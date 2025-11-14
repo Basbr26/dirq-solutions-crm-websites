@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { TaskDialog } from '@/components/TaskDialog';
@@ -11,13 +11,15 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Calendar, User, FileText, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
-import { mockSickLeaveCases, mockTasks, mockTimelineEvents, mockDocuments } from '@/lib/mockData';
-import { CaseStatus, TaskStatus, Task, Document } from '@/types/sickLeave';
+import { CaseStatus, TaskStatus, Task, Document, SickLeaveCase, TimelineEvent } from '@/types/sickLeave';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { DocumentList } from '@/components/DocumentList';
 import { WetPoortwachterInfo } from '@/components/WetPoortwachterInfo';
 import { toast as sonnerToast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/lib/supabase';
+import { getCaseDocuments, getCaseTimeline, updateTaskStatus, updateCaseStatus } from '@/lib/supabaseHelpers';
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
@@ -43,22 +45,75 @@ export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, role } = useAuth();
   
-  const case_ = mockSickLeaveCases.find(c => c.id === id);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
-  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
-  const caseTasks = tasks.filter(t => t.case_id === id);
-  const caseDocuments = documents.filter(d => d.case_id === id);
-  const caseEvents = mockTimelineEvents.filter(e => e.case_id === id).sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  const [case_, setCase] = useState<SickLeaveCase | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<CaseStatus>('actief');
 
-  const [status, setStatus] = useState<CaseStatus>(case_?.status || 'actief');
+  useEffect(() => {
+    if (id) {
+      loadCaseData();
+    }
+  }, [id]);
+
+  const loadCaseData = async () => {
+    if (!id || !user || !role) return;
+
+    setLoading(true);
+    try {
+      const { data: caseData, error: caseError } = await supabase
+        .from('sick_leave_cases')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (caseError) throw caseError;
+      
+      setCase(caseData);
+      setStatus(caseData.status);
+
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('case_id', id)
+        .order('deadline', { ascending: true });
+
+      if (tasksError) throw tasksError;
+      setTasks(tasksData || []);
+
+      const documentsData = await getCaseDocuments(id, role);
+      setDocuments(documentsData || []);
+
+      const timelineData = await getCaseTimeline(id);
+      setTimeline(timelineData || []);
+
+    } catch (error) {
+      console.error('Error loading case:', error);
+      sonnerToast.error('Fout bij laden van case');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader title="Verzuimdossier" />
+        <div className="container mx-auto px-4 py-8">
+          <p>Laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!case_) {
-  return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader title="Verzuimdossier" />
+    return (
+      <div className="min-h-screen bg-background">
+        <DashboardHeader title="Verzuimdossier" />
         <div className="container mx-auto px-4 py-8">
           <p>Case niet gevonden</p>
         </div>
@@ -66,35 +121,70 @@ export default function CaseDetail() {
     );
   }
 
-  const handleStatusChange = (newStatus: CaseStatus) => {
-    setStatus(newStatus);
-    toast({
-      title: 'Status bijgewerkt',
-      description: `Case status gewijzigd naar: ${statusConfig[newStatus].label}`,
-    });
+  const handleStatusChange = async (newStatus: CaseStatus) => {
+    if (!id || !user) return;
+
+    try {
+      await updateCaseStatus(id, newStatus, user.id);
+      setStatus(newStatus);
+      setCase({ ...case_, status: newStatus });
+      toast({
+        title: 'Status bijgewerkt',
+        description: `Case status gewijzigd naar: ${statusConfig[newStatus].label}`,
+      });
+      loadCaseData();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      sonnerToast.error('Fout bij bijwerken status');
+    }
   };
 
-  const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
-    setTasks(tasks.map(t => 
-      t.id === taskId 
-        ? { ...t, status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
-        : t
-    ));
-    toast({
-      title: 'Taak bijgewerkt',
-      description: `Taak status gewijzigd naar: ${taskStatusConfig[newStatus].label}`,
-    });
+  const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+    if (!id || !user) return;
+
+    try {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      await updateTaskStatus(taskId, newStatus, id, user.id, task.titel);
+      setTasks(tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
+          : t
+      ));
+      toast({
+        title: 'Taak bijgewerkt',
+        description: `Taak status gewijzigd naar: ${taskStatusConfig[newStatus].label}`,
+      });
+      loadCaseData();
+    } catch (error) {
+      console.error('Error updating task:', error);
+      sonnerToast.error('Fout bij bijwerken taak');
+    }
   };
 
-  const handleTaskAssignment = (taskId: string, assignee: string) => {
-    setTasks(tasks.map(t => 
-      t.id === taskId 
-        ? { ...t, toegewezen_aan: assignee || null }
-        : t
-    ));
+  const handleTaskAssignment = async (taskId: string, assignee: string) => {
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ toegewezen_aan: assignee || null })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      setTasks(tasks.map(t => 
+        t.id === taskId 
+          ? { ...t, toegewezen_aan: assignee || null }
+          : t
+      ));
+      sonnerToast.success('Taak toegewezen');
+    } catch (error) {
+      console.error('Error assigning task:', error);
+      sonnerToast.error('Fout bij toewijzen taak');
+    }
   };
 
-  const handleNewTask = (data: {
+  const handleNewTask = async (data: {
     titel: string;
     beschrijving: string;
     deadline: string;
@@ -225,29 +315,29 @@ export default function CaseDetail() {
           {/* Tabs */}
           <Tabs defaultValue="tasks" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="tasks">Taken ({caseTasks.length})</TabsTrigger>
-              <TabsTrigger value="documents">Documenten ({caseDocuments.length})</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline ({caseEvents.length})</TabsTrigger>
+              <TabsTrigger value="tasks">Taken ({tasks.length})</TabsTrigger>
+              <TabsTrigger value="documents">Documenten ({documents.length})</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline ({timeline.length})</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tasks" className="space-y-4">
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle>Taken ({caseTasks.length})</CardTitle>
+                    <CardTitle>Taken ({tasks.length})</CardTitle>
                     <TaskDialog onSubmit={handleNewTask} />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <WetPoortwachterInfo />
                   
-                  {caseTasks.length === 0 ? (
+                  {tasks.length === 0 ? (
                     <div className="py-8 text-center text-muted-foreground">
                       Geen taken beschikbaar
                     </div>
                   ) : (
                     <div className="space-y-4 mt-4">
-                      {caseTasks.map((task) => {
+                      {tasks.map((task) => {
                         const StatusIcon = taskStatusConfig[task.status].icon;
                         return (
                           <Card key={task.id}>
@@ -303,11 +393,11 @@ export default function CaseDetail() {
               <div className="flex justify-end">
                 <DocumentUpload onUpload={handleDocumentUpload} />
               </div>
-              <DocumentList documents={caseDocuments} onDelete={handleDocumentDelete} />
+              <DocumentList documents={documents} onDelete={handleDocumentDelete} />
             </TabsContent>
             
             <TabsContent value="timeline" className="space-y-4">
-              {caseEvents.length === 0 ? (
+              {timeline.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
                     Geen gebeurtenissen beschikbaar
@@ -315,7 +405,7 @@ export default function CaseDetail() {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {caseEvents.map((event) => (
+                  {timeline.map((event) => (
                     <Card key={event.id}>
                       <CardContent className="py-4">
                         <div className="flex items-start gap-4">

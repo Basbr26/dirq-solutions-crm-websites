@@ -1,28 +1,127 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-react';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { useAuth } from '@/hooks/useAuth';
+import { getManagerCases, getManagerTasks } from '@/lib/supabaseHelpers';
+import { SickLeaveCase, Task } from '@/types/sickLeave';
+import { format, isToday, isTomorrow, startOfWeek, endOfWeek } from 'date-fns';
+import { nl } from 'date-fns/locale';
+import { toast } from 'sonner';
+
+const statusConfig = {
+  actief: { label: 'Actief', variant: 'destructive' as const },
+  herstel: { label: 'Herstel', variant: 'default' as const },
+  afgesloten: { label: 'Afgesloten', variant: 'secondary' as const },
+};
 
 export default function DashboardManager() {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const [cases, setCases] = useState<SickLeaveCase[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user && profile) {
+      loadData();
+    }
+  }, [user, profile]);
+
+  const loadData = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const [casesData, tasksData] = await Promise.all([
+        getManagerCases(user.id),
+        getManagerTasks(user.id)
+      ]);
+      
+      setCases(casesData || []);
+      setTasks(tasksData || []);
+    } catch (error) {
+      console.error('Error loading manager data:', error);
+      toast.error('Fout bij laden van gegevens');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const stats = {
+    totalTeam: cases.length > 0 ? cases.filter(c => c.status !== 'afgesloten').length : 0,
+    sickCount: cases.filter(c => c.status === 'actief').length,
+    recoveryCount: cases.filter(c => c.status === 'herstel').length,
+    openTasks: tasks.filter(t => t.status === 'open').length,
+    tasksToday: tasks.filter(t => t.status === 'open' && t.deadline && isToday(new Date(t.deadline))).length,
+    completedThisWeek: tasks.filter(t => 
+      t.status === 'completed' && 
+      t.completed_at && 
+      new Date(t.completed_at) >= startOfWeek(new Date()) &&
+      new Date(t.completed_at) <= endOfWeek(new Date())
+    ).length,
+    overdueTasks: tasks.filter(t => 
+      t.status !== 'completed' && 
+      t.deadline && 
+      new Date(t.deadline) < new Date()
+    ).length,
+  };
+
+  const myTasks = tasks
+    .filter(t => t.toegewezen_aan === user?.id && t.status !== 'completed')
+    .sort((a, b) => {
+      if (!a.deadline) return 1;
+      if (!b.deadline) return -1;
+      return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+    })
+    .slice(0, 5);
+
+  const activeCases = cases
+    .filter(c => c.status === 'actief' || c.status === 'herstel')
+    .sort((a, b) => new Date(b.start_datum).getTime() - new Date(a.start_datum).getTime())
+    .slice(0, 5);
+
+  const getDeadlineLabel = (deadline: string | null) => {
+    if (!deadline) return 'Geen deadline';
+    const date = new Date(deadline);
+    if (isToday(date)) return 'Vandaag';
+    if (isTomorrow(date)) return 'Morgen';
+    return format(date, 'd MMM', { locale: nl });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-secondary">
+        <DashboardHeader title="Manager Dashboard" />
+        <main className="container mx-auto px-6 py-8">
+          <p className="text-muted-foreground">Laden...</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-secondary">
       <DashboardHeader title="Manager Dashboard" />
 
       <main className="container mx-auto px-6 py-8">
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-4 mb-8">
           <Card className="shadow-dirq">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Mijn Team
+                Actief Ziek
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">8</div>
-                <Users className="h-8 w-8 text-primary" />
+                <div className="text-3xl font-bold text-foreground">{stats.sickCount}</div>
+                <Users className="h-8 w-8 text-destructive" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                2 ziek gemeld
+                {stats.recoveryCount} in herstel
               </p>
             </CardContent>
           </Card>
@@ -35,11 +134,11 @@ export default function DashboardManager() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">3</div>
+                <div className="text-3xl font-bold text-foreground">{stats.openTasks}</div>
                 <Clock className="h-8 w-8 text-primary" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                1 vandaag
+                {stats.tasksToday} vandaag
               </p>
             </CardContent>
           </Card>
@@ -52,11 +151,28 @@ export default function DashboardManager() {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">5</div>
-                <CheckCircle2 className="h-8 w-8 text-primary" />
+                <div className="text-3xl font-bold text-foreground">{stats.completedThisWeek}</div>
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 Goed werk!
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-dirq">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Vertraagde Taken
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="text-3xl font-bold text-foreground">{stats.overdueTasks}</div>
+                <AlertTriangle className="h-8 w-8 text-orange-600" />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Actie vereist
               </p>
             </CardContent>
           </Card>
@@ -70,24 +186,32 @@ export default function DashboardManager() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {[
-                { title: 'Bel medewerker voor verzuimgesprek', deadline: 'Vandaag', priority: 'high' },
-                { title: 'Check verbetering bij medewerker', deadline: 'Morgen', priority: 'medium' },
-                { title: 'Voorbereiding Plan van Aanpak gesprek', deadline: '5 dagen', priority: 'medium' },
-              ].map((task, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <div>
-                    <p className="font-medium text-foreground">{task.title}</p>
-                    <p className="text-sm text-muted-foreground">Deadline: {task.deadline}</p>
+            {myTasks.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Geen openstaande taken</p>
+            ) : (
+              <div className="space-y-3">
+                {myTasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/case/${task.case_id}`)}
+                  >
+                    <div>
+                      <p className="font-medium text-foreground">{task.titel}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Deadline: {getDeadlineLabel(task.deadline)}
+                      </p>
+                    </div>
+                    <Button size="sm" onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/case/${task.case_id}`);
+                    }}>
+                      Bekijk Case
+                    </Button>
                   </div>
-                  <Button size="sm">Uitvoeren</Button>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -99,33 +223,37 @@ export default function DashboardManager() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[1, 2].map((item) => (
-                <div
-                  key={item}
-                  className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">TM</span>
+            {activeCases.length === 0 ? (
+              <p className="text-muted-foreground text-sm">Geen actieve verzuimcases</p>
+            ) : (
+              <div className="space-y-3">
+                {activeCases.map((case_) => (
+                  <div
+                    key={case_.id}
+                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/case/${case_.id}`)}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="font-medium text-foreground">{case_.medewerker_naam}</p>
+                        <Badge variant={statusConfig[case_.status].variant}>
+                          {statusConfig[case_.status].label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Ziek sinds: {format(new Date(case_.start_datum), 'd MMMM yyyy', { locale: nl })}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Reden: {case_.reden}
+                      </p>
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">Teamlid Naam</p>
-                      <p className="text-sm text-muted-foreground">Functie</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Ziek sinds</p>
-                      <p className="font-medium">5 dagen</p>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Bekijk dossier
+                    <Button size="sm" variant="outline">
+                      Bekijk
                     </Button>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
