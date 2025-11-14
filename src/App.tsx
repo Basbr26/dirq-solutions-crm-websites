@@ -2,11 +2,28 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Auth from "./pages/Auth";
+import DashboardHR from "./pages/DashboardHR";
+import DashboardManager from "./pages/DashboardManager";
+import DashboardMedewerker from "./pages/DashboardMedewerker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function RoleBasedRedirect() {
+  const { role, loading } = useAuth();
+  
+  if (loading) return null;
+  
+  if (role === 'hr') return <Navigate to="/dashboard/hr" replace />;
+  if (role === 'manager') return <Navigate to="/dashboard/manager" replace />;
+  if (role === 'medewerker') return <Navigate to="/dashboard/medewerker" replace />;
+  
+  return <Navigate to="/auth" replace />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +31,41 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<RoleBasedRedirect />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            <Route 
+              path="/dashboard/hr" 
+              element={
+                <ProtectedRoute allowedRoles={['hr']}>
+                  <DashboardHR />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/dashboard/manager" 
+              element={
+                <ProtectedRoute allowedRoles={['manager']}>
+                  <DashboardManager />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/dashboard/medewerker" 
+              element={
+                <ProtectedRoute allowedRoles={['medewerker']}>
+                  <DashboardMedewerker />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
