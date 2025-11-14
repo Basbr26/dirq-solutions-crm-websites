@@ -6,13 +6,15 @@ import { CaseCard } from '@/components/CaseCard';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockSickLeaveCases } from '@/lib/mockData';
-import { SickLeaveCase, CaseStatus } from '@/types/sickLeave';
+import { mockSickLeaveCases, mockTasks } from '@/lib/mockData';
+import { SickLeaveCase, CaseStatus, Task } from '@/types/sickLeave';
 import { Search, TrendingUp, Users, Clock } from 'lucide-react';
+import { generateTasksFromTemplate } from '@/lib/taskTemplates';
 
 export default function DashboardHR() {
   const navigate = useNavigate();
   const [cases, setCases] = useState<SickLeaveCase[]>(mockSickLeaveCases);
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CaseStatus | 'all'>('all');
 
@@ -30,7 +32,16 @@ export default function DashboardHR() {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+    
+    // Automatisch taken genereren op basis van templates
+    const newTasks = generateTasksFromTemplate(
+      newCase.id,
+      newCase.start_datum,
+      'mock-user-id-123'
+    );
+    
     setCases([newCase, ...cases]);
+    setTasks([...newTasks, ...tasks]);
   };
 
   const filteredCases = cases.filter(c => {
