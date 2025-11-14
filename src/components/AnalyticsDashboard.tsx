@@ -117,7 +117,14 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
             <CardDescription>Huidige verdeling van ziekmeldingen</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={{}} className="h-[300px]">
+            <ChartContainer
+              config={{
+                actief: { color: COLORS.actief },
+                herstel_gemeld: { color: COLORS.herstel_gemeld },
+                gesloten: { color: COLORS.gesloten },
+              }}
+              className="h-[300px]"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -146,7 +153,12 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
             <CardDescription>Aantal nieuwe ziekmeldingen per maand</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={{}} className="h-[300px]">
+            <ChartContainer
+              config={{
+                trend: { color: 'hsl(var(--primary))' },
+              }}
+              className="h-[300px]"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -166,7 +178,12 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
             <CardDescription>Gemiddeld aantal dagen per status</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={{}} className="h-[300px]">
+            <ChartContainer
+              config={{
+                duur: { color: 'hsl(var(--primary))' },
+              }}
+              className="h-[300px]"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={durationData}>
                   <CartesianGrid strokeDasharray="3 3" />
