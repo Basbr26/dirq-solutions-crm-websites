@@ -1,6 +1,7 @@
 export type CaseStatus = 'actief' | 'herstel' | 'afgesloten';
 export type TaskStatus = 'open' | 'in_progress' | 'completed';
 export type AppRole = 'hr' | 'manager' | 'medewerker';
+export type DocumentCategory = 'medisch' | 'correspondentie' | 're-integratie' | 'overig';
 
 export interface SickLeaveCase {
   id: string;
@@ -34,5 +35,17 @@ export interface TimelineEvent {
   event_type: 'ziekmelding' | 'gesprek' | 'herstel' | 'afmelding' | 'notitie';
   beschrijving: string;
   created_by: string;
+  created_at: string;
+}
+
+export interface Document {
+  id: string;
+  case_id: string;
+  naam: string;
+  categorie: DocumentCategory;
+  bestand_url: string;
+  bestand_type: string;
+  grootte: number;
+  uploaded_by: string;
   created_at: string;
 }
