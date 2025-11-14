@@ -6,7 +6,7 @@ export type AppRole = Database['public']['Enums']['app_role'];
 export type DocumentType = Database['public']['Enums']['document_type'];
 export type EventType = Database['public']['Enums']['event_type'];
 
-// For backward compatibility and UI display
+// Main types matching Supabase schema
 export interface SickLeaveCase {
   id: string;
   employee_id: string;
@@ -31,7 +31,7 @@ export interface Task {
   description: string | null;
   deadline: string;
   task_status: TaskStatus;
-  assigned_to: string;
+  assigned_to: string | null;
   completed_at: string | null;
   completed_by: string | null;
   created_at: string | null;

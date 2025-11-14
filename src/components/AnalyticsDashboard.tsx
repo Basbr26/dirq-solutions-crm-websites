@@ -11,16 +11,16 @@ interface AnalyticsDashboardProps {
 
 const COLORS = {
   actief: 'hsl(var(--destructive))',
-  herstel: 'hsl(var(--warning))',
-  afgesloten: 'hsl(var(--success))',
+  herstel_gemeld: 'hsl(var(--warning))',
+  gesloten: 'hsl(var(--success))',
 };
 
 export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
   // Status verdeling
   const statusData = [
-    { name: 'Actief', value: cases.filter(c => c.status === 'actief').length, fill: COLORS.actief },
-    { name: 'Herstel', value: cases.filter(c => c.status === 'herstel').length, fill: COLORS.herstel },
-    { name: 'Afgesloten', value: cases.filter(c => c.status === 'afgesloten').length, fill: COLORS.afgesloten },
+    { name: 'Actief', value: cases.filter(c => c.case_status === 'actief').length, fill: COLORS.actief },
+    { name: 'Herstel Gemeld', value: cases.filter(c => c.case_status === 'herstel_gemeld').length, fill: COLORS.herstel_gemeld },
+    { name: 'Gesloten', value: cases.filter(c => c.case_status === 'gesloten').length, fill: COLORS.gesloten },
   ];
 
   // Trend per maand (laatste 6 maanden)
@@ -32,7 +32,7 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
     const monthStart = startOfMonth(month);
     const monthEnd = endOfMonth(month);
     const casesInMonth = cases.filter(c => {
-      const startDate = new Date(c.start_datum);
+      const startDate = new Date(c.start_date);
       return startDate >= monthStart && startDate <= monthEnd;
     });
     
@@ -43,11 +43,11 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
   });
 
   // Gemiddelde duur per status
-  const durationData = ['actief', 'herstel', 'afgesloten'].map(status => {
-    const statusCases = cases.filter(c => c.status === status);
+  const durationData = ['actief', 'herstel_gemeld', 'gesloten'].map(status => {
+    const statusCases = cases.filter(c => c.case_status === status);
     const durations = statusCases.map(c => {
-      const start = new Date(c.start_datum);
-      const end = c.eind_datum ? new Date(c.eind_datum) : new Date();
+      const start = new Date(c.start_date);
+      const end = c.end_date ? new Date(c.end_date) : new Date();
       return differenceInDays(end, start);
     });
     const avgDuration = durations.length > 0 
@@ -55,26 +55,27 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
       : 0;
     
     return {
-      status: status.charAt(0).toUpperCase() + status.slice(1),
+      status: status === 'herstel_gemeld' ? 'Herstel Gemeld' : status.charAt(0).toUpperCase() + status.slice(1),
       dagen: avgDuration,
     };
   });
 
-  // Top redenen
-  const reasonCounts = cases.reduce((acc, c) => {
-    acc[c.reden] = (acc[c.reden] || 0) + 1;
+  // Top functionele beperkingen (vervanger voor "redenen")
+  const limitationCounts = cases.reduce((acc, c) => {
+    const limitation = c.functional_limitations || 'Niet gespecificeerd';
+    acc[limitation] = (acc[limitation] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   
-  const topReasons = Object.entries(reasonCounts)
-    .map(([reden, aantal]) => ({ reden, aantal }))
+  const topLimitations = Object.entries(limitationCounts)
+    .map(([beperking, aantal]) => ({ beperking, aantal }))
     .sort((a, b) => b.aantal - a.aantal)
     .slice(0, 5);
 
   // Totale statistieken
   const totalDays = cases.reduce((sum, c) => {
-    const start = new Date(c.start_datum);
-    const end = c.eind_datum ? new Date(c.eind_datum) : new Date();
+    const start = new Date(c.start_date);
+    const end = c.end_date ? new Date(c.end_date) : new Date();
     return sum + differenceInDays(end, start);
   }, 0);
   
@@ -98,13 +99,13 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Actieve Gevallen</CardDescription>
-            <CardTitle className="text-3xl">{cases.filter(c => c.status === 'actief').length}</CardTitle>
+            <CardTitle className="text-3xl">{cases.filter(c => c.case_status === 'actief').length}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>In Herstel</CardDescription>
-            <CardTitle className="text-3xl">{cases.filter(c => c.status === 'herstel').length}</CardTitle>
+            <CardDescription>Herstel Gemeld</CardDescription>
+            <CardTitle className="text-3xl">{cases.filter(c => c.case_status === 'herstel_gemeld').length}</CardTitle>
           </CardHeader>
         </Card>
       </div>
@@ -181,16 +182,16 @@ export function AnalyticsDashboard({ cases }: AnalyticsDashboardProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top 5 Redenen</CardTitle>
-            <CardDescription>Meest voorkomende verzuimredenen</CardDescription>
+            <CardTitle>Top 5 Functionele Beperkingen</CardTitle>
+            <CardDescription>Meest voorkomende functionele beperkingen</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={{}} className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topReasons} layout="vertical">
+                <BarChart data={topLimitations} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" />
-                  <YAxis dataKey="reden" type="category" width={100} />
+                  <YAxis dataKey="beperking" type="category" width={120} />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="aantal" fill="hsl(var(--primary))" />
                 </BarChart>

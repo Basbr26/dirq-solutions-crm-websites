@@ -5,13 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Upload } from 'lucide-react';
-import { DocumentCategory } from '@/types/sickLeave';
+import { DocumentType } from '@/types/sickLeave';
 import { toast } from 'sonner';
 
 interface DocumentUploadProps {
   onUpload: (data: {
-    naam: string;
-    categorie: DocumentCategory;
+    file_name: string;
+    document_type: DocumentType;
     file: File;
   }) => void;
 }
@@ -19,7 +19,7 @@ interface DocumentUploadProps {
 export function DocumentUpload({ onUpload }: DocumentUploadProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [categorie, setCategorie] = useState<DocumentCategory>('overig');
+  const [documentType, setDocumentType] = useState<DocumentType>('overig');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -42,13 +42,13 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
     }
 
     onUpload({
-      naam: selectedFile.name,
-      categorie,
+      file_name: selectedFile.name,
+      document_type: documentType,
       file: selectedFile,
     });
 
     setSelectedFile(null);
-    setCategorie('overig');
+    setDocumentType('overig');
     setOpen(false);
     toast.success('Document geüpload');
   };
@@ -82,15 +82,19 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
             )}
           </div>
           <div>
-            <Label htmlFor="categorie">Categorie *</Label>
-            <Select value={categorie} onValueChange={(v) => setCategorie(v as DocumentCategory)}>
+            <Label htmlFor="document_type">Categorie *</Label>
+            <Select value={documentType} onValueChange={(v) => setDocumentType(v as DocumentType)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="medisch">Medisch</SelectItem>
-                <SelectItem value="correspondentie">Correspondentie</SelectItem>
-                <SelectItem value="re-integratie">Re-integratie</SelectItem>
+                <SelectItem value="medisch_attest">Medisch Attest</SelectItem>
+                <SelectItem value="probleemanalyse">Probleemanalyse</SelectItem>
+                <SelectItem value="plan_van_aanpak">Plan van Aanpak</SelectItem>
+                <SelectItem value="evaluatie_3_maanden">Evaluatie 3 maanden</SelectItem>
+                <SelectItem value="evaluatie_6_maanden">Evaluatie 6 maanden</SelectItem>
+                <SelectItem value="evaluatie_1_jaar">Evaluatie 1 jaar</SelectItem>
+                <SelectItem value="herstelmelding">Herstelmelding</SelectItem>
                 <SelectItem value="overig">Overig</SelectItem>
               </SelectContent>
             </Select>

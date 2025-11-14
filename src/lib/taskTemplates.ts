@@ -1,65 +1,62 @@
 import { Task } from '@/types/sickLeave';
 
 interface TaskTemplate {
-  titel: string;
-  beschrijving: string;
-  deadlineDays: number; // dagen na start_datum
+  title: string;
+  description: string;
+  deadlineDays: number; // dagen na start_date
 }
 
 export const defaultTaskTemplates: TaskTemplate[] = [
   {
-    titel: 'Eerste contact met medewerker',
-    beschrijving: 'Neem binnen 24 uur contact op met de zieke medewerker om te informeren naar de situatie.',
+    title: 'Eerste contact met medewerker',
+    description: 'Neem binnen 24 uur contact op met de zieke medewerker om te informeren naar de situatie.',
     deadlineDays: 1,
   },
   {
-    titel: 'Manager informeren',
-    beschrijving: 'Informeer de direct leidinggevende over de ziekmelding en bespreek werkoverleg.',
+    title: 'Manager informeren',
+    description: 'Informeer de direct leidinggevende over de ziekmelding en bespreek werkoverleg.',
     deadlineDays: 1,
   },
   {
-    titel: 'Arbo-arts raadplegen',
-    beschrijving: 'Plan een afspraak met de bedrijfsarts indien nodig voor medische beoordeling.',
+    title: 'Arbo-arts raadplegen',
+    description: 'Plan een afspraak met de bedrijfsarts indien nodig voor medische beoordeling.',
     deadlineDays: 7,
   },
   {
-    titel: 'Probleemanalyse uitvoeren',
-    beschrijving: 'Analyseer mogelijke oorzaken van het verzuim en documenteer bevindingen.',
+    title: 'Probleemanalyse uitvoeren',
+    description: 'Analyseer mogelijke oorzaken van het verzuim en documenteer bevindingen.',
     deadlineDays: 14,
   },
   {
-    titel: 'Plan van aanpak opstellen',
-    beschrijving: 'Stel samen met medewerker en manager een re-integratieplan op.',
+    title: 'Plan van aanpak opstellen',
+    description: 'Stel samen met medewerker en manager een re-integratieplan op.',
     deadlineDays: 21,
   },
   {
-    titel: 'Eerste evaluatiegesprek',
-    beschrijving: 'Voer een evaluatiegesprek over voortgang en eventuele aanpassingen.',
+    title: 'Eerste evaluatiegesprek',
+    description: 'Voer een evaluatiegesprek over voortgang en eventuele aanpassingen.',
     deadlineDays: 42,
   },
 ];
 
 export function generateTasksFromTemplate(
   caseId: string,
-  startDatum: string,
+  startDate: string,
   createdBy: string
-): Task[] {
-  const startDate = new Date(startDatum);
+): Omit<Task, 'id' | 'created_at' | 'updated_at' | 'completed_at' | 'completed_by' | 'gespreksonderwerpen' | 'toegestane_vragen' | 'verboden_vragen' | 'juridische_context' | 'notes'>[] {
+  const start = new Date(startDate);
   
-  return defaultTaskTemplates.map((template, index) => {
-    const deadline = new Date(startDate);
+  return defaultTaskTemplates.map((template) => {
+    const deadline = new Date(start);
     deadline.setDate(deadline.getDate() + template.deadlineDays);
     
     return {
-      id: `task-${caseId}-${index}`,
       case_id: caseId,
-      titel: template.titel,
-      beschrijving: template.beschrijving,
+      title: template.title,
+      description: template.description,
       deadline: deadline.toISOString().split('T')[0],
-      status: 'open',
-      toegewezen_aan: null,
-      created_at: new Date().toISOString(),
-      completed_at: null,
+      task_status: 'open' as const,
+      assigned_to: null,
     };
   });
 }

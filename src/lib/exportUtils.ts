@@ -8,19 +8,17 @@ export function exportCasesToCSV(cases: SickLeaveCase[]) {
     'Medewerker',
     'Startdatum',
     'Einddatum',
-    'Reden',
+    'Functionele Beperkingen',
     'Status',
-    'Notities',
   ];
 
   const rows = cases.map(c => [
     c.id,
-    c.medewerker_naam,
-    format(new Date(c.start_datum), 'dd-MM-yyyy', { locale: nl }),
-    c.eind_datum ? format(new Date(c.eind_datum), 'dd-MM-yyyy', { locale: nl }) : 'Lopend',
-    c.reden,
-    c.status.charAt(0).toUpperCase() + c.status.slice(1),
-    c.notities || '',
+    c.employee ? `${c.employee.voornaam} ${c.employee.achternaam}` : 'Onbekend',
+    format(new Date(c.start_date), 'dd-MM-yyyy', { locale: nl }),
+    c.end_date ? format(new Date(c.end_date), 'dd-MM-yyyy', { locale: nl }) : 'Lopend',
+    c.functional_limitations || 'Niet gespecificeerd',
+    c.case_status === 'herstel_gemeld' ? 'Herstel Gemeld' : c.case_status.charAt(0).toUpperCase() + c.case_status.slice(1),
   ]);
 
   const csvContent = [
@@ -45,14 +43,18 @@ export function exportTasksToCSV(tasks: Task[], cases: SickLeaveCase[]) {
 
   const rows = tasks.map(t => {
     const relatedCase = cases.find(c => c.id === t.case_id);
+    const employeeName = relatedCase?.employee 
+      ? `${relatedCase.employee.voornaam} ${relatedCase.employee.achternaam}` 
+      : 'Onbekend';
+    
     return [
       t.id,
       t.case_id,
-      relatedCase?.medewerker_naam || 'Onbekend',
-      t.titel,
-      t.beschrijving,
+      employeeName,
+      t.title,
+      t.description || '',
       format(new Date(t.deadline), 'dd-MM-yyyy', { locale: nl }),
-      t.status === 'open' ? 'Open' : t.status === 'in_progress' ? 'Bezig' : 'Voltooid',
+      t.task_status === 'open' ? 'Open' : t.task_status === 'in_progress' ? 'Bezig' : 'Voltooid',
       t.completed_at ? format(new Date(t.completed_at), 'dd-MM-yyyy', { locale: nl }) : '',
     ];
   });

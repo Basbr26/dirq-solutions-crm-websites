@@ -23,8 +23,8 @@ import { getCaseDocuments, getCaseTimeline, updateTaskStatus, updateCaseStatus }
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
-  herstel: { label: 'Herstel', variant: 'default' as const },
-  afgesloten: { label: 'Afgesloten', variant: 'secondary' as const },
+  herstel_gemeld: { label: 'Herstel Gemeld', variant: 'default' as const },
+  gesloten: { label: 'Gesloten', variant: 'secondary' as const },
 };
 
 const taskStatusConfig = {
@@ -39,6 +39,9 @@ const eventTypeConfig = {
   herstel: { label: 'Herstel', color: 'bg-green-600/10 text-green-600' },
   afmelding: { label: 'Afmelding', color: 'bg-secondary/10 text-secondary-foreground' },
   notitie: { label: 'Notitie', color: 'bg-muted text-muted-foreground' },
+  document_upload: { label: 'Document Upload', color: 'bg-blue-600/10 text-blue-600' },
+  task_completed: { label: 'Taak Voltooid', color: 'bg-green-600/10 text-green-600' },
+  status_change: { label: 'Status Wijziging', color: 'bg-orange-600/10 text-orange-600' },
 };
 
 export default function CaseDetail() {
@@ -67,14 +70,14 @@ export default function CaseDetail() {
     try {
       const { data: caseData, error: caseError } = await supabase
         .from('sick_leave_cases')
-        .select('*')
+        .select('*, employee:profiles!employee_id(voornaam, achternaam, email)')
         .eq('id', id)
         .single();
 
       if (caseError) throw caseError;
       
-      setCase(caseData);
-      setStatus(caseData.status);
+      setCase(caseData as SickLeaveCase);
+      setStatus(caseData.case_status);
 
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
@@ -127,7 +130,7 @@ export default function CaseDetail() {
     try {
       await updateCaseStatus(id, newStatus, user.id);
       setStatus(newStatus);
-      setCase({ ...case_, status: newStatus });
+      setCase({ ...case_, case_status: newStatus });
       toast({
         title: 'Status bijgewerkt',
         description: `Case status gewijzigd naar: ${statusConfig[newStatus].label}`,
@@ -146,10 +149,10 @@ export default function CaseDetail() {
       const task = tasks.find(t => t.id === taskId);
       if (!task) return;
 
-      await updateTaskStatus(taskId, newStatus, id, user.id, task.titel);
+      await updateTaskStatus(taskId, newStatus, id, user.id, task.title);
       setTasks(tasks.map(t => 
         t.id === taskId 
-          ? { ...t, status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
+          ? { ...t, task_status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
           : t
       ));
       toast({
@@ -167,14 +170,14 @@ export default function CaseDetail() {
     try {
       const { error } = await supabase
         .from('tasks')
-        .update({ toegewezen_aan: assignee || null })
+        .update({ assigned_to: assignee || null })
         .eq('id', taskId);
 
       if (error) throw error;
 
       setTasks(tasks.map(t => 
         t.id === taskId 
-          ? { ...t, toegewezen_aan: assignee || null }
+          ? { ...t, assigned_to: assignee || null }
           : t
       ));
       sonnerToast.success('Taak toegewezen');
@@ -185,44 +188,49 @@ export default function CaseDetail() {
   };
 
   const handleNewTask = async (data: {
-    titel: string;
-    beschrijving: string;
+    title: string;
+    description: string;
     deadline: string;
-    toegewezen_aan?: string;
+    assigned_to?: string;
   }) => {
     if (!case_) return;
     
-    const newTask: Task = {
+    const newTask: Partial<Task> = {
       id: `task-${Date.now()}`,
       case_id: case_.id,
-      titel: data.titel,
-      beschrijving: data.beschrijving,
+      title: data.title,
+      description: data.description,
       deadline: data.deadline,
-      status: 'open',
-      toegewezen_aan: data.toegewezen_aan || null,
+      task_status: 'open',
+      assigned_to: data.assigned_to || null,
       created_at: new Date().toISOString(),
       completed_at: null,
+      completed_by: null,
+      updated_at: new Date().toISOString(),
+      gespreksonderwerpen: null,
+      toegestane_vragen: null,
+      verboden_vragen: null,
+      juridische_context: null,
+      notes: null,
     };
     
-    setTasks([...tasks, newTask]);
+    setTasks([...tasks, newTask as Task]);
     toast({
       title: 'Taak toegevoegd',
       description: 'Nieuwe taak is succesvol aangemaakt',
     });
   };
 
-  const handleDocumentUpload = (data: { naam: string; categorie: any; file: File }) => {
-    if (!case_) return;
+  const handleDocumentUpload = (data: { file_name: string; document_type: any; file: File }) => {
+    if (!case_ || !user) return;
     
     const newDoc: Document = {
       id: `doc-${Date.now()}`,
       case_id: case_.id,
-      naam: data.naam,
-      categorie: data.categorie,
-      bestand_url: URL.createObjectURL(data.file),
-      bestand_type: data.file.type,
-      grootte: data.file.size,
-      uploaded_by: 'Huidige gebruiker',
+      file_name: data.file_name,
+      document_type: data.document_type,
+      file_url: URL.createObjectURL(data.file),
+      uploaded_by: user.id,
       created_at: new Date().toISOString(),
     };
     setDocuments([...documents, newDoc]);
@@ -234,13 +242,17 @@ export default function CaseDetail() {
     sonnerToast.success('Document verwijderd');
   };
 
-  const daysOut = case_.eind_datum 
-    ? Math.ceil((new Date(case_.eind_datum).getTime() - new Date(case_.start_datum).getTime()) / (1000 * 60 * 60 * 24))
-    : Math.ceil((new Date().getTime() - new Date(case_.start_datum).getTime()) / (1000 * 60 * 60 * 24));
+  const daysOut = case_.end_date 
+    ? Math.ceil((new Date(case_.end_date).getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24))
+    : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24));
 
-    return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader title="Verzuimdossier" />
+  const employeeName = case_.employee 
+    ? `${case_.employee.voornaam} ${case_.employee.achternaam}`
+    : 'Onbekende medewerker';
+
+  return (
+    <div className="min-h-screen bg-background">
+      <DashboardHeader title="Verzuimdossier" />
       
       <div className="container mx-auto px-4 py-8">
         <Button 
@@ -260,17 +272,17 @@ export default function CaseDetail() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <User className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-2xl">{case_.medewerker_naam}</CardTitle>
+                    <CardTitle className="text-2xl">{employeeName}</CardTitle>
                   </div>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Start: {format(new Date(case_.start_datum), 'dd MMMM yyyy', { locale: nl })}
+                      Start: {format(new Date(case_.start_date), 'dd MMMM yyyy', { locale: nl })}
                     </div>
-                    {case_.eind_datum && (
+                    {case_.end_date && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        Eind: {format(new Date(case_.eind_datum), 'dd MMMM yyyy', { locale: nl })}
+                        Eind: {format(new Date(case_.end_date), 'dd MMMM yyyy', { locale: nl })}
                       </div>
                     )}
                   </div>
@@ -287,26 +299,21 @@ export default function CaseDetail() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="actief">Actief</SelectItem>
-                      <SelectItem value="herstel">Herstel</SelectItem>
-                      <SelectItem value="afgesloten">Afgesloten</SelectItem>
+                      <SelectItem value="herstel_gemeld">Herstel Gemeld</SelectItem>
+                      <SelectItem value="gesloten">Gesloten</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Reden ziekmelding
-                </h3>
-                <p className="text-muted-foreground">{case_.reden}</p>
-              </div>
-              
-              {case_.notities && (
+              {case_.functional_limitations && (
                 <div>
-                  <h3 className="font-medium mb-2">Notities</h3>
-                  <p className="text-muted-foreground">{case_.notities}</p>
+                  <h3 className="font-medium mb-2 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Functionele Beperkingen
+                  </h3>
+                  <p className="text-muted-foreground">{case_.functional_limitations}</p>
                 </div>
               )}
             </CardContent>
@@ -338,20 +345,20 @@ export default function CaseDetail() {
                   ) : (
                     <div className="space-y-4 mt-4">
                       {tasks.map((task) => {
-                        const StatusIcon = taskStatusConfig[task.status].icon;
+                        const StatusIcon = taskStatusConfig[task.task_status].icon;
                         return (
                           <Card key={task.id}>
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between">
-                                <CardTitle className="text-lg">{task.titel}</CardTitle>
+                                <CardTitle className="text-lg">{task.title}</CardTitle>
                                 <Select 
-                                  value={task.status} 
+                                  value={task.task_status} 
                                   onValueChange={(v) => handleTaskStatusChange(task.id, v as TaskStatus)}
                                 >
                                   <SelectTrigger className="w-32">
                                     <div className="flex items-center gap-2">
-                                      <StatusIcon className={`h-4 w-4 ${taskStatusConfig[task.status].color}`} />
-                                      <span>{taskStatusConfig[task.status].label}</span>
+                                      <StatusIcon className={`h-4 w-4 ${taskStatusConfig[task.task_status].color}`} />
+                                      <span>{taskStatusConfig[task.task_status].label}</span>
                                     </div>
                                   </SelectTrigger>
                                   <SelectContent>
@@ -363,7 +370,7 @@ export default function CaseDetail() {
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-2">
-                              <p className="text-sm text-muted-foreground">{task.beschrijving}</p>
+                              <p className="text-sm text-muted-foreground">{task.description}</p>
                               <div className="flex items-center gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -372,7 +379,7 @@ export default function CaseDetail() {
                                 <div className="flex items-center gap-2">
                                   <User className="h-4 w-4 text-muted-foreground" />
                                   <Input
-                                    value={task.toegewezen_aan || ''}
+                                    value={task.assigned_to || ''}
                                     onChange={(e) => handleTaskAssignment(task.id, e.target.value)}
                                     placeholder="Niet toegewezen"
                                     className="h-7 w-40 text-sm"
@@ -414,11 +421,13 @@ export default function CaseDetail() {
                               <Badge className={eventTypeConfig[event.event_type].color}>
                                 {eventTypeConfig[event.event_type].label}
                               </Badge>
-                              <span className="text-sm text-muted-foreground">
-                                {format(new Date(event.created_at), 'dd MMM yyyy HH:mm', { locale: nl })}
-                              </span>
+                              {event.created_at && (
+                                <span className="text-sm text-muted-foreground">
+                                  {format(new Date(event.created_at), 'dd MMM yyyy HH:mm', { locale: nl })}
+                                </span>
+                              )}
                             </div>
-                            <p className="text-sm">{event.beschrijving}</p>
+                            <p className="text-sm">{event.description}</p>
                           </div>
                         </div>
                       </CardContent>
