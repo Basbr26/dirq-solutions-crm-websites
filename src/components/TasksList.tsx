@@ -44,7 +44,8 @@ export function TasksList({ tasks }: TasksListProps) {
     .filter(task => {
       if (statusFilter === 'all') return true;
       if (statusFilter === 'overdue') {
-        return task.deadline && isPast(new Date(task.deadline)) && task.task_status !== 'afgerond';
+        // Overdue: deadline in past and not completed
+        return task.deadline && isPast(new Date(task.deadline)) && (task.task_status === 'open' || task.task_status === 'in_progress');
       }
       return task.task_status === statusFilter;
     })
