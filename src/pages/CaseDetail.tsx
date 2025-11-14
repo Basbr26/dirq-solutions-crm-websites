@@ -18,7 +18,7 @@ import { DocumentList } from '@/components/DocumentList';
 import { WetPoortwachterInfo } from '@/components/WetPoortwachterInfo';
 import { toast as sonnerToast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { getCaseDocuments, getCaseTimeline, updateTaskStatus, updateCaseStatus } from '@/lib/supabaseHelpers';
 
 const statusConfig = {
