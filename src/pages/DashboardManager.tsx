@@ -197,7 +197,7 @@ export default function DashboardManager() {
                     onClick={() => navigate(`/case/${task.case_id}`)}
                   >
                     <div>
-                      <p className="font-medium text-foreground">{task.titel}</p>
+                      <p className="font-medium text-foreground">{task.title}</p>
                       <p className="text-sm text-muted-foreground">
                         Deadline: {getDeadlineLabel(task.deadline)}
                       </p>

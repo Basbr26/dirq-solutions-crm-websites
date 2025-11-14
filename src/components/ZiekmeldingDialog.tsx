@@ -35,6 +35,7 @@ interface Employee {
   voornaam: string;
   achternaam: string;
   email: string;
+  user_roles?: { role: string }[];
 }
 
 export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
@@ -64,11 +65,16 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, voornaam, achternaam, email')
+        .select('id, voornaam, achternaam, email, user_roles!inner(role)')
         .order('voornaam');
-      
+
       if (error) throw error;
-      setEmployees(data || []);
+      // user_roles bevat nu alleen 'medewerker' door de inner join
+      // Fallback: filter alleen medewerkers met geldige user_roles array
+      const medewerkers = (Array.isArray(data) ? data : []).filter(
+        (emp: any) => Array.isArray(emp.user_roles) && emp.user_roles.some((r: any) => r.role === 'medewerker')
+      );
+      setEmployees(medewerkers);
     } catch (error) {
       console.error('Error loading employees:', error);
       toast({

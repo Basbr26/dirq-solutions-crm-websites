@@ -42,7 +42,7 @@ export function WetPoortwachterInfo() {
                   <Calendar className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
                   <div>
                     <span className="font-medium">Dag {template.deadlineDays}:</span>{' '}
-                    {template.titel}
+                    {template.title}
                   </div>
                 </li>
               ))}

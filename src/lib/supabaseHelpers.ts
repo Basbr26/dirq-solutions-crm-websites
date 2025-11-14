@@ -8,8 +8,8 @@ import { defaultTaskTemplates } from './taskTemplates';
 export async function generateInitialTasks(caseId: string, startDate: string, assignedTo: string) {
   const tasks = defaultTaskTemplates.map(template => ({
     case_id: caseId,
-    title: template.titel,
-    description: template.beschrijving,
+    title: template.title,
+    description: template.description,
     deadline: calculateDeadline(startDate, template.deadlineDays),
     task_status: 'open' as const,
     assigned_to: assignedTo,
