@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { defaultTaskTemplates } from '@/lib/taskTemplates';
 
 interface TaskDialogProps {
   onSubmit: (data: {
@@ -17,12 +19,37 @@ interface TaskDialogProps {
 
 export function TaskDialog({ onSubmit }: TaskDialogProps) {
   const [open, setOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('custom');
   const [formData, setFormData] = useState({
     titel: '',
     beschrijving: '',
     deadline: '',
     toegewezen_aan: '',
   });
+
+  const handleTemplateChange = (value: string) => {
+    setSelectedTemplate(value);
+    if (value === 'custom') {
+      setFormData({
+        titel: '',
+        beschrijving: '',
+        deadline: '',
+        toegewezen_aan: '',
+      });
+    } else {
+      const templateIndex = parseInt(value);
+      const template = defaultTaskTemplates[templateIndex];
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + template.deadlineDays);
+      
+      setFormData({
+        titel: template.titel,
+        beschrijving: template.beschrijving,
+        deadline: deadline.toISOString().split('T')[0],
+        toegewezen_aan: '',
+      });
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +74,22 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
           <DialogTitle>Nieuwe taak toevoegen</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="template">Taak template</Label>
+            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Kies een template of maak custom taak" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="custom">Aangepaste taak</SelectItem>
+                {defaultTaskTemplates.map((template, index) => (
+                  <SelectItem key={index} value={index.toString()}>
+                    {template.titel} (dag {template.deadlineDays})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label htmlFor="titel">Titel *</Label>
             <Input

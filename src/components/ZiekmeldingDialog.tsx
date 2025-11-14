@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus } from 'lucide-react';
+import { Plus, Info } from 'lucide-react';
 import { z } from 'zod';
+import { defaultTaskTemplates } from '@/lib/taskTemplates';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ziekmeldingSchema = z.object({
   medewerker_naam: z.string().trim().min(2, 'Naam moet minimaal 2 karakters zijn').max(100),
@@ -74,11 +77,12 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
           Nieuwe ziekmelding
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Nieuwe ziekmelding registreren</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="medewerker_naam">Naam medewerker *</Label>
             <Input
@@ -133,15 +137,30 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
             )}
           </div>
 
-          <div className="flex justify-end gap-3">
+          <Alert className="border-primary/50">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Wet Poortwachter - Automatische taken</AlertTitle>
+            <AlertDescription className="mt-2">
+              <p className="text-sm mb-2">Bij deze ziekmelding worden automatisch de volgende taken aangemaakt volgens de Wet Poortwachter:</p>
+              <ul className="space-y-1 text-sm">
+                {defaultTaskTemplates.map((template, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <span className="text-muted-foreground min-w-[60px]">Dag {template.deadlineDays}:</span>
+                    <span>{template.titel}</span>
+                  </li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+
+          <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuleren
             </Button>
-            <Button type="submit">
-              Registreren
-            </Button>
+            <Button type="submit">Ziekmelding registreren</Button>
           </div>
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

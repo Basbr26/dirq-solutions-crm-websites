@@ -16,6 +16,7 @@ import { CaseStatus, TaskStatus, Task, Document } from '@/types/sickLeave';
 import { useToast } from '@/hooks/use-toast';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { DocumentList } from '@/components/DocumentList';
+import { WetPoortwachterInfo } from '@/components/WetPoortwachterInfo';
 import { toast as sonnerToast } from 'sonner';
 
 const statusConfig = {
@@ -230,65 +231,72 @@ export default function CaseDetail() {
             </TabsList>
             
             <TabsContent value="tasks" className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Taken ({caseTasks.length})</h3>
-                <TaskDialog onSubmit={handleNewTask} />
-              </div>
-              
-              {caseTasks.length === 0 ? (
-                <Card>
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    Geen taken beschikbaar
-                  </CardContent>
-                </Card>
-              ) : (
-                caseTasks.map((task) => {
-                  const StatusIcon = taskStatusConfig[task.status].icon;
-                  return (
-                    <Card key={task.id}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">{task.titel}</CardTitle>
-                          <Select 
-                            value={task.status} 
-                            onValueChange={(v) => handleTaskStatusChange(task.id, v as TaskStatus)}
-                          >
-                            <SelectTrigger className="w-32">
-                              <div className="flex items-center gap-2">
-                                <StatusIcon className={`h-4 w-4 ${taskStatusConfig[task.status].color}`} />
-                                <span>{taskStatusConfig[task.status].label}</span>
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Taken ({caseTasks.length})</CardTitle>
+                    <TaskDialog onSubmit={handleNewTask} />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <WetPoortwachterInfo />
+                  
+                  {caseTasks.length === 0 ? (
+                    <div className="py-8 text-center text-muted-foreground">
+                      Geen taken beschikbaar
+                    </div>
+                  ) : (
+                    <div className="space-y-4 mt-4">
+                      {caseTasks.map((task) => {
+                        const StatusIcon = taskStatusConfig[task.status].icon;
+                        return (
+                          <Card key={task.id}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <CardTitle className="text-lg">{task.titel}</CardTitle>
+                                <Select 
+                                  value={task.status} 
+                                  onValueChange={(v) => handleTaskStatusChange(task.id, v as TaskStatus)}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <div className="flex items-center gap-2">
+                                      <StatusIcon className={`h-4 w-4 ${taskStatusConfig[task.status].color}`} />
+                                      <span>{taskStatusConfig[task.status].label}</span>
+                                    </div>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="open">Open</SelectItem>
+                                    <SelectItem value="in_progress">Bezig</SelectItem>
+                                    <SelectItem value="completed">Voltooid</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="open">Open</SelectItem>
-                              <SelectItem value="in_progress">Bezig</SelectItem>
-                              <SelectItem value="completed">Voltooid</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <p className="text-sm text-muted-foreground">{task.beschrijving}</p>
-                        <div className="flex items-center gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span>Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <Input
-                              value={task.toegewezen_aan || ''}
-                              onChange={(e) => handleTaskAssignment(task.id, e.target.value)}
-                              placeholder="Niet toegewezen"
-                              className="h-7 w-40 text-sm"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                              <p className="text-sm text-muted-foreground">{task.beschrijving}</p>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span>Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-muted-foreground" />
+                                  <Input
+                                    value={task.toegewezen_aan || ''}
+                                    onChange={(e) => handleTaskAssignment(task.id, e.target.value)}
+                                    placeholder="Niet toegewezen"
+                                    className="h-7 w-40 text-sm"
+                                  />
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="documents" className="space-y-4">
