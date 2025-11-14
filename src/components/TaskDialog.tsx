@@ -48,17 +48,14 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, voornaam, achternaam, email, user_roles!inner(role)')
+        .select('id, voornaam, achternaam, email, user_roles:user_roles!user_id(role)')
         .order('voornaam');
 
       if (error) throw error;
-      // user_roles bevat nu alleen HR/manager door de inner join
-      // Fallback: filter alleen HR/manager met geldige user_roles array
+      // user_roles bevat nu alleen HR/manager door de juiste join
       let verantwoordelijken: Assignee[] = [];
       if (Array.isArray(data)) {
         verantwoordelijken = data.filter((emp: Assignee) => {
-          // Fallback: if user_roles join fails, skip filtering
-          if (!emp.user_roles || typeof emp.user_roles === 'string') return true;
           return Array.isArray(emp.user_roles) && (emp.user_roles as { role: string }[]).some((r) => r.role === 'hr' || r.role === 'manager');
         });
       }

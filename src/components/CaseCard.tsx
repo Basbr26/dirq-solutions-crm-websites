@@ -8,6 +8,7 @@ import { nl } from 'date-fns/locale';
 interface CaseCardProps {
   case_: SickLeaveCase;
   onClick: () => void;
+  onDelete?: () => void;
 }
 
 const statusConfig = {
@@ -28,9 +29,21 @@ export function CaseCard({ case_, onClick }: CaseCardProps) {
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow"
+      className="cursor-pointer hover:shadow-md transition-shadow relative"
       onClick={onClick}
     >
+      {typeof onDelete === 'function' && (
+        <button
+          className="absolute top-2 right-2 z-10 opacity-80 bg-destructive text-white rounded px-2 py-1 text-xs shadow hover:bg-destructive/80 transition"
+          title="Verwijder ziekmelding"
+          onClick={e => {
+            e.stopPropagation();
+            onDelete();
+          }}
+        >
+          Verwijder
+        </button>
+      )}
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
@@ -49,7 +62,6 @@ export function CaseCard({ case_, onClick }: CaseCardProps) {
             Start: {format(new Date(case_.start_date), 'dd MMMM yyyy', { locale: nl })}
           </span>
         </div>
-        
         {case_.end_date && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
@@ -58,14 +70,12 @@ export function CaseCard({ case_, onClick }: CaseCardProps) {
             </span>
           </div>
         )}
-
         {case_.functional_limitations && (
           <div className="flex items-start gap-2 text-sm">
             <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
             <span className="line-clamp-2">{case_.functional_limitations}</span>
           </div>
         )}
-
         <div className="pt-2 text-sm font-medium">
           {case_.end_date ? `${daysOut} dagen verzuim` : `${daysOut} dagen (lopend)`}
         </div>

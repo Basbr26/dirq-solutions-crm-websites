@@ -22,11 +22,27 @@ export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
       if (!window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen?')) return;
       try {
-        const { error } = await supabase
+        // Verwijder eerst alle gerelateerde taken
+        const { error: tasksError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('case_id', caseId);
+        if (tasksError) throw tasksError;
+
+        // Verwijder alle gerelateerde timeline_events
+        const { error: timelineError } = await supabase
+          .from('timeline_events')
+          .delete()
+          .eq('case_id', caseId);
+        if (timelineError) throw timelineError;
+
+        // Verwijder nu de case zelf
+        const { error: caseError } = await supabase
           .from('sick_leave_cases')
           .delete()
           .eq('id', caseId);
-        if (error) throw error;
+        if (caseError) throw caseError;
+
         toast.success('Ziekmelding verwijderd');
         loadCases();
       } catch (error) {
@@ -306,17 +322,8 @@ export default function DashboardHR() {
                     <CaseCard 
                       case_={caseItem} 
                       onClick={() => navigate(`/case/${caseItem.id}`)}
+                      onDelete={() => handleDeleteCase(caseItem.id)}
                     />
-                    <button
-                      className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 bg-destructive text-white rounded px-2 py-1 text-xs shadow hover:bg-destructive/80 transition"
-                      title="Verwijder ziekmelding"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteCase(caseItem.id);
-                      }}
-                    >
-                      Verwijder
-                    </button>
                   </div>
                 ))}
               </div>
