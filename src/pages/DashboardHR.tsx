@@ -12,7 +12,7 @@ import { SickLeaveCase, CaseStatus, Task } from '@/types/sickLeave';
 import { Search, TrendingUp, Users, Clock, BarChart3, Download } from 'lucide-react';
 import { exportCasesToCSV, exportTasksToCSV } from '@/lib/exportUtils';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { generateInitialTasks, createTimelineEvent } from '@/lib/supabaseHelpers';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';

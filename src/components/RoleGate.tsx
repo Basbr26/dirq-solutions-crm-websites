@@ -1,5 +1,4 @@
-import { useAuth } from '@/hooks/useAuth';
-import { AppRole } from '@/lib/supabase';
+import { useAuth, AppRole } from '@/hooks/useAuth';
 
 interface RoleGateProps {
   children: React.ReactNode;

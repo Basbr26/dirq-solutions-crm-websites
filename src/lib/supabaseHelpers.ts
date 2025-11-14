@@ -1,18 +1,18 @@
-import { supabase } from './supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { defaultTaskTemplates } from './taskTemplates';
 
 /**
  * Genereert automatisch taken op basis van de Wet Poortwachter templates
  * Wordt aangeroepen bij het aanmaken van een nieuwe ziekmelding
  */
-export async function generateInitialTasks(caseId: string, startDate: string) {
+export async function generateInitialTasks(caseId: string, startDate: string, assignedTo: string) {
   const tasks = defaultTaskTemplates.map(template => ({
     case_id: caseId,
-    titel: template.titel,
-    beschrijving: template.beschrijving,
+    title: template.titel,
+    description: template.beschrijving,
     deadline: calculateDeadline(startDate, template.deadlineDays),
-    status: 'open' as const,
-    toegewezen_aan: null,
+    task_status: 'open' as const,
+    assigned_to: assignedTo,
   }));
 
   const { data, error } = await supabase
@@ -38,7 +38,7 @@ export function calculateDeadline(startDate: string, daysAfter: number): string 
  */
 export async function createTimelineEvent(
   caseId: string,
-  eventType: 'ziekmelding' | 'gesprek' | 'herstel' | 'afmelding' | 'notitie' | 'document_upload' | 'task_completed' | 'status_change',
+  eventType: 'ziekmelding' | 'gesprek' | 'document_toegevoegd' | 'taak_afgerond' | 'herstelmelding' | 'evaluatie' | 'statuswijziging',
   beschrijving: string,
   createdBy: string
 ) {
@@ -47,7 +47,7 @@ export async function createTimelineEvent(
     .insert({
       case_id: caseId,
       event_type: eventType,
-      beschrijving,
+      description: beschrijving,
       created_by: createdBy,
     })
     .select()
@@ -65,7 +65,7 @@ export async function getManagerCases(managerId: string) {
     .from('sick_leave_cases')
     .select(`
       *,
-      profiles!sick_leave_cases_medewerker_id_fkey (
+      employee:profiles!sick_leave_cases_employee_id_fkey (
         id,
         voornaam,
         achternaam,
@@ -73,7 +73,7 @@ export async function getManagerCases(managerId: string) {
         foto_url
       )
     `)
-    .eq('manager_id', managerId)
+    .eq('profiles.manager_id', managerId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -84,16 +84,34 @@ export async function getManagerCases(managerId: string) {
  * Haalt alle taken op voor een manager (van zijn team)
  */
 export async function getManagerTasks(managerId: string) {
+  // First get all cases for this manager
+  const { data: cases, error: casesError } = await supabase
+    .from('sick_leave_cases')
+    .select('id')
+    .eq('profiles.manager_id', managerId);
+
+  if (casesError) throw casesError;
+  
+  const caseIds = cases?.map(c => c.id) || [];
+  
+  if (caseIds.length === 0) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('tasks')
     .select(`
       *,
-      sick_leave_cases!inner (
-        medewerker_naam,
-        manager_id
+      case:sick_leave_cases!inner (
+        id,
+        employee_id,
+        employee:profiles!sick_leave_cases_employee_id_fkey (
+          voornaam,
+          achternaam
+        )
       )
     `)
-    .eq('sick_leave_cases.manager_id', managerId)
+    .in('case_id', caseIds)
     .order('deadline', { ascending: true });
 
   if (error) throw error;
@@ -106,12 +124,21 @@ export async function getManagerTasks(managerId: string) {
 export async function getEmployeeCase(employeeId: string) {
   const { data, error } = await supabase
     .from('sick_leave_cases')
-    .select('*')
-    .eq('medewerker_id', employeeId)
-    .eq('status', 'actief')
-    .single();
+    .select(`
+      *,
+      employee:profiles!sick_leave_cases_employee_id_fkey (
+        voornaam,
+        achternaam,
+        email
+      )
+    `)
+    .eq('employee_id', employeeId)
+    .in('case_status', ['actief', 'herstel_gemeld'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+  if (error) throw error;
   return data;
 }
 
@@ -126,7 +153,8 @@ export async function getCaseDocuments(caseId: string, userRole: string) {
 
   // Medewerkers en managers mogen geen medische documenten zien
   if (userRole !== 'hr') {
-    query = query.neq('categorie', 'medisch');
+    // Filter out medical document types if needed
+    query = query.in('document_type', ['probleemanalyse', 'plan_van_aanpak', 'evaluatie_3_maanden', 'evaluatie_6_maanden', 'evaluatie_1_jaar', 'herstelmelding', 'overig']);
   }
 
   const { data, error } = await query.order('created_at', { ascending: false });
@@ -143,7 +171,7 @@ export async function getCaseTimeline(caseId: string) {
     .from('timeline_events')
     .select(`
       *,
-      profiles!timeline_events_created_by_fkey (
+      creator:profiles!timeline_events_created_by_fkey (
         voornaam,
         achternaam
       )
@@ -156,64 +184,78 @@ export async function getCaseTimeline(caseId: string) {
 }
 
 /**
- * Update de status van een taak en creëer een timeline event
+ * Update taak status
  */
 export async function updateTaskStatus(
   taskId: string,
-  status: 'open' | 'in_progress' | 'completed',
+  status: 'open' | 'in_progress' | 'afgerond',
   caseId: string,
   userId: string,
   taskTitle: string
 ) {
-  // Update task
-  const { error: taskError } = await supabase
+  const updates: any = {
+    task_status: status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (status === 'afgerond') {
+    updates.completed_at = new Date().toISOString();
+    updates.completed_by = userId;
+  }
+
+  const { error } = await supabase
     .from('tasks')
-    .update({ 
-      status,
-      completed_at: status === 'completed' ? new Date().toISOString() : null
-    })
+    .update(updates)
     .eq('id', taskId);
 
-  if (taskError) throw taskError;
+  if (error) throw error;
 
-  // Create timeline event if completed
-  if (status === 'completed') {
+  // Create timeline event for completed tasks
+  if (status === 'afgerond') {
     await createTimelineEvent(
       caseId,
-      'task_completed',
-      `Taak voltooid: ${taskTitle}`,
+      'taak_afgerond',
+      `Taak afgerond: ${taskTitle}`,
       userId
     );
   }
 }
 
 /**
- * Update de status van een case en creëer een timeline event
+ * Update case status
  */
 export async function updateCaseStatus(
   caseId: string,
-  status: 'actief' | 'herstel' | 'afgesloten',
+  status: 'actief' | 'herstel_gemeld' | 'gesloten',
   userId: string
 ) {
-  // Update case
-  const { error: caseError } = await supabase
+  const updates: any = {
+    case_status: status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (status === 'gesloten') {
+    updates.end_date = new Date().toISOString().split('T')[0];
+  }
+
+  const { error } = await supabase
     .from('sick_leave_cases')
-    .update({ status })
+    .update(updates)
     .eq('id', caseId);
 
-  if (caseError) throw caseError;
+  if (error) throw error;
 
   // Create timeline event
   const statusLabels = {
-    actief: 'Case status gewijzigd naar Actief',
-    herstel: 'Case status gewijzigd naar Herstel',
-    afgesloten: 'Case afgesloten',
+    actief: 'Actief',
+    herstel_gemeld: 'Herstel gemeld',
+    gesloten: 'Gesloten',
   };
 
   await createTimelineEvent(
     caseId,
-    'status_change',
-    statusLabels[status],
+    'statuswijziging',
+    `Status gewijzigd naar: ${statusLabels[status]}`,
     userId
   );
 }

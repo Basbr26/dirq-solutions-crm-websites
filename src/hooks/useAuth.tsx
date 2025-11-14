@@ -1,6 +1,21 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { AppRole, Profile, supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+
+export type AppRole = 'hr' | 'manager' | 'medewerker';
+
+export interface Profile {
+  id: string;
+  voornaam: string;
+  achternaam: string;
+  email: string;
+  telefoon?: string | null;
+  functie?: string | null;
+  manager_id?: string | null;
+  foto_url?: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
