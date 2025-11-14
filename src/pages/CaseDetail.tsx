@@ -198,7 +198,7 @@ export default function CaseDetail() {
           task_status,
           case_id,
           assigned_to,
-          assigned_user:profiles!tasks_assigned_to_fkey (
+          assigned_user:profiles (
             id,
             voornaam,
             achternaam,

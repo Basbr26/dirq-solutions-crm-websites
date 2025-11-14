@@ -80,7 +80,7 @@ const LoadingScreen = ({ onComplete, duration = 3000 }: LoadingScreenProps) => {
 
           {/* Magnifying glass handle (line drawing animation) */}
           <motion.line
-            x1="136"
+            x1="135"
             y1="121"
             x2="175"
             y2="160"
