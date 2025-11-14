@@ -1,4 +1,4 @@
-import { SickLeaveCase, Task, TimelineEvent } from '@/types/sickLeave';
+import { SickLeaveCase, Task, TimelineEvent, Document } from '@/types/sickLeave';
 
 export const mockSickLeaveCases: SickLeaveCase[] = [
   {
@@ -142,5 +142,30 @@ export const mockTimelineEvents: TimelineEvent[] = [
     beschrijving: 'Status gewijzigd naar herstel. Re-integratie start volgende week.',
     created_by: 'mock-user-id-123',
     created_at: '2025-11-12T14:25:00Z',
+  },
+];
+
+export const mockDocuments: Document[] = [
+  {
+    id: 'doc-1',
+    case_id: 'case-1',
+    naam: 'Medische verklaring.pdf',
+    categorie: 'medisch',
+    bestand_url: '/placeholder.svg',
+    bestand_type: 'application/pdf',
+    grootte: 245000,
+    uploaded_by: 'HR Specialist',
+    created_at: '2025-11-10T09:00:00Z',
+  },
+  {
+    id: 'doc-2',
+    case_id: 'case-1',
+    naam: 'Re-integratie plan.docx',
+    categorie: 're-integratie',
+    bestand_url: '/placeholder.svg',
+    bestand_type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    grootte: 156000,
+    uploaded_by: 'HR Specialist',
+    created_at: '2025-11-11T11:30:00Z',
   },
 ];

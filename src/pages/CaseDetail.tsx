@@ -11,9 +11,12 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Calendar, User, FileText, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
-import { mockSickLeaveCases, mockTasks, mockTimelineEvents } from '@/lib/mockData';
-import { CaseStatus, TaskStatus, Task } from '@/types/sickLeave';
+import { mockSickLeaveCases, mockTasks, mockTimelineEvents, mockDocuments } from '@/lib/mockData';
+import { CaseStatus, TaskStatus, Task, Document } from '@/types/sickLeave';
 import { useToast } from '@/hooks/use-toast';
+import { DocumentUpload } from '@/components/DocumentUpload';
+import { DocumentList } from '@/components/DocumentList';
+import { toast as sonnerToast } from 'sonner';
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
@@ -42,7 +45,9 @@ export default function CaseDetail() {
   
   const case_ = mockSickLeaveCases.find(c => c.id === id);
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
   const caseTasks = tasks.filter(t => t.case_id === id);
+  const caseDocuments = documents.filter(d => d.case_id === id);
   const caseEvents = mockTimelineEvents.filter(e => e.case_id === id).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
@@ -113,6 +118,29 @@ export default function CaseDetail() {
       title: 'Taak toegevoegd',
       description: 'Nieuwe taak is succesvol aangemaakt',
     });
+  };
+
+  const handleDocumentUpload = (data: { naam: string; categorie: any; file: File }) => {
+    if (!case_) return;
+    
+    const newDoc: Document = {
+      id: `doc-${Date.now()}`,
+      case_id: case_.id,
+      naam: data.naam,
+      categorie: data.categorie,
+      bestand_url: URL.createObjectURL(data.file),
+      bestand_type: data.file.type,
+      grootte: data.file.size,
+      uploaded_by: 'Huidige gebruiker',
+      created_at: new Date().toISOString(),
+    };
+    setDocuments([...documents, newDoc]);
+    sonnerToast.success('Document geüpload');
+  };
+
+  const handleDocumentDelete = (docId: string) => {
+    setDocuments(documents.filter(d => d.id !== docId));
+    sonnerToast.success('Document verwijderd');
   };
 
   const daysOut = case_.eind_datum 
@@ -195,8 +223,9 @@ export default function CaseDetail() {
 
           {/* Tabs */}
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="tasks">Taken ({caseTasks.length})</TabsTrigger>
+              <TabsTrigger value="documents">Documenten ({caseDocuments.length})</TabsTrigger>
               <TabsTrigger value="timeline">Timeline ({caseEvents.length})</TabsTrigger>
             </TabsList>
             
@@ -260,6 +289,13 @@ export default function CaseDetail() {
                   );
                 })
               )}
+            </TabsContent>
+
+            <TabsContent value="documents" className="space-y-4">
+              <div className="flex justify-end">
+                <DocumentUpload onUpload={handleDocumentUpload} />
+              </div>
+              <DocumentList documents={caseDocuments} onDelete={handleDocumentDelete} />
             </TabsContent>
             
             <TabsContent value="timeline" className="space-y-4">
