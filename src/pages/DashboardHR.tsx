@@ -101,7 +101,7 @@ export default function DashboardHR() {
       }
 
       // Generate initial tasks
-      await generateInitialTasks(newCase.id, newCase.start_date);
+      await generateInitialTasks(newCase.id, newCase.start_date, user.id);
       
       // Create timeline event
       await createTimelineEvent(
@@ -114,9 +114,15 @@ export default function DashboardHR() {
       toast.success('Ziekmelding succesvol aangemaakt');
       loadCases();
       loadTasks();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating case:', error);
-      toast.error(`Fout bij aanmaken ziekmelding: ${error.message || 'Onbekende fout'}`);
+      toast.error(
+        `Fout bij aanmaken ziekmelding: ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message?: string }).message
+            : 'Onbekende fout'
+        }`
+      );
     }
   };
 
