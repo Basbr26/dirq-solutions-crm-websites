@@ -102,21 +102,25 @@ src/
 │   ├── DocumentList.tsx              # Documenten overzicht
 │   ├── DocumentUpload.tsx            # Document upload widget
 │   ├── NavLink.tsx                   # Navigatie links
-│   ├── ProtectedRoute.tsx            # Auth route wrapper
+│   ├── ProtectedRoute.tsx            # Auth route wrapper met role-based redirect
+│   ├── RoleGate.tsx                  # ✅ Conditional rendering op basis van rol
 │   ├── TaskDialog.tsx                # Taak aanmaken/bewerken
 │   ├── WetPoortwachterInfo.tsx       # Wet info component
 │   └── ZiekmeldingDialog.tsx         # Ziekmelding aanmaken
 ├── pages/
-│   ├── Auth.tsx                      # Login pagina (basis)
+│   ├── Auth.tsx                      # Login/signup pagina met Supabase
 │   ├── CaseDetail.tsx                # Case detail met tabs
-│   ├── DashboardHR.tsx               # HR dashboard
-│   ├── DashboardManager.tsx          # Manager dashboard (leeg)
-│   └── DashboardMedewerker.tsx       # Medewerker dashboard (leeg)
+│   ├── DashboardHR.tsx               # HR dashboard (compleet)
+│   ├── DashboardManager.tsx          # Manager dashboard (UI klaar, data fetching TODO)
+│   └── DashboardMedewerker.tsx       # Medewerker dashboard (UI klaar, data fetching TODO)
+├── hooks/
+│   └── useAuth.tsx                   # ✅ Supabase auth hook met role management
 ├── lib/
 │   ├── exportUtils.ts                # CSV export functies
 │   ├── mockData.ts                   # Mock data voor development
-│   ├── taskTemplates.ts              # Wet Poortwachter templates
-│   └── supabase.ts                   # Supabase client (nog niet actief)
+│   ├── supabase.ts                   # Supabase client configuratie
+│   ├── supabaseHelpers.ts            # ✅ Helper functies voor CRUD operations
+│   └── taskTemplates.ts              # Wet Poortwachter templates
 └── types/
     └── sickLeave.ts                  # TypeScript types
 ```
@@ -161,22 +165,26 @@ src/
   - Secure URLs voor downloads
   - File type en size validatie server-side
 
-### Prioriteit 2: Authenticatie & Autorisatie
-- [ ] **Auth Systeem**
-  - Login/logout functionaliteit
-  - User registratie
-  - Password reset flow
-  - Session management
+### Prioriteit 2: Authenticatie & Autorisatie ✅ FRONTEND KLAAR
+- [x] **Auth Systeem (Frontend)**
+  - ✅ Login/logout functionaliteit via `useAuth` hook
+  - ✅ User registratie met email/password
+  - ✅ Password reset flow (Supabase magic link)
+  - ✅ Session management met auto-refresh
+  - ⏳ **Vereist:** Supabase setup met Auth enabled
   
-- [ ] **Role-Based Access Control (RBAC)**
-  - HR: volledige toegang tot alle cases
-  - Manager: toegang tot eigen team cases
-  - Medewerker: alleen eigen cases zien
+- [x] **Role-Based Access Control (RBAC) (Frontend)**
+  - ✅ HR: volledige toegang tot alle cases
+  - ✅ Manager: toegang tot eigen team cases (via `getManagerCases()`)
+  - ✅ Medewerker: alleen eigen cases (via `getEmployeeCase()`)
+  - ✅ `RoleGate` component voor conditional rendering
+  - ⏳ **Vereist:** RLS policies in database (zie `SUPABASE_SETUP.md`)
   
-- [ ] **Protected Routes**
-  - Redirect naar login als niet ingelogd
-  - Role-based route protection
-  - Unauthorized access handling
+- [x] **Protected Routes (Frontend)**
+  - ✅ Redirect naar `/auth` als niet ingelogd
+  - ✅ Role-based route protection in `ProtectedRoute.tsx`
+  - ✅ Automatic redirect naar correct dashboard per rol
+  - ✅ Unauthorized access handling (403 redirect)
 
 ### Prioriteit 3: Notificaties & Alerts
 - [ ] **In-App Notificaties**
@@ -208,30 +216,37 @@ src/
   - Status wijziging → Alle betrokkenen
   - Weekoverzicht → HR met open taken
 
-### Prioriteit 5: Manager Dashboard
+### Prioriteit 5: Manager Dashboard (UI KLAAR)
 - [ ] **Manager Specifieke Features**
-  - Overzicht van team verzuim
-  - Alleen eigen team cases zichtbaar
-  - Team verzuim statistieken
-  - Actiepunten voor manager (goedkeuringen, gesprekken)
+  - ✅ UI klaar in `DashboardManager.tsx`
+  - ✅ `getManagerCases()` helper beschikbaar
+  - ✅ `getManagerTasks()` helper beschikbaar
+  - ⏳ Data fetching moet worden geïmplementeerd
+  - ⏳ Overzicht van team verzuim
+  - ⏳ Team verzuim statistieken
+  - ⏳ Actiepunten voor manager (goedkeuringen, gesprekken)
   
 - [ ] **Team Management**
-  - Lijst van teamleden
-  - Verzuimgeschiedenis per teamlid
-  - Gesprek planning functionaliteit
+  - ⏳ Lijst van teamleden
+  - ⏳ Verzuimgeschiedenis per teamlid
+  - ⏳ Gesprek planning functionaliteit
 
-### Prioriteit 6: Medewerker Dashboard
+### Prioriteit 6: Medewerker Dashboard (UI KLAAR)
 - [ ] **Medewerker View**
-  - Alleen eigen verzuimcase(s) zichtbaar
-  - Status van eigen re-integratie traject
-  - Upload eigen documenten
-  - Communicatie met HR/Manager
+  - ✅ UI klaar in `DashboardMedewerker.tsx`
+  - ✅ `getEmployeeCase()` helper beschikbaar
+  - ✅ `getCaseDocuments()` helper beschikbaar
+  - ✅ `getCaseTimeline()` helper beschikbaar
+  - ⏳ Data fetching moet worden geïmplementeerd
+  - ⏳ Status van eigen re-integratie traject
+  - ⏳ Upload eigen documenten (Storage integratie)
+  - ⏳ Communicatie met HR/Manager
   
 - [ ] **Self-Service**
-  - Eigen notities toevoegen
-  - Voortgang inzien
-  - Gesprek afspraken bekijken
-  - Documenten delen met HR
+  - ⏳ Eigen notities toevoegen
+  - ⏳ Voortgang inzien
+  - ⏳ Gesprek afspraken bekijken
+  - ⏳ Documenten delen met HR
 
 ### Prioriteit 7: Advanced Features
 - [ ] **Wet Poortwachter Compliance Dashboard**
@@ -315,33 +330,94 @@ src/
 
 ## 📊 Huidige Status
 
-**✅ Volledig Geïmplementeerd (Frontend):**
-- Frontend UI & Components compleet
-- Authenticatie flow (login/signup met Supabase)
-- Role-based routing (HR/Manager/Medewerker)
-- Protected routes + RoleGate component
-- Mock data werkend (kan worden vervangen)
-- Document management UI
-- Analytics & Reporting
-- Wet Poortwachter templates & automatisering
-- Complete Supabase helper library (`supabaseHelpers.ts`)
+### ✅ FASE 1: Frontend UI - COMPLEET
+- ✅ Alle dashboards (HR, Manager, Medewerker) UI gebouwd
+- ✅ Case detail pagina met 4 tabs (Overzicht, Taken, Timeline, Documenten)
+- ✅ Alle dialogs en forms (ZiekmeldingDialog, TaskDialog, etc.)
+- ✅ Analytics dashboard met recharts
+- ✅ Document management UI (upload, lijst, preview)
+- ✅ Responsive design + dark/light mode
+- ✅ Export functionaliteit (CSV)
 
-**📋 Documentatie Beschikbaar:**
-- ✅ `SUPABASE_SETUP.md` - Complete database setup (SQL scripts)
-- ✅ `IMPLEMENTATIE_CHECKLIST.md` - Stap-voor-stap guide
-- ✅ `PROJECT_STATUS.md` - Project overzicht
+### ✅ FASE 2: Authenticatie & Rollen - FRONTEND KLAAR
+**Frontend Implementatie:**
+- ✅ `useAuth.tsx` - Supabase auth hook met session management
+- ✅ `ProtectedRoute.tsx` - Role-based route protection
+- ✅ `RoleGate.tsx` - Conditional rendering component
+- ✅ `Auth.tsx` - Login/signup pagina
+- ✅ Role-based redirects (HR → `/dashboard/hr`, etc.)
+- ✅ Auto-redirect naar correct dashboard na login
 
-**🔨 Jouw Acties (Backend Setup):**
-1. Voer alle SQL uit `SUPABASE_SETUP.md` uit
-2. Vul `.env` bestand in met Supabase credentials
-3. Maak eerste gebruiker en wijs rol toe
-4. Test functionaliteiten per rol
+**Helper Functies in `supabaseHelpers.ts`:**
+- ✅ `generateInitialTasks()` - Automatische taakgeneratie bij nieuwe case
+- ✅ `calculateDeadline()` - Deadline berekening op basis van template
+- ✅ `createTimelineEvent()` - Timeline event logging
+- ✅ `getManagerCases()` - Cases voor manager's team
+- ✅ `getManagerTasks()` - Taken voor manager
+- ✅ `getEmployeeCase()` - Case voor specifieke medewerker
+- ✅ `getCaseDocuments()` - Documenten per case
+- ✅ `getCaseTimeline()` - Timeline events per case
+- ✅ `updateTaskStatus()` - Taak status update
+- ✅ `updateCaseStatus()` - Case status update
 
-**🎯 Nog Te Implementeren (Na Setup):**
-- Manager dashboard data fetching
-- Medewerker dashboard data fetching  
-- Document upload Supabase Storage integratie
-- Notificatie systeem
-- Email notificaties (edge functions)
+**⏳ Wat Jij Moet Doen (Backend Setup):**
+1. **Supabase Project Setup:**
+   - Voer alle SQL uit `SUPABASE_SETUP.md` uit:
+     - Profiles tabel met role enum
+     - Cases, tasks, timeline_events, documents tabellen
+     - RLS policies voor HR/Manager/Medewerker
+     - Database triggers voor auto-updates
+     - Storage bucket voor documenten
+   
+2. **Environment Variables:**
+   - Kopieer `.env.example` naar `.env`
+   - Vul `VITE_SUPABASE_URL` en `VITE_SUPABASE_ANON_KEY` in
 
-**Geschatte Voortgang:** ~70% (frontend compleet, backend setup vereist)
+3. **Test Gebruiker Aanmaken:**
+   - Voer `create-test-user.sql` uit
+   - Test login met verschillende rollen
+   - Verifieer dat RLS policies werken
+
+4. **Volg `IMPLEMENTATIE_CHECKLIST.md`:**
+   - Stap-voor-stap verificatie
+   - Test elke rol (HR, Manager, Medewerker)
+   - Verifieer data toegang per rol
+
+### 📋 Beschikbare Documentatie
+- ✅ `SUPABASE_SETUP.md` - Volledige database schema + RLS policies
+- ✅ `IMPLEMENTATIE_CHECKLIST.md` - Stap-voor-stap setup guide
+- ✅ `PROJECT_STATUS.md` - Dit bestand
+- ✅ `create-test-user.sql` - Test gebruikers SQL script
+- ✅ `.env.example` - Environment variables template
+
+### ⏳ FASE 3: Manager & Medewerker Dashboards - NA BACKEND SETUP
+**Na jouw Supabase setup moet nog:**
+- [ ] Manager dashboard: Implementeer data fetching met `getManagerCases()` en `getManagerTasks()`
+- [ ] Medewerker dashboard: Implementeer data fetching met `getEmployeeCase()`
+- [ ] Vervang mock data door echte Supabase queries
+- [ ] Test filtering en permissions per rol
+
+### ⏳ FASE 4: Automatisering Wet Poortwachter - NA BACKEND SETUP
+**Na jouw Supabase setup moet nog:**
+- [ ] Test automatische taakgeneratie bij nieuwe ziekmelding
+- [ ] Verifieer deadline berekeningen
+- [ ] Test timeline event tracking
+- [ ] Verifieer dat RPC functie `generate_initial_tasks()` werkt
+
+### 🎯 Toekomstige Features (Later)
+- [ ] Document upload naar Supabase Storage (nu lokaal)
+- [ ] In-app notificaties (toast + notificatie centrum)
+- [ ] Email notificaties (edge functions + Resend/SendGrid)
+- [ ] Deadline waarschuwingen (3 dagen voor deadline)
+- [ ] Advanced analytics en compliance dashboard
+- [ ] Calendar integratie (iCal export)
+- [ ] Bulk actions (meerdere cases tegelijk)
+
+### 📊 Voortgang Overzicht
+- **Frontend:** 100% ✅ (Alle UI, components, routing klaar)
+- **Auth & Roles (Frontend):** 100% ✅ (Wacht op backend setup)
+- **Backend Setup:** 0% ⏳ (Jouw actie: voer SQL uit + .env configureren)
+- **Data Integratie:** 0% ⏳ (Na backend setup: dashboard data fetching)
+- **Advanced Features:** 0% ⏳ (Toekomst: notificaties, emails, etc.)
+
+**Geschatte Totale Voortgang:** ~75% (frontend compleet, backend setup + data integratie vereist)
