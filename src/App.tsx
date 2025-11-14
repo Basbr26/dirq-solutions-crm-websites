@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import DashboardHR from "./pages/DashboardHR";
 import DashboardManager from "./pages/DashboardManager";
 import DashboardMedewerker from "./pages/DashboardMedewerker";
+import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,15 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={['medewerker']}>
                   <DashboardMedewerker />
+                </ProtectedRoute>
+              } 
+            />
+
+            <Route 
+              path="/case/:id" 
+              element={
+                <ProtectedRoute>
+                  <CaseDetail />
                 </ProtectedRoute>
               } 
             />
