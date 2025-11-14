@@ -12,14 +12,19 @@ interface CaseCardProps {
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
-  herstel: { label: 'Herstel', variant: 'default' as const },
-  afgesloten: { label: 'Afgesloten', variant: 'secondary' as const },
+  herstel_gemeld: { label: 'Herstel gemeld', variant: 'default' as const },
+  gesloten: { label: 'Gesloten', variant: 'secondary' as const },
+  archief: { label: 'Archief', variant: 'outline' as const },
 };
 
 export function CaseCard({ case_, onClick }: CaseCardProps) {
-  const daysOut = case_.eind_datum 
-    ? Math.ceil((new Date(case_.eind_datum).getTime() - new Date(case_.start_datum).getTime()) / (1000 * 60 * 60 * 24))
-    : Math.ceil((new Date().getTime() - new Date(case_.start_datum).getTime()) / (1000 * 60 * 60 * 24));
+  const daysOut = case_.end_date 
+    ? Math.ceil((new Date(case_.end_date).getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24))
+    : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24));
+
+  const employeeName = case_.employee 
+    ? `${case_.employee.voornaam} ${case_.employee.achternaam}`
+    : 'Onbekende medewerker';
 
   return (
     <Card 
@@ -30,10 +35,10 @@ export function CaseCard({ case_, onClick }: CaseCardProps) {
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">{case_.medewerker_naam}</CardTitle>
+            <CardTitle className="text-lg">{employeeName}</CardTitle>
           </div>
-          <Badge variant={statusConfig[case_.status].variant}>
-            {statusConfig[case_.status].label}
+          <Badge variant={statusConfig[case_.case_status].variant}>
+            {statusConfig[case_.case_status].label}
           </Badge>
         </div>
       </CardHeader>
@@ -41,26 +46,28 @@ export function CaseCard({ case_, onClick }: CaseCardProps) {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           <span>
-            Start: {format(new Date(case_.start_datum), 'dd MMMM yyyy', { locale: nl })}
+            Start: {format(new Date(case_.start_date), 'dd MMMM yyyy', { locale: nl })}
           </span>
         </div>
         
-        {case_.eind_datum && (
+        {case_.end_date && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>
-              Eind: {format(new Date(case_.eind_datum), 'dd MMMM yyyy', { locale: nl })}
+              Eind: {format(new Date(case_.end_date), 'dd MMMM yyyy', { locale: nl })}
             </span>
           </div>
         )}
 
-        <div className="flex items-start gap-2 text-sm">
-          <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-          <span className="line-clamp-2">{case_.reden}</span>
-        </div>
+        {case_.functional_limitations && (
+          <div className="flex items-start gap-2 text-sm">
+            <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <span className="line-clamp-2">{case_.functional_limitations}</span>
+          </div>
+        )}
 
         <div className="pt-2 text-sm font-medium">
-          {case_.eind_datum ? `${daysOut} dagen verzuim` : `${daysOut} dagen (lopend)`}
+          {case_.end_date ? `${daysOut} dagen verzuim` : `${daysOut} dagen (lopend)`}
         </div>
       </CardContent>
     </Card>
