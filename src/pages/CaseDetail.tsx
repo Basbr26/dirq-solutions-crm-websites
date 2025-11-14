@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { TaskDialog } from '@/components/TaskDialog';
@@ -12,6 +12,23 @@ import { ArrowLeft, Calendar, User, FileText, CheckCircle2, Clock, Circle } from
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { CaseStatus, TaskStatus, Task, Document, SickLeaveCase, TimelineEvent } from '@/types/sickLeave';
+// Type for raw timeline event from Supabase
+type RawTimelineEvent = {
+  id: string;
+  case_id: string;
+  event_type: string;
+  description: string;
+  created_by: string;
+  created_at: string | null;
+  date: string | null;
+  metadata: unknown;
+  creator?: {
+    voornaam: string;
+    achternaam: string;
+    email?: string;
+    id?: string;
+  };
+};
 import { useToast } from '@/hooks/use-toast';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { DocumentList } from '@/components/DocumentList';
@@ -20,28 +37,52 @@ import { toast as sonnerToast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getCaseDocuments, getCaseTimeline, updateTaskStatus, updateCaseStatus } from '@/lib/supabaseHelpers';
+// Mapping helpers
+const normalizeTaskStatus = (status: string): UpdatableTaskStatus => {
+  if (status === 'overdue') return 'open';
+  return status as UpdatableTaskStatus;
+};
+
+const mapEventType = (dbType: string): TimelineEvent['event_type'] => {
+  const map: Record<string, TimelineEvent['event_type']> = {
+    document_toegevoegd: 'document_upload',
+    taak_afgerond: 'afgerond',
+    statuswijziging: 'status_change',
+  };
+  return (map[dbType] || dbType) as TimelineEvent['event_type'];
+};
+
+// CaseStatus uit de database bevat ook 'archief', maar deze pagina ondersteunt alleen actieve dossiers:
+// map 'archief' -> 'gesloten' voor de UI.
+type ActiveCaseStatus = Extract<CaseStatus, 'actief' | 'herstel_gemeld' | 'gesloten'>;
+
+// TaskStatus uit de database bevat mogelijk ook 'overdue' (virtueel in je andere lijst).
+// Voor updates willen we alleen echte statuswaarden gebruiken:
+type UpdatableTaskStatus = Extract<TaskStatus, 'open' | 'in_progress' | 'afgerond'>;
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
   herstel_gemeld: { label: 'Herstel Gemeld', variant: 'default' as const },
   gesloten: { label: 'Gesloten', variant: 'secondary' as const },
+  archief: { label: 'Archief', variant: 'outline' as const },
 };
 
 const taskStatusConfig = {
   open: { label: 'Open', icon: Circle, color: 'text-muted-foreground' },
   in_progress: { label: 'Bezig', icon: Clock, color: 'text-primary' },
-  completed: { label: 'Voltooid', icon: CheckCircle2, color: 'text-green-600' },
+  afgerond: { label: 'Afgerond', icon: CheckCircle2, color: 'text-green-600' },
+  overdue: { label: 'Te laat', icon: Clock, color: 'text-red-600' },
 };
 
+// Sluit aan bij je enum waardes in Supabase / createTimelineEvent:
 const eventTypeConfig = {
   ziekmelding: { label: 'Ziekmelding', color: 'bg-destructive/10 text-destructive' },
   gesprek: { label: 'Gesprek', color: 'bg-primary/10 text-primary' },
-  herstel: { label: 'Herstel', color: 'bg-green-600/10 text-green-600' },
-  afmelding: { label: 'Afmelding', color: 'bg-secondary/10 text-secondary-foreground' },
-  notitie: { label: 'Notitie', color: 'bg-muted text-muted-foreground' },
-  document_upload: { label: 'Document Upload', color: 'bg-blue-600/10 text-blue-600' },
-  task_completed: { label: 'Taak Voltooid', color: 'bg-green-600/10 text-green-600' },
-  status_change: { label: 'Status Wijziging', color: 'bg-orange-600/10 text-orange-600' },
+  herstelmelding: { label: 'Herstelmelding', color: 'bg-green-600/10 text-green-600' },
+  document_toegevoegd: { label: 'Document toegevoegd', color: 'bg-blue-600/10 text-blue-600' },
+  taak_afgerond: { label: 'Taak afgerond', color: 'bg-green-600/10 text-green-600' },
+  evaluatie: { label: 'Evaluatie', color: 'bg-purple-600/10 text-purple-600' },
+  statuswijziging: { label: 'Statuswijziging', color: 'bg-orange-600/10 text-orange-600' },
 };
 
 export default function CaseDetail() {
@@ -55,19 +96,14 @@ export default function CaseDetail() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<CaseStatus>('actief');
+  const [status, setStatus] = useState<ActiveCaseStatus>('actief');
 
-  useEffect(() => {
-    if (id) {
-      loadCaseData();
-    }
-  }, [id]);
-
-  const loadCaseData = async () => {
+  const loadCaseData = useCallback(async () => {
     if (!id || !user || !role) return;
 
     setLoading(true);
     try {
+      // Case + medewerker
       const { data: caseData, error: caseError } = await supabase
         .from('sick_leave_cases')
         .select('*, employee:profiles!employee_id(voornaam, achternaam, email)')
@@ -76,9 +112,17 @@ export default function CaseDetail() {
 
       if (caseError) throw caseError;
       
-      setCase(caseData as SickLeaveCase);
-      setStatus(caseData.case_status);
+      const typedCase = caseData as SickLeaveCase;
 
+      // Map 'archief' -> 'gesloten' voor display
+      const dbStatus = (typedCase.case_status === 'archief'
+        ? 'gesloten'
+        : typedCase.case_status) as ActiveCaseStatus;
+
+      setCase({ ...typedCase, case_status: dbStatus });
+      setStatus(dbStatus);
+
+      // Taken
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
@@ -86,21 +130,55 @@ export default function CaseDetail() {
         .order('deadline', { ascending: true });
 
       if (tasksError) throw tasksError;
-      setTasks(tasksData || []);
+      setTasks((tasksData || []).map(t => ({
+        ...t,
+        task_status: normalizeTaskStatus(t.task_status),
+      })));
 
+      // Documenten (met rol-filter)
       const documentsData = await getCaseDocuments(id, role);
-      setDocuments(documentsData || []);
+      setDocuments((documentsData || []) as Document[]);
 
-      const timelineData = await getCaseTimeline(id);
-      setTimeline(timelineData || []);
-
+      // Timeline: helper geeft raw Supabase rows + joined profile.
+      const rawTimeline = await getCaseTimeline(id);
+      setTimeline(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((rawTimeline || []) as any[]).map((e) => {
+              let creator;
+              if (
+                e.creator &&
+                typeof e.creator === 'object' &&
+                'voornaam' in e.creator &&
+                'achternaam' in e.creator &&
+                typeof e.creator.voornaam === 'string' &&
+                typeof e.creator.achternaam === 'string'
+              ) {
+                creator = {
+                  voornaam: e.creator.voornaam,
+                  achternaam: e.creator.achternaam,
+                };
+              } else {
+                creator = undefined;
+              }
+              return {
+                ...e,
+                metadata: e.metadata ?? null,
+                event_type: mapEventType(e.event_type),
+                creator,
+              };
+            })
+      );
     } catch (error) {
       console.error('Error loading case:', error);
       sonnerToast.error('Fout bij laden van case');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user, role]);
+
+  useEffect(() => {
+    void loadCaseData();
+  }, [loadCaseData]);
 
   if (loading) {
     return (
@@ -124,7 +202,7 @@ export default function CaseDetail() {
     );
   }
 
-  const handleStatusChange = async (newStatus: CaseStatus) => {
+  const handleStatusChange = async (newStatus: ActiveCaseStatus) => {
     if (!id || !user) return;
 
     try {
@@ -135,14 +213,14 @@ export default function CaseDetail() {
         title: 'Status bijgewerkt',
         description: `Case status gewijzigd naar: ${statusConfig[newStatus].label}`,
       });
-      loadCaseData();
+      void loadCaseData();
     } catch (error) {
       console.error('Error updating status:', error);
       sonnerToast.error('Fout bij bijwerken status');
     }
   };
 
-  const handleTaskStatusChange = async (taskId: string, newStatus: TaskStatus) => {
+  const handleTaskStatusChange = async (taskId: string, newStatus: UpdatableTaskStatus) => {
     if (!id || !user) return;
 
     try {
@@ -150,16 +228,22 @@ export default function CaseDetail() {
       if (!task) return;
 
       await updateTaskStatus(taskId, newStatus, id, user.id, task.title);
+
       setTasks(tasks.map(t => 
         t.id === taskId 
-          ? { ...t, task_status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
+          ? { 
+              ...t, 
+              task_status: newStatus,
+              completed_at: newStatus === 'afgerond' ? new Date().toISOString() : null 
+            }
           : t
       ));
+
       toast({
         title: 'Taak bijgewerkt',
         description: `Taak status gewijzigd naar: ${taskStatusConfig[newStatus].label}`,
       });
-      loadCaseData();
+      void loadCaseData();
     } catch (error) {
       console.error('Error updating task:', error);
       sonnerToast.error('Fout bij bijwerken taak');
@@ -195,7 +279,7 @@ export default function CaseDetail() {
   }) => {
     if (!case_) return;
     
-    const newTask: Partial<Task> = {
+    const newTask: Task = {
       id: `task-${Date.now()}`,
       case_id: case_.id,
       title: data.title,
@@ -214,14 +298,14 @@ export default function CaseDetail() {
       notes: null,
     };
     
-    setTasks([...tasks, newTask as Task]);
+    setTasks([...tasks, newTask]);
     toast({
       title: 'Taak toegevoegd',
       description: 'Nieuwe taak is succesvol aangemaakt',
     });
   };
 
-  const handleDocumentUpload = (data: { file_name: string; document_type: any; file: File }) => {
+  const handleDocumentUpload = (data: { file_name: string; document_type: "probleemanalyse" | "plan_van_aanpak" | "evaluatie_3_maanden" | "evaluatie_6_maanden" | "evaluatie_1_jaar" | "herstelmelding" | "uwv_melding" | "overig"; file: File }) => {
     if (!case_ || !user) return;
     
     const newDoc: Document = {
@@ -293,7 +377,7 @@ export default function CaseDetail() {
                   <Badge variant={statusConfig[status].variant} className="text-sm">
                     {statusConfig[status].label}
                   </Badge>
-                  <Select value={status} onValueChange={(v) => handleStatusChange(v as CaseStatus)}>
+                  <Select value={status} onValueChange={(v) => handleStatusChange(v as ActiveCaseStatus)}>
                     <SelectTrigger className="w-40">
                       <SelectValue />
                     </SelectTrigger>
@@ -301,6 +385,7 @@ export default function CaseDetail() {
                       <SelectItem value="actief">Actief</SelectItem>
                       <SelectItem value="herstel_gemeld">Herstel Gemeld</SelectItem>
                       <SelectItem value="gesloten">Gesloten</SelectItem>
+                      <SelectItem value="archief">Archief</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -345,36 +430,46 @@ export default function CaseDetail() {
                   ) : (
                     <div className="space-y-4 mt-4">
                       {tasks.map((task) => {
-                        const StatusIcon = taskStatusConfig[task.task_status].icon;
+                        // Als er ooit een status buiten UpdatableTaskStatus voorkomt, fallback naar 'open'
+                        const safeStatus: UpdatableTaskStatus =
+                          (['open', 'in_progress', 'afgerond'].includes(task.task_status as string)
+                            ? task.task_status
+                            : 'open') as UpdatableTaskStatus;
+
+                        const StatusIcon = taskStatusConfig[safeStatus].icon;
                         return (
                           <Card key={task.id}>
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between">
                                 <CardTitle className="text-lg">{task.title}</CardTitle>
                                 <Select 
-                                  value={task.task_status} 
-                                  onValueChange={(v) => handleTaskStatusChange(task.id, v as TaskStatus)}
+                                  value={safeStatus}
+                                  onValueChange={(v) => handleTaskStatusChange(task.id, v as UpdatableTaskStatus)}
                                 >
                                   <SelectTrigger className="w-32">
                                     <div className="flex items-center gap-2">
-                                      <StatusIcon className={`h-4 w-4 ${taskStatusConfig[task.task_status].color}`} />
-                                      <span>{taskStatusConfig[task.task_status].label}</span>
+                                      <StatusIcon className={`h-4 w-4 ${taskStatusConfig[safeStatus].color}`} />
+                                      <span>{taskStatusConfig[safeStatus].label}</span>
                                     </div>
                                   </SelectTrigger>
                                   <SelectContent>
                                     <SelectItem value="open">Open</SelectItem>
                                     <SelectItem value="in_progress">Bezig</SelectItem>
-                                    <SelectItem value="completed">Voltooid</SelectItem>
+                                    <SelectItem value="afgerond">Afgerond</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
                             </CardHeader>
                             <CardContent className="space-y-2">
-                              <p className="text-sm text-muted-foreground">{task.description}</p>
+                              {task.description && (
+                                <p className="text-sm text-muted-foreground">{task.description}</p>
+                              )}
                               <div className="flex items-center gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                                  <span>Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}</span>
+                                  <span>
+                                    Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <User className="h-4 w-4 text-muted-foreground" />
@@ -412,27 +507,35 @@ export default function CaseDetail() {
                 </Card>
               ) : (
                 <div className="space-y-3">
-                  {timeline.map((event) => (
-                    <Card key={event.id}>
-                      <CardContent className="py-4">
-                        <div className="flex items-start gap-4">
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Badge className={eventTypeConfig[event.event_type].color}>
-                                {eventTypeConfig[event.event_type].label}
-                              </Badge>
-                              {event.created_at && (
-                                <span className="text-sm text-muted-foreground">
-                                  {format(new Date(event.created_at), 'dd MMM yyyy HH:mm', { locale: nl })}
-                                </span>
-                              )}
+                  {timeline.map((event) => {
+                    const cfg = eventTypeConfig[event.event_type];
+                    return (
+                      <Card key={event.id}>
+                        <CardContent className="py-4">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <Badge className={cfg.color}>
+                                  {cfg.label}
+                                </Badge>
+                                {event.created_at && (
+                                  <span className="text-sm text-muted-foreground">
+                                    {format(new Date(event.created_at), 'dd MMM yyyy HH:mm', { locale: nl })}
+                                  </span>
+                                )}
+                                {event.creator && (
+                                  <span className="text-sm text-muted-foreground">
+                                    • {event.creator.voornaam} {event.creator.achternaam}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm">{event.description}</p>
                             </div>
-                            <p className="text-sm">{event.description}</p>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
             </TabsContent>

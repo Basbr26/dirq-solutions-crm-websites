@@ -171,7 +171,7 @@ export async function getCaseTimeline(caseId: string) {
     .from('timeline_events')
     .select(`
       *,
-      created_by_profile:profiles!timeline_events_created_by_fkey (
+      creator:profiles!timeline_events_created_by_fkey (
         id,
         voornaam,
         achternaam,

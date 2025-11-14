@@ -1,10 +1,14 @@
-import { Database } from '@/integrations/supabase/types';
+import { Database, Json } from '@/integrations/supabase/types';
 
 export type CaseStatus = Database['public']['Enums']['case_status'];
 export type TaskStatus = Database['public']['Enums']['task_status'];
 export type AppRole = Database['public']['Enums']['app_role'];
 export type DocumentType = Database['public']['Enums']['document_type'];
-export type EventType = Database['public']['Enums']['event_type'];
+export type EventType =
+  Database['public']['Enums']['event_type'] |
+  'document_upload' |
+  'afgerond' |
+  'status_change';
 
 // Sluit aan op de Supabase-tabel sick_leave_cases
 export interface SickLeaveCase {
@@ -59,7 +63,7 @@ export interface TimelineEvent {
   date: string | null;
 
   // Gebruik een veiligere type i.p.v. any
-    metadata: unknown | null;
+    metadata: Json | null;
 
   // Via select(..., created_by_profile:profiles!created_by(...))
   creator?: {

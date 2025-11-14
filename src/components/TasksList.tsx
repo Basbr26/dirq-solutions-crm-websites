@@ -28,7 +28,7 @@ export function TasksList({ tasks }: TasksListProps) {
     if (
       task.deadline &&
       isPast(new Date(task.deadline)) &&
-      (task.task_status === 'open' || task.task_status === 'in_progress' || task.task_status === 'overdue')
+      (task.task_status === 'open' || task.task_status === 'in_progress')
     ) {
       return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Te laat</Badge>;
     }
@@ -51,7 +51,8 @@ export function TasksList({ tasks }: TasksListProps) {
         // Overdue: deadline in past and not completed (only valid status values)
         return task.deadline && isPast(new Date(task.deadline)) && (task.task_status === 'open' || task.task_status === 'in_progress');
       }
-      return task.task_status === statusFilter;
+      // Only allow valid TaskStatus values for direct comparison
+      return (['open', 'in_progress', 'afgerond'].includes(statusFilter) && task.task_status === statusFilter);
     })
     .sort((a, b) => {
       if (sortBy === 'deadline') {
@@ -60,7 +61,7 @@ export function TasksList({ tasks }: TasksListProps) {
         return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
       }
       // Sort by status
-      const statusOrder = { 'open': 0, 'in_progress': 1, 'afgerond': 2, 'overdue': 3 };
+      const statusOrder = { 'open': 0, 'in_progress': 1, 'afgerond': 2 };
       return (statusOrder[a.task_status || 'open'] || 0) - (statusOrder[b.task_status || 'open'] || 0);
     });
 
