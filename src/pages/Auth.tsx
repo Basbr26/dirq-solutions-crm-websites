@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import LoadingScreen from '@/components/LoadingScreen';
+import { useEffect } from 'react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -32,13 +33,17 @@ export default function Auth() {
   const [achternaam, setAchternaam] = useState('');
   const [showAnimation, setShowAnimation] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, role } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect if already logged in
   if (user && !showAnimation) {
-    navigate('/dashboard');
+    // Redirect naar juiste dashboard per rol
+    if (role === 'hr') navigate('/dashboard/hr');
+    else if (role === 'manager') navigate('/dashboard/manager');
+    else if (role === 'medewerker') navigate('/dashboard/medewerker');
+    else navigate('/');
     return null;
   }
 
@@ -59,7 +64,12 @@ export default function Auth() {
         });
       } else {
         setShowAnimation(true);
-        setRedirectPath('/dashboard');
+        // Redirect pad bepalen op basis van rol
+        let path = '/';
+        if (role === 'hr') path = '/dashboard/hr';
+        else if (role === 'manager') path = '/dashboard/manager';
+        else if (role === 'medewerker') path = '/dashboard/medewerker';
+        setRedirectPath(path);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
