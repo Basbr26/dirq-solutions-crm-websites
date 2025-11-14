@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,10 +10,10 @@ import { defaultTaskTemplates } from '@/lib/taskTemplates';
 
 interface TaskDialogProps {
   onSubmit: (data: {
-    titel: string;
-    beschrijving: string;
+    title: string;
+    description: string;
     deadline: string;
-    toegewezen_aan?: string;
+    assigned_to?: string;
   }) => void;
 }
 
@@ -21,20 +21,20 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('custom');
   const [formData, setFormData] = useState({
-    titel: '',
-    beschrijving: '',
+    title: '',
+    description: '',
     deadline: '',
-    toegewezen_aan: '',
+    assigned_to: '',
   });
 
   const handleTemplateChange = (value: string) => {
     setSelectedTemplate(value);
     if (value === 'custom') {
       setFormData({
-        titel: '',
-        beschrijving: '',
+        title: '',
+        description: '',
         deadline: '',
-        toegewezen_aan: '',
+        assigned_to: '',
       });
     } else {
       const templateIndex = parseInt(value);
@@ -43,10 +43,10 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
       deadline.setDate(deadline.getDate() + template.deadlineDays);
       
       setFormData({
-        titel: template.titel,
-        beschrijving: template.beschrijving,
+        title: template.title,
+        description: template.description,
         deadline: deadline.toISOString().split('T')[0],
-        toegewezen_aan: '',
+        assigned_to: '',
       });
     }
   };
@@ -55,9 +55,9 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
     e.preventDefault();
     onSubmit({
       ...formData,
-      toegewezen_aan: formData.toegewezen_aan || undefined,
+      assigned_to: formData.assigned_to || undefined,
     });
-    setFormData({ titel: '', beschrijving: '', deadline: '', toegewezen_aan: '' });
+    setFormData({ title: '', description: '', deadline: '', assigned_to: '' });
     setOpen(false);
   };
 
@@ -72,6 +72,9 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Nieuwe taak toevoegen</DialogTitle>
+          <DialogDescription>
+            Voeg een nieuwe taak toe aan dit verzuimdossier
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -84,27 +87,27 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
                 <SelectItem value="custom">Aangepaste taak</SelectItem>
                 {defaultTaskTemplates.map((template, index) => (
                   <SelectItem key={index} value={index.toString()}>
-                    {template.titel} (dag {template.deadlineDays})
+                    {template.title} (dag {template.deadlineDays})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label htmlFor="titel">Titel *</Label>
+            <Label htmlFor="title">Titel *</Label>
             <Input
-              id="titel"
-              value={formData.titel}
-              onChange={(e) => setFormData({ ...formData, titel: e.target.value })}
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
             />
           </div>
           <div>
-            <Label htmlFor="beschrijving">Beschrijving *</Label>
+            <Label htmlFor="description">Beschrijving *</Label>
             <Textarea
-              id="beschrijving"
-              value={formData.beschrijving}
-              onChange={(e) => setFormData({ ...formData, beschrijving: e.target.value })}
+              id="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               required
             />
           </div>
@@ -119,12 +122,12 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
             />
           </div>
           <div>
-            <Label htmlFor="toegewezen_aan">Toegewezen aan</Label>
+            <Label htmlFor="assigned_to">Toegewezen aan (User ID)</Label>
             <Input
-              id="toegewezen_aan"
-              value={formData.toegewezen_aan}
-              onChange={(e) => setFormData({ ...formData, toegewezen_aan: e.target.value })}
-              placeholder="Naam medewerker (optioneel)"
+              id="assigned_to"
+              value={formData.assigned_to}
+              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
+              placeholder="UUID van medewerker (optioneel)"
             />
           </div>
           <div className="flex justify-end gap-2">

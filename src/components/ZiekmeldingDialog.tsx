@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,12 +10,18 @@ import { z } from 'zod';
 import { defaultTaskTemplates } from '@/lib/taskTemplates';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
 
 const ziekmeldingSchema = z.object({
-  medewerker_naam: z.string().trim().min(2, 'Naam moet minimaal 2 karakters zijn').max(100),
-  start_datum: z.string().min(1, 'Start datum is verplicht'),
-  reden: z.string().trim().min(5, 'Reden moet minimaal 5 karakters zijn').max(500),
-  notities: z.string().max(1000).optional(),
+  employee_id: z.string().uuid('Selecteer een medewerker'),
+  start_date: z.string().min(1, 'Start datum is verplicht'),
+  functional_limitations: z.string().trim().min(5, 'Functionele beperkingen moeten minimaal 5 karakters zijn').max(500),
+  expected_duration: z.string().optional(),
+  availability_notes: z.string().max(1000).optional(),
+  can_work_partial: z.boolean().optional(),
+  partial_work_description: z.string().max(500).optional(),
 });
 
 type ZiekmeldingFormData = z.infer<typeof ziekmeldingSchema>;
@@ -24,16 +30,56 @@ interface ZiekmeldingDialogProps {
   onSubmit: (data: ZiekmeldingFormData) => void;
 }
 
+interface Employee {
+  id: string;
+  voornaam: string;
+  achternaam: string;
+  email: string;
+}
+
 export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
   const [open, setOpen] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [formData, setFormData] = useState<ZiekmeldingFormData>({
-    medewerker_naam: '',
-    start_datum: new Date().toISOString().split('T')[0],
-    reden: '',
-    notities: '',
+    employee_id: '',
+    start_date: new Date().toISOString().split('T')[0],
+    functional_limitations: '',
+    expected_duration: '',
+    availability_notes: '',
+    can_work_partial: false,
+    partial_work_description: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (open) {
+      loadEmployees();
+    }
+  }, [open]);
+
+  const loadEmployees = async () => {
+    setLoadingEmployees(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, voornaam, achternaam, email')
+        .order('voornaam');
+      
+      if (error) throw error;
+      setEmployees(data || []);
+    } catch (error) {
+      console.error('Error loading employees:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Fout bij laden medewerkers',
+        description: 'Kon medewerkers niet laden',
+      });
+    } finally {
+      setLoadingEmployees(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,17 +88,21 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
       const validated = ziekmeldingSchema.parse(formData);
       onSubmit(validated);
       
+      const selectedEmployee = employees.find(e => e.id === validated.employee_id);
       toast({
         title: 'Ziekmelding geregistreerd',
-        description: `Ziekmelding voor ${validated.medewerker_naam} is succesvol aangemaakt.`,
+        description: `Ziekmelding voor ${selectedEmployee?.voornaam} ${selectedEmployee?.achternaam} is succesvol aangemaakt.`,
       });
       
       // Reset form
       setFormData({
-        medewerker_naam: '',
-        start_datum: new Date().toISOString().split('T')[0],
-        reden: '',
-        notities: '',
+        employee_id: '',
+        start_date: new Date().toISOString().split('T')[0],
+        functional_limitations: '',
+        expected_duration: '',
+        availability_notes: '',
+        can_work_partial: false,
+        partial_work_description: '',
       });
       setErrors({});
       setOpen(false);
@@ -77,63 +127,116 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
           Nieuwe ziekmelding
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Nieuwe ziekmelding registreren</DialogTitle>
+          <DialogDescription>
+            Registreer een nieuwe ziekmelding volgens de Wet Poortwachter
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
           <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="medewerker_naam">Naam medewerker *</Label>
-            <Input
-              id="medewerker_naam"
-              value={formData.medewerker_naam}
-              onChange={(e) => setFormData({ ...formData, medewerker_naam: e.target.value })}
-              placeholder="Bijv. Jan Jansen"
-            />
-            {errors.medewerker_naam && (
-              <p className="text-sm text-destructive">{errors.medewerker_naam}</p>
+            <Label htmlFor="employee_id">Medewerker *</Label>
+            <Select 
+              value={formData.employee_id} 
+              onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingEmployees ? "Laden..." : "Selecteer medewerker"} />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((emp) => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.voornaam} {emp.achternaam} ({emp.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.employee_id && (
+              <p className="text-sm text-destructive">{errors.employee_id}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="start_datum">Start datum *</Label>
+            <Label htmlFor="start_date">Eerste ziektedag *</Label>
             <Input
-              id="start_datum"
+              id="start_date"
               type="date"
-              value={formData.start_datum}
-              onChange={(e) => setFormData({ ...formData, start_datum: e.target.value })}
+              value={formData.start_date}
+              onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
             />
-            {errors.start_datum && (
-              <p className="text-sm text-destructive">{errors.start_datum}</p>
+            {errors.start_date && (
+              <p className="text-sm text-destructive">{errors.start_date}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="reden">Reden ziekmelding *</Label>
+            <Label htmlFor="functional_limitations">Functionele beperkingen *</Label>
             <Textarea
-              id="reden"
-              value={formData.reden}
-              onChange={(e) => setFormData({ ...formData, reden: e.target.value })}
-              placeholder="Korte beschrijving van de klachten"
+              id="functional_limitations"
+              value={formData.functional_limitations}
+              onChange={(e) => setFormData({ ...formData, functional_limitations: e.target.value })}
+              placeholder="Bijv: Kan niet langdurig staan, geen zware tilwerkzaamheden, beperkte concentratie"
               rows={3}
             />
-            {errors.reden && (
-              <p className="text-sm text-destructive">{errors.reden}</p>
+            <p className="text-xs text-muted-foreground">
+              Beschrijf wat de medewerker WEL en NIET kan doen, geen medische diagnose
+            </p>
+            {errors.functional_limitations && (
+              <p className="text-sm text-destructive">{errors.functional_limitations}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notities">Extra notities (optioneel)</Label>
+            <Label htmlFor="expected_duration">Verwachte duur (optioneel)</Label>
+            <Input
+              id="expected_duration"
+              value={formData.expected_duration}
+              onChange={(e) => setFormData({ ...formData, expected_duration: e.target.value })}
+              placeholder="Bijv: 1-2 weken"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="availability_notes">Bereikbaarheid (optioneel)</Label>
             <Textarea
-              id="notities"
-              value={formData.notities}
-              onChange={(e) => setFormData({ ...formData, notities: e.target.value })}
-              placeholder="Aanvullende informatie"
+              id="availability_notes"
+              value={formData.availability_notes}
+              onChange={(e) => setFormData({ ...formData, availability_notes: e.target.value })}
+              placeholder="Bijv: Bereikbaar tussen 9-17 uur op mobiel"
               rows={2}
             />
-            {errors.notities && (
-              <p className="text-sm text-destructive">{errors.notities}</p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="can_work_partial"
+                checked={formData.can_work_partial}
+                onCheckedChange={(checked) => 
+                  setFormData({ ...formData, can_work_partial: checked as boolean })
+                }
+              />
+              <Label 
+                htmlFor="can_work_partial" 
+                className="text-sm font-normal cursor-pointer"
+              >
+                Medewerker kan gedeeltelijk werken
+              </Label>
+            </div>
+
+            {formData.can_work_partial && (
+              <div className="space-y-2 pl-6">
+                <Label htmlFor="partial_work_description">Beschrijving gedeeltelijk werken</Label>
+                <Textarea
+                  id="partial_work_description"
+                  value={formData.partial_work_description}
+                  onChange={(e) => setFormData({ ...formData, partial_work_description: e.target.value })}
+                  placeholder="Bijv: Kan 4 uur per dag thuiswerken aan administratieve taken"
+                  rows={2}
+                />
+              </div>
             )}
           </div>
 
@@ -141,14 +244,15 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
             <Info className="h-4 w-4" />
             <AlertTitle>Wet Poortwachter - Automatische taken</AlertTitle>
             <AlertDescription className="mt-2">
-              <p className="text-sm mb-2">Bij deze ziekmelding worden automatisch de volgende taken aangemaakt volgens de Wet Poortwachter:</p>
+              <p className="text-sm mb-2">Bij deze ziekmelding worden automatisch de volgende taken aangemaakt:</p>
               <ul className="space-y-1 text-sm">
-                {defaultTaskTemplates.map((template, index) => (
+                {defaultTaskTemplates.slice(0, 4).map((template, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-muted-foreground min-w-[60px]">Dag {template.deadlineDays}:</span>
-                    <span>{template.titel}</span>
+                    <span>{template.title}</span>
                   </li>
                 ))}
+                <li className="text-muted-foreground text-xs pt-1">+ {defaultTaskTemplates.length - 4} extra taken...</li>
               </ul>
             </AlertDescription>
           </Alert>

@@ -35,7 +35,7 @@ export default function DashboardHR() {
     try {
       const { data, error } = await supabase
         .from('sick_leave_cases')
-        .select('*')
+        .select('*, employee:profiles!employee_id(voornaam, achternaam, email)')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -63,54 +63,80 @@ export default function DashboardHR() {
     }
   };
 
-  const handleNewCase = async (data: any) => {
-    if (!user) return;
+  const handleNewCase = async (data: {
+    employee_id: string;
+    start_date: string;
+    functional_limitations: string;
+    expected_duration?: string;
+    availability_notes?: string;
+    can_work_partial?: boolean;
+    partial_work_description?: string;
+  }) => {
+    if (!user) {
+      toast.error('Je moet ingelogd zijn om een case aan te maken');
+      return;
+    }
 
     try {
+      // Insert new case met correcte property names
       const { data: newCase, error: caseError } = await supabase
         .from('sick_leave_cases')
         .insert({
-          medewerker_id: data.medewerker_id,
-          medewerker_naam: data.medewerker_naam,
-          start_datum: data.start_datum,
-          reden: data.reden,
-          status: 'actief',
-          notities: data.notities || null,
+          employee_id: data.employee_id,
+          start_date: data.start_date,
+          functional_limitations: data.functional_limitations,
+          case_status: 'actief',
+          created_by: user.id,
+          expected_duration: data.expected_duration || null,
+          availability_notes: data.availability_notes || null,
+          can_work_partial: data.can_work_partial || false,
+          partial_work_description: data.partial_work_description || null,
         })
-        .select()
+        .select('*, employee:profiles!employee_id(voornaam, achternaam, email)')
         .single();
 
-      if (caseError) throw caseError;
+      if (caseError) {
+        console.error('Supabase error:', caseError);
+        throw caseError;
+      }
 
-      await generateInitialTasks(newCase.id, newCase.start_datum);
+      // Generate initial tasks
+      await generateInitialTasks(newCase.id, newCase.start_date);
+      
+      // Create timeline event
       await createTimelineEvent(
         newCase.id,
         'ziekmelding',
-        `Ziekmelding ontvangen: ${newCase.reden}`,
+        `Ziekmelding ontvangen: ${newCase.functional_limitations}`,
         user.id
       );
 
       toast.success('Ziekmelding succesvol aangemaakt');
       loadCases();
       loadTasks();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating case:', error);
-      toast.error('Fout bij aanmaken ziekmelding');
+      toast.error(`Fout bij aanmaken ziekmelding: ${error.message || 'Onbekende fout'}`);
     }
   };
 
   const filteredCases = cases.filter(c => {
-    const matchesSearch = c.medewerker_naam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         c.reden.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || c.status === statusFilter;
+    const employeeName = c.employee 
+      ? `${c.employee.voornaam} ${c.employee.achternaam}`.toLowerCase()
+      : '';
+    const limitations = c.functional_limitations?.toLowerCase() || '';
+    
+    const matchesSearch = employeeName.includes(searchQuery.toLowerCase()) ||
+                         limitations.includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || c.case_status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const stats = {
     total: cases.length,
-    actief: cases.filter(c => c.status === 'actief').length,
-    herstel: cases.filter(c => c.status === 'herstel').length,
-    afgesloten: cases.filter(c => c.status === 'afgesloten').length,
+    actief: cases.filter(c => c.case_status === 'actief').length,
+    herstel_gemeld: cases.filter(c => c.case_status === 'herstel_gemeld').length,
+    gesloten: cases.filter(c => c.case_status === 'gesloten').length,
   };
 
   const handleExportCases = () => {
@@ -194,8 +220,8 @@ export default function DashboardHR() {
                       <Clock className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Herstel</p>
-                      <p className="text-2xl font-bold">{stats.herstel}</p>
+                      <p className="text-sm text-muted-foreground">Herstel Gemeld</p>
+                      <p className="text-2xl font-bold">{stats.herstel_gemeld}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -208,8 +234,8 @@ export default function DashboardHR() {
                       <Users className="h-6 w-6 text-secondary-foreground" />
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Afgesloten</p>
-                      <p className="text-2xl font-bold">{stats.afgesloten}</p>
+                      <p className="text-sm text-muted-foreground">Gesloten</p>
+                      <p className="text-2xl font-bold">{stats.gesloten}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -220,7 +246,7 @@ export default function DashboardHR() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Zoek op naam of reden..."
+                  placeholder="Zoek op naam of functionele beperkingen..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -233,8 +259,8 @@ export default function DashboardHR() {
                 <SelectContent>
                   <SelectItem value="all">Alle statussen</SelectItem>
                   <SelectItem value="actief">Actief</SelectItem>
-                  <SelectItem value="herstel">Herstel</SelectItem>
-                  <SelectItem value="afgesloten">Afgesloten</SelectItem>
+                  <SelectItem value="herstel_gemeld">Herstel Gemeld</SelectItem>
+                  <SelectItem value="gesloten">Gesloten</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -255,7 +281,7 @@ export default function DashboardHR() {
                   <CaseCard 
                     key={caseItem.id} 
                     case_={caseItem} 
-                    onClick={() => window.location.href = `/case/${caseItem.id}`}
+                    onClick={() => navigate(`/case/${caseItem.id}`)}
                   />
                 ))}
               </div>
