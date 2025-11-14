@@ -11,27 +11,29 @@ interface DocumentListProps {
   onDelete?: (id: string) => void;
 }
 
-const categoryLabels = {
-  medisch: 'Medisch',
-  correspondentie: 'Correspondentie',
-  're-integratie': 'Re-integratie',
+const categoryLabels: Record<string, string> = {
+  medisch_attest: 'Medisch attest',
+  probleemanalyse: 'Probleemanalyse',
+  plan_van_aanpak: 'Plan van aanpak',
+  evaluatie_3_maanden: 'Evaluatie 3 maanden',
+  evaluatie_6_maanden: 'Evaluatie 6 maanden',
+  evaluatie_1_jaar: 'Evaluatie 1 jaar',
+  herstelmelding: 'Herstelmelding',
   overig: 'Overig',
 };
 
-const categoryColors = {
-  medisch: 'bg-destructive/10 text-destructive',
-  correspondentie: 'bg-primary/10 text-primary',
-  're-integratie': 'bg-secondary/10 text-secondary-foreground',
+const categoryColors: Record<string, string> = {
+  medisch_attest: 'bg-destructive/10 text-destructive',
+  probleemanalyse: 'bg-primary/10 text-primary',
+  plan_van_aanpak: 'bg-secondary/10 text-secondary-foreground',
+  evaluatie_3_maanden: 'bg-accent/10 text-accent-foreground',
+  evaluatie_6_maanden: 'bg-accent/10 text-accent-foreground',
+  evaluatie_1_jaar: 'bg-accent/10 text-accent-foreground',
+  herstelmelding: 'bg-primary/10 text-primary',
   overig: 'bg-muted text-muted-foreground',
 };
 
 export function DocumentList({ documents, onDelete }: DocumentListProps) {
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
   if (documents.length === 0) {
     return (
       <Card>
@@ -54,28 +56,35 @@ export function DocumentList({ documents, onDelete }: DocumentListProps) {
                   <FileText className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium truncate">{doc.naam}</h4>
+                  <h4 className="font-medium truncate">{doc.file_name}</h4>
                   <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <Badge variant="outline" className={categoryColors[doc.categorie]}>
-                      {categoryLabels[doc.categorie]}
+                    <Badge variant="outline" className={categoryColors[doc.document_type]}>
+                      {categoryLabels[doc.document_type]}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {formatFileSize(doc.grootte)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {format(new Date(doc.created_at), 'dd MMM yyyy', { locale: nl })}
+                      {doc.created_at && format(new Date(doc.created_at), 'dd MMM yyyy', { locale: nl })}
                     </span>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Geüpload door {doc.uploaded_by}
-                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <Button size="sm" variant="ghost">
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => window.open(doc.file_url, '_blank')}
+                >
                   <Eye className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="ghost">
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = doc.file_url;
+                    link.download = doc.file_name;
+                    link.click();
+                  }}
+                >
                   <Download className="h-4 w-4" />
                 </Button>
                 {onDelete && (
