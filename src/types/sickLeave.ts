@@ -6,7 +6,7 @@ export type AppRole = Database['public']['Enums']['app_role'];
 export type DocumentType = Database['public']['Enums']['document_type'];
 export type EventType = Database['public']['Enums']['event_type'];
 
-// Main types matching Supabase schema
+// Sluit aan op de Supabase-tabel sick_leave_cases
 export interface SickLeaveCase {
   id: string;
   employee_id: string;
@@ -17,6 +17,8 @@ export interface SickLeaveCase {
   created_by: string;
   created_at: string | null;
   updated_at: string | null;
+
+  // Via select(..., employee:profiles!employee_id(...))
   employee?: {
     voornaam: string;
     achternaam: string;
@@ -24,6 +26,7 @@ export interface SickLeaveCase {
   };
 }
 
+// Sluit aan op de Supabase-tabel tasks
 export interface Task {
   id: string;
   case_id: string;
@@ -36,8 +39,8 @@ export interface Task {
   completed_by: string | null;
   created_at: string | null;
   updated_at: string | null;
-  
-  // Wet Poortwachter specific fields
+
+  // Wet Poortwachter specifieke velden
   gespreksonderwerpen: string | null;
   toegestane_vragen: string | null;
   verboden_vragen: string | null;
@@ -45,6 +48,7 @@ export interface Task {
   notes: string | null;
 }
 
+// Sluit aan op de Supabase-tabel timeline_events
 export interface TimelineEvent {
   id: string;
   case_id: string;
@@ -53,13 +57,18 @@ export interface TimelineEvent {
   created_by: string;
   created_at: string | null;
   date: string | null;
-  metadata: any;
+
+  // Gebruik een veiligere type i.p.v. any
+    metadata: unknown | null;
+
+  // Via select(..., created_by_profile:profiles!created_by(...))
   creator?: {
     voornaam: string;
     achternaam: string;
   };
 }
 
+// Sluit aan op de Supabase-tabel documents
 export interface Document {
   id: string;
   case_id: string;
