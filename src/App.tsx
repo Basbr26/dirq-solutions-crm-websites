@@ -15,8 +15,31 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function RoleBasedRedirect() {
-  // Direct naar HR dashboard met mock user
-  return <Navigate to="/dashboard/hr" replace />;
+  const { user, role, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Redirect based on role
+  switch (role) {
+    case 'hr':
+      return <Navigate to="/dashboard/hr" replace />;
+    case 'manager':
+      return <Navigate to="/dashboard/manager" replace />;
+    case 'medewerker':
+      return <Navigate to="/dashboard/medewerker" replace />;
+    default:
+      return <Navigate to="/auth" replace />;
+  }
 }
 
 const App = () => (
