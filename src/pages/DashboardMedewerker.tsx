@@ -4,11 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TasksList } from '@/components/TasksList';
 import { Info, FileText, Shield, Calendar } from 'lucide-react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { getEmployeeCase } from '@/lib/supabaseHelpers';
 import { SickLeaveCase } from '@/types/sickLeave';
+import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -23,6 +26,7 @@ export default function DashboardMedewerker() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeCase, setActiveCase] = useState<SickLeaveCase | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,6 +41,15 @@ export default function DashboardMedewerker() {
     try {
       const caseData = await getEmployeeCase(user.id);
       setActiveCase(caseData);
+      
+      // Load tasks for the employee
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('assigned_to', user.id)
+        .order('deadline', { ascending: true });
+      
+      setTasks(tasksData || []);
     } catch (error) {
       console.error('Error loading case:', error);
       toast.error('Fout bij laden van gegevens');
@@ -68,6 +81,13 @@ export default function DashboardMedewerker() {
       <DashboardHeader title="Mijn Overzicht" />
 
       <main className="container mx-auto px-6 py-8 max-w-4xl">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overzicht</TabsTrigger>
+            <TabsTrigger value="tasks">Mijn Taken</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
         {!activeCase ? (
           <Alert className="mb-6 border-primary/20 bg-primary/5">
             <Info className="h-4 w-4 text-primary" />
@@ -276,10 +296,16 @@ export default function DashboardMedewerker() {
                   toegestaan zijn. Dit moet je altijd vooraf bespreken met je werkgever en mogelijk 
                   de bedrijfsarts.
                 </p>
-              </details>
-            </CardContent>
-          </Card>
-        </div>
+            </details>
+          </CardContent>
+        </Card>
+      </div>
+          </TabsContent>
+
+          <TabsContent value="tasks">
+            <TasksList tasks={tasks} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

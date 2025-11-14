@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TasksList } from '@/components/TasksList';
 import { CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/hooks/useAuth';
@@ -108,6 +110,13 @@ export default function DashboardManager() {
       <DashboardHeader title="Manager Dashboard" />
 
       <main className="container mx-auto px-6 py-8">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overzicht</TabsTrigger>
+            <TabsTrigger value="tasks">Taken</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
         <div className="grid gap-6 md:grid-cols-4 mb-8">
           <Card className="shadow-dirq">
             <CardHeader className="pb-3">
@@ -256,6 +265,12 @@ export default function DashboardManager() {
             )}
           </CardContent>
         </Card>
+          </TabsContent>
+
+          <TabsContent value="tasks">
+            <TasksList tasks={tasks} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

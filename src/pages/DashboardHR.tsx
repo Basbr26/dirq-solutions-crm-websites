@@ -4,6 +4,7 @@ import { ZiekmeldingDialog } from '@/components/ZiekmeldingDialog';
 import { CaseCard } from '@/components/CaseCard';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Input } from '@/components/ui/input';
+import { TasksList } from '@/components/TasksList';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
@@ -183,6 +184,7 @@ export default function DashboardHR() {
         <Tabs defaultValue="overzicht" className="w-full">
           <TabsList className="mb-6">
             <TabsTrigger value="overzicht">Overzicht</TabsTrigger>
+            <TabsTrigger value="taken">Taken</TabsTrigger>
             <TabsTrigger value="analyse">
               <BarChart3 className="h-4 w-4 mr-2" />
               Analyse & Rapportage
@@ -292,6 +294,10 @@ export default function DashboardHR() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="taken">
+            <TasksList tasks={tasks} />
           </TabsContent>
 
           <TabsContent value="analyse">
