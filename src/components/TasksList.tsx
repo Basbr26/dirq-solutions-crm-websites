@@ -25,7 +25,11 @@ export function TasksList({ tasks }: TasksListProps) {
     if (task.task_status === 'in_progress') {
       return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />Bezig</Badge>;
     }
-    if (task.deadline && isPast(new Date(task.deadline)) && task.task_status !== 'afgerond') {
+    if (
+      task.deadline &&
+      isPast(new Date(task.deadline)) &&
+      (task.task_status === 'open' || task.task_status === 'in_progress' || task.task_status === 'overdue')
+    ) {
       return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Te laat</Badge>;
     }
     return <Badge variant="outline">Open</Badge>;
@@ -44,7 +48,7 @@ export function TasksList({ tasks }: TasksListProps) {
     .filter(task => {
       if (statusFilter === 'all') return true;
       if (statusFilter === 'overdue') {
-        // Overdue: deadline in past and not completed
+        // Overdue: deadline in past and not completed (only valid status values)
         return task.deadline && isPast(new Date(task.deadline)) && (task.task_status === 'open' || task.task_status === 'in_progress');
       }
       return task.task_status === statusFilter;
