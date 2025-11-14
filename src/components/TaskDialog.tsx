@@ -9,7 +9,7 @@ type Assignee = {
   voornaam: string;
   achternaam: string;
   email: string;
-  user_roles?: { role: string }[] | string;
+  user_roles?: { role: string }[] | null;
 };
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -44,21 +44,40 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
   }, [open]);
 
   const loadAssignees = async () => {
+    type AssigneeProfile = {
+      id: string;
+      voornaam: string;
+      achternaam: string;
+      email: string;
+      user_roles: { role: string }[] | null;
+    };
     setLoadingAssignees(true);
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, voornaam, achternaam, email, user_roles:user_roles!user_id(role)')
-        .order('voornaam');
+        .select(`
+          id,
+          voornaam,
+          achternaam,
+          email,
+          user_roles(role)
+        `)
+        .order('voornaam')
+        .returns<AssigneeProfile[]>();
 
       if (error) throw error;
-      // user_roles bevat nu alleen HR/manager door de juiste join
+
       let verantwoordelijken: Assignee[] = [];
       if (Array.isArray(data)) {
-        verantwoordelijken = data.filter((emp: Assignee) => {
-          return Array.isArray(emp.user_roles) && (emp.user_roles as { role: string }[]).some((r) => r.role === 'hr' || r.role === 'manager');
-        });
+        verantwoordelijken = data.filter((emp) =>
+          Array.isArray(emp.user_roles)
+            ? emp.user_roles.some(
+                (r) => r.role === 'hr' || r.role === 'manager'
+              )
+            : false
+        );
       }
+
       setAssignees(verantwoordelijken);
     } catch (error) {
       console.error('Error loading assignees:', error);
