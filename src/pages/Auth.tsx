@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import LoadingScreen from '@/components/LoadingScreen';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -30,6 +31,7 @@ export default function Auth() {
   const [voornaam, setVoornaam] = useState('');
   const [achternaam, setAchternaam] = useState('');
   const [showAnimation, setShowAnimation] = useState(false);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -57,9 +59,7 @@ export default function Auth() {
         });
       } else {
         setShowAnimation(true);
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 3000);
+        setRedirectPath('/dashboard');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -113,11 +113,12 @@ export default function Auth() {
 
   return (
     showAnimation ? (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white animate-fadeOut">
-        <img src="/logo-dirq.svg" alt="DIRQ logo" className="h-20 w-20 mb-6 animate-pulse" />
-        <div className="loader ease-linear rounded-full border-8 border-t-8 border-[#00C6B2] border-t-[#FFF4C2] h-12 w-12 mb-4 animate-spin"></div>
-        <h2 className="text-2xl font-bold text-[#00C6B2] font-inter mt-2">Welkom bij DIRQ!</h2>
-      </div>
+      <LoadingScreen
+        duration={3000}
+        onComplete={() => {
+          if (redirectPath) navigate(redirectPath);
+        }}
+      />
     ) : (
       <div className="min-h-screen flex items-center justify-center bg-secondary px-4">
         <Card className="w-full max-w-md shadow-dirq-lg">
