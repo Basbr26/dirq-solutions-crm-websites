@@ -138,10 +138,17 @@ export default function CaseDetail() {
 
     setLoading(true);
     try {
-      // Case + medewerker
+      // Case + medewerker (correcte join)
       const { data: caseData, error: caseError } = await supabase
         .from('sick_leave_cases')
-        .select('*, employee:profiles!employee_id(voornaam, achternaam, email)')
+        .select(`
+          *,
+          employee:profiles!sick_leave_cases_employee_id_fkey (
+            voornaam,
+            achternaam,
+            email
+          )
+        `)
         .eq('id', id)
         .single();
 
@@ -312,32 +319,40 @@ export default function CaseDetail() {
     deadline: string;
     assigned_to?: string;
   }) => {
-    if (!case_) return;
-    
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      case_id: case_.id,
-      title: data.title,
-      description: data.description,
-      deadline: data.deadline,
-      task_status: 'open',
-      assigned_to: data.assigned_to || null,
-      created_at: new Date().toISOString(),
-      completed_at: null,
-      completed_by: null,
-      updated_at: new Date().toISOString(),
-      gespreksonderwerpen: null,
-      toegestane_vragen: null,
-      verboden_vragen: null,
-      juridische_context: null,
-      notes: null,
-    };
-    
-    setTasks([...tasks, newTask]);
-    toast({
-      title: 'Taak toegevoegd',
-      description: 'Nieuwe taak is succesvol aangemaakt',
-    });
+    if (!case_ || !user) return;
+
+    try {
+      const { data: createdTask, error } = await supabase
+        .from('tasks')
+        .insert({
+          case_id: case_.id,
+          title: data.title,
+          description: data.description,
+          deadline: data.deadline,
+          task_status: 'open',
+          assigned_to: data.assigned_to || null,
+          created_at: new Date().toISOString(),
+        })
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      setTasks([...tasks, createdTask]);
+
+      toast({
+        title: 'Taak toegevoegd',
+        description: 'Nieuwe taak is succesvol aangemaakt',
+      });
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: 'Fout',
+        description: 'Kon taak niet aanmaken',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDocumentUpload = (data: { file_name: string; document_type: "probleemanalyse" | "plan_van_aanpak" | "evaluatie_3_maanden" | "evaluatie_6_maanden" | "evaluatie_1_jaar" | "herstelmelding" | "uwv_melding" | "overig"; file: File }) => {

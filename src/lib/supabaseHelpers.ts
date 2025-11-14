@@ -195,7 +195,12 @@ export async function updateTaskStatus(
   userId: string,
   taskTitle: string
 ) {
-  const updates: any = {
+  const updates: {
+    task_status: 'open' | 'in_progress' | 'afgerond',
+    updated_at: string,
+    completed_at?: string,
+    completed_by?: string
+  } = {
     task_status: status,
     updated_at: new Date().toISOString(),
   };
@@ -231,7 +236,11 @@ export async function updateCaseStatus(
   status: 'actief' | 'herstel_gemeld' | 'gesloten',
   userId: string
 ) {
-  const updates: any = {
+  const updates: {
+    case_status: 'actief' | 'herstel_gemeld' | 'gesloten',
+    updated_at: string,
+    end_date?: string
+  } = {
     case_status: status,
     updated_at: new Date().toISOString(),
   };
