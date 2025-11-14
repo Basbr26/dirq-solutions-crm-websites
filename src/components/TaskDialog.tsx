@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+type Assignee = {
+  id: string;
+  voornaam: string;
+  achternaam: string;
+  email: string;
+  user_roles?: { role: string }[] | string;
+};
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { defaultTaskTemplates } from '@/lib/taskTemplates';
 
@@ -26,6 +34,42 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
     deadline: '',
     assigned_to: '',
   });
+
+    const [assignees, setAssignees] = useState<Assignee[]>([]);
+    const [loadingAssignees, setLoadingAssignees] = useState(false);
+  useEffect(() => {
+    if (open) {
+      loadAssignees();
+    }
+  }, [open]);
+
+  const loadAssignees = async () => {
+    setLoadingAssignees(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, voornaam, achternaam, email, user_roles!inner(role)')
+        .order('voornaam');
+
+      if (error) throw error;
+      // user_roles bevat nu alleen HR/manager door de inner join
+      // Fallback: filter alleen HR/manager met geldige user_roles array
+      let verantwoordelijken: Assignee[] = [];
+      if (Array.isArray(data)) {
+        verantwoordelijken = data.filter((emp: Assignee) => {
+          // Fallback: if user_roles join fails, skip filtering
+          if (!emp.user_roles || typeof emp.user_roles === 'string') return true;
+          return Array.isArray(emp.user_roles) && (emp.user_roles as { role: string }[]).some((r) => r.role === 'hr' || r.role === 'manager');
+        });
+      }
+      setAssignees(verantwoordelijken);
+    } catch (error) {
+      console.error('Error loading assignees:', error);
+      setAssignees([]);
+    } finally {
+      setLoadingAssignees(false);
+    }
+  };
 
   const handleTemplateChange = (value: string) => {
     setSelectedTemplate(value);
@@ -122,13 +166,23 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
             />
           </div>
           <div>
-            <Label htmlFor="assigned_to">Toegewezen aan (User ID)</Label>
-            <Input
-              id="assigned_to"
+            <Label htmlFor="assigned_to">Toegewezen aan *</Label>
+            <Select
               value={formData.assigned_to}
-              onChange={(e) => setFormData({ ...formData, assigned_to: e.target.value })}
-              placeholder="UUID van medewerker (optioneel)"
-            />
+              onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingAssignees ? "Laden..." : "Selecteer verantwoordelijke (HR/Manager)"} />
+              </SelectTrigger>
+              <SelectContent>
+                {assignees.map((emp) => (
+                  <SelectItem key={emp.id} value={emp.id}>
+                    {emp.voornaam} {emp.achternaam} ({emp.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
