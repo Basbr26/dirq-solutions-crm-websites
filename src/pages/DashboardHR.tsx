@@ -19,6 +19,20 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export default function DashboardHR() {
+    const handleDeleteCase = async (caseId: string) => {
+      if (!window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen?')) return;
+      try {
+        const { error } = await supabase
+          .from('sick_leave_cases')
+          .delete()
+          .eq('id', caseId);
+        if (error) throw error;
+        toast.success('Ziekmelding verwijderd');
+        loadCases();
+      } catch (error) {
+        toast.error('Verwijderen mislukt');
+      }
+    };
   const { user } = useAuth();
   const navigate = useNavigate();
   const [cases, setCases] = useState<SickLeaveCase[]>([]);
@@ -288,11 +302,22 @@ export default function DashboardHR() {
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {filteredCases.map((caseItem) => (
-                  <CaseCard 
-                    key={caseItem.id} 
-                    case_={caseItem} 
-                    onClick={() => navigate(`/case/${caseItem.id}`)}
-                  />
+                  <div key={caseItem.id} className="relative group">
+                    <CaseCard 
+                      case_={caseItem} 
+                      onClick={() => navigate(`/case/${caseItem.id}`)}
+                    />
+                    <button
+                      className="absolute top-2 right-2 z-10 opacity-80 group-hover:opacity-100 bg-destructive text-white rounded px-2 py-1 text-xs shadow hover:bg-destructive/80 transition"
+                      title="Verwijder ziekmelding"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCase(caseItem.id);
+                      }}
+                    >
+                      Verwijder
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
