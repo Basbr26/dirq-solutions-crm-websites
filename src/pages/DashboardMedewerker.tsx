@@ -40,7 +40,7 @@ export default function DashboardMedewerker() {
 
     try {
       const caseData = await getEmployeeCase(user.id);
-      setActiveCase(caseData);
+        setActiveCase({ ...caseData, reason: 'reason' in caseData ? caseData.reason : '' } as SickLeaveCase);
       
       // Load tasks for the employee
       const { data: tasksData } = await supabase
@@ -61,7 +61,7 @@ export default function DashboardMedewerker() {
   const daysOut = activeCase 
     ? differenceInDays(
         activeCase.end_date ? new Date(activeCase.end_date) : new Date(),
-        new Date(activeCase.start_datum)
+        new Date(activeCase.start_date)
       ) + 1
     : 0;
 
@@ -158,20 +158,20 @@ export default function DashboardMedewerker() {
               <div className="p-4 rounded-lg bg-muted/50">
                 <h3 className="font-semibold mb-2 text-foreground">Jouw rechten:</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Je hoeft geen medische details te delen</li>
-                  <li>• Je hebt recht op begeleiding en ondersteuning</li>
-                  <li>• Je krijgt minimaal 70% van je loon doorbetaald</li>
-                  <li>• Je mag niet zomaar ontslagen worden</li>
+                  <li>â€¢ Je hoeft geen medische details te delen</li>
+                  <li>â€¢ Je hebt recht op begeleiding en ondersteuning</li>
+                  <li>â€¢ Je krijgt minimaal 70% van je loon doorbetaald</li>
+                  <li>â€¢ Je mag niet zomaar ontslagen worden</li>
                 </ul>
               </div>
 
               <div className="p-4 rounded-lg bg-muted/50">
                 <h3 className="font-semibold mb-2 text-foreground">Jouw plichten:</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Meld je altijd telefonisch ziek bij je manager</li>
-                  <li>• Houd je aan afspraken en contactmomenten</li>
-                  <li>• Werk mee aan herstel en re-integratie</li>
-                  <li>• Wees bereikbaar tijdens afgesproken tijden</li>
+                  <li>â€¢ Meld je altijd telefonisch ziek bij je manager</li>
+                  <li>â€¢ Houd je aan afspraken en contactmomenten</li>
+                  <li>â€¢ Werk mee aan herstel en re-integratie</li>
+                  <li>â€¢ Wees bereikbaar tijdens afgesproken tijden</li>
                 </ul>
               </div>
             </CardContent>

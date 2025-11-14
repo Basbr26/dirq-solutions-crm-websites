@@ -20,18 +20,47 @@ import { useNavigate } from 'react-router-dom';
 
 export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
-      if (!window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen?')) return;
+      if (!window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen? Dit verwijdert ook alle gerelateerde taken, documenten en tijdlijn gebeurtenissen.')) return;
+      
       try {
-        const { error } = await supabase
+        // Eerst verwijder gerelateerde taken
+        const { error: tasksError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('case_id', caseId);
+        
+        if (tasksError) throw tasksError;
+
+        // Verwijder documenten
+        const { error: docsError } = await supabase
+          .from('documents')
+          .delete()
+          .eq('case_id', caseId);
+        
+        if (docsError) throw docsError;
+
+        // Verwijder timeline events
+        const { error: timelineError } = await supabase
+          .from('timeline_events')
+          .delete()
+          .eq('case_id', caseId);
+        
+        if (timelineError) throw timelineError;
+
+        // Nu verwijder de case zelf
+        const { error: caseError } = await supabase
           .from('sick_leave_cases')
           .delete()
           .eq('id', caseId);
-        if (error) throw error;
-        toast.success('Ziekmelding verwijderd');
+        
+        if (caseError) throw caseError;
+
+        toast.success('Ziekmelding en alle gerelateerde gegevens verwijderd');
         loadCases();
+        loadTasks();
       } catch (error) {
-        toast.error('Verwijderen mislukt');
-        console.error(error);
+        toast.error('Verwijderen mislukt: ' + (error instanceof Error ? error.message : 'Onbekende fout'));
+        console.error('Delete error:', error);
       }
     };
   const { user } = useAuth();
@@ -55,7 +84,10 @@ export default function DashboardHR() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setCases(data || []);
+        setCases((data || []).map(c => ({
+          ...c,
+          reason: typeof c.reason === 'string' ? c.reason : ''
+        })));
     } catch (error) {
       console.error('Error loading cases:', error);
       toast.error('Fout bij laden van cases');
@@ -165,12 +197,12 @@ export default function DashboardHR() {
 
   const handleExportCases = () => {
     exportCasesToCSV(cases);
-    toast.success('Ziekmeldingen geëxporteerd naar CSV');
+    toast.success('Ziekmeldingen geÃ«xporteerd naar CSV');
   };
 
   const handleExportTasks = () => {
     exportTasksToCSV(tasks, cases);
-    toast.success('Taken geëxporteerd naar CSV');
+    toast.success('Taken geÃ«xporteerd naar CSV');
   };
 
   return (

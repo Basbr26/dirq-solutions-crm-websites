@@ -21,7 +21,7 @@ const statusConfig = {
 export function CaseCard({ case_, onClick, onDelete }: CaseCardProps) {
   const daysOut = case_.end_date 
     ? Math.ceil((new Date(case_.end_date).getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24))
-    : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24));
+    : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const employeeName = case_.employee 
     ? `${case_.employee.voornaam} ${case_.employee.achternaam}`

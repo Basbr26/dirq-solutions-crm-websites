@@ -79,7 +79,7 @@ const taskStatusConfig = {
 const eventTypeConfig: Record<EventType, { label: string; color: string }> = {
     // Fallbacks for extended EventType union
     document_upload: {
-      label: "Document geüpload",
+      label: "Document geÃ¼pload",
       color: "bg-muted text-muted-foreground",
     },
     afgerond: {
@@ -122,26 +122,53 @@ const eventTypeConfig: Record<EventType, { label: string; color: string }> = {
 
 export default function CaseDetail() {
     const handleDeleteCase = async () => {
-      if (!case_ || !window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen?')) return;
+      if (!case_ || !window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen? Dit verwijdert ook alle gerelateerde taken, documenten en tijdlijn gebeurtenissen.')) return;
+      
       try {
-        const { error } = await supabase
+        // Eerst verwijder gerelateerde taken
+        const { error: tasksError } = await supabase
+          .from('tasks')
+          .delete()
+          .eq('case_id', case_.id);
+        
+        if (tasksError) throw tasksError;
+
+        // Verwijder documenten
+        const { error: docsError } = await supabase
+          .from('documents')
+          .delete()
+          .eq('case_id', case_.id);
+        
+        if (docsError) throw docsError;
+
+        // Verwijder timeline events
+        const { error: timelineError } = await supabase
+          .from('timeline_events')
+          .delete()
+          .eq('case_id', case_.id);
+        
+        if (timelineError) throw timelineError;
+
+        // Nu verwijder de case zelf
+        const { error: caseError } = await supabase
           .from('sick_leave_cases')
           .delete()
           .eq('id', case_.id);
-        if (error) throw error;
+        
+        if (caseError) throw caseError;
+
         toast({
           title: 'Ziekmelding verwijderd',
-          description: 'Het dossier is succesvol verwijderd.',
-          variant: 'destructive',
+          description: 'Het dossier en alle gerelateerde gegevens zijn succesvol verwijderd.',
         });
         navigate(-1);
       } catch (error) {
         toast({
           title: 'Verwijderen mislukt',
-          description: 'Er ging iets mis bij het verwijderen.',
+          description: 'Er ging iets mis bij het verwijderen: ' + (error instanceof Error ? error.message : 'Onbekende fout'),
           variant: 'destructive',
         });
-        console.error(error);
+        console.error('Delete error:', error);
       }
     };
   const { id } = useParams<{ id: string }>();
@@ -177,7 +204,7 @@ export default function CaseDetail() {
 
       if (caseError) throw caseError;
       
-      const typedCase = caseData as SickLeaveCase;
+      const typedCase = caseData as unknown as SickLeaveCase;
 
       // Map 'archief' -> 'gesloten' voor display
       const dbStatus = (typedCase.case_status === 'archief'
@@ -412,7 +439,7 @@ export default function CaseDetail() {
       created_at: new Date().toISOString(),
     };
     setDocuments([...documents, newDoc]);
-    sonnerToast.success('Document geüpload');
+    sonnerToast.success('Document geÃ¼pload');
   };
 
   const handleDocumentDelete = (docId: string) => {
@@ -422,7 +449,7 @@ export default function CaseDetail() {
 
   const daysOut = case_.end_date 
     ? Math.ceil((new Date(case_.end_date).getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24))
-    : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24));
+    : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const employeeName = case_.employee 
     ? `${case_.employee.voornaam} ${case_.employee.achternaam}`
@@ -577,11 +604,11 @@ export default function CaseDetail() {
                                 </div>
                                 {task.assigned_user && (
                                   <span className="text-xs">
-                                    • {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                                    â€¢ {task.assigned_user.voornaam} {task.assigned_user.achternaam}
                                   </span>
                                 )}
                                 {task.notes && (
-                                  <span className="text-xs">• Notities beschikbaar</span>
+                                  <span className="text-xs">â€¢ Notities beschikbaar</span>
                                 )}
                               </div>
                             </CardContent>
@@ -632,7 +659,7 @@ export default function CaseDetail() {
                                 )}
                                 {event.creator && (
                                   <span className="text-sm text-muted-foreground">
-                                    • {event.creator.voornaam} {event.creator.achternaam}
+                                    â€¢ {event.creator.voornaam} {event.creator.achternaam}
                                   </span>
                                 )}
                               </div>

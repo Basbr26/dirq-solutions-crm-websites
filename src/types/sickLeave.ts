@@ -1,4 +1,5 @@
 import { Database, Json } from '@/integrations/supabase/types';
+import { ReactNode } from 'react';
 
 export type CaseStatus = Database['public']['Enums']['case_status'];
 export type TaskStatus = Database['public']['Enums']['task_status'];
@@ -12,6 +13,7 @@ export type EventType =
 
 // Sluit aan op de Supabase-tabel sick_leave_cases
 export interface SickLeaveCase {
+  reason: ReactNode;
   id: string;
   employee_id: string;
   start_date: string;

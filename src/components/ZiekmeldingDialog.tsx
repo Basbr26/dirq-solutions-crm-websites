@@ -135,8 +135,9 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
       // Maak de ziekmelding aan via onSubmit (deze returned het nieuwe caseId)
       const caseId = await onSubmit(validated);
 
-      // Genereer automatische taken voor deze case
-      await generateInitialTasks(caseId, validated.start_date, validated.employee_id);
+      if (!caseId) {
+        throw new Error('Case ID niet ontvangen');
+      }
 
       const selectedEmployee = employees.find(
         (emp) => emp.id === validated.employee_id

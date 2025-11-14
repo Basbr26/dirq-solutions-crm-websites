@@ -43,7 +43,10 @@ export default function DashboardManager() {
         getManagerTasks(user.id)
       ]);
       
-      setCases(casesData || []);
+      setCases((casesData || []).map(c => ({
+        ...c,
+        reason: typeof c.reason === 'string' ? c.reason : '',
+      })));
       setTasks(tasksData || []);
     } catch (error) {
       console.error('Error loading manager data:', error);
