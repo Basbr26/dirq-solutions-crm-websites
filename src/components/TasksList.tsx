@@ -14,6 +14,8 @@ interface TasksListProps {
 }
 
 export function TasksList({ tasks }: TasksListProps) {
+    const isActiveStatus = (status: Task['task_status']) =>
+      status === 'open' || status === 'in_progress' || status === 'overdue';
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'deadline' | 'status'>('deadline');
@@ -28,9 +30,14 @@ export function TasksList({ tasks }: TasksListProps) {
     if (
       task.deadline &&
       isPast(new Date(task.deadline)) &&
-      (task.task_status === 'open' || task.task_status === 'in_progress')
+      isActiveStatus(task.task_status)
     ) {
-      return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Te laat</Badge>;
+      return (
+        <Badge variant="destructive" className="gap-1">
+          <AlertCircle className="h-3 w-3" />
+          Te laat
+        </Badge>
+      );
     }
     return <Badge variant="outline">Open</Badge>;
   };

@@ -12,6 +12,7 @@ import { ArrowLeft, Calendar, User, FileText, CheckCircle2, Clock, Circle } from
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { CaseStatus, TaskStatus, Task, Document, SickLeaveCase, TimelineEvent } from '@/types/sickLeave';
+import type { EventType } from '@/types/sickLeave';
 // Type for raw timeline event from Supabase
 type RawTimelineEvent = {
   id: string;
@@ -75,14 +76,48 @@ const taskStatusConfig = {
 };
 
 // Sluit aan bij je enum waardes in Supabase / createTimelineEvent:
-const eventTypeConfig = {
-  ziekmelding: { label: 'Ziekmelding', color: 'bg-destructive/10 text-destructive' },
-  gesprek: { label: 'Gesprek', color: 'bg-primary/10 text-primary' },
-  herstelmelding: { label: 'Herstelmelding', color: 'bg-green-600/10 text-green-600' },
-  document_toegevoegd: { label: 'Document toegevoegd', color: 'bg-blue-600/10 text-blue-600' },
-  taak_afgerond: { label: 'Taak afgerond', color: 'bg-green-600/10 text-green-600' },
-  evaluatie: { label: 'Evaluatie', color: 'bg-purple-600/10 text-purple-600' },
-  statuswijziging: { label: 'Statuswijziging', color: 'bg-orange-600/10 text-orange-600' },
+const eventTypeConfig: Record<EventType, { label: string; color: string }> = {
+    // Fallbacks for extended EventType union
+    document_upload: {
+      label: "Document geüpload",
+      color: "bg-muted text-muted-foreground",
+    },
+    afgerond: {
+      label: "Afgerond",
+      color: "bg-green-600/10 text-green-600",
+    },
+    status_change: {
+      label: "Status gewijzigd",
+      color: "bg-muted text-muted-foreground",
+    },
+  ziekmelding: {
+    label: "Ziekmelding",
+    color: "bg-destructive/10 text-destructive",
+  },
+  gesprek: {
+    label: "Gesprek",
+    color: "bg-primary/10 text-primary",
+  },
+  document_toegevoegd: {
+    label: "Document toegevoegd",
+    color: "bg-blue-600/10 text-blue-600",
+  },
+  taak_afgerond: {
+    label: "Taak afgerond",
+    color: "bg-green-600/10 text-green-600",
+  },
+  herstelmelding: {
+    label: "Herstelmelding",
+    color: "bg-green-600/10 text-green-600",
+  },
+  evaluatie: {
+    label: "Evaluatie",
+    color: "bg-violet-600/10 text-violet-600",
+  },
+  statuswijziging: {
+    label: "Statuswijziging",
+    color: "bg-orange-600/10 text-orange-600",
+  },
 };
 
 export default function CaseDetail() {
@@ -508,15 +543,19 @@ export default function CaseDetail() {
               ) : (
                 <div className="space-y-3">
                   {timeline.map((event) => {
-                    const cfg = eventTypeConfig[event.event_type];
                     return (
                       <Card key={event.id}>
                         <CardContent className="py-4">
                           <div className="flex items-start gap-4">
                             <div className="flex-1 space-y-1">
                               <div className="flex items-center gap-2">
-                                <Badge className={cfg.color}>
-                                  {cfg.label}
+                                <Badge
+                                  className={
+                                    eventTypeConfig[event.event_type]?.color ??
+                                    "bg-muted text-muted-foreground"
+                                  }
+                                >
+                                  {eventTypeConfig[event.event_type]?.label ?? event.event_type}
                                 </Badge>
                                 {event.created_at && (
                                   <span className="text-sm text-muted-foreground">
