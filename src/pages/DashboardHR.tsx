@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { ZiekmeldingDialog } from '@/components/ZiekmeldingDialog';
 import { CaseCard } from '@/components/CaseCard';
@@ -8,42 +8,95 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockSickLeaveCases, mockTasks } from '@/lib/mockData';
 import { SickLeaveCase, CaseStatus, Task } from '@/types/sickLeave';
 import { Search, TrendingUp, Users, Clock, BarChart3, Download } from 'lucide-react';
-import { generateTasksFromTemplate } from '@/lib/taskTemplates';
 import { exportCasesToCSV, exportTasksToCSV } from '@/lib/exportUtils';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
+import { generateInitialTasks, createTimelineEvent } from '@/lib/supabaseHelpers';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 export default function DashboardHR() {
-  const [cases, setCases] = useState<SickLeaveCase[]>(mockSickLeaveCases);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [cases, setCases] = useState<SickLeaveCase[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CaseStatus | 'all'>('all');
+  const [loading, setLoading] = useState(true);
 
-  const handleNewCase = (data: any) => {
-    const newCase: SickLeaveCase = {
-      id: `case-${Date.now()}`,
-      medewerker_id: `emp-${Date.now()}`,
-      medewerker_naam: data.medewerker_naam,
-      start_datum: data.start_datum,
-      eind_datum: null,
-      reden: data.reden,
-      status: 'actief',
-      manager_id: null,
-      notities: data.notities || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    
-    const newTasks = generateTasksFromTemplate(
-      newCase.id,
-      newCase.start_datum,
-      'mock-user-id-123'
-    );
-    
-    setCases([newCase, ...cases]);
-    setTasks([...newTasks, ...tasks]);
+  useEffect(() => {
+    loadCases();
+    loadTasks();
+  }, []);
+
+  const loadCases = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sick_leave_cases')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setCases(data || []);
+    } catch (error) {
+      console.error('Error loading cases:', error);
+      toast.error('Fout bij laden van cases');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('deadline', { ascending: true });
+      
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+      toast.error('Fout bij laden van taken');
+    }
+  };
+
+  const handleNewCase = async (data: any) => {
+    if (!user) return;
+
+    try {
+      const { data: newCase, error: caseError } = await supabase
+        .from('sick_leave_cases')
+        .insert({
+          medewerker_id: data.medewerker_id,
+          medewerker_naam: data.medewerker_naam,
+          start_datum: data.start_datum,
+          reden: data.reden,
+          status: 'actief',
+          notities: data.notities || null,
+        })
+        .select()
+        .single();
+
+      if (caseError) throw caseError;
+
+      await generateInitialTasks(newCase.id, newCase.start_datum);
+      await createTimelineEvent(
+        newCase.id,
+        'ziekmelding',
+        `Ziekmelding ontvangen: ${newCase.reden}`,
+        user.id
+      );
+
+      toast.success('Ziekmelding succesvol aangemaakt');
+      loadCases();
+      loadTasks();
+    } catch (error) {
+      console.error('Error creating case:', error);
+      toast.error('Fout bij aanmaken ziekmelding');
+    }
   };
 
   const filteredCases = cases.filter(c => {
