@@ -14,15 +14,8 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function RoleBasedRedirect() {
-  const { role, loading } = useAuth();
-  
-  if (loading) return null;
-  
-  if (role === 'hr') return <Navigate to="/dashboard/hr" replace />;
-  if (role === 'manager') return <Navigate to="/dashboard/manager" replace />;
-  if (role === 'medewerker') return <Navigate to="/dashboard/medewerker" replace />;
-  
-  return <Navigate to="/auth" replace />;
+  // Direct naar HR dashboard met mock user
+  return <Navigate to="/dashboard/hr" replace />;
 }
 
 const App = () => (
