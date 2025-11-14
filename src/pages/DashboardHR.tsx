@@ -22,31 +22,16 @@ export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
       if (!window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen?')) return;
       try {
-        // Verwijder eerst alle gerelateerde taken
-        const { error: tasksError } = await supabase
-          .from('tasks')
-          .delete()
-          .eq('case_id', caseId);
-        if (tasksError) throw tasksError;
-
-        // Verwijder alle gerelateerde timeline_events
-        const { error: timelineError } = await supabase
-          .from('timeline_events')
-          .delete()
-          .eq('case_id', caseId);
-        if (timelineError) throw timelineError;
-
-        // Verwijder nu de case zelf
-        const { error: caseError } = await supabase
+        const { error } = await supabase
           .from('sick_leave_cases')
           .delete()
           .eq('id', caseId);
-        if (caseError) throw caseError;
-
+        if (error) throw error;
         toast.success('Ziekmelding verwijderd');
         loadCases();
       } catch (error) {
         toast.error('Verwijderen mislukt');
+        console.error(error);
       }
     };
   const { user } = useAuth();

@@ -121,6 +121,29 @@ const eventTypeConfig: Record<EventType, { label: string; color: string }> = {
 };
 
 export default function CaseDetail() {
+    const handleDeleteCase = async () => {
+      if (!case_ || !window.confirm('Weet je zeker dat je deze ziekmelding wilt verwijderen?')) return;
+      try {
+        const { error } = await supabase
+          .from('sick_leave_cases')
+          .delete()
+          .eq('id', case_.id);
+        if (error) throw error;
+        toast({
+          title: 'Ziekmelding verwijderd',
+          description: 'Het dossier is succesvol verwijderd.',
+          variant: 'destructive',
+        });
+        navigate(-1);
+      } catch (error) {
+        toast({
+          title: 'Verwijderen mislukt',
+          description: 'Er ging iets mis bij het verwijderen.',
+          variant: 'destructive',
+        });
+        console.error(error);
+      }
+    };
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -164,18 +187,39 @@ export default function CaseDetail() {
       setCase({ ...typedCase, case_status: dbStatus });
       setStatus(dbStatus);
 
-      // Taken
+      // Taken (selecteer alleen relevante velden en assigned_user via FK)
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          id,
+          title,
+          description,
+          deadline,
+          task_status,
+          case_id,
+          assigned_to,
+          assigned_user:profiles!tasks_assigned_to_fkey (
+            id,
+            voornaam,
+            achternaam,
+            email
+          )
+        `)
         .eq('case_id', id)
         .order('deadline', { ascending: true });
 
-      if (tasksError) throw tasksError;
-      setTasks((tasksData || []).map(t => ({
-        ...t,
-        task_status: normalizeTaskStatus(t.task_status),
-      })));
+        if (tasksError) throw tasksError;
+        setTasks((tasksData || []).map(t => ({
+          ...t,
+          task_status: normalizeTaskStatus(t.task_status),
+          assigned_user:
+            t.assigned_user != null &&
+            typeof t.assigned_user === 'object' &&
+            t.assigned_user !== null &&
+            t.assigned_user && !('error' in t.assigned_user)
+              ? t.assigned_user
+              : null,
+        })));
 
       // Documenten (met rol-filter)
       const documentsData = await getCaseDocuments(id, role);
@@ -424,9 +468,19 @@ export default function CaseDetail() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Badge variant={statusConfig[status].variant} className="text-sm">
-                    {statusConfig[status].label}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={statusConfig[status].variant} className="text-sm">
+                      {statusConfig[status].label}
+                    </Badge>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="ml-2"
+                      onClick={handleDeleteCase}
+                    >
+                      Verwijder dossier
+                    </Button>
+                  </div>
                   <Select value={status} onValueChange={(v) => handleStatusChange(v as ActiveCaseStatus)}>
                     <SelectTrigger className="w-40">
                       <SelectValue />
@@ -514,22 +568,21 @@ export default function CaseDetail() {
                               {task.description && (
                                 <p className="text-sm text-muted-foreground">{task.description}</p>
                               )}
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <div className="flex items-center gap-1">
                                   <Calendar className="h-4 w-4 text-muted-foreground" />
                                   <span>
                                     Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    value={task.assigned_to || ''}
-                                    onChange={(e) => handleTaskAssignment(task.id, e.target.value)}
-                                    placeholder="Niet toegewezen"
-                                    className="h-7 w-40 text-sm"
-                                  />
-                                </div>
+                                {task.assigned_user && (
+                                  <span className="text-xs">
+                                    • {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                                  </span>
+                                )}
+                                {task.notes && (
+                                  <span className="text-xs">• Notities beschikbaar</span>
+                                )}
                               </div>
                             </CardContent>
                           </Card>

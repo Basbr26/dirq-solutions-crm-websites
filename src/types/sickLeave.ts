@@ -33,23 +33,27 @@ export interface SickLeaveCase {
 // Sluit aan op de Supabase-tabel tasks
 export interface Task {
   id: string;
-  case_id: string;
   title: string;
   description: string | null;
-  deadline: string;
-  task_status: TaskStatus;
-  assigned_to: string | null;
-  completed_at: string | null;
-  completed_by: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-
-  // Wet Poortwachter specifieke velden
-  gespreksonderwerpen: string | null;
-  toegestane_vragen: string | null;
-  verboden_vragen: string | null;
-  juridische_context: string | null;
-  notes: string | null;
+  deadline: string | null;
+  task_status: 'open' | 'in_progress' | 'afgerond' | 'overdue';
+  case_id: string;
+  assigned_to: string;
+  assigned_user?: {
+    id: string;
+    voornaam: string;
+    achternaam: string;
+    email?: string;
+  } | null;
+  completed_at?: string | null;
+  completed_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  gespreksonderwerpen?: string | null;
+  toegestane_vragen?: string | null;
+  verboden_vragen?: string | null;
+  juridische_context?: string | null;
+  notes?: string | null;
 }
 
 // Sluit aan op de Supabase-tabel timeline_events

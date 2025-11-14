@@ -134,6 +134,13 @@ export function TasksList({ tasks }: TasksListProps) {
                     <Clock className="h-4 w-4" />
                     <span>{getDeadlineLabel(task.deadline)}</span>
                   </div>
+
+                  {task.assigned_user && (
+                    <span className="text-xs">
+                      • {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                    </span>
+                  )}
+
                   {task.notes && (
                     <span className="text-xs">• Notities beschikbaar</span>
                   )}
