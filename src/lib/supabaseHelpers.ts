@@ -169,13 +169,7 @@ export async function getCaseDocuments(caseId: string, userRole: string) {
 export async function getCaseTimeline(caseId: string) {
   const { data, error } = await supabase
     .from('timeline_events')
-    .select(`
-      *,
-      creator:profiles!timeline_events_created_by_fkey (
-        voornaam,
-        achternaam
-      )
-    `)
+    .select(`*,profiles(voornaam,achternaam)`)
     .eq('case_id', caseId)
     .order('created_at', { ascending: false });
 

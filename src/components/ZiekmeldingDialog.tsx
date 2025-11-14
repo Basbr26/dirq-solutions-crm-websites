@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Info } from 'lucide-react';
 import { z } from 'zod';
 import { defaultTaskTemplates } from '@/lib/taskTemplates';
+import { generateInitialTasks } from '@/lib/supabaseHelpers';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -44,7 +45,7 @@ const ziekmeldingSchema = z.object({
 type ZiekmeldingFormData = z.infer<typeof ziekmeldingSchema>;
 
 interface ZiekmeldingDialogProps {
-  onSubmit: (data: ZiekmeldingFormData) => void | Promise<void>;
+  onSubmit: (data: ZiekmeldingFormData) => Promise<string | undefined>;
 }
 
 interface Employee {
@@ -131,7 +132,11 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
 
     try {
       const validated = ziekmeldingSchema.parse(formData);
-      await onSubmit(validated);
+      // Maak de ziekmelding aan via onSubmit (deze returned het nieuwe caseId)
+      const caseId = await onSubmit(validated);
+
+      // Genereer automatische taken voor deze case
+      await generateInitialTasks(caseId, validated.start_date, validated.employee_id);
 
       const selectedEmployee = employees.find(
         (emp) => emp.id === validated.employee_id
@@ -141,7 +146,7 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
         title: 'Ziekmelding geregistreerd',
         description: `Ziekmelding voor ${selectedEmployee?.voornaam ?? ''} ${
           selectedEmployee?.achternaam ?? ''
-        } is succesvol aangemaakt.`,
+        } is succesvol aangemaakt. Automatische taken zijn toegevoegd.`,
       });
 
       // Reset form

@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
-  herstel: { label: 'Herstel', variant: 'default' as const },
+  herstel_gemeld: { label: 'Herstel Gemeld', variant: 'default' as const },
   afgesloten: { label: 'Afgesloten', variant: 'secondary' as const },
 };
 
@@ -60,7 +60,7 @@ export default function DashboardMedewerker() {
 
   const daysOut = activeCase 
     ? differenceInDays(
-        activeCase.eind_datum ? new Date(activeCase.eind_datum) : new Date(),
+        activeCase.end_date ? new Date(activeCase.end_date) : new Date(),
         new Date(activeCase.start_datum)
       ) + 1
     : 0;
@@ -104,8 +104,8 @@ export default function DashboardMedewerker() {
                   <CardTitle>Jouw Actieve Ziekmelding</CardTitle>
                   <CardDescription>Huidige status en informatie</CardDescription>
                 </div>
-                <Badge variant={statusConfig[activeCase.status].variant}>
-                  {statusConfig[activeCase.status].label}
+                <Badge variant={statusConfig[activeCase.case_status].variant}>
+                  {statusConfig[activeCase.case_status].label}
                 </Badge>
               </div>
             </CardHeader>
@@ -115,7 +115,7 @@ export default function DashboardMedewerker() {
                   <p className="text-sm text-muted-foreground">Startdatum</p>
                   <p className="font-medium flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-primary" />
-                    {format(new Date(activeCase.start_datum), 'd MMMM yyyy', { locale: nl })}
+                    {format(new Date(activeCase.start_date), 'd MMMM yyyy', { locale: nl })}
                   </p>
                 </div>
                 <div>
@@ -123,10 +123,10 @@ export default function DashboardMedewerker() {
                   <p className="font-medium">{daysOut} dagen</p>
                 </div>
               </div>
-              {activeCase.reden && (
+              {activeCase.reason && (
                 <div>
                   <p className="text-sm text-muted-foreground">Reden</p>
-                  <p className="font-medium">{activeCase.reden}</p>
+                  <p className="font-medium">{activeCase.reason}</p>
                 </div>
               )}
               <Button 

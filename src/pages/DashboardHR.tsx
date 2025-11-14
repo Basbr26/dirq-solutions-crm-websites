@@ -72,7 +72,7 @@ export default function DashboardHR() {
     availability_notes?: string;
     can_work_partial?: boolean;
     partial_work_description?: string;
-  }) => {
+  }): Promise<string | undefined> => {
     if (!user) {
       toast.error('Je moet ingelogd zijn om een case aan te maken');
       return;
@@ -115,6 +115,7 @@ export default function DashboardHR() {
       toast.success('Ziekmelding succesvol aangemaakt');
       loadCases();
       loadTasks();
+      return newCase.id;
     } catch (error: unknown) {
       console.error('Error creating case:', error);
       toast.error(
@@ -124,6 +125,7 @@ export default function DashboardHR() {
             : 'Onbekende fout'
         }`
       );
+      return undefined;
     }
   };
 

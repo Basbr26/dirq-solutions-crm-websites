@@ -29,13 +29,14 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [voornaam, setVoornaam] = useState('');
   const [achternaam, setAchternaam] = useState('');
+  const [showAnimation, setShowAnimation] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect if already logged in
-  if (user) {
-    navigate('/');
+  if (user && !showAnimation) {
+    navigate('/dashboard');
     return null;
   }
 
@@ -45,9 +46,7 @@ export default function Auth() {
     try {
       loginSchema.parse({ email, password });
       setLoading(true);
-      
       const { error } = await signIn(email, password);
-      
       if (error) {
         toast({
           variant: 'destructive',
@@ -57,11 +56,10 @@ export default function Auth() {
             : error.message,
         });
       } else {
-        toast({
-          title: 'Succesvol ingelogd',
-          description: 'Je wordt doorgestuurd...',
-        });
-        navigate('/');
+        setShowAnimation(true);
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 3000);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -114,116 +112,115 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary px-4">
-      <Card className="w-full max-w-md shadow-dirq-lg">
-        <CardHeader className="space-y-2 text-center">
-          <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-primary-foreground">D</span>
-          </div>
-          <CardTitle className="text-2xl">Dirq Poortwachter</CardTitle>
-          <CardDescription>
-            Verzuimbeheer volgens de wet
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent>
-          <Tabs value={isLogin ? 'login' : 'signup'} onValueChange={(v) => setIsLogin(v === 'login')}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="login">Inloggen</TabsTrigger>
-              <TabsTrigger value="signup">Registreren</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="login-email">E-mailadres</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="naam@bedrijf.nl"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="login-password">Wachtwoord</Label>
-                  <Input
-                    id="login-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Inloggen
-                </Button>
-              </form>
-            </TabsContent>
-            
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+    showAnimation ? (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white animate-fadeOut">
+        <img src="/logo-dirq.svg" alt="DIRQ logo" className="h-20 w-20 mb-6 animate-pulse" />
+        <div className="loader ease-linear rounded-full border-8 border-t-8 border-[#00C6B2] border-t-[#FFF4C2] h-12 w-12 mb-4 animate-spin"></div>
+        <h2 className="text-2xl font-bold text-[#00C6B2] font-inter mt-2">Welkom bij DIRQ!</h2>
+      </div>
+    ) : (
+      <div className="min-h-screen flex items-center justify-center bg-secondary px-4">
+        <Card className="w-full max-w-md shadow-dirq-lg">
+          <CardHeader className="space-y-2 text-center">
+            <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4">
+              <span className="text-2xl font-bold text-primary-foreground">D</span>
+            </div>
+            <CardTitle className="text-2xl">Dirq Poortwachter</CardTitle>
+            <CardDescription>
+              Verzuimbeheer volgens de wet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={isLogin ? 'login' : 'signup'} onValueChange={(v) => setIsLogin(v === 'login')}>
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Inloggen</TabsTrigger>
+                <TabsTrigger value="signup">Registreren</TabsTrigger>
+              </TabsList>
+              <TabsContent value="login">
+                <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-voornaam">Voornaam</Label>
+                    <Label htmlFor="login-email">E-mailadres</Label>
                     <Input
-                      id="signup-voornaam"
-                      type="text"
-                      value={voornaam}
-                      onChange={(e) => setVoornaam(e.target.value)}
+                      id="login-email"
+                      type="email"
+                      placeholder="naam@bedrijf.nl"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
                   </div>
-                  
                   <div className="space-y-2">
-                    <Label htmlFor="signup-achternaam">Achternaam</Label>
+                    <Label htmlFor="login-password">Wachtwoord</Label>
                     <Input
-                      id="signup-achternaam"
-                      type="text"
-                      value={achternaam}
-                      onChange={(e) => setAchternaam(e.target.value)}
+                      id="login-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">E-mailadres</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="naam@bedrijf.nl"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Wachtwoord</Label>
-                  <Input
-                    id="signup-password"
-                    type="password"
-                    placeholder="Minimaal 6 tekens"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Account aanmaken
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Inloggen
+                  </Button>
+                </form>
+              </TabsContent>
+              <TabsContent value="signup">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-voornaam">Voornaam</Label>
+                      <Input
+                        id="signup-voornaam"
+                        type="text"
+                        value={voornaam}
+                        onChange={(e) => setVoornaam(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-achternaam">Achternaam</Label>
+                      <Input
+                        id="signup-achternaam"
+                        type="text"
+                        value={achternaam}
+                        onChange={(e) => setAchternaam(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">E-mailadres</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="naam@bedrijf.nl"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Wachtwoord</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="Minimaal 6 tekens"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Account aanmaken
+                  </Button>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    )
   );
 }

@@ -55,7 +55,7 @@ export function TasksList({ tasks }: TasksListProps) {
         return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
       }
       // Sort by status
-      const statusOrder = { 'open': 0, 'in_progress': 1, 'afgerond': 2 };
+      const statusOrder = { 'open': 0, 'in_progress': 1, 'afgerond': 2, 'overdue': 3 };
       return (statusOrder[a.task_status || 'open'] || 0) - (statusOrder[b.task_status || 'open'] || 0);
     });
 

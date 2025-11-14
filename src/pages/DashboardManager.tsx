@@ -54,26 +54,26 @@ export default function DashboardManager() {
   };
 
   const stats = {
-    totalTeam: cases.length > 0 ? cases.filter(c => c.status !== 'afgesloten').length : 0,
-    sickCount: cases.filter(c => c.status === 'actief').length,
-    recoveryCount: cases.filter(c => c.status === 'herstel').length,
-    openTasks: tasks.filter(t => t.status === 'open').length,
-    tasksToday: tasks.filter(t => t.status === 'open' && t.deadline && isToday(new Date(t.deadline))).length,
+    totalTeam: cases.length > 0 ? cases.filter(c => c.case_status !== 'gesloten').length : 0,
+    sickCount: cases.filter(c => c.case_status === 'actief').length,
+    recoveryCount: cases.filter(c => c.case_status === 'herstel_gemeld').length,
+    openTasks: tasks.filter(t => t.task_status === 'open').length,
+    tasksToday: tasks.filter(t => t.task_status === 'open' && t.deadline && isToday(new Date(t.deadline))).length,
     completedThisWeek: tasks.filter(t => 
-      t.status === 'completed' && 
+      t.task_status === 'afgerond' && 
       t.completed_at && 
       new Date(t.completed_at) >= startOfWeek(new Date()) &&
       new Date(t.completed_at) <= endOfWeek(new Date())
     ).length,
     overdueTasks: tasks.filter(t => 
-      t.status !== 'completed' && 
+      t.task_status !== 'afgerond' && 
       t.deadline && 
       new Date(t.deadline) < new Date()
     ).length,
   };
 
   const myTasks = tasks
-    .filter(t => t.toegewezen_aan === user?.id && t.status !== 'completed')
+    .filter(t => t.assigned_to === user?.id && t.task_status !== 'afgerond')
     .sort((a, b) => {
       if (!a.deadline) return 1;
       if (!b.deadline) return -1;
@@ -82,8 +82,8 @@ export default function DashboardManager() {
     .slice(0, 5);
 
   const activeCases = cases
-    .filter(c => c.status === 'actief' || c.status === 'herstel')
-    .sort((a, b) => new Date(b.start_datum).getTime() - new Date(a.start_datum).getTime())
+    .filter(c => c.case_status === 'actief' || c.case_status === 'herstel_gemeld')
+    .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime())
     .slice(0, 5);
 
   const getDeadlineLabel = (deadline: string | null) => {
@@ -244,16 +244,16 @@ export default function DashboardManager() {
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="font-medium text-foreground">{case_.medewerker_naam}</p>
-                        <Badge variant={statusConfig[case_.status].variant}>
-                          {statusConfig[case_.status].label}
+                        <p className="font-medium text-foreground">{case_.employee?.voornaam} {case_.employee?.achternaam}</p>
+                        <Badge variant={statusConfig[case_.case_status].variant}>
+                          {statusConfig[case_.case_status].label}
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Ziek sinds: {format(new Date(case_.start_datum), 'd MMMM yyyy', { locale: nl })}
+                        Ziek sinds: {format(new Date(case_.start_date), 'd MMMM yyyy', { locale: nl })}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Reden: {case_.reden}
+                        Reden: {case_.reason}
                       </p>
                     </div>
                     <Button size="sm" variant="outline">
