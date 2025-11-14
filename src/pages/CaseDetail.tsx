@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { TaskDialog } from '@/components/TaskDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { ArrowLeft, Calendar, User, FileText, CheckCircle2, Clock, Circle } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { mockSickLeaveCases, mockTasks, mockTimelineEvents } from '@/lib/mockData';
-import { CaseStatus, TaskStatus } from '@/types/sickLeave';
+import { CaseStatus, TaskStatus, Task } from '@/types/sickLeave';
 import { useToast } from '@/hooks/use-toast';
 
 const statusConfig = {
@@ -39,7 +41,8 @@ export default function CaseDetail() {
   const { toast } = useToast();
   
   const case_ = mockSickLeaveCases.find(c => c.id === id);
-  const caseTasks = mockTasks.filter(t => t.case_id === id);
+  const [tasks, setTasks] = useState<Task[]>(mockTasks);
+  const caseTasks = tasks.filter(t => t.case_id === id);
   const caseEvents = mockTimelineEvents.filter(e => e.case_id === id).sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
@@ -66,9 +69,49 @@ export default function CaseDetail() {
   };
 
   const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
+    setTasks(tasks.map(t => 
+      t.id === taskId 
+        ? { ...t, status: newStatus, completed_at: newStatus === 'completed' ? new Date().toISOString() : null }
+        : t
+    ));
     toast({
       title: 'Taak bijgewerkt',
       description: `Taak status gewijzigd naar: ${taskStatusConfig[newStatus].label}`,
+    });
+  };
+
+  const handleTaskAssignment = (taskId: string, assignee: string) => {
+    setTasks(tasks.map(t => 
+      t.id === taskId 
+        ? { ...t, toegewezen_aan: assignee || null }
+        : t
+    ));
+  };
+
+  const handleNewTask = (data: {
+    titel: string;
+    beschrijving: string;
+    deadline: string;
+    toegewezen_aan?: string;
+  }) => {
+    if (!case_) return;
+    
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      case_id: case_.id,
+      titel: data.titel,
+      beschrijving: data.beschrijving,
+      deadline: data.deadline,
+      status: 'open',
+      toegewezen_aan: data.toegewezen_aan || null,
+      created_at: new Date().toISOString(),
+      completed_at: null,
+    };
+    
+    setTasks([...tasks, newTask]);
+    toast({
+      title: 'Taak toegevoegd',
+      description: 'Nieuwe taak is succesvol aangemaakt',
     });
   };
 
@@ -158,6 +201,11 @@ export default function CaseDetail() {
             </TabsList>
             
             <TabsContent value="tasks" className="space-y-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Taken ({caseTasks.length})</h3>
+                <TaskDialog onSubmit={handleNewTask} />
+              </div>
+              
               {caseTasks.length === 0 ? (
                 <Card>
                   <CardContent className="py-8 text-center text-muted-foreground">
@@ -192,9 +240,20 @@ export default function CaseDetail() {
                       </CardHeader>
                       <CardContent className="space-y-2">
                         <p className="text-sm text-muted-foreground">{task.beschrijving}</p>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}</span>
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span>Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <Input
+                              value={task.toegewezen_aan || ''}
+                              onChange={(e) => handleTaskAssignment(task.id, e.target.value)}
+                              placeholder="Niet toegewezen"
+                              className="h-7 w-40 text-sm"
+                            />
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
