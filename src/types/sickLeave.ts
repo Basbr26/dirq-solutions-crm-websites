@@ -13,7 +13,6 @@ export type EventType =
 
 // Sluit aan op de Supabase-tabel sick_leave_cases
 export interface SickLeaveCase {
-  reason: ReactNode;
   id: string;
   employee_id: string;
   start_date: string;

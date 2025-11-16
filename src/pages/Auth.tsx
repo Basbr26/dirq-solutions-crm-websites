@@ -130,22 +130,22 @@ export default function Auth() {
         }}
       />
     ) : (
-      <div className="min-h-screen flex items-center justify-center bg-secondary px-4">
+      <div className="min-h-screen flex items-center justify-center bg-secondary px-4 py-8">
         <Card className="w-full max-w-md shadow-dirq-lg">
-          <CardHeader className="space-y-2 text-center">
-            <div className="mx-auto w-12 h-12 bg-primary rounded-lg flex items-center justify-center mb-4">
-              <span className="text-2xl font-bold text-primary-foreground">D</span>
+          <CardHeader className="space-y-2 text-center px-4 sm:px-6">
+            <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-primary rounded-lg flex items-center justify-center mb-2">
+              <span className="text-2xl sm:text-3xl font-bold text-primary-foreground">D</span>
             </div>
-            <CardTitle className="text-2xl">Dirq Poortwachter</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-xl sm:text-2xl">Dirq Poortwachter</CardTitle>
+            <CardDescription className="text-sm">
               Verzuimbeheer volgens de wet
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6">
             <Tabs value={isLogin ? 'login' : 'signup'} onValueChange={(v) => setIsLogin(v === 'login')}>
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Inloggen</TabsTrigger>
-                <TabsTrigger value="signup">Registreren</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
+                <TabsTrigger value="login" className="text-sm">Inloggen</TabsTrigger>
+                <TabsTrigger value="signup" className="text-sm">Registreren</TabsTrigger>
               </TabsList>
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">

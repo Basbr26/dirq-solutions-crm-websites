@@ -38,32 +38,33 @@ const LoadingScreen = ({ onComplete, duration = 3000 }: LoadingScreenProps) => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white px-4">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-glow"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/5 rounded-full blur-3xl animate-pulse-glow delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-primary/2 to-accent/2 rounded-full blur-3xl animate-spin-slow"></div>
+        <div className="absolute -top-40 -right-40 w-60 h-60 sm:w-80 sm:h-80 bg-primary/5 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div className="absolute -bottom-40 -left-40 w-60 h-60 sm:w-80 sm:h-80 bg-accent/5 rounded-full blur-3xl animate-pulse-glow delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 sm:w-96 sm:h-96 bg-gradient-to-r from-primary/2 to-accent/2 rounded-full blur-3xl animate-spin-slow"></div>
       </div>
 
       {/* Main loading content */}
-      <div className="relative z-10 text-center space-y-12">
+      <div className="relative z-10 text-center space-y-8 sm:space-y-12 w-full max-w-2xl">
         {/* Animated glow behind logo */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.35 }}
           transition={{ duration: 1.2 }}
-          className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 w-[180px] h-[180px] rounded-full bg-primary blur-[60px]"
+          className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 w-[120px] h-[120px] sm:w-[180px] sm:h-[180px] rounded-full bg-primary blur-[60px]"
         />
 
-        {/* Dirq Solutions Logo - larger and more spacious */}
+        {/* Dirq Solutions Logo - responsive */}
         <motion.svg
-          width="600"
-          height="160"
+          width="100%"
+          height="120"
           viewBox="0 0 600 160"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="mx-auto"
+          className="mx-auto max-w-md sm:max-w-lg"
+          preserveAspectRatio="xMidYMid meet"
         >
           {/* Magnifying glass circle (line drawing animation) - larger to fit text */}
           <motion.circle
@@ -126,9 +127,9 @@ const LoadingScreen = ({ onComplete, duration = 3000 }: LoadingScreenProps) => {
           </motion.text>
         </motion.svg>
 
-        {/* Slogan - elegant and centered below logo */}
+        {/* Slogan - elegant and centered below logo - responsive */}
         <motion.p
-          className="text-2xl text-gray-500/80 font-light tracking-wider italic"
+          className="text-lg sm:text-2xl text-gray-500/80 font-light tracking-wider italic px-4"
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, delay: 2.0 }}

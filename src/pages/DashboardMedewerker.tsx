@@ -40,7 +40,7 @@ export default function DashboardMedewerker() {
 
     try {
       const caseData = await getEmployeeCase(user.id);
-        setActiveCase({ ...caseData, reason: 'reason' in caseData ? caseData.reason : '' } as SickLeaveCase);
+      setActiveCase(caseData);
       
       // Load tasks for the employee
       const { data: tasksData } = await supabase
@@ -123,10 +123,10 @@ export default function DashboardMedewerker() {
                   <p className="font-medium">{daysOut} dagen</p>
                 </div>
               </div>
-              {activeCase.reason && (
+              {activeCase.functional_limitations && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Reden</p>
-                  <p className="font-medium">{activeCase.reason}</p>
+                  <p className="text-sm text-muted-foreground">Functionele beperkingen</p>
+                  <p className="font-medium">{activeCase.functional_limitations}</p>
                 </div>
               )}
               <Button 

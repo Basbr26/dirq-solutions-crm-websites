@@ -212,6 +212,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tasks_case_id_fkey"
             columns: ["case_id"]
             isOneToOne: false
@@ -224,7 +231,7 @@ export type Database = {
         Row: {
           case_id: string
           created_at: string | null
-          created_by: string
+          created_by: string | null
           date: string | null
           description: string
           event_type: Database["public"]["Enums"]["event_type"]
@@ -234,7 +241,7 @@ export type Database = {
         Insert: {
           case_id: string
           created_at?: string | null
-          created_by: string
+          created_by?: string | null
           date?: string | null
           description: string
           event_type: Database["public"]["Enums"]["event_type"]
@@ -244,7 +251,7 @@ export type Database = {
         Update: {
           case_id?: string
           created_at?: string | null
-          created_by?: string
+          created_by?: string | null
           date?: string | null
           description?: string
           event_type?: Database["public"]["Enums"]["event_type"]
@@ -257,6 +264,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "sick_leave_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timeline_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -280,7 +294,15 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       verzuim_patterns: {
         Row: {
