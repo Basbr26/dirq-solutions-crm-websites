@@ -175,7 +175,9 @@ export default function DashboardHR() {
 
   const filteredCases = cases.filter(c => {
     const employeeName = c.employee 
-      ? `${c.employee.voornaam} ${c.employee.achternaam}`.toLowerCase()
+      ? (c.employee.voornaam && c.employee.achternaam 
+          ? `${c.employee.voornaam} ${c.employee.achternaam}`.toLowerCase()
+          : c.employee.email?.toLowerCase() || '')
       : '';
     const limitations = c.functional_limitations?.toLowerCase() || '';
     
