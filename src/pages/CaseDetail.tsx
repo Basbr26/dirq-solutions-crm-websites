@@ -452,7 +452,9 @@ export default function CaseDetail() {
     : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
   const employeeName = case_.employee 
-    ? `${case_.employee.voornaam} ${case_.employee.achternaam}`
+    ? (case_.employee.voornaam && case_.employee.achternaam 
+        ? `${case_.employee.voornaam} ${case_.employee.achternaam}`.trim()
+        : case_.employee.email || 'Onbekende medewerker')
     : 'Onbekende medewerker';
 
   return (

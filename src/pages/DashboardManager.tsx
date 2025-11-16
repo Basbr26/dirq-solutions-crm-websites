@@ -245,7 +245,11 @@ export default function DashboardManager() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 flex-wrap">
-                        <p className="font-medium text-sm sm:text-base text-foreground">{case_.employee?.voornaam} {case_.employee?.achternaam}</p>
+                        <p className="font-medium text-sm sm:text-base text-foreground">
+                          {case_.employee?.voornaam && case_.employee?.achternaam 
+                            ? `${case_.employee.voornaam} ${case_.employee.achternaam}` 
+                            : case_.employee?.email || 'Onbekende medewerker'}
+                        </p>
                         <Badge variant={statusConfig[case_.case_status].variant} className="text-[10px] sm:text-xs">
                           {statusConfig[case_.case_status].label}
                         </Badge>
