@@ -84,10 +84,7 @@ export default function DashboardHR() {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-        setCases((data || []).map(c => ({
-          ...c,
-          reason: typeof c.reason === 'string' ? c.reason : ''
-        })));
+      setCases(data || []);
     } catch (error) {
       console.error('Error loading cases:', error);
       toast.error('Fout bij laden van cases');

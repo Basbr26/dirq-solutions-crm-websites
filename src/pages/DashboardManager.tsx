@@ -43,10 +43,7 @@ export default function DashboardManager() {
         getManagerTasks(user.id)
       ]);
       
-      setCases((casesData || []).map(c => ({
-        ...c,
-        reason: typeof c.reason === 'string' ? c.reason : '',
-      })));
+      setCases(casesData || []);
       setTasks(tasksData || []);
     } catch (error) {
       console.error('Error loading manager data:', error);
@@ -256,7 +253,7 @@ export default function DashboardManager() {
                         Ziek sinds: {format(new Date(case_.start_date), 'd MMMM yyyy', { locale: nl })}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Reden: {case_.reason}
+                        {case_.functional_limitations || 'Geen functionele beperkingen opgegeven'}
                       </p>
                     </div>
                     <Button size="sm" variant="outline">
