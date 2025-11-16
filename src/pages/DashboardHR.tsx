@@ -337,13 +337,11 @@ export default function DashboardHR() {
             ) : (
               <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredCases.map((caseItem) => (
-                  <div key={caseItem.id} className="relative group">
-                    <CaseCard 
-                      case_={caseItem} 
-                      onClick={() => navigate(`/case/${caseItem.id}`)}
-                      onDelete={() => handleDeleteCase(caseItem.id)}
-                    />
-                  </div>
+                  <CaseCard 
+                    key={caseItem.id}
+                    case_={caseItem} 
+                    onClick={() => navigate(`/case/${caseItem.id}`)}
+                  />
                 ))}
               </div>
             )}
