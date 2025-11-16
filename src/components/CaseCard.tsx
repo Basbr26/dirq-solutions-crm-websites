@@ -8,7 +8,6 @@ import { nl } from 'date-fns/locale';
 interface CaseCardProps {
   case_: SickLeaveCase;
   onClick: () => void;
-  onDelete?: () => void;
 }
 
 const statusConfig = {
@@ -18,7 +17,7 @@ const statusConfig = {
   archief: { label: 'Archief', variant: 'outline' as const },
 };
 
-export function CaseCard({ case_, onClick, onDelete }: CaseCardProps) {
+export function CaseCard({ case_, onClick }: CaseCardProps) {
   const daysOut = case_.end_date 
     ? Math.ceil((new Date(case_.end_date).getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24))
     : Math.ceil((new Date().getTime() - new Date(case_.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -31,21 +30,9 @@ export function CaseCard({ case_, onClick, onDelete }: CaseCardProps) {
 
   return (
     <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow relative"
+      className="cursor-pointer hover:shadow-md transition-shadow"
       onClick={onClick}
     >
-      {typeof onDelete === 'function' && (
-        <button
-          className="absolute top-2 right-2 z-10 opacity-80 bg-destructive text-white rounded px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs shadow hover:bg-destructive/80 transition"
-          title="Verwijder ziekmelding"
-          onClick={e => {
-            e.stopPropagation();
-            onDelete();
-          }}
-        >
-          Verwijder
-        </button>
-      )}
       <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-3 sm:pt-6">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
