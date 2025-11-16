@@ -80,7 +80,7 @@ export default function DashboardHR() {
     try {
       const { data, error } = await supabase
         .from('sick_leave_cases')
-        .select('*, employee:profiles!employee_id(voornaam, achternaam, email)')
+        .select('*, employee:profiles!sick_leave_cases_employee_id_fkey(voornaam, achternaam, email)')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
