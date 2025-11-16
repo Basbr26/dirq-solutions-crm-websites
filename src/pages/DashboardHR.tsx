@@ -206,108 +206,111 @@ export default function DashboardHR() {
     <div className="min-h-screen bg-background">
       <DashboardHeader title="HR Dashboard" />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Verzuimdossiers</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">Verzuimdossiers</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Overzicht van alle verzuimcases
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExportCases}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Gevallen
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportCases} className="text-xs sm:text-sm">
+              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Export Gevallen</span>
+              <span className="sm:hidden">Gevallen</span>
             </Button>
-            <Button variant="outline" onClick={handleExportTasks}>
-              <Download className="h-4 w-4 mr-2" />
-              Export Taken
+            <Button variant="outline" size="sm" onClick={handleExportTasks} className="text-xs sm:text-sm">
+              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Export Taken</span>
+              <span className="sm:hidden">Taken</span>
             </Button>
             <ZiekmeldingDialog onSubmit={handleNewCase} />
           </div>
         </div>
 
         <Tabs defaultValue="overzicht" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="overzicht">Overzicht</TabsTrigger>
-            <TabsTrigger value="taken">Taken</TabsTrigger>
-            <TabsTrigger value="analyse">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Analyse & Rapportage
+          <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-3 sm:flex">
+            <TabsTrigger value="overzicht" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
+            <TabsTrigger value="taken" className="text-xs sm:text-sm">Taken</TabsTrigger>
+            <TabsTrigger value="analyse" className="text-xs sm:text-sm gap-1 sm:gap-2">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Analyse & Rapportage</span>
+              <span className="sm:hidden">Analyse</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overzicht" className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-4">
+          <TabsContent value="overzicht" className="space-y-4 sm:space-y-6">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <Users className="h-6 w-6 text-primary" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
+                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Totaal</p>
-                      <p className="text-2xl font-bold">{stats.total}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Totaal</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-destructive/10">
-                      <TrendingUp className="h-6 w-6 text-destructive" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-destructive/10 flex-shrink-0">
+                      <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-destructive" />
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Actief</p>
-                      <p className="text-2xl font-bold">{stats.actief}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <Clock className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Herstel Gemeld</p>
-                      <p className="text-2xl font-bold">{stats.herstel_gemeld}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Actief</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.actief}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-secondary/10">
-                      <Users className="h-6 w-6 text-secondary-foreground" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
+                      <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Gesloten</p>
-                      <p className="text-2xl font-bold">{stats.gesloten}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Herstel Gemeld</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.herstel_gemeld}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-secondary/10 flex-shrink-0">
+                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-secondary-foreground" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Gesloten</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.gesloten}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Zoek op naam of functionele beperkingen..."
+                  placeholder="Zoek op naam..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-9 sm:pl-10 text-sm h-9 sm:h-10"
                 />
               </div>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as CaseStatus | 'all')}>
-                <SelectTrigger className="w-48">
+                <SelectTrigger className="w-full sm:w-48 text-sm h-9 sm:h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -330,7 +333,7 @@ export default function DashboardHR() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredCases.map((caseItem) => (
                   <div key={caseItem.id} className="relative group">
                     <CaseCard 

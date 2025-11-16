@@ -109,109 +109,110 @@ export default function DashboardManager() {
     <div className="min-h-screen bg-secondary">
       <DashboardHeader title="Manager Dashboard" />
 
-      <main className="container mx-auto px-6 py-8">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overzicht</TabsTrigger>
-            <TabsTrigger value="tasks">Taken</TabsTrigger>
+      <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
+            <TabsTrigger value="tasks" className="text-xs sm:text-sm">Taken</TabsTrigger>
+            <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analyse</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">
-        <div className="grid gap-6 md:grid-cols-4 mb-8">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
           <Card className="shadow-dirq">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Actief Ziek
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">{stats.sickCount}</div>
-                <Users className="h-8 w-8 text-destructive" />
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.sickCount}</div>
+                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-destructive" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
                 {stats.recoveryCount} in herstel
               </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-dirq">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Openstaande Taken
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">{stats.openTasks}</div>
-                <Clock className="h-8 w-8 text-primary" />
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.openTasks}</div>
+                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
                 {stats.tasksToday} vandaag
               </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-dirq">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Afgerond Deze Week
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">{stats.completedThisWeek}</div>
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.completedThisWeek}</div>
+                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
                 Goed werk!
               </p>
             </CardContent>
           </Card>
 
           <Card className="shadow-dirq">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Vertraagde Taken
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="flex items-center justify-between">
-                <div className="text-3xl font-bold text-foreground">{stats.overdueTasks}</div>
-                <AlertTriangle className="h-8 w-8 text-orange-600" />
+                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.overdueTasks}</div>
+                <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
                 Actie vereist
               </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="shadow-dirq mb-6">
-          <CardHeader>
-            <CardTitle>Mijn Taken</CardTitle>
-            <CardDescription>
+        <Card className="shadow-dirq mb-4 sm:mb-6">
+          <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+            <CardTitle className="text-base sm:text-lg">Mijn Taken</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Taken die op jou wachten
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
             {myTasks.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Geen openstaande taken</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">Geen openstaande taken</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {myTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer gap-2 sm:gap-0"
                     onClick={() => navigate(`/case/${task.case_id}`)}
                   >
-                    <div>
-                      <p className="font-medium text-foreground">{task.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm sm:text-base text-foreground truncate">{task.title}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Deadline: {getDeadlineLabel(task.deadline)}
                       </p>
                     </div>
-                    <Button size="sm" onClick={(e) => {
+                    <Button size="sm" className="text-xs sm:text-sm w-full sm:w-auto" onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/case/${task.case_id}`);
                     }}>
@@ -225,38 +226,38 @@ export default function DashboardManager() {
         </Card>
 
         <Card className="shadow-dirq">
-          <CardHeader>
-            <CardTitle>Mijn Team - Verzuimoverzicht</CardTitle>
-            <CardDescription>
+          <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+            <CardTitle className="text-base sm:text-lg">Mijn Team - Verzuimoverzicht</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               Teamleden met actief verzuim
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
             {activeCases.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Geen actieve verzuimcases</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">Geen actieve verzuimcases</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {activeCases.map((case_) => (
                   <div
                     key={case_.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer gap-3"
                     onClick={() => navigate(`/case/${case_.id}`)}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <p className="font-medium text-foreground">{case_.employee?.voornaam} {case_.employee?.achternaam}</p>
-                        <Badge variant={statusConfig[case_.case_status].variant}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 flex-wrap">
+                        <p className="font-medium text-sm sm:text-base text-foreground">{case_.employee?.voornaam} {case_.employee?.achternaam}</p>
+                        <Badge variant={statusConfig[case_.case_status].variant} className="text-[10px] sm:text-xs">
                           {statusConfig[case_.case_status].label}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Ziek sinds: {format(new Date(case_.start_date), 'd MMMM yyyy', { locale: nl })}
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        Ziek sinds: {format(new Date(case_.start_date), 'd MMM yyyy', { locale: nl })}
                       </p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                         {case_.functional_limitations || 'Geen functionele beperkingen opgegeven'}
                       </p>
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="text-xs sm:text-sm w-full sm:w-auto flex-shrink-0">
                       Bekijk
                     </Button>
                   </div>
