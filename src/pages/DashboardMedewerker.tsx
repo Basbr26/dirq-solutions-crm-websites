@@ -80,57 +80,57 @@ export default function DashboardMedewerker() {
     <div className="min-h-screen bg-secondary">
       <DashboardHeader title="Mijn Overzicht" />
 
-      <main className="container mx-auto px-6 py-8 max-w-4xl">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overzicht</TabsTrigger>
-            <TabsTrigger value="tasks">Mijn Taken</TabsTrigger>
+      <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-4xl">
+        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+          <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:flex">
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
+            <TabsTrigger value="tasks" className="text-xs sm:text-sm">Mijn Taken</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview">
+          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
         {!activeCase ? (
-          <Alert className="mb-6 border-primary/20 bg-primary/5">
-            <Info className="h-4 w-4 text-primary" />
-            <AlertTitle>Je bent momenteel niet ziek gemeld</AlertTitle>
-            <AlertDescription>
+          <Alert className="mb-4 sm:mb-6 border-primary/20 bg-primary/5">
+            <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+            <AlertTitle className="text-sm sm:text-base">Je bent momenteel niet ziek gemeld</AlertTitle>
+            <AlertDescription className="text-xs sm:text-sm">
               Als je ziek wordt, meld dit dan altijd telefonisch bij je manager.
             </AlertDescription>
           </Alert>
         ) : (
-          <Card className="shadow-dirq mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
+          <Card className="shadow-dirq mb-4 sm:mb-6">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
                 <div>
-                  <CardTitle>Jouw Actieve Ziekmelding</CardTitle>
-                  <CardDescription>Huidige status en informatie</CardDescription>
+                  <CardTitle className="text-base sm:text-lg">Jouw Actieve Ziekmelding</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">Huidige status en informatie</CardDescription>
                 </div>
-                <Badge variant={statusConfig[activeCase.case_status].variant}>
+                <Badge variant={statusConfig[activeCase.case_status].variant} className="text-xs self-start sm:self-auto">
                   {statusConfig[activeCase.case_status].label}
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Startdatum</p>
-                  <p className="font-medium flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    {format(new Date(activeCase.start_date), 'd MMMM yyyy', { locale: nl })}
+                  <p className="text-xs sm:text-sm text-muted-foreground">Startdatum</p>
+                  <p className="font-medium flex items-center gap-2 text-sm sm:text-base">
+                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+                    {format(new Date(activeCase.start_date), 'd MMM yyyy', { locale: nl })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Dagen verzuimd</p>
-                  <p className="font-medium">{daysOut} dagen</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Dagen verzuimd</p>
+                  <p className="font-medium text-sm sm:text-base">{daysOut} dagen</p>
                 </div>
               </div>
               {activeCase.functional_limitations && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Functionele beperkingen</p>
-                  <p className="font-medium">{activeCase.functional_limitations}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Functionele beperkingen</p>
+                  <p className="font-medium text-sm sm:text-base">{activeCase.functional_limitations}</p>
                 </div>
               )}
               <Button 
-                className="w-full" 
+                className="w-full text-sm sm:text-base" 
                 onClick={() => navigate(`/case/${activeCase.id}`)}
               >
                 Bekijk Volledig Dossier
@@ -139,10 +139,10 @@ export default function DashboardMedewerker() {
           </Card>
         )}
 
-        <div className="grid gap-6 mb-8">
+        <div className="grid gap-4 sm:gap-6">
           <Card className="shadow-dirq">
-            <CardHeader>
-              <div className="flex items-center gap-3">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <Shield className="h-5 w-5 text-primary" />
                 </div>

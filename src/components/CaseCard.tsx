@@ -34,7 +34,7 @@ export function CaseCard({ case_, onClick, onDelete }: CaseCardProps) {
     >
       {typeof onDelete === 'function' && (
         <button
-          className="absolute top-2 right-2 z-10 opacity-80 bg-destructive text-white rounded px-2 py-1 text-xs shadow hover:bg-destructive/80 transition"
+          className="absolute top-2 right-2 z-10 opacity-80 bg-destructive text-white rounded px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs shadow hover:bg-destructive/80 transition"
           title="Verwijder ziekmelding"
           onClick={e => {
             e.stopPropagation();
@@ -44,39 +44,39 @@ export function CaseCard({ case_, onClick, onDelete }: CaseCardProps) {
           Verwijder
         </button>
       )}
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">{employeeName}</CardTitle>
+      <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-3 sm:pt-6">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-base sm:text-lg truncate">{employeeName}</CardTitle>
           </div>
-          <Badge variant={statusConfig[case_.case_status].variant}>
+          <Badge variant={statusConfig[case_.case_status].variant} className="text-[10px] sm:text-xs flex-shrink-0">
             {statusConfig[case_.case_status].label}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          <span>
-            Start: {format(new Date(case_.start_date), 'dd MMMM yyyy', { locale: nl })}
+      <CardContent className="space-y-1.5 sm:space-y-2 px-4 sm:px-6 pb-4 sm:pb-6">
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+          <span className="truncate">
+            Start: {format(new Date(case_.start_date), 'dd MMM yyyy', { locale: nl })}
           </span>
         </div>
         {case_.end_date && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>
-              Eind: {format(new Date(case_.end_date), 'dd MMMM yyyy', { locale: nl })}
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="truncate">
+              Eind: {format(new Date(case_.end_date), 'dd MMM yyyy', { locale: nl })}
             </span>
           </div>
         )}
         {case_.functional_limitations && (
-          <div className="flex items-start gap-2 text-sm">
-            <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+          <div className="flex items-start gap-2 text-xs sm:text-sm">
+            <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <span className="line-clamp-2">{case_.functional_limitations}</span>
           </div>
         )}
-        <div className="pt-2 text-sm font-medium">
+        <div className="pt-1 sm:pt-2 text-xs sm:text-sm font-medium">
           {case_.end_date ? `${daysOut} dagen verzuim` : `${daysOut} dagen (lopend)`}
         </div>
       </CardContent>

@@ -109,40 +109,42 @@ export function TasksList({ tasks }: TasksListProps) {
         <div className="grid gap-4">
           {filteredTasks.map((task) => (
             <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer">
-              <CardHeader 
-                className="pb-3"
+               <CardHeader 
+                className="pb-2 sm:pb-3 px-4 sm:px-6"
                 onClick={() => {
                   // Navigate to the case detail page where the task belongs
                   navigate(`/case/${task.case_id}`);
                 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{task.title}</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base sm:text-lg mb-1 sm:mb-2">{task.title}</CardTitle>
                     {task.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                         {task.description}
                       </p>
                     )}
                   </div>
-                  {getStatusBadge(task)}
+                  <div className="self-start sm:self-auto">
+                    {getStatusBadge(task)}
+                  </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>{getDeadlineLabel(task.deadline)}</span>
                   </div>
 
                   {task.assigned_user && (
-                    <span className="text-xs">
+                    <span className="text-[10px] sm:text-xs">
                       • {task.assigned_user.voornaam} {task.assigned_user.achternaam}
                     </span>
                   )}
 
                   {task.notes && (
-                    <span className="text-xs">• Notities beschikbaar</span>
+                    <span className="text-[10px] sm:text-xs">• Notities beschikbaar</span>
                   )}
                 </div>
               </CardContent>

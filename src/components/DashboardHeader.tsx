@@ -26,23 +26,23 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
 
   return (
     <header className="bg-card border-b border-border">
-      <div className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
-            <p className="text-sm text-muted-foreground">
+      <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-2xl font-bold text-foreground truncate">{title}</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate">
               Welkom, {profile?.voornaam} {profile?.achternaam}
             </p>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {children}
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-semibold text-primary">
+                <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-4">
+                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-xs sm:text-sm font-semibold text-primary">
                       {profile?.voornaam?.[0]}{profile?.achternaam?.[0]}
                     </span>
                   </div>
