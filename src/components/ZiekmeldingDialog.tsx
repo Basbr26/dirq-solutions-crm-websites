@@ -198,8 +198,8 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
             Registreer een nieuwe ziekmelding volgens de Wet Poortwachter
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-8rem)] pr-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <ScrollArea className="max-h-[calc(90vh-12rem)] pr-4">
+          <form id="ziekmelding-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="employee_id">Medewerker *</Label>
               <Select
@@ -349,7 +349,12 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
             {/* einde formulier */}
           </form>
         </ScrollArea>
+        <div className="flex justify-end pt-4 border-t">
+          <Button type="submit" form="ziekmelding-form">
+            Maak aan
+          </Button>
+        </div>
       </DialogContent>
-          </Dialog>
-        );
-    }
+    </Dialog>
+  );
+}
