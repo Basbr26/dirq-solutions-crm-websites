@@ -4,12 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import LoadingScreen from '@/components/LoadingScreen';
-import { useEffect } from 'react';
+import { DirqLogo } from '@/components/DirqLogo';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -130,15 +130,14 @@ export default function Auth() {
         }}
       />
     ) : (
-      <div className="min-h-screen flex items-center justify-center bg-secondary px-4 py-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dirq-soft-grey to-white px-4 py-8">
         <Card className="w-full max-w-md shadow-dirq-lg">
-          <CardHeader className="space-y-2 text-center px-4 sm:px-6">
-            <div className="mx-auto w-14 h-14 sm:w-16 sm:h-16 bg-primary rounded-lg flex items-center justify-center mb-2">
-              <span className="text-2xl sm:text-3xl font-bold text-primary-foreground">D</span>
+          <CardHeader className="space-y-4 text-center px-4 sm:px-6">
+            <div className="flex justify-center">
+              <DirqLogo size="md" className="max-w-xs" />
             </div>
-            <CardTitle className="text-xl sm:text-2xl">Dirq Poortwachter</CardTitle>
-            <CardDescription className="text-sm">
-              Verzuimbeheer volgens de wet
+            <CardDescription className="text-base">
+              Verzuimbeheer Systeem
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
