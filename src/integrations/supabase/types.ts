@@ -112,6 +112,7 @@ export type Database = {
           employee_id: string
           end_date: string | null
           expected_duration: string | null
+          expected_recovery_date: string | null
           functional_limitations: string | null
           id: string
           partial_work_description: string | null
@@ -127,6 +128,7 @@ export type Database = {
           employee_id: string
           end_date?: string | null
           expected_duration?: string | null
+          expected_recovery_date?: string | null
           functional_limitations?: string | null
           id?: string
           partial_work_description?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           employee_id?: string
           end_date?: string | null
           expected_duration?: string | null
+          expected_recovery_date?: string | null
           functional_limitations?: string | null
           id?: string
           partial_work_description?: string | null
