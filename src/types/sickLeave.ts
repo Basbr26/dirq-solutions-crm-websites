@@ -41,11 +41,17 @@ export interface Task {
   case_id: string;
   assigned_to: string;
   assigned_user?: {
-    id: string;
     voornaam: string;
     achternaam: string;
-    email?: string;
   } | null;
+  case?: {
+    id: string;
+    employee_id: string;
+    employee?: {
+      voornaam: string;
+      achternaam: string;
+    };
+  };
   completed_at?: string | null;
   completed_by?: string | null;
   created_at?: string | null;

@@ -99,7 +99,21 @@ export default function DashboardHR() {
     try {
       const { data, error } = await supabase
         .from('tasks')
-        .select('*')
+        .select(`
+          *,
+          assigned_user:profiles!tasks_assigned_to_fkey (
+            voornaam,
+            achternaam
+          ),
+          case:sick_leave_cases!inner (
+            id,
+            employee_id,
+            employee:profiles!sick_leave_cases_employee_id_fkey (
+              voornaam,
+              achternaam
+            )
+          )
+        `)
         .order('deadline', { ascending: true });
       
       if (error) throw error;
