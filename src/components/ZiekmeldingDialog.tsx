@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Info } from 'lucide-react';
+import { Plus, Info, CalendarIcon } from 'lucide-react';
 import { z } from 'zod';
 import { defaultTaskTemplates } from '@/lib/taskTemplates';
 import { generateInitialTasks } from '@/lib/supabaseHelpers';
@@ -27,6 +27,11 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 const ziekmeldingSchema = z.object({
   employee_id: z.string().uuid('Selecteer een medewerker'),
@@ -36,7 +41,7 @@ const ziekmeldingSchema = z.object({
     .trim()
     .min(5, 'Functionele beperkingen moeten minimaal 5 karakters zijn')
     .max(500),
-  expected_duration: z.string().optional(),
+  expected_recovery_date: z.string().min(1, 'Verwachte betermelding is verplicht'),
   availability_notes: z.string().max(1000).optional(),
   can_work_partial: z.boolean().optional(),
   partial_work_description: z.string().max(500).optional(),
@@ -73,7 +78,7 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
     employee_id: '',
     start_date: new Date().toISOString().split('T')[0],
     functional_limitations: '',
-    expected_duration: '',
+    expected_recovery_date: '',
     availability_notes: '',
     can_work_partial: false,
     partial_work_description: '',
@@ -155,7 +160,7 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
         employee_id: '',
         start_date: new Date().toISOString().split('T')[0],
         functional_limitations: '',
-        expected_duration: '',
+        expected_recovery_date: '',
         availability_notes: '',
         can_work_partial: false,
         partial_work_description: '',
@@ -274,20 +279,47 @@ export function ZiekmeldingDialog({ onSubmit }: ZiekmeldingDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expected_duration">
-                Verwachte duur (optioneel)
+              <Label htmlFor="expected_recovery_date">
+                Verwachte betermelding *
               </Label>
-              <Input
-                id="expected_duration"
-                value={formData.expected_duration ?? ''}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    expected_duration: e.target.value,
-                  }))
-                }
-                placeholder="Bijv: 1-2 weken"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.expected_recovery_date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.expected_recovery_date ? (
+                      format(new Date(formData.expected_recovery_date), "PPP", { locale: nl })
+                    ) : (
+                      <span>Selecteer datum</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.expected_recovery_date ? new Date(formData.expected_recovery_date) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          expected_recovery_date: date.toISOString().split('T')[0],
+                        }));
+                      }
+                    }}
+                    disabled={(date) => date < new Date(formData.start_date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              {errors.expected_recovery_date && (
+                <p className="text-sm text-destructive">{errors.expected_recovery_date}</p>
+              )}
             </div>
 
             <div className="space-y-2">

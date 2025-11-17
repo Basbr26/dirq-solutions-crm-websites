@@ -128,7 +128,7 @@ export default function DashboardHR() {
     employee_id: string;
     start_date: string;
     functional_limitations: string;
-    expected_duration?: string;
+    expected_recovery_date: string;
     availability_notes?: string;
     can_work_partial?: boolean;
     partial_work_description?: string;
@@ -148,7 +148,7 @@ export default function DashboardHR() {
           functional_limitations: data.functional_limitations,
           case_status: 'actief',
           created_by: user.id,
-          expected_duration: data.expected_duration || null,
+          expected_recovery_date: data.expected_recovery_date || null,
           availability_notes: data.availability_notes || null,
           can_work_partial: data.can_work_partial || false,
           partial_work_description: data.partial_work_description || null,
