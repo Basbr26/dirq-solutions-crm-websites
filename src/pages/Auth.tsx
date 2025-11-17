@@ -5,40 +5,39 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import LoadingScreen from '@/components/LoadingScreen';
 import { DirqLogo } from '@/components/DirqLogo';
+import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 import { z } from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const loginSchema = z.object({
   email: z.string().email('Ongeldig e-mailadres'),
   password: z.string().min(6, 'Wachtwoord moet minimaal 6 tekens zijn'),
 });
 
-const signupSchema = z.object({
-  email: z.string().email('Ongeldig e-mailadres'),
-  password: z.string().min(6, 'Wachtwoord moet minimaal 6 tekens zijn'),
-  voornaam: z.string().min(2, 'Voornaam is verplicht'),
-  achternaam: z.string().min(2, 'Achternaam is verplicht'),
-});
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [voornaam, setVoornaam] = useState('');
-  const [achternaam, setAchternaam] = useState('');
   const [showAnimation, setShowAnimation] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
-  const { signIn, signUp, user, role } = useAuth();
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const { signIn, user, role, profile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Redirect if already logged in
-  if (user && !showAnimation) {
+  if (user && !showAnimation && !showChangePassword) {
+    // Check if password change is required
+    if (profile?.must_change_password) {
+      setShowChangePassword(true);
+      return null;
+    }
+    
     // Redirect naar juiste dashboard per rol
     if (role === 'hr') navigate('/dashboard/hr');
     else if (role === 'manager') navigate('/dashboard/manager');
@@ -63,6 +62,21 @@ export default function Auth() {
             : error.message,
         });
       } else {
+        // Check if password change is required via profile
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (currentUser) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('must_change_password')
+            .eq('id', currentUser.id)
+            .single();
+          
+          if (profileData?.must_change_password) {
+            setShowChangePassword(true);
+            return;
+          }
+        }
+        
         setShowAnimation(true);
         // Redirect pad bepalen op basis van rol
         let path = '/';
@@ -84,45 +98,22 @@ export default function Auth() {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      signupSchema.parse({ email, password, voornaam, achternaam });
-      setLoading(true);
-      
-      const { error } = await signUp(email, password, voornaam, achternaam);
-      
-      if (error) {
-        toast({
-          variant: 'destructive',
-          title: 'Registratie mislukt',
-          description: error.message === 'User already registered' 
-            ? 'Dit e-mailadres is al geregistreerd' 
-            : error.message,
-        });
-      } else {
-        toast({
-          title: 'Account aangemaakt',
-          description: 'Controleer je e-mail om je account te bevestigen.',
-        });
-        setIsLogin(true);
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        toast({
-          variant: 'destructive',
-          title: 'Validatiefout',
-          description: error.errors[0].message,
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
-    showAnimation ? (
+    showChangePassword ? (
+      <ChangePasswordDialog 
+        open={showChangePassword}
+        onPasswordChanged={() => {
+          setShowChangePassword(false);
+          setShowAnimation(true);
+          let path = '/';
+          if (role === 'hr') path = '/dashboard/hr';
+          else if (role === 'manager') path = '/dashboard/manager';
+          else if (role === 'medewerker') path = '/dashboard/medewerker';
+          setRedirectPath(path);
+        }}
+      />
+    ) : showAnimation ? (
       <LoadingScreen
         duration={3000}
         onComplete={() => {
@@ -141,93 +132,33 @@ export default function Auth() {
             </CardDescription>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
-            <Tabs value={isLogin ? 'login' : 'signup'} onValueChange={(v) => setIsLogin(v === 'login')}>
-              <TabsList className="grid w-full grid-cols-2 mb-4 sm:mb-6">
-                <TabsTrigger value="login" className="text-sm">Inloggen</TabsTrigger>
-                <TabsTrigger value="signup" className="text-sm">Registreren</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">E-mailadres</Label>
-                    <Input
-                      id="login-email"
-                      type="email"
-                      placeholder="naam@bedrijf.nl"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Wachtwoord</Label>
-                    <Input
-                      id="login-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Inloggen
-                  </Button>
-                </form>
-              </TabsContent>
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-voornaam">Voornaam</Label>
-                      <Input
-                        id="signup-voornaam"
-                        type="text"
-                        value={voornaam}
-                        onChange={(e) => setVoornaam(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-achternaam">Achternaam</Label>
-                      <Input
-                        id="signup-achternaam"
-                        type="text"
-                        value={achternaam}
-                        onChange={(e) => setAchternaam(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">E-mailadres</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="naam@bedrijf.nl"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Wachtwoord</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Minimaal 6 tekens"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Account aanmaken
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="login-email">E-mailadres</Label>
+                <Input
+                  id="login-email"
+                  type="email"
+                  placeholder="naam@bedrijf.nl"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="login-password">Wachtwoord</Label>
+                <Input
+                  id="login-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Inloggen
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>

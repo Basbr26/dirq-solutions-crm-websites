@@ -61,6 +61,7 @@ export type Database = {
           functie: string | null
           id: string
           manager_id: string | null
+          must_change_password: boolean | null
           telefoon: string | null
           updated_at: string | null
           voornaam: string
@@ -73,6 +74,7 @@ export type Database = {
           functie?: string | null
           id: string
           manager_id?: string | null
+          must_change_password?: boolean | null
           telefoon?: string | null
           updated_at?: string | null
           voornaam: string
@@ -85,6 +87,7 @@ export type Database = {
           functie?: string | null
           id?: string
           manager_id?: string | null
+          must_change_password?: boolean | null
           telefoon?: string | null
           updated_at?: string | null
           voornaam?: string

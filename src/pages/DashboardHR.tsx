@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { ZiekmeldingDialog } from '@/components/ZiekmeldingDialog';
+import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { CaseCard } from '@/components/CaseCard';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SickLeaveCase, CaseStatus, Task } from '@/types/sickLeave';
-import { Search, TrendingUp, Users, Clock, BarChart3, Download } from 'lucide-react';
+import { Search, TrendingUp, Users, Clock, BarChart3, Download, UserPlus } from 'lucide-react';
 import { exportCasesToCSV, exportTasksToCSV } from '@/lib/exportUtils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -70,6 +71,7 @@ export default function DashboardHR() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<CaseStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
 
   useEffect(() => {
     loadCases();
@@ -217,6 +219,11 @@ export default function DashboardHR() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setCreateUserDialogOpen(true)} className="text-xs sm:text-sm">
+              <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Nieuwe gebruiker</span>
+              <span className="sm:hidden">Gebruiker</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={handleExportCases} className="text-xs sm:text-sm">
               <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
               <span className="hidden sm:inline">Export Gevallen</span>
@@ -356,6 +363,12 @@ export default function DashboardHR() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <CreateUserDialog 
+        open={createUserDialogOpen} 
+        onOpenChange={setCreateUserDialogOpen}
+        onUserCreated={loadCases}
+      />
     </div>
   );
 }
