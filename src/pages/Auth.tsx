@@ -26,24 +26,45 @@ export default function Auth() {
   const [showAnimation, setShowAnimation] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const { signIn, user, role, profile } = useAuth();
+  const { signIn, user, role, profile, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Show change password dialog if required
+  if (showChangePassword) {
+    return (
+      <ChangePasswordDialog 
+        open={showChangePassword}
+        onPasswordChanged={() => {
+          setShowChangePassword(false);
+          setShowAnimation(true);
+          let path = '/';
+          if (role === 'hr') path = '/dashboard/hr';
+          else if (role === 'manager') path = '/dashboard/manager';
+          else if (role === 'medewerker') path = '/dashboard/medewerker';
+          setRedirectPath(path);
+        }}
+      />
+    );
+  }
+
   // Redirect if already logged in
-  if (user && !showAnimation && !showChangePassword) {
-    // Check if password change is required
-    if (profile?.must_change_password) {
-      setShowChangePassword(true);
-      return null;
-    }
-    
+  if (user && !showAnimation && !authLoading) {
     // Redirect naar juiste dashboard per rol
     if (role === 'hr') navigate('/dashboard/hr');
     else if (role === 'manager') navigate('/dashboard/manager');
     else if (role === 'medewerker') navigate('/dashboard/medewerker');
     else navigate('/');
     return null;
+  }
+
+  // Show loading while auth is initializing
+  if (user && authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dirq-soft-grey to-white">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -65,14 +86,15 @@ export default function Auth() {
         // Check if password change is required via profile
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (currentUser) {
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('must_change_password')
             .eq('id', currentUser.id)
-            .single();
+            .maybeSingle();
           
-          if (profileData?.must_change_password) {
+          if (!profileError && profileData?.must_change_password) {
             setShowChangePassword(true);
+            setLoading(false);
             return;
           }
         }
@@ -100,20 +122,7 @@ export default function Auth() {
 
 
   return (
-    showChangePassword ? (
-      <ChangePasswordDialog 
-        open={showChangePassword}
-        onPasswordChanged={() => {
-          setShowChangePassword(false);
-          setShowAnimation(true);
-          let path = '/';
-          if (role === 'hr') path = '/dashboard/hr';
-          else if (role === 'manager') path = '/dashboard/manager';
-          else if (role === 'medewerker') path = '/dashboard/medewerker';
-          setRedirectPath(path);
-        }}
-      />
-    ) : showAnimation ? (
+    showAnimation ? (
       <LoadingScreen
         duration={3000}
         onComplete={() => {
