@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Task } from '@/types/sickLeave';
-import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { format, isToday, isTomorrow, isPast, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
@@ -18,6 +18,7 @@ export function TasksList({ tasks }: TasksListProps) {
       status === 'open' || status === 'in_progress' || status === 'overdue';
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [timeFilter, setTimeFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'deadline' | 'status'>('deadline');
 
   const getStatusBadge = (task: Task) => {
@@ -53,13 +54,36 @@ export function TasksList({ tasks }: TasksListProps) {
 
   const filteredTasks = tasks
     .filter(task => {
-      if (statusFilter === 'all') return true;
-      if (statusFilter === 'overdue') {
-        // Overdue: deadline in past and not completed (only valid status values)
-        return task.deadline && isPast(new Date(task.deadline)) && (task.task_status === 'open' || task.task_status === 'in_progress');
+      // Status filter
+      if (statusFilter !== 'all') {
+        if (statusFilter === 'overdue') {
+          if (!(task.deadline && isPast(new Date(task.deadline)) && (task.task_status === 'open' || task.task_status === 'in_progress'))) {
+            return false;
+          }
+        } else if (!(['open', 'in_progress', 'afgerond'].includes(statusFilter) && task.task_status === statusFilter)) {
+          return false;
+        }
       }
-      // Only allow valid TaskStatus values for direct comparison
-      return (['open', 'in_progress', 'afgerond'].includes(statusFilter) && task.task_status === statusFilter);
+      
+      // Time filter
+      if (timeFilter !== 'all' && task.deadline) {
+        const deadlineDate = new Date(task.deadline);
+        const now = new Date();
+        
+        if (timeFilter === 'today') {
+          if (!isToday(deadlineDate)) return false;
+        } else if (timeFilter === 'week') {
+          const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+          const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+          if (!isWithinInterval(deadlineDate, { start: weekStart, end: weekEnd })) return false;
+        } else if (timeFilter === 'month') {
+          const monthStart = startOfMonth(now);
+          const monthEnd = endOfMonth(now);
+          if (!isWithinInterval(deadlineDate, { start: monthStart, end: monthEnd })) return false;
+        }
+      }
+      
+      return true;
     })
     .sort((a, b) => {
       if (sortBy === 'deadline') {
@@ -85,6 +109,18 @@ export function TasksList({ tasks }: TasksListProps) {
             <SelectItem value="in_progress">Bezig</SelectItem>
             <SelectItem value="afgerond">Afgerond</SelectItem>
             <SelectItem value="overdue">Verlopen</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={timeFilter} onValueChange={setTimeFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filter op tijd" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alles</SelectItem>
+            <SelectItem value="today">Vandaag</SelectItem>
+            <SelectItem value="week">Deze week</SelectItem>
+            <SelectItem value="month">Deze maand</SelectItem>
           </SelectContent>
         </Select>
 
