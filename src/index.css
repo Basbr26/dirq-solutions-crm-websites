@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* Dirq Brand Colors */
-    --dirq-turquoise: 190 79% 53%;
+    --dirq-turquoise: 173 80% 40%;
     --dirq-dark-navy: 210 57% 9%;
     --dirq-soft-grey: 206 33% 93%;
     --dirq-grey: 200 20% 75%;
@@ -23,7 +23,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 57% 9%;
     
-    --primary: 190 79% 53%;
+    --primary: 173 80% 40%;
     --primary-foreground: 0 0% 100%;
     
     --secondary: 206 33% 93%;
@@ -32,7 +32,7 @@
     --muted: 206 33% 93%;
     --muted-foreground: 200 20% 40%;
     
-    --accent: 190 79% 53%;
+    --accent: 173 80% 40%;
     --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84% 60%;
@@ -46,7 +46,7 @@
     
     --border: 200 20% 85%;
     --input: 200 20% 85%;
-    --ring: 190 79% 53%;
+    --ring: 173 80% 40%;
     
     --radius: 0.5rem;
 
@@ -75,7 +75,7 @@
     --popover: 210 50% 12%;
     --popover-foreground: 0 0% 100%;
     
-    --primary: 190 79% 53%;
+    --primary: 173 80% 40%;
     --primary-foreground: 0 0% 100%;
     
     --secondary: 210 50% 15%;
@@ -84,7 +84,7 @@
     --muted: 210 50% 15%;
     --muted-foreground: 200 20% 70%;
     
-    --accent: 190 79% 53%;
+    --accent: 173 80% 40%;
     --accent-foreground: 0 0% 100%;
     
     --destructive: 0 84% 60%;
@@ -98,7 +98,7 @@
     
     --border: 210 50% 20%;
     --input: 210 50% 20%;
-    --ring: 190 79% 53%;
+    --ring: 173 80% 40%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
