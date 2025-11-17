@@ -5,7 +5,21 @@ import { defaultTaskTemplates } from './taskTemplates';
  * Genereert automatisch taken op basis van de Wet Poortwachter templates
  * Wordt aangeroepen bij het aanmaken van een nieuwe ziekmelding
  */
-export async function generateInitialTasks(caseId: string, startDate: string, assignedTo: string) {
+export async function generateInitialTasks(caseId: string, startDate: string, employeeId: string, createdBy: string) {
+  // Haal de manager op van de zieke medewerker
+  const { data: employee, error: empError } = await supabase
+    .from('profiles')
+    .select('manager_id')
+    .eq('id', employeeId)
+    .single();
+
+  if (empError) {
+    console.error('Error fetching employee manager:', empError);
+  }
+
+  // Gebruik de manager als die bestaat, anders de persoon die de case aanmaakt (HR)
+  const assignedTo = employee?.manager_id || createdBy;
+
   const tasks = defaultTaskTemplates.map(template => ({
     case_id: caseId,
     title: template.title,

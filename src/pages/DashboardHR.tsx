@@ -145,8 +145,8 @@ export default function DashboardHR() {
         throw caseError;
       }
 
-      // Generate initial tasks
-      await generateInitialTasks(newCase.id, newCase.start_date, user.id);
+      // Generate initial tasks - assigned to employee's manager
+      await generateInitialTasks(newCase.id, newCase.start_date, data.employee_id, user.id);
       
       // Create timeline event
       await createTimelineEvent(
