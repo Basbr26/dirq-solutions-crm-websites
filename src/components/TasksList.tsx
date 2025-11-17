@@ -132,6 +132,12 @@ export function TasksList({ tasks }: TasksListProps) {
               </CardHeader>
               <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                  {task.case?.employee && (
+                    <div className="flex items-center gap-1 font-medium text-foreground">
+                      <span>Medewerker: {task.case.employee.voornaam} {task.case.employee.achternaam}</span>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>{getDeadlineLabel(task.deadline)}</span>
@@ -139,7 +145,7 @@ export function TasksList({ tasks }: TasksListProps) {
 
                   {task.assigned_user && (
                     <span className="text-[10px] sm:text-xs">
-                      • {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                      • Toegewezen aan: {task.assigned_user.voornaam} {task.assigned_user.achternaam}
                     </span>
                   )}
 

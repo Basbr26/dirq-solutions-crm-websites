@@ -116,6 +116,10 @@ export async function getManagerTasks(managerId: string) {
     .from('tasks')
     .select(`
       *,
+      assigned_user:profiles!tasks_assigned_to_fkey (
+        voornaam,
+        achternaam
+      ),
       case:sick_leave_cases!inner (
         id,
         employee_id,
