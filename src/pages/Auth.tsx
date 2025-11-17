@@ -49,7 +49,7 @@ export default function Auth() {
   }
 
   // Redirect if already logged in
-  if (user && !showAnimation && !authLoading) {
+  if (user && !showAnimation && !authLoading && !loading) {
     // Redirect naar juiste dashboard per rol
     if (role === 'hr') navigate('/dashboard/hr');
     else if (role === 'manager') navigate('/dashboard/manager');
