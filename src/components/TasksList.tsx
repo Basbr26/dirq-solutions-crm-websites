@@ -145,7 +145,7 @@ export function TasksList({ tasks }: TasksListProps) {
 
                   {task.assigned_user && (
                     <span className="text-[10px] sm:text-xs">
-                      • Toegewezen aan: {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                      Toegewezen aan: {task.assigned_user.voornaam} {task.assigned_user.achternaam}
                     </span>
                   )}
 
