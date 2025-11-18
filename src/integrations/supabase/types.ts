@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      document_invitations: {
+        Row: {
+          created_at: string | null
+          document_id: string
+          email: string
+          expires_at: string | null
+          id: string
+          signature_data: string | null
+          signed: boolean | null
+          signed_at: string | null
+          signed_document_path: string | null
+          verification_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          document_id: string
+          email: string
+          expires_at?: string | null
+          id?: string
+          signature_data?: string | null
+          signed?: boolean | null
+          signed_at?: string | null
+          signed_document_path?: string | null
+          verification_code: string
+        }
+        Update: {
+          created_at?: string | null
+          document_id?: string
+          email?: string
+          expires_at?: string | null
+          id?: string
+          signature_data?: string | null
+          signed?: boolean | null
+          signed_at?: string | null
+          signed_document_path?: string | null
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_invitations_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           case_id: string
@@ -22,6 +69,12 @@ export type Database = {
           file_name: string
           file_url: string
           id: string
+          owner_signature_data: string | null
+          owner_signed: boolean | null
+          owner_signed_at: string | null
+          requires_signatures: string[] | null
+          signed_file_path: string | null
+          status: string | null
           uploaded_by: string
         }
         Insert: {
@@ -31,6 +84,12 @@ export type Database = {
           file_name: string
           file_url: string
           id?: string
+          owner_signature_data?: string | null
+          owner_signed?: boolean | null
+          owner_signed_at?: string | null
+          requires_signatures?: string[] | null
+          signed_file_path?: string | null
+          status?: string | null
           uploaded_by: string
         }
         Update: {
@@ -40,6 +99,12 @@ export type Database = {
           file_name?: string
           file_url?: string
           id?: string
+          owner_signature_data?: string | null
+          owner_signed?: boolean | null
+          owner_signed_at?: string | null
+          requires_signatures?: string[] | null
+          signed_file_path?: string | null
+          status?: string | null
           uploaded_by?: string
         }
         Relationships: [
