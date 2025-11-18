@@ -38,6 +38,10 @@ import { toast as sonnerToast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { getCaseDocuments, getCaseTimeline, updateTaskStatus, updateCaseStatus } from '@/lib/supabaseHelpers';
+// NEW IMPORTS voor document signing
+import { CaseDocumentUpload } from '@/components/CaseDocumentUpload';
+import { CaseDocumentsList } from '@/components/CaseDocumentsList';
+import { GenerateTemplateDocument } from '@/components/GenerateTemplateDocument';
 // Mapping helpers
 const normalizeTaskStatus = (status: string): UpdatableTaskStatus => {
   if (status === 'overdue') return 'open';
@@ -624,9 +628,35 @@ export default function CaseDetail() {
             </TabsContent>
 
             <TabsContent value="documents" className="space-y-4">
-              <div className="flex justify-end">
-                <DocumentUpload onUpload={handleDocumentUpload} />
-              </div>
+              {/* Actie knoppen voor HR/Manager */}
+              {(role === 'hr' || role === 'manager') && (
+                <div className="flex gap-2">
+                  <CaseDocumentUpload
+                    caseId={case_.id}
+                    caseStartDate={case_.start_date}
+                    employeeId={case_.employee_id}
+                    onUploadComplete={loadCaseData}
+                  />
+                  <GenerateTemplateDocument
+                    caseData={case_}
+                    company={{ naam: 'Uw Bedrijf', adres: 'Bedrijfsadres' }}
+                    userId={user?.id || ''}
+                    onGenerated={loadCaseData}
+                  />
+                  <DocumentUpload onUpload={handleDocumentUpload} />
+                </div>
+              )}
+              
+              {/* Document Signing Lijst */}
+              <CaseDocumentsList
+                caseId={case_.id}
+                employeeId={case_.employee_id}
+                userRole={role}
+                userId={user?.id}
+                onRefresh={loadCaseData}
+              />
+              
+              {/* Oude DocumentList voor backward compatibility */}
               <DocumentList documents={documents} onDelete={handleDocumentDelete} />
             </TabsContent>
             
