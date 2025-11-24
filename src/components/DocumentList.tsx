@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface DocumentListProps {
   documents: Document[];
@@ -34,6 +36,64 @@ const categoryColors: Record<string, string> = {
 };
 
 export function DocumentList({ documents, onDelete }: DocumentListProps) {
+  const isFullUrl = (url: string) => /^https?:\/\//i.test(url);
+
+  const viewDocument = async (doc: Document) => {
+    if (isFullUrl(doc.file_url)) {
+      window.open(doc.file_url, '_blank');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(doc.file_url);
+
+      if (error || !data) {
+        throw error || new Error('Bestand niet gevonden');
+      }
+
+      const url = URL.createObjectURL(data);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      console.error('Error viewing document:', error);
+      toast.error('Kon document niet openen');
+    }
+  };
+
+  const downloadDocument = async (doc: Document) => {
+    if (isFullUrl(doc.file_url)) {
+      const link = document.createElement('a');
+      link.href = doc.file_url;
+      link.download = doc.file_name;
+      link.click();
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(doc.file_url);
+
+      if (error || !data) {
+        throw error || new Error('Bestand niet gevonden');
+      }
+
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.file_name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('Kon document niet downloaden');
+    }
+  };
+
   if (documents.length === 0) {
     return (
       <Card>
@@ -71,19 +131,14 @@ export function DocumentList({ documents, onDelete }: DocumentListProps) {
                 <Button 
                   size="sm" 
                   variant="ghost"
-                  onClick={() => window.open(doc.file_url, '_blank')}
+                  onClick={() => viewDocument(doc)}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
                 <Button 
                   size="sm" 
                   variant="ghost"
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = doc.file_url;
-                    link.download = doc.file_name;
-                    link.click();
-                  }}
+                  onClick={() => downloadDocument(doc)}
                 >
                   <Download className="h-4 w-4" />
                 </Button>
