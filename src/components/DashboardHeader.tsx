@@ -2,6 +2,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { DirqLogo } from './DirqLogo';
+import { NotificationBell } from './NotificationBell';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +42,8 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
           
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {children}
+            
+            <NotificationBell />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
