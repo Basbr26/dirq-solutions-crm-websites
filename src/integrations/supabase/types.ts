@@ -117,6 +117,67 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          email_sent: boolean
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          task_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type: string
+          task_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          task_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "sick_leave_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           achternaam: string
