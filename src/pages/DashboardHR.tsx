@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DashboardHeader } from '@/components/DashboardHeader';
-import { ZiekmeldingDialog } from '@/components/ZiekmeldingDialog';
+import { ZiekmeldingWizard } from '@/components/ZiekmeldingWizard';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { CaseCard } from '@/components/CaseCard';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
@@ -248,7 +248,7 @@ export default function DashboardHR() {
               <span className="hidden sm:inline">Export Taken</span>
               <span className="sm:hidden">Taken</span>
             </Button>
-            <ZiekmeldingDialog onSubmit={handleNewCase} />
+            <ZiekmeldingWizard onSubmit={handleNewCase} />
           </div>
         </div>
 
