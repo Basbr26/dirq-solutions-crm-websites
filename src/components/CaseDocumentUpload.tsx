@@ -44,7 +44,7 @@ export function CaseDocumentUpload({
 }: CaseDocumentUploadProps) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [documentType, setDocumentType] = useState<DocumentType>('algemeen');
+  const [documentType, setDocumentType] = useState<DocumentType>('probleemanalyse');
   const [requiredSignatures, setRequiredSignatures] = useState<SignatureRole[]>(['employee']);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -170,7 +170,7 @@ export function CaseDocumentUpload({
         setOpen(false);
         setUploadSuccess(false);
         setFile(null);
-        setDocumentType('algemeen');
+        setDocumentType('probleemanalyse');
         setRequiredSignatures(['employee']);
         onUploadComplete?.();
       }, 2000);
@@ -270,8 +270,8 @@ export function CaseDocumentUpload({
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg">
+              <p className="text-sm text-foreground">
                 <strong>Let op:</strong> Geselecteerde partijen ontvangen automatisch een
                 email met een verificatiecode om het document te ondertekenen.
               </p>
