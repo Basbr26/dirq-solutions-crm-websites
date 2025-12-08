@@ -3,7 +3,7 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { DepartmentManagement } from '@/components/DepartmentManagement';
 import { UserManagement } from '@/components/UserManagement';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, UserPlus, Shield, BarChart3 } from 'lucide-react';
@@ -27,9 +27,19 @@ export default function DashboardSuperAdmin() {
   });
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('users');
 
   useEffect(() => {
     loadStats();
+
+    // Listen for tab change events from mobile nav
+    const handleTabChange = (e: CustomEvent) => {
+      if (e.detail === 'users') setActiveTab('users');
+      if (e.detail === 'departments') setActiveTab('departments');
+    };
+
+    window.addEventListener('nav-tab-change', handleTabChange as EventListener);
+    return () => window.removeEventListener('nav-tab-change', handleTabChange as EventListener);
   }, []);
 
   const loadStats = async () => {
@@ -72,7 +82,7 @@ export default function DashboardSuperAdmin() {
 
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
-      <DashboardHeader title="Super Admin Dashboard" />
+      <DashboardHeader title="Admin Dashboard" />
       
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
@@ -92,7 +102,10 @@ export default function DashboardSuperAdmin() {
 
         {/* Stats Cards */}
         <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card>
+          <Card 
+            className="cursor-pointer transition-colors hover:bg-muted/50"
+            onClick={() => setActiveTab('users')}
+          >
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
@@ -106,7 +119,10 @@ export default function DashboardSuperAdmin() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer transition-colors hover:bg-muted/50"
+            onClick={() => setActiveTab('departments')}
+          >
             <CardContent className="p-4 sm:p-6">
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="p-2 sm:p-3 rounded-lg bg-secondary/10 flex-shrink-0">
@@ -149,7 +165,7 @@ export default function DashboardSuperAdmin() {
           </Card>
         </div>
 
-        <Tabs defaultValue="users" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-2 sm:flex">
             <TabsTrigger value="users" className="text-xs sm:text-sm gap-1 sm:gap-2">
               <Users className="h-3 w-3 sm:h-4 sm:w-4" />
