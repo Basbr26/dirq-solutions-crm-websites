@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppRole = 'hr' | 'manager' | 'medewerker';
+export type AppRole = 'hr' | 'manager' | 'medewerker' | 'super_admin';
 
 export interface Profile {
   id: string;
@@ -13,6 +13,7 @@ export interface Profile {
   functie?: string | null;
   manager_id?: string | null;
   foto_url?: string | null;
+  department_id?: string | null;
   created_at: string | null;
   updated_at: string | null;
   must_change_password?: boolean;

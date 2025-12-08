@@ -25,6 +25,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     // Redirect to appropriate dashboard based on role
     switch (role) {
+      case 'super_admin':
+        return <Navigate to="/dashboard/super-admin" replace />;
       case 'hr':
         return <Navigate to="/dashboard/hr" replace />;
       case 'manager':
