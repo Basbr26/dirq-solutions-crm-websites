@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -18,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Loader2, CheckCircle2, Eye, Download, Upload } from 'lucide-react';
+import { FileText, Loader2, CheckCircle2, Eye, Download, Upload, CalendarIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   generateProbleemanalyse,
@@ -37,6 +43,7 @@ import {
 } from '@/types/verzuimDocumentTypes';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface GenerateTemplateDocumentProps {
   caseData: any;
@@ -67,6 +74,7 @@ export function GenerateTemplateDocument({
   const [aanwezigen, setAanwezigen] = useState('');
   const [gespreksonderwerp, setGespreksonderwerp] = useState('');
   const [afspraken, setAfspraken] = useState('');
+  const [gespreksdatum, setGespreksdatum] = useState<Date>(new Date());
   
   // Preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -118,6 +126,7 @@ export function GenerateTemplateDocument({
             gespreksonderwerp,
             afspraken,
             acties,
+            gespreksdatum,
           });
           break;
         default:
@@ -193,6 +202,7 @@ export function GenerateTemplateDocument({
     setAanwezigen('');
     setGespreksonderwerp('');
     setAfspraken('');
+    setGespreksdatum(new Date());
   };
 
   // Cleanup preview URL on unmount
@@ -274,6 +284,32 @@ export function GenerateTemplateDocument({
       case 'gespreksverslag':
         return (
           <>
+            <div className="space-y-2">
+              <Label>Datum van het gesprek</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !gespreksdatum && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {gespreksdatum ? format(gespreksdatum, "d MMMM yyyy", { locale: nl }) : <span>Selecteer datum</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={gespreksdatum}
+                    onSelect={(date) => date && setGespreksdatum(date)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <FormField
               label="Aanwezigen bij het gesprek"
               value={aanwezigen}
