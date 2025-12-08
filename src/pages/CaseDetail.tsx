@@ -42,6 +42,9 @@ import { getCaseDocuments, getCaseTimeline, updateTaskStatus, updateCaseStatus }
 import { CaseDocumentUpload } from '@/components/CaseDocumentUpload';
 import { CaseDocumentsList } from '@/components/CaseDocumentsList';
 import { GenerateTemplateDocument } from '@/components/GenerateTemplateDocument';
+// Gespreksnotities
+import { ConversationNotesDialog } from '@/components/ConversationNotesDialog';
+import { ConversationNotesList } from '@/components/ConversationNotesList';
 // Mapping helpers
 const normalizeTaskStatus = (status: string): UpdatableTaskStatus => {
   if (status === 'overdue') return 'open';
@@ -185,6 +188,7 @@ export default function CaseDetail() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notesRefreshTrigger, setNotesRefreshTrigger] = useState(0);
   const [status, setStatus] = useState<ActiveCaseStatus>('actief');
 
   const loadCaseData = useCallback(async () => {
@@ -543,8 +547,9 @@ export default function CaseDetail() {
 
           {/* Tabs */}
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="tasks">Taken ({tasks.length})</TabsTrigger>
+              <TabsTrigger value="conversations">Gesprekken</TabsTrigger>
               <TabsTrigger value="documents">Documenten ({documents.length})</TabsTrigger>
               <TabsTrigger value="timeline">Timeline ({timeline.length})</TabsTrigger>
             </TabsList>
@@ -623,6 +628,28 @@ export default function CaseDetail() {
                       })}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="conversations" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>Gespreksnotities</CardTitle>
+                    {(role === 'hr' || role === 'manager') && (
+                      <ConversationNotesDialog 
+                        caseId={case_.id} 
+                        onNoteAdded={() => setNotesRefreshTrigger(prev => prev + 1)} 
+                      />
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ConversationNotesList 
+                    caseId={case_.id} 
+                    refreshTrigger={notesRefreshTrigger} 
+                  />
                 </CardContent>
               </Card>
             </TabsContent>

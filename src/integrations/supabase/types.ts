@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_notes: {
+        Row: {
+          agreements: string | null
+          case_id: string
+          conversation_date: string
+          conversation_type: string
+          created_at: string
+          created_by: string
+          discussed_topics: string | null
+          employee_mood: string | null
+          follow_up_actions: string | null
+          id: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          agreements?: string | null
+          case_id: string
+          conversation_date?: string
+          conversation_type?: string
+          created_at?: string
+          created_by: string
+          discussed_topics?: string | null
+          employee_mood?: string | null
+          follow_up_actions?: string | null
+          id?: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          agreements?: string | null
+          case_id?: string
+          conversation_date?: string
+          conversation_type?: string
+          created_at?: string
+          created_by?: string
+          discussed_topics?: string | null
+          employee_mood?: string | null
+          follow_up_actions?: string | null
+          id?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_notes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "sick_leave_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_invitations: {
         Row: {
           created_at: string | null
