@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { TasksList } from '@/components/TasksList';
 import { CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { useAuth } from '@/hooks/useAuth';
 import { getManagerCases, getManagerTasks } from '@/lib/supabaseHelpers';
 import { SickLeaveCase, Task } from '@/types/sickLeave';
@@ -106,11 +107,16 @@ export default function DashboardManager() {
     );
   }
 
+  const handleRefresh = useCallback(async () => {
+    await loadData();
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
       <DashboardHeader title="Manager Dashboard" />
 
-      <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <PullToRefresh onRefresh={handleRefresh} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
+        <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
           <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
             <TabsTrigger value="overview" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
@@ -278,6 +284,7 @@ export default function DashboardManager() {
           </TabsContent>
         </Tabs>
       </main>
+      </PullToRefresh>
       <MobileBottomNav />
     </div>
   );

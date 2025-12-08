@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { DepartmentManagement } from '@/components/DepartmentManagement';
@@ -10,6 +10,7 @@ import { Users, Building2, UserPlus, Shield, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 interface Stats {
   totalUsers: number;
@@ -80,10 +81,15 @@ export default function DashboardSuperAdmin() {
     }
   };
 
+  const handleRefresh = useCallback(async () => {
+    await loadStats();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
       <DashboardHeader title="Admin Dashboard" />
       
+      <PullToRefresh onRefresh={handleRefresh} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
@@ -186,6 +192,7 @@ export default function DashboardSuperAdmin() {
           </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
 
       <CreateUserDialog 
         open={createUserDialogOpen} 
