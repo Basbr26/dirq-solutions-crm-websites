@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { ZiekmeldingWizard } from '@/components/ZiekmeldingWizard';
 import { CaseCard } from '@/components/CaseCard';
@@ -18,6 +18,7 @@ import { generateInitialTasks, createTimelineEvent } from '@/lib/supabaseHelpers
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { PullToRefresh } from '@/components/PullToRefresh';
 
 export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
@@ -219,10 +220,15 @@ export default function DashboardHR() {
     toast.success('Taken geÃ«xporteerd naar CSV');
   };
 
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([loadCases(), loadTasks()]);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
       <DashboardHeader title="HR Dashboard" />
       
+      <PullToRefresh onRefresh={handleRefresh} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
           <div>
@@ -371,6 +377,7 @@ export default function DashboardHR() {
           </TabsContent>
         </Tabs>
       </div>
+      </PullToRefresh>
       
       <MobileBottomNav />
     </div>
