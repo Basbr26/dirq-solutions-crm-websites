@@ -680,8 +680,8 @@ export default function CaseDetail() {
             </TabsContent>
 
             <TabsContent value="documents" className="space-y-4 mt-4">
-              {/* Actie knoppen voor HR/Manager */}
-              {(role === 'hr' || role === 'manager') && (
+              {/* Actie knoppen voor HR/Manager/Super Admin */}
+              {(role === 'hr' || role === 'manager' || role === 'super_admin') && (
                 <div className="flex flex-wrap gap-2">
                   <CaseDocumentUpload
                     caseId={case_.id}
