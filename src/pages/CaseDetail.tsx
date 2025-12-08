@@ -481,50 +481,50 @@ export default function CaseDetail() {
           Terug
         </Button>
 
-        <div className="grid gap-6">
+        <div className="grid gap-4 sm:gap-6">
           {/* Header Card */}
           <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <User className="h-5 w-5 text-muted-foreground" />
-                    <CardTitle className="text-2xl">{employeeName}</CardTitle>
+            <CardHeader className="px-4 py-4 sm:px-6 sm:py-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="space-y-2 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
+                    <CardTitle className="text-lg sm:text-2xl truncate">{employeeName}</CardTitle>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      Start: {format(new Date(case_.start_date), 'dd MMMM yyyy', { locale: nl })}
+                      <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                      <span>Start: {format(new Date(case_.start_date), 'dd MMM yyyy', { locale: nl })}</span>
                     </div>
                     {case_.end_date && (
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Eind: {format(new Date(case_.end_date), 'dd MMMM yyyy', { locale: nl })}
+                        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                        <span>Eind: {format(new Date(case_.end_date), 'dd MMM yyyy', { locale: nl })}</span>
                       </div>
                     )}
                   </div>
-                  <p className="text-lg font-medium">{daysOut} dagen verzuim</p>
+                  <p className="text-base sm:text-lg font-medium">{daysOut} dagen verzuim</p>
                 </div>
                 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={statusConfig[status].variant} className="text-sm">
+                <div className="flex flex-col gap-2 sm:items-end">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={statusConfig[status].variant} className="text-xs sm:text-sm">
                       {statusConfig[status].label}
                     </Badge>
                     <Button
                       variant="destructive"
                       size="sm"
-                      className="ml-2"
+                      className="text-xs sm:text-sm h-7 sm:h-8"
                       onClick={handleDeleteCase}
                     >
-                      Verwijder dossier
+                      Verwijder
                     </Button>
                   </div>
                   <Select value={status} onValueChange={(v) => handleStatusChange(v as ActiveCaseStatus)}>
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="w-full sm:w-40 h-9">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       <SelectItem value="actief">Actief</SelectItem>
                       <SelectItem value="herstel_gemeld">Herstel Gemeld</SelectItem>
                       <SelectItem value="gesloten">Gesloten</SelectItem>
@@ -534,14 +534,14 @@ export default function CaseDetail() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 sm:px-6">
               {case_.functional_limitations && (
                 <div>
-                  <h3 className="font-medium mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
+                  <h3 className="font-medium mb-2 flex items-center gap-2 text-sm sm:text-base">
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
                     Functionele Beperkingen
                   </h3>
-                  <p className="text-muted-foreground">{case_.functional_limitations}</p>
+                  <p className="text-muted-foreground text-sm sm:text-base">{case_.functional_limitations}</p>
                 </div>
               )}
             </CardContent>
@@ -549,23 +549,35 @@ export default function CaseDetail() {
 
           {/* Tabs */}
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="tasks">Taken ({tasks.length})</TabsTrigger>
-              <TabsTrigger value="conversations">Gesprekken</TabsTrigger>
-              <TabsTrigger value="documents">Documenten ({documents.length})</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline ({timeline.length})</TabsTrigger>
-              <TabsTrigger value="activity">Activiteit</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex w-auto min-w-full sm:grid sm:w-full sm:grid-cols-5 h-auto flex-nowrap">
+                <TabsTrigger value="tasks" className="text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap">
+                  Taken ({tasks.length})
+                </TabsTrigger>
+                <TabsTrigger value="conversations" className="text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap">
+                  Gesprekken
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap">
+                  Docs ({documents.length})
+                </TabsTrigger>
+                <TabsTrigger value="timeline" className="text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap">
+                  Timeline ({timeline.length})
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="text-xs sm:text-sm px-2 sm:px-4 py-2 whitespace-nowrap">
+                  Activiteit
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
-            <TabsContent value="tasks" className="space-y-4">
+            <TabsContent value="tasks" className="space-y-4 mt-4">
               <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle>Taken ({tasks.length})</CardTitle>
+                <CardHeader className="px-4 py-4 sm:px-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+                    <CardTitle className="text-base sm:text-lg">Taken ({tasks.length})</CardTitle>
                     <TaskDialog onSubmit={handleNewTask} />
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 px-4 sm:px-6">
                   <WetPoortwachterInfo />
                   
                   {tasks.length === 0 ? (
@@ -584,20 +596,20 @@ export default function CaseDetail() {
                         const StatusIcon = taskStatusConfig[safeStatus].icon;
                         return (
                           <Card key={task.id}>
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between">
-                                <CardTitle className="text-lg">{task.title}</CardTitle>
+                            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <CardTitle className="text-base sm:text-lg">{task.title}</CardTitle>
                                 <Select 
                                   value={safeStatus}
                                   onValueChange={(v) => handleTaskStatusChange(task.id, v as UpdatableTaskStatus)}
                                 >
-                                  <SelectTrigger className="w-32">
+                                  <SelectTrigger className="w-full sm:w-32 h-8 sm:h-9">
                                     <div className="flex items-center gap-2">
-                                      <StatusIcon className={`h-4 w-4 ${taskStatusConfig[safeStatus].color}`} />
-                                      <span>{taskStatusConfig[safeStatus].label}</span>
+                                      <StatusIcon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${taskStatusConfig[safeStatus].color}`} />
+                                      <span className="text-xs sm:text-sm">{taskStatusConfig[safeStatus].label}</span>
                                     </div>
                                   </SelectTrigger>
-                                  <SelectContent>
+                                  <SelectContent className="bg-popover">
                                     <SelectItem value="open">Open</SelectItem>
                                     <SelectItem value="in_progress">Bezig</SelectItem>
                                     <SelectItem value="afgerond">Afgerond</SelectItem>
@@ -605,16 +617,16 @@ export default function CaseDetail() {
                                 </Select>
                               </div>
                             </CardHeader>
-                            <CardContent className="space-y-2">
+                            <CardContent className="space-y-2 px-4 sm:px-6">
                               {task.description && (
-                                <p className="text-sm text-muted-foreground">{task.description}</p>
+                                <p className="text-xs sm:text-sm text-muted-foreground">{task.description}</p>
                               )}
-                              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                <div className="flex items-center gap-4">
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs sm:text-sm text-muted-foreground">
+                                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <span>
-                                      Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}
+                                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+                                    <span className="text-xs sm:text-sm">
+                                      {format(new Date(task.deadline), 'dd MMM yyyy', { locale: nl })}
                                     </span>
                                   </div>
                                   {task.assigned_user && (
@@ -623,7 +635,7 @@ export default function CaseDetail() {
                                     </span>
                                   )}
                                   {task.notes && (
-                                    <span className="text-xs">• Notities beschikbaar</span>
+                                    <span className="text-xs hidden sm:inline">• Notities</span>
                                   )}
                                 </div>
                                 <CalendarExportButton
@@ -645,11 +657,11 @@ export default function CaseDetail() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="conversations" className="space-y-4">
+            <TabsContent value="conversations" className="space-y-4 mt-4">
               <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle>Gespreksnotities</CardTitle>
+                <CardHeader className="px-4 py-4 sm:px-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+                    <CardTitle className="text-base sm:text-lg">Gespreksnotities</CardTitle>
                     {(role === 'hr' || role === 'manager') && (
                       <ConversationNotesDialog 
                         caseId={case_.id} 
@@ -658,7 +670,7 @@ export default function CaseDetail() {
                     )}
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-4 sm:px-6">
                   <ConversationNotesList 
                     caseId={case_.id} 
                     refreshTrigger={notesRefreshTrigger} 
@@ -667,10 +679,10 @@ export default function CaseDetail() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="documents" className="space-y-4">
+            <TabsContent value="documents" className="space-y-4 mt-4">
               {/* Actie knoppen voor HR/Manager */}
               {(role === 'hr' || role === 'manager') && (
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <CaseDocumentUpload
                     caseId={case_.id}
                     caseStartDate={case_.start_date}
@@ -700,42 +712,47 @@ export default function CaseDetail() {
               <DocumentList documents={documents} onDelete={handleDocumentDelete} />
             </TabsContent>
             
-            <TabsContent value="timeline" className="space-y-4">
+            <TabsContent value="timeline" className="space-y-4 mt-4">
               {timeline.length === 0 ? (
                 <Card>
-                  <CardContent className="py-8 text-center text-muted-foreground">
+                  <CardContent className="py-8 text-center text-muted-foreground text-sm">
                     Geen gebeurtenissen beschikbaar
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {timeline.map((event) => {
                     return (
                       <Card key={event.id}>
-                        <CardContent className="py-4">
-                          <div className="flex items-start gap-4">
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center gap-2">
+                        <CardContent className="py-3 sm:py-4 px-4 sm:px-6">
+                          <div className="flex items-start gap-2 sm:gap-4">
+                            <div className="flex-1 space-y-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                                 <Badge
-                                  className={
+                                  className={`text-[10px] sm:text-xs ${
                                     eventTypeConfig[event.event_type]?.color ??
                                     "bg-muted text-muted-foreground"
-                                  }
+                                  }`}
                                 >
                                   {eventTypeConfig[event.event_type]?.label ?? event.event_type}
                                 </Badge>
                                 {event.created_at && (
-                                  <span className="text-sm text-muted-foreground">
+                                  <span className="text-[10px] sm:text-sm text-muted-foreground">
                                     {format(new Date(event.created_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                                   </span>
                                 )}
                                 {event.creator && (
-                                  <span className="text-sm text-muted-foreground">
-                                    â€¢ {event.creator.voornaam} {event.creator.achternaam}
+                                  <span className="text-[10px] sm:text-sm text-muted-foreground hidden sm:inline">
+                                    • {event.creator.voornaam} {event.creator.achternaam}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm">{event.description}</p>
+                              <p className="text-xs sm:text-sm">{event.description}</p>
+                              {event.creator && (
+                                <p className="text-[10px] text-muted-foreground sm:hidden">
+                                  Door: {event.creator.voornaam} {event.creator.achternaam}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </CardContent>
@@ -746,7 +763,7 @@ export default function CaseDetail() {
               )}
             </TabsContent>
 
-            <TabsContent value="activity" className="space-y-4">
+            <TabsContent value="activity" className="space-y-4 mt-4">
               <ActivityLog caseId={case_.id} />
             </TabsContent>
           </Tabs>
