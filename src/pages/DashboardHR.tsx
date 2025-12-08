@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { StatsCardsSkeleton, CaseCardsSkeleton, DashboardHeaderSkeleton } from '@/components/DashboardSkeleton';
 
 export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
