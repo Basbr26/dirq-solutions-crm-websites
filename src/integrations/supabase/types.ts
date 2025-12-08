@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          case_id: string | null
+          created_at: string
+          description: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          case_id?: string | null
+          created_at?: string
+          description: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          case_id?: string | null
+          created_at?: string
+          description?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "sick_leave_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_notes: {
         Row: {
           agreements: string | null
@@ -388,6 +442,7 @@ export type Database = {
       tasks: {
         Row: {
           assigned_to: string
+          calendar_reminder_sent: boolean | null
           case_id: string
           completed_at: string | null
           completed_by: string | null
@@ -397,6 +452,7 @@ export type Database = {
           gespreksonderwerpen: string | null
           id: string
           juridische_context: string | null
+          last_reminder_at: string | null
           notes: string | null
           task_status: Database["public"]["Enums"]["task_status"] | null
           title: string
@@ -406,6 +462,7 @@ export type Database = {
         }
         Insert: {
           assigned_to: string
+          calendar_reminder_sent?: boolean | null
           case_id: string
           completed_at?: string | null
           completed_by?: string | null
@@ -415,6 +472,7 @@ export type Database = {
           gespreksonderwerpen?: string | null
           id?: string
           juridische_context?: string | null
+          last_reminder_at?: string | null
           notes?: string | null
           task_status?: Database["public"]["Enums"]["task_status"] | null
           title: string
@@ -424,6 +482,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string
+          calendar_reminder_sent?: boolean | null
           case_id?: string
           completed_at?: string | null
           completed_by?: string | null
@@ -433,6 +492,7 @@ export type Database = {
           gespreksonderwerpen?: string | null
           id?: string
           juridische_context?: string | null
+          last_reminder_at?: string | null
           notes?: string | null
           task_status?: Database["public"]["Enums"]["task_status"] | null
           title?: string

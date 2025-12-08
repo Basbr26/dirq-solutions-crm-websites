@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { defaultTaskTemplates } from './taskTemplates';
+import { logActivity } from './activityLogger';
 
 /**
  * Genereert automatisch taken op basis van de Wet Poortwachter templates
@@ -235,6 +236,18 @@ export async function updateTaskStatus(
 
   if (error) throw error;
 
+  // Log activity
+  await logActivity({
+    caseId,
+    actionType: status === 'afgerond' ? 'task_completed' : 'task_updated',
+    entityType: 'task',
+    entityId: taskId,
+    description: status === 'afgerond' 
+      ? `Taak "${taskTitle}" is afgerond`
+      : `Taak "${taskTitle}" status gewijzigd naar ${status}`,
+    metadata: { new_status: status }
+  });
+
   // Create timeline event for completed tasks
   if (status === 'afgerond') {
     await createTimelineEvent(
@@ -280,6 +293,16 @@ export async function updateCaseStatus(
     herstel_gemeld: 'Herstel gemeld',
     gesloten: 'Gesloten',
   };
+
+  // Log activity
+  await logActivity({
+    caseId,
+    actionType: status === 'gesloten' ? 'case_closed' : status === 'herstel_gemeld' ? 'recovery_reported' : 'case_updated',
+    entityType: 'sick_leave_case',
+    entityId: caseId,
+    description: `Case status gewijzigd naar: ${statusLabels[status]}`,
+    metadata: { new_status: status }
+  });
 
   await createTimelineEvent(
     caseId,
