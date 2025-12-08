@@ -45,6 +45,8 @@ import { GenerateTemplateDocument } from '@/components/GenerateTemplateDocument'
 // Gespreksnotities
 import { ConversationNotesDialog } from '@/components/ConversationNotesDialog';
 import { ConversationNotesList } from '@/components/ConversationNotesList';
+import { ActivityLog } from '@/components/ActivityLog';
+import { CalendarExportButton } from '@/components/CalendarExportButton';
 // Mapping helpers
 const normalizeTaskStatus = (status: string): UpdatableTaskStatus => {
   if (status === 'overdue') return 'open';
@@ -547,11 +549,12 @@ export default function CaseDetail() {
 
           {/* Tabs */}
           <Tabs defaultValue="tasks" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="tasks">Taken ({tasks.length})</TabsTrigger>
               <TabsTrigger value="conversations">Gesprekken</TabsTrigger>
               <TabsTrigger value="documents">Documenten ({documents.length})</TabsTrigger>
               <TabsTrigger value="timeline">Timeline ({timeline.length})</TabsTrigger>
+              <TabsTrigger value="activity">Activiteit</TabsTrigger>
             </TabsList>
             
             <TabsContent value="tasks" className="space-y-4">
@@ -606,21 +609,31 @@ export default function CaseDetail() {
                               {task.description && (
                                 <p className="text-sm text-muted-foreground">{task.description}</p>
                               )}
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                                  <span>
-                                    Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}
-                                  </span>
+                              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <span>
+                                      Deadline: {format(new Date(task.deadline), 'dd MMMM yyyy', { locale: nl })}
+                                    </span>
+                                  </div>
+                                  {task.assigned_user && (
+                                    <span className="text-xs">
+                                      • {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                                    </span>
+                                  )}
+                                  {task.notes && (
+                                    <span className="text-xs">• Notities beschikbaar</span>
+                                  )}
                                 </div>
-                                {task.assigned_user && (
-                                  <span className="text-xs">
-                                    â€¢ {task.assigned_user.voornaam} {task.assigned_user.achternaam}
-                                  </span>
-                                )}
-                                {task.notes && (
-                                  <span className="text-xs">â€¢ Notities beschikbaar</span>
-                                )}
+                                <CalendarExportButton
+                                  task={{
+                                    title: task.title,
+                                    description: task.description || undefined,
+                                    deadline: task.deadline,
+                                    employeeName: employeeName,
+                                  }}
+                                />
                               </div>
                             </CardContent>
                           </Card>
@@ -731,6 +744,10 @@ export default function CaseDetail() {
                   })}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="activity" className="space-y-4">
+              <ActivityLog caseId={case_.id} />
             </TabsContent>
           </Tabs>
         </div>

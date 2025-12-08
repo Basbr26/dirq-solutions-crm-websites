@@ -8,6 +8,7 @@ import { Task } from '@/types/sickLeave';
 import { format, isToday, isTomorrow, isPast, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { CalendarExportButton } from '@/components/CalendarExportButton';
 
 interface TasksListProps {
   tasks: Task[];
@@ -167,27 +168,41 @@ export function TasksList({ tasks }: TasksListProps) {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
-                  {task.case?.employee && (
-                    <div className="flex items-center gap-1 font-medium text-foreground">
-                      <span>Medewerker: {task.case.employee.voornaam} {task.case.employee.achternaam}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
+                    {task.case?.employee && (
+                      <div className="flex items-center gap-1 font-medium text-foreground">
+                        <span>Medewerker: {task.case.employee.voornaam} {task.case.employee.achternaam}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <span>{getDeadlineLabel(task.deadline)}</span>
                     </div>
-                  )}
 
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span>{getDeadlineLabel(task.deadline)}</span>
+                    {task.assigned_user && (
+                      <span className="text-[10px] sm:text-xs">
+                        Toegewezen aan: {task.assigned_user.voornaam} {task.assigned_user.achternaam}
+                      </span>
+                    )}
+
+                    {task.notes && (
+                      <span className="text-[10px] sm:text-xs">• Notities beschikbaar</span>
+                    )}
                   </div>
-
-                  {task.assigned_user && (
-                    <span className="text-[10px] sm:text-xs">
-                      Toegewezen aan: {task.assigned_user.voornaam} {task.assigned_user.achternaam}
-                    </span>
-                  )}
-
-                  {task.notes && (
-                    <span className="text-[10px] sm:text-xs">• Notities beschikbaar</span>
-                  )}
+                  
+                  <CalendarExportButton
+                    task={{
+                      title: task.title,
+                      description: task.description || undefined,
+                      deadline: task.deadline,
+                      employeeName: task.case?.employee 
+                        ? `${task.case.employee.voornaam} ${task.case.employee.achternaam}`
+                        : undefined,
+                    }}
+                    size="sm"
+                  />
                 </div>
               </CardContent>
             </Card>
