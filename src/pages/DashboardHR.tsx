@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { generateInitialTasks, createTimelineEvent } from '@/lib/supabaseHelpers';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 
 export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
@@ -221,7 +222,7 @@ export default function DashboardHR() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 sm:pb-0">
       <DashboardHeader title="HR Dashboard" />
       
       <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -383,6 +384,8 @@ export default function DashboardHR() {
         onOpenChange={setCreateUserDialogOpen}
         onUserCreated={loadCases}
       />
+      
+      <MobileBottomNav />
     </div>
   );
 }
