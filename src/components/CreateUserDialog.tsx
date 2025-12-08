@@ -13,7 +13,7 @@ const createUserSchema = z.object({
   email: z.string().email('Ongeldig e-mailadres'),
   voornaam: z.string().min(2, 'Voornaam is verplicht'),
   achternaam: z.string().min(2, 'Achternaam is verplicht'),
-  role: z.enum(['hr', 'manager', 'medewerker'], { required_error: 'Rol is verplicht' }),
+  role: z.enum(['hr', 'manager', 'medewerker', 'super_admin'], { required_error: 'Rol is verplicht' }),
 });
 
 interface CreateUserDialogProps {
@@ -27,7 +27,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
   const [email, setEmail] = useState('');
   const [voornaam, setVoornaam] = useState('');
   const [achternaam, setAchternaam] = useState('');
-  const [role, setRole] = useState<'hr' | 'manager' | 'medewerker'>('medewerker');
+  const [role, setRole] = useState<'hr' | 'manager' | 'medewerker' | 'super_admin'>('medewerker');
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,7 +158,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Rol</Label>
-            <Select value={role} onValueChange={(value: 'hr' | 'manager' | 'medewerker') => setRole(value)}>
+            <Select value={role} onValueChange={(value: 'hr' | 'manager' | 'medewerker' | 'super_admin') => setRole(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecteer een rol" />
               </SelectTrigger>
@@ -166,6 +166,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
                 <SelectItem value="medewerker">Medewerker</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="hr">HR</SelectItem>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
               </SelectContent>
             </Select>
           </div>

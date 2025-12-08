@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import DashboardHR from "./pages/DashboardHR";
 import DashboardManager from "./pages/DashboardManager";
 import DashboardMedewerker from "./pages/DashboardMedewerker";
+import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
 import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
 
@@ -31,6 +32,8 @@ function RoleBasedRedirect() {
 
   // Redirect based on role
   switch (role) {
+    case 'super_admin':
+      return <Navigate to="/dashboard/super-admin" replace />;
     case 'hr':
       return <Navigate to="/dashboard/hr" replace />;
     case 'manager':
@@ -54,9 +57,18 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             
             <Route 
+              path="/dashboard/super-admin" 
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <DashboardSuperAdmin />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
               path="/dashboard/hr" 
               element={
-                <ProtectedRoute allowedRoles={['hr']}>
+                <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
                   <DashboardHR />
                 </ProtectedRoute>
               } 

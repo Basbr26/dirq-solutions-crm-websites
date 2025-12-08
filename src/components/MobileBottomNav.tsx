@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, ClipboardList, FileText, BarChart3, User, Users, Bell } from 'lucide-react';
+import { Home, ClipboardList, FileText, BarChart3, User, Users, Bell, Building2, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,13 @@ export function MobileBottomNav() {
 
   const getNavItems = (): NavItem[] => {
     switch (role) {
+      case 'super_admin':
+        return [
+          { icon: Home, label: 'Overzicht', path: '/dashboard/super-admin' },
+          { icon: Users, label: 'Gebruikers', path: '/dashboard/super-admin', action: 'users' },
+          { icon: Building2, label: 'Afdelingen', path: '/dashboard/super-admin', action: 'departments' },
+          { icon: Shield, label: 'HR View', path: '/dashboard/hr' },
+        ];
       case 'hr':
         return [
           { icon: Home, label: 'Overzicht', path: '/dashboard/hr', action: 'overview' },

@@ -67,6 +67,30 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document_invitations: {
         Row: {
           created_at: string | null
@@ -235,6 +259,7 @@ export type Database = {
         Row: {
           achternaam: string
           created_at: string | null
+          department_id: string | null
           email: string
           foto_url: string | null
           functie: string | null
@@ -248,6 +273,7 @@ export type Database = {
         Insert: {
           achternaam: string
           created_at?: string | null
+          department_id?: string | null
           email: string
           foto_url?: string | null
           functie?: string | null
@@ -261,6 +287,7 @@ export type Database = {
         Update: {
           achternaam?: string
           created_at?: string | null
+          department_id?: string | null
           email?: string
           foto_url?: string | null
           functie?: string | null
@@ -272,6 +299,13 @@ export type Database = {
           voornaam?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_manager_id_fkey"
             columns: ["manager_id"]
