@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { PullToRefresh } from '@/components/PullToRefresh';
+import { StatsCardsSkeleton, TableSkeleton, DashboardHeaderSkeleton } from '@/components/DashboardSkeleton';
 
 interface Stats {
   totalUsers: number;

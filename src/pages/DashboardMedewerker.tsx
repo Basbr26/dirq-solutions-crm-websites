@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, differenceInDays } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
@@ -69,11 +70,34 @@ export default function DashboardMedewerker() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary">
+      <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
         <DashboardHeader title="Mijn Overzicht" />
-        <main className="container mx-auto px-6 py-8 max-w-4xl">
-          <p className="text-muted-foreground">Laden...</p>
+        <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-4xl">
+          <Card className="shadow-dirq mb-6">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32 mt-2" />
+            </CardHeader>
+            <CardContent className="space-y-4 px-4 sm:px-6 pb-4 sm:pb-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-32" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-5 w-20" />
+                </div>
+              </div>
+              <Skeleton className="h-10 w-full" />
+            </CardContent>
+          </Card>
+          <div className="space-y-4">
+            <Skeleton className="h-48 w-full rounded-lg" />
+            <Skeleton className="h-48 w-full rounded-lg" />
+          </div>
         </main>
+        <MobileBottomNav />
       </div>
     );
   }

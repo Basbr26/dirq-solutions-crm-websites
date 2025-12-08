@@ -15,6 +15,8 @@ import { SickLeaveCase, Task } from '@/types/sickLeave';
 import { format, isToday, isTomorrow, startOfWeek, endOfWeek } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { StatsCardsSkeleton, TasksListSkeleton } from '@/components/DashboardSkeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const statusConfig = {
   actief: { label: 'Actief', variant: 'destructive' as const },
@@ -98,11 +100,21 @@ export default function DashboardManager() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary">
+      <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
         <DashboardHeader title="Manager Dashboard" />
-        <main className="container mx-auto px-6 py-8">
-          <p className="text-muted-foreground">Laden...</p>
+        <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+          <StatsCardsSkeleton />
+          <Card className="shadow-dirq mt-6">
+            <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-48 mt-2" />
+            </CardHeader>
+            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+              <TasksListSkeleton count={3} />
+            </CardContent>
+          </Card>
         </main>
+        <MobileBottomNav />
       </div>
     );
   }
