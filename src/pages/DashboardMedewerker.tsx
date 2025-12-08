@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TasksList } from '@/components/TasksList';
 import { Info, FileText, Shield, Calendar } from 'lucide-react';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { useAuth } from '@/hooks/useAuth';
 import { getEmployeeCase } from '@/lib/supabaseHelpers';
 import { SickLeaveCase } from '@/types/sickLeave';
@@ -77,7 +78,7 @@ export default function DashboardMedewerker() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
       <DashboardHeader title="Mijn Overzicht" />
 
       <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 max-w-4xl">
@@ -307,6 +308,7 @@ export default function DashboardMedewerker() {
           </TabsContent>
         </Tabs>
       </main>
+      <MobileBottomNav />
     </div>
   );
 }
