@@ -699,49 +699,51 @@ export function ZiekmeldingWizard({ onSubmit }: ZiekmeldingWizardProps) {
           Nieuwe ziekmelding
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle>Ziekmelding Registreren</DialogTitle>
-              <DialogDescription>
-                Stap {currentStep + 1} van {WIZARD_STEPS.length}: {WIZARD_STEPS[currentStep].title}
-              </DialogDescription>
-            </div>
-          </div>
-          <Progress value={progress} className="h-2 mt-4" />
-        </DialogHeader>
-
-        {/* Step indicators */}
-        <div className="flex justify-center gap-2 py-2">
-          {WIZARD_STEPS.map((step, index) => {
-            const Icon = step.icon;
-            return (
-              <div
-                key={step.id}
-                className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors",
-                  index === currentStep
-                    ? "bg-primary text-primary-foreground"
-                    : index < currentStep
-                    ? "bg-primary/20 text-primary"
-                    : "bg-muted text-muted-foreground"
-                )}
-              >
-                <Icon className="h-3 w-3" />
-                <span className="hidden sm:inline">{step.title}</span>
+      <DialogContent className="sm:max-w-[700px] h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
+        <div className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>Ziekmelding Registreren</DialogTitle>
+                <DialogDescription>
+                  Stap {currentStep + 1} van {WIZARD_STEPS.length}: {WIZARD_STEPS[currentStep].title}
+                </DialogDescription>
               </div>
-            );
-          })}
+            </div>
+            <Progress value={progress} className="h-2 mt-4" />
+          </DialogHeader>
+
+          {/* Step indicators */}
+          <div className="flex justify-center gap-1 sm:gap-2 py-3 overflow-x-auto">
+            {WIZARD_STEPS.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.id}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors flex-shrink-0",
+                    index === currentStep
+                      ? "bg-primary text-primary-foreground"
+                      : index < currentStep
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Icon className="h-3 w-3" />
+                  <span className="hidden sm:inline">{step.title}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="flex-1 min-h-0 px-4 sm:px-6">
           <div className="py-4">
             {renderStepContent()}
           </div>
         </ScrollArea>
 
-        <div className="flex justify-between pt-4 border-t">
+        <div className="flex-shrink-0 flex justify-between p-4 sm:px-6 sm:pb-6 border-t bg-background">
           <Button
             type="button"
             variant="outline"
@@ -750,17 +752,18 @@ export function ZiekmeldingWizard({ onSubmit }: ZiekmeldingWizardProps) {
             className="gap-2"
           >
             <ChevronLeft className="h-4 w-4" />
-            Vorige
+            <span className="hidden sm:inline">Vorige</span>
           </Button>
 
           {currentStep < WIZARD_STEPS.length - 1 ? (
             <Button onClick={handleNext} className="gap-2">
-              Volgende
+              <span className="hidden sm:inline">Volgende</span>
+              <span className="sm:hidden">Verder</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
-              {submitting ? 'Bezig...' : 'Ziekmelding registreren'}
+              {submitting ? 'Bezig...' : 'Registreren'}
               <CheckCircle2 className="h-4 w-4" />
             </Button>
           )}
