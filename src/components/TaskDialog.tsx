@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 type Assignee = {
   id: string;
@@ -35,8 +36,9 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
     assigned_to: '',
   });
 
-    const [assignees, setAssignees] = useState<Assignee[]>([]);
-    const [loadingAssignees, setLoadingAssignees] = useState(false);
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
+  const [loadingAssignees, setLoadingAssignees] = useState(false);
+  
   useEffect(() => {
     if (open) {
       loadAssignees();
@@ -126,87 +128,95 @@ export function TaskDialog({ onSubmit }: TaskDialogProps) {
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="h-4 w-4 mr-2" />
-          Nieuwe taak
+          <span className="hidden sm:inline">Nieuwe taak</span>
+          <span className="sm:hidden">Taak</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Nieuwe taak toevoegen</DialogTitle>
-          <DialogDescription>
-            Voeg een nieuwe taak toe aan dit verzuimdossier
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="template">Taak template</Label>
-            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Kies een template of maak custom taak" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="custom">Aangepaste taak</SelectItem>
-                {defaultTaskTemplates.map((template, index) => (
-                  <SelectItem key={index} value={index.toString()}>
-                    {template.title} (dag {template.deadlineDays})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="title">Titel *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Beschrijving *</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="deadline">Deadline *</Label>
-            <Input
-              id="deadline"
-              type="date"
-              value={formData.deadline}
-              onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="assigned_to">Toegewezen aan *</Label>
-            <Select
-              value={formData.assigned_to}
-              onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={loadingAssignees ? "Laden..." : "Selecteer verantwoordelijke (HR/Manager)"} />
-              </SelectTrigger>
-              <SelectContent>
-                {assignees.map((emp) => (
-                  <SelectItem key={emp.id} value={emp.id}>
-                    {emp.voornaam} {emp.achternaam} ({emp.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Annuleren
-            </Button>
-            <Button type="submit">Taak toevoegen</Button>
-          </div>
-        </form>
+      <DialogContent className="sm:max-w-[500px] h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0 gap-0">
+        <div className="flex-shrink-0 px-4 sm:px-6 pt-4 sm:pt-6">
+          <DialogHeader>
+            <DialogTitle>Nieuwe taak toevoegen</DialogTitle>
+            <DialogDescription>
+              Voeg een nieuwe taak toe aan dit verzuimdossier
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <ScrollArea className="flex-1 min-h-0 px-4 sm:px-6">
+          <form id="task-form" onSubmit={handleSubmit} className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="template">Taak template</Label>
+              <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Kies een template of maak custom taak" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="custom">Aangepaste taak</SelectItem>
+                  {defaultTaskTemplates.map((template, index) => (
+                    <SelectItem key={index} value={index.toString()}>
+                      {template.title} (dag {template.deadlineDays})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="title">Titel *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Beschrijving *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline *</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={formData.deadline}
+                onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="assigned_to">Toegewezen aan *</Label>
+              <Select
+                value={formData.assigned_to}
+                onValueChange={(value) => setFormData({ ...formData, assigned_to: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={loadingAssignees ? "Laden..." : "Selecteer verantwoordelijke"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {assignees.map((emp) => (
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.voornaam} {emp.achternaam}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </form>
+        </ScrollArea>
+
+        <div className="flex-shrink-0 flex justify-end gap-2 p-4 sm:px-6 sm:pb-6 border-t bg-background">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            Annuleren
+          </Button>
+          <Button type="submit" form="task-form">Toevoegen</Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
