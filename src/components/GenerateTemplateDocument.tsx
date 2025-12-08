@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Loader2, CheckCircle2, Sparkles, Eye, Download, Upload } from 'lucide-react';
+import { FileText, Loader2, CheckCircle2, Eye, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   generateProbleemanalyse,
@@ -34,7 +34,6 @@ import {
   DOCUMENT_TYPE_DESCRIPTIONS,
   getRelevantDocumentTypes,
 } from '@/types/verzuimDocumentTypes';
-import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -44,8 +43,6 @@ interface GenerateTemplateDocumentProps {
   userId: string;
   onGenerated?: () => void;
 }
-
-type SuggestionType = 'probleemanalyse' | 'doelstellingen' | 'acties' | 'belemmeringen';
 
 export function GenerateTemplateDocument({
   caseData,
@@ -65,9 +62,6 @@ export function GenerateTemplateDocument({
   const [doelstellingen, setDoelstellingen] = useState('');
   const [acties, setActies] = useState('');
   
-  // AI suggestion state
-  const [loadingSuggestion, setLoadingSuggestion] = useState<SuggestionType | null>(null);
-  
   // Preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
@@ -81,55 +75,6 @@ export function GenerateTemplateDocument({
       setProbleemanalyse(caseData.functional_limitations);
     }
   }, [caseData]);
-
-  const getAISuggestion = async (type: SuggestionType) => {
-    setLoadingSuggestion(type);
-    try {
-      const employeeName = caseData.employee
-        ? `${caseData.employee.voornaam} ${caseData.employee.achternaam}`
-        : 'Medewerker';
-
-      const context = {
-        documentType: selectedTemplate,
-        employeeName,
-        startDate: format(new Date(caseData.start_date), 'dd MMMM yyyy', { locale: nl }),
-        functionalLimitations: caseData.functional_limitations || 'Niet opgegeven',
-        canWorkPartial: caseData.can_work_partial || false,
-        partialWorkDescription: caseData.partial_work_description,
-        expectedDuration: caseData.expected_duration,
-      };
-
-      const { data, error } = await supabase.functions.invoke('document-ai-suggestions', {
-        body: { context, suggestionType: type },
-      });
-
-      if (error) throw error;
-
-      const suggestion = data.suggestion;
-
-      switch (type) {
-        case 'probleemanalyse':
-          setProbleemanalyse(suggestion);
-          break;
-        case 'belemmeringen':
-          setBelemmeringen(suggestion);
-          break;
-        case 'doelstellingen':
-          setDoelstellingen(suggestion);
-          break;
-        case 'acties':
-          setActies(suggestion);
-          break;
-      }
-
-      toast.success('AI suggestie gegenereerd');
-    } catch (error) {
-      console.error('AI suggestion error:', error);
-      toast.error('Fout bij genereren AI suggestie');
-    } finally {
-      setLoadingSuggestion(null);
-    }
-  };
 
   const generatePreview = async () => {
     setGenerating(true);
@@ -250,16 +195,12 @@ export function GenerateTemplateDocument({
               label="Probleemanalyse / Verzuimoorzaak"
               value={probleemanalyse}
               onChange={setProbleemanalyse}
-              onAISuggest={() => getAISuggestion('probleemanalyse')}
-              loading={loadingSuggestion === 'probleemanalyse'}
               placeholder="Beschrijf de functionele beperkingen en verzuimoorzaak..."
             />
             <FormField
               label="Belemmeringen voor werkhervatting"
               value={belemmeringen}
               onChange={setBelemmeringen}
-              onAISuggest={() => getAISuggestion('belemmeringen')}
-              loading={loadingSuggestion === 'belemmeringen'}
               placeholder="Welke belemmeringen zijn er voor werkhervatting..."
             />
           </>
@@ -271,24 +212,18 @@ export function GenerateTemplateDocument({
               label="Probleemstelling"
               value={probleemanalyse}
               onChange={setProbleemanalyse}
-              onAISuggest={() => getAISuggestion('probleemanalyse')}
-              loading={loadingSuggestion === 'probleemanalyse'}
               placeholder="Samenvatting van de verzuimsituatie..."
             />
             <FormField
               label="Concrete doelstellingen"
               value={doelstellingen}
               onChange={setDoelstellingen}
-              onAISuggest={() => getAISuggestion('doelstellingen')}
-              loading={loadingSuggestion === 'doelstellingen'}
               placeholder="SMART doelstellingen voor re-integratie..."
             />
             <FormField
               label="Afgesproken acties"
               value={acties}
               onChange={setActies}
-              onAISuggest={() => getAISuggestion('acties')}
-              loading={loadingSuggestion === 'acties'}
               placeholder="Concrete acties en afspraken..."
             />
           </>
@@ -308,16 +243,12 @@ export function GenerateTemplateDocument({
               label="Huidige situatie en belemmeringen"
               value={belemmeringen}
               onChange={setBelemmeringen}
-              onAISuggest={() => getAISuggestion('belemmeringen')}
-              loading={loadingSuggestion === 'belemmeringen'}
               placeholder="Huidige situatie en eventuele belemmeringen..."
             />
             <FormField
               label="Bijgestelde doelstellingen"
               value={doelstellingen}
               onChange={setDoelstellingen}
-              onAISuggest={() => getAISuggestion('doelstellingen')}
-              loading={loadingSuggestion === 'doelstellingen'}
               placeholder="Aangepaste doelstellingen indien nodig..."
             />
           </>
@@ -343,7 +274,7 @@ export function GenerateTemplateDocument({
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Genereer Wet Poortwachter Document</DialogTitle>
           <DialogDescription>
-            Genereer automatisch een document met AI-ondersteuning
+            Genereer automatisch een document op basis van de case gegevens
           </DialogDescription>
         </DialogHeader>
 
@@ -468,50 +399,26 @@ export function GenerateTemplateDocument({
   );
 }
 
-// Form field component with AI suggestion button
+// Form field component
 function FormField({
   label,
   value,
   onChange,
-  onAISuggest,
-  loading,
   placeholder,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  onAISuggest?: () => void;
-  loading?: boolean;
   placeholder?: string;
 }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <Label>{label}</Label>
-        {onAISuggest && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onAISuggest}
-            disabled={loading}
-            className="h-8 text-xs"
-          >
-            {loading ? (
-              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-            ) : (
-              <Sparkles className="h-3 w-3 mr-1" />
-            )}
-            AI Suggestie
-          </Button>
-        )}
-      </div>
+      <Label>{label}</Label>
       <Textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        rows={4}
-        className="resize-none"
+        className="min-h-[100px]"
       />
     </div>
   );
