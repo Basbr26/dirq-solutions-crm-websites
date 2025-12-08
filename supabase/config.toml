@@ -2,3 +2,6 @@ project_id = "fnhyekshkdcxuhcvhvfz"
 
 [functions.check-deadlines]
 verify_jwt = false
+
+[functions.document-ai-suggestions]
+verify_jwt = false

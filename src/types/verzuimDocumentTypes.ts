@@ -1,18 +1,13 @@
 // Extended types for verzuim document signing integration
 
 export type DocumentType = 
-  | 'algemeen'
-  | 'reintegratie_plan'
-  | 'plan_van_aanpak'
   | 'probleemanalyse'
-  | 'evaluatie_42_weken'
+  | 'plan_van_aanpak'
+  | 'evaluatie_3_maanden'
+  | 'evaluatie_6_maanden'
   | 'evaluatie_1_jaar'
-  | 'evaluatie_2_jaar'
-  | 'toestemming_bedrijfsarts'
-  | 'toestemming_arbeidsdeskundige'
-  | 'medische_informatie'
-  | 'werk_aanpassing'
-  | 'correspondentie'
+  | 'herstelmelding'
+  | 'uwv_melding'
   | 'overig';
 
 export type SignatureRole = 'employee' | 'manager' | 'hr' | 'bedrijfsarts';
@@ -24,7 +19,6 @@ export interface VerzuimDocument {
   uploaded_by: string;
   status: 'pending' | 'completed';
   created_at: string;
-  // Nieuwe velden voor verzuim integratie
   case_id?: string;
   document_type?: DocumentType;
   requires_signatures?: SignatureRole[];
@@ -56,6 +50,7 @@ export interface SickLeaveCase {
   created_by: string;
   created_at: string;
   expected_duration?: string;
+  expected_recovery_date?: string;
   availability_notes?: string;
   can_work_partial?: boolean;
   partial_work_description?: string;
@@ -67,19 +62,25 @@ export interface SickLeaveCase {
 }
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
-  algemeen: 'Algemeen Document',
-  reintegratie_plan: 'Re-integratieplan',
-  plan_van_aanpak: 'Plan van Aanpak',
   probleemanalyse: 'Probleemanalyse',
-  evaluatie_42_weken: 'Evaluatie 42 weken',
+  plan_van_aanpak: 'Plan van Aanpak',
+  evaluatie_3_maanden: 'Evaluatie 3 maanden',
+  evaluatie_6_maanden: 'Evaluatie 6 maanden (42 weken)',
   evaluatie_1_jaar: 'Evaluatie 1 jaar',
-  evaluatie_2_jaar: 'Evaluatie 2 jaar',
-  toestemming_bedrijfsarts: 'Toestemming Bedrijfsarts',
-  toestemming_arbeidsdeskundige: 'Toestemming Arbeidsdeskundige',
-  medische_informatie: 'Medische Informatie',
-  werk_aanpassing: 'Werk Aanpassing',
-  correspondentie: 'Correspondentie',
+  herstelmelding: 'Herstelmelding',
+  uwv_melding: 'UWV 42-weken melding',
   overig: 'Overig',
+};
+
+export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
+  probleemanalyse: 'Verplicht binnen 6 weken - Analyse van verzuimoorzaak en belemmeringen',
+  plan_van_aanpak: 'Week 6-8 - Concrete stappen en doelstellingen voor re-integratie',
+  evaluatie_3_maanden: '3 maanden - Voortgangsevaluatie re-integratie',
+  evaluatie_6_maanden: '42 weken - Verplichte evaluatie en UWV voorbereiding',
+  evaluatie_1_jaar: '1 jaar - Uitgebreide evaluatie en bijstelling plan',
+  herstelmelding: 'Bij (gedeeltelijk) herstel - Officiële herstelmelding',
+  uwv_melding: '42 weken - Verplichte ziekmelding aan UWV',
+  overig: 'Overige documentatie',
 };
 
 export const SIGNATURE_ROLE_LABELS: Record<SignatureRole, string> = {
@@ -95,7 +96,6 @@ export function getDocumentDeadline(documentType: DocumentType, startDate: strin
   
   switch (documentType) {
     case 'probleemanalyse':
-    case 'reintegratie_plan':
       // Binnen 6 weken
       return new Date(start.getTime() + (6 * 7 * 24 * 60 * 60 * 1000));
     
@@ -103,7 +103,12 @@ export function getDocumentDeadline(documentType: DocumentType, startDate: strin
       // Week 6-8
       return new Date(start.getTime() + (8 * 7 * 24 * 60 * 60 * 1000));
     
-    case 'evaluatie_42_weken':
+    case 'evaluatie_3_maanden':
+      // 3 maanden
+      return new Date(start.getTime() + (13 * 7 * 24 * 60 * 60 * 1000));
+    
+    case 'evaluatie_6_maanden':
+    case 'uwv_melding':
       // 42 weken
       return new Date(start.getTime() + (42 * 7 * 24 * 60 * 60 * 1000));
     
@@ -111,12 +116,53 @@ export function getDocumentDeadline(documentType: DocumentType, startDate: strin
       // 1 jaar
       return new Date(start.getTime() + (365 * 24 * 60 * 60 * 1000));
     
-    case 'evaluatie_2_jaar':
-      // 2 jaar
-      return new Date(start.getTime() + (2 * 365 * 24 * 60 * 60 * 1000));
+    case 'herstelmelding':
+      // Binnen 1 week na herstel
+      return new Date(Date.now() + (7 * 24 * 60 * 60 * 1000));
     
     default:
       // Standaard 14 dagen
       return new Date(start.getTime() + (14 * 24 * 60 * 60 * 1000));
   }
+}
+
+// Bepaal welke documenten relevant zijn op basis van verzuimduur
+export function getRelevantDocumentTypes(startDate: string): DocumentType[] {
+  const start = new Date(startDate);
+  const now = new Date();
+  const weeksSinceStart = Math.floor((now.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  
+  const relevant: DocumentType[] = [];
+  
+  // Altijd beschikbaar
+  relevant.push('overig');
+  relevant.push('herstelmelding');
+  
+  // Probleemanalyse: relevant vanaf week 1
+  if (weeksSinceStart >= 0) {
+    relevant.unshift('probleemanalyse');
+  }
+  
+  // Plan van Aanpak: relevant vanaf week 6
+  if (weeksSinceStart >= 6) {
+    relevant.unshift('plan_van_aanpak');
+  }
+  
+  // Evaluatie 3 maanden: relevant vanaf week 10
+  if (weeksSinceStart >= 10) {
+    relevant.unshift('evaluatie_3_maanden');
+  }
+  
+  // Evaluatie 42 weken + UWV: relevant vanaf week 38
+  if (weeksSinceStart >= 38) {
+    relevant.unshift('evaluatie_6_maanden');
+    relevant.unshift('uwv_melding');
+  }
+  
+  // Evaluatie 1 jaar: relevant vanaf week 48
+  if (weeksSinceStart >= 48) {
+    relevant.unshift('evaluatie_1_jaar');
+  }
+  
+  return relevant;
 }
