@@ -40,7 +40,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [managerId, setManagerId] = useState<string>('');
+  const [managerId, setManagerId] = useState<string>('none');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
       const deptData = {
         name: name.trim(),
         description: description.trim() || null,
-        manager_id: managerId || null,
+        manager_id: managerId === 'none' ? null : managerId || null,
       };
 
       if (editingDept) {
@@ -161,12 +161,13 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
     setEditingDept(dept);
     setName(dept.name);
     setDescription(dept.description || '');
-    setManagerId(dept.manager_id || '');
+    setManagerId(dept.manager_id || 'none');
     setDialogOpen(true);
   };
 
   const openNewDialog = () => {
     resetForm();
+    setManagerId('none');
     setDialogOpen(true);
   };
 
@@ -174,7 +175,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
     setEditingDept(null);
     setName('');
     setDescription('');
-    setManagerId('');
+    setManagerId('none');
   };
 
   return (
@@ -305,7 +306,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
                   <SelectValue placeholder="Selecteer een manager" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
-                  <SelectItem value="">Geen manager</SelectItem>
+                  <SelectItem value="none">Geen manager</SelectItem>
                   {managers.map((mgr) => (
                     <SelectItem key={mgr.id} value={mgr.id}>
                       {mgr.voornaam} {mgr.achternaam}
