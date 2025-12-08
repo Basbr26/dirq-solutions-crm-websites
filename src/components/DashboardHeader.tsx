@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Shield, Users } from 'lucide-react';
 import { DirqLogo } from './DirqLogo';
 import { NotificationBell } from './NotificationBell';
+import { ThemeToggle } from './ThemeToggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -77,6 +78,7 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
               </div>
             )}
             
+            <ThemeToggle />
             <NotificationBell />
             
             <DropdownMenu>
