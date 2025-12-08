@@ -115,15 +115,15 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Nieuwe gebruiker aanmaken</DialogTitle>
           <DialogDescription>
             Maak een nieuwe gebruiker aan. Het standaard wachtwoord is Welkom123 en moet bij eerste inlog gewijzigd worden.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="voornaam">Voornaam</Label>
               <Input
@@ -162,7 +162,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
               <SelectTrigger>
                 <SelectValue placeholder="Selecteer een rol" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover">
                 <SelectItem value="medewerker">Medewerker</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="hr">HR</SelectItem>
@@ -170,7 +170,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
               </SelectContent>
             </Select>
           </div>
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t flex-shrink-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuleren
             </Button>

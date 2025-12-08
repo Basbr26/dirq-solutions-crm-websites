@@ -61,11 +61,11 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
           Upload document
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Document uploaden</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1">
           <div>
             <Label htmlFor="file">Bestand *</Label>
             <Input
@@ -87,7 +87,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover">
                 <SelectItem value="medisch_attest">Medisch Attest</SelectItem>
                 <SelectItem value="probleemanalyse">Probleemanalyse</SelectItem>
                 <SelectItem value="plan_van_aanpak">Plan van Aanpak</SelectItem>
@@ -99,7 +99,7 @@ export function DocumentUpload({ onUpload }: DocumentUploadProps) {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t flex-shrink-0">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuleren
             </Button>
