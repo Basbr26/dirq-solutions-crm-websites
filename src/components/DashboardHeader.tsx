@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Shield, Users } from 'lucide-react';
 import { DirqLogo } from './DirqLogo';
 import { NotificationBell } from './NotificationBell';
 import {
@@ -19,12 +20,18 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ title, children }: DashboardHeaderProps) {
   const { profile, signOut, role } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const getRoleLabel = () => {
+    if (role === 'super_admin') return 'Super Admin';
     if (role === 'hr') return 'HR Medewerker';
     if (role === 'manager') return 'Manager';
     return 'Medewerker';
   };
+
+  const isOnSuperAdminDashboard = location.pathname === '/dashboard/super-admin';
+  const isOnHRDashboard = location.pathname === '/dashboard/hr';
 
   return (
     <header className="bg-card border-b border-border">
@@ -42,6 +49,33 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
           
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {children}
+            
+            {/* Dashboard switcher for super_admin */}
+            {role === 'super_admin' && (
+              <div className="hidden sm:flex">
+                {isOnSuperAdminDashboard ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/dashboard/hr')}
+                    className="gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    HR Dashboard
+                  </Button>
+                ) : isOnHRDashboard ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => navigate('/dashboard/super-admin')}
+                    className="gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Admin Dashboard
+                  </Button>
+                ) : null}
+              </div>
+            )}
             
             <NotificationBell />
             
@@ -63,6 +97,26 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                
+                {/* Mobile dashboard switcher for super_admin */}
+                {role === 'super_admin' && (
+                  <>
+                    {isOnSuperAdminDashboard && (
+                      <DropdownMenuItem onClick={() => navigate('/dashboard/hr')} className="cursor-pointer sm:hidden">
+                        <Users className="mr-2 h-4 w-4" />
+                        HR Dashboard
+                      </DropdownMenuItem>
+                    )}
+                    {isOnHRDashboard && (
+                      <DropdownMenuItem onClick={() => navigate('/dashboard/super-admin')} className="cursor-pointer sm:hidden">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator className="sm:hidden" />
+                  </>
+                )}
+                
                 <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   Uitloggen
