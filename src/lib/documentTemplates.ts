@@ -480,7 +480,7 @@ export async function generateGespreksverslag(
     gespreksonderwerp?: string;
     aanwezigen?: string;
     afspraken?: string;
-    vervolgdatum?: string;
+    gespreksdatum?: Date;
   }
 ): Promise<Blob> {
   const { pdfDoc, page, font, boldFont, y: startY } = await createPDFWithHeader(
@@ -494,8 +494,12 @@ export async function generateGespreksverslag(
     ? `${caseData.employee.voornaam} ${caseData.employee.achternaam}`
     : 'Onbekend';
 
+  const gespreksdatumFormatted = formData?.gespreksdatum 
+    ? format(formData.gespreksdatum, 'dd-MM-yyyy', { locale: nl })
+    : format(new Date(), 'dd-MM-yyyy', { locale: nl });
+
   // Basisgegevens
-  page.drawText(`Datum gesprek: ${format(new Date(), 'dd-MM-yyyy', { locale: nl })}`, { x: 50, y, size: 10, font });
+  page.drawText(`Datum gesprek: ${gespreksdatumFormatted}`, { x: 50, y, size: 10, font });
   y -= 15;
   page.drawText(`Werknemer: ${employeeName}`, { x: 50, y, size: 10, font });
   y -= 15;
