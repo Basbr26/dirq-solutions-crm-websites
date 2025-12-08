@@ -355,24 +355,26 @@ export function CaseDocumentsList({
 
       {/* Sign Dialog */}
       <Dialog open={signDialogOpen} onOpenChange={setSignDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Document ondertekenen</DialogTitle>
             <DialogDescription>
               {selectedDocument && `Teken document: ${selectedDocument.file_name}`}
             </DialogDescription>
           </DialogHeader>
 
-          {signing ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-          ) : (
-            <SignatureCanvas
-              onSave={handleSign}
-              onCancel={() => setSignDialogOpen(false)}
-            />
-          )}
+          <div className="overflow-y-auto flex-1">
+            {signing ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <SignatureCanvas
+                onSave={handleSign}
+                onCancel={() => setSignDialogOpen(false)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>

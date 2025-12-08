@@ -190,8 +190,8 @@ export function CaseDocumentUpload({
           Document Uploaden
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Document Uploaden voor Verzuimcase</DialogTitle>
           <DialogDescription>
             Upload een document dat ondertekend moet worden door de betrokken partijen
@@ -207,7 +207,7 @@ export function CaseDocumentUpload({
             </p>
           </div>
         ) : (
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 overflow-y-auto flex-1">
             <div className="space-y-2">
               <Label htmlFor="file">Document (PDF)</Label>
               <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export function CaseDocumentUpload({
                 <SelectTrigger id="documentType">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover">
                   {Object.entries(DOCUMENT_TYPE_LABELS).map(([value, label]) => (
                     <SelectItem key={value} value={value}>
                       {label}
@@ -277,12 +277,12 @@ export function CaseDocumentUpload({
               </p>
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end pt-4 border-t flex-shrink-0">
               <Button variant="outline" onClick={() => setOpen(false)} disabled={uploading}>
                 Annuleren
               </Button>
               <Button onClick={handleUpload} disabled={!file || uploading}>
-                {uploading ? 'Uploaden...' : 'Upload en Verstuur Uitnodigingen'}
+                {uploading ? 'Uploaden...' : 'Upload en Verstuur'}
               </Button>
             </div>
           </div>

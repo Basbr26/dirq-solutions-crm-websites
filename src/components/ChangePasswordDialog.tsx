@@ -81,14 +81,14 @@ export function ChangePasswordDialog({ open, onPasswordChanged }: ChangePassword
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-[425px]" onInteractOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] max-h-[85vh] flex flex-col" onInteractOutside={(e) => e.preventDefault()}>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Wachtwoord wijzigen</DialogTitle>
           <DialogDescription>
             Je moet je wachtwoord wijzigen voordat je verder kunt. Kies een sterk wachtwoord met minimaal 8 tekens.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1">
           <div className="space-y-2">
             <Label htmlFor="password">Nieuw wachtwoord</Label>
             <Input
@@ -111,7 +111,7 @@ export function ChangePasswordDialog({ open, onPasswordChanged }: ChangePassword
               required
             />
           </div>
-          <div className="flex justify-end pt-4">
+          <div className="flex justify-end pt-4 border-t flex-shrink-0">
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Wachtwoord wijzigen

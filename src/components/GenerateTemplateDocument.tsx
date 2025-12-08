@@ -118,8 +118,8 @@ export function GenerateTemplateDocument({
           Genereer Document
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Genereer Wet Poortwachter Document</DialogTitle>
           <DialogDescription>
             Genereer automatisch een document op basis van de verzuimgegevens
@@ -137,7 +137,7 @@ export function GenerateTemplateDocument({
             </div>
           </div>
         ) : (
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 overflow-y-auto flex-1">
             <div className="space-y-3">
               <Label htmlFor="template">Selecteer Document Type</Label>
               <Select
@@ -147,7 +147,7 @@ export function GenerateTemplateDocument({
                 <SelectTrigger id="template">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover">
                   {TEMPLATE_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -188,7 +188,7 @@ export function GenerateTemplateDocument({
               </p>
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 justify-end pt-4 border-t flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={() => setOpen(false)}
@@ -205,7 +205,7 @@ export function GenerateTemplateDocument({
                 ) : (
                   <>
                     <FileText className="h-4 w-4 mr-2" />
-                    Genereer Document
+                    Genereer
                   </>
                 )}
               </Button>
