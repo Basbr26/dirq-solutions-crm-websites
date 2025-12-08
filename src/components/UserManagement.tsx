@@ -43,8 +43,8 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [editRole, setEditRole] = useState<AppRole>('medewerker');
-  const [editDepartment, setEditDepartment] = useState<string>('');
-  const [editManager, setEditManager] = useState<string>('');
+  const [editDepartment, setEditDepartment] = useState<string>('none');
+  const [editManager, setEditManager] = useState<string>('none');
   const [editFunctie, setEditFunctie] = useState('');
 
   useEffect(() => {
@@ -103,8 +103,8 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
   const openEditDialog = (user: UserWithRole) => {
     setSelectedUser(user);
     setEditRole(user.role || 'medewerker');
-    setEditDepartment(user.department_id || '');
-    setEditManager(user.manager_id || '');
+    setEditDepartment(user.department_id || 'none');
+    setEditManager(user.manager_id || 'none');
     setEditFunctie(user.functie || '');
     setEditDialogOpen(true);
   };
@@ -117,8 +117,8 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          department_id: editDepartment || null,
-          manager_id: editManager || null,
+          department_id: editDepartment === 'none' ? null : editDepartment || null,
+          manager_id: editManager === 'none' ? null : editManager || null,
           functie: editFunctie || null,
         })
         .eq('id', selectedUser.id);
@@ -284,8 +284,8 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteer afdeling" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Geen afdeling</SelectItem>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="none">Geen afdeling</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -301,8 +301,8 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteer manager" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Geen manager</SelectItem>
+                <SelectContent className="bg-popover">
+                  <SelectItem value="none">Geen manager</SelectItem>
                   {managers
                     .filter(m => m.id !== selectedUser?.id)
                     .map((mgr) => (
