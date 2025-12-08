@@ -668,6 +668,7 @@ export type Database = {
         | "herstelmelding"
         | "uwv_melding"
         | "overig"
+        | "gespreksverslag"
       event_type:
         | "ziekmelding"
         | "gesprek"
@@ -815,6 +816,7 @@ export const Constants = {
         "herstelmelding",
         "uwv_melding",
         "overig",
+        "gespreksverslag",
       ],
       event_type: [
         "ziekmelding",

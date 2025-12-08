@@ -470,6 +470,100 @@ export async function generateUWVMelding(
   return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
 }
 
+/**
+ * Genereer een Gespreksverslag PDF
+ */
+export async function generateGespreksverslag(
+  caseData: SickLeaveCase,
+  company: Company,
+  formData?: FormData & { 
+    gespreksonderwerp?: string;
+    aanwezigen?: string;
+    afspraken?: string;
+    vervolgdatum?: string;
+  }
+): Promise<Blob> {
+  const { pdfDoc, page, font, boldFont, y: startY } = await createPDFWithHeader(
+    'GESPREKSVERSLAG',
+    'Officiële vastlegging van gemaakte afspraken'
+  );
+
+  let y = startY;
+
+  const employeeName = caseData.employee
+    ? `${caseData.employee.voornaam} ${caseData.employee.achternaam}`
+    : 'Onbekend';
+
+  // Basisgegevens
+  page.drawText(`Datum gesprek: ${format(new Date(), 'dd-MM-yyyy', { locale: nl })}`, { x: 50, y, size: 10, font });
+  y -= 15;
+  page.drawText(`Werknemer: ${employeeName}`, { x: 50, y, size: 10, font });
+  y -= 15;
+  page.drawText(`Bedrijf: ${company.naam}`, { x: 50, y, size: 10, font });
+  y -= 15;
+  page.drawText(
+    `Eerste ziektedag: ${format(new Date(caseData.start_date), 'dd-MM-yyyy', { locale: nl })}`,
+    { x: 50, y, size: 10, font }
+  );
+  y -= 30;
+
+  // Aanwezigen
+  page.drawText('Aanwezigen bij het gesprek:', { x: 50, y, size: 11, font: boldFont });
+  y -= 20;
+  const aanwezigen = splitText(formData?.aanwezigen || 'Werknemer, Leidinggevende', 80);
+  aanwezigen.forEach((line) => {
+    page.drawText(line, { x: 50, y, size: 10, font });
+    y -= 15;
+  });
+  y -= 20;
+
+  // Onderwerp
+  page.drawText('Onderwerp van het gesprek:', { x: 50, y, size: 11, font: boldFont });
+  y -= 20;
+  const onderwerp = splitText(formData?.gespreksonderwerp || 'Voortgang re-integratie en gemaakte afspraken', 80);
+  onderwerp.forEach((line) => {
+    page.drawText(line, { x: 50, y, size: 10, font });
+    y -= 15;
+  });
+  y -= 20;
+
+  // Besproken punten
+  page.drawText('Besproken punten:', { x: 50, y, size: 11, font: boldFont });
+  y -= 20;
+  const besproken = splitText(formData?.probleemanalyse || 'Beschrijf de besproken onderwerpen...', 80);
+  besproken.forEach((line) => {
+    page.drawText(line, { x: 50, y, size: 10, font });
+    y -= 15;
+  });
+  y -= 20;
+
+  // Gemaakte afspraken
+  page.drawText('Gemaakte afspraken:', { x: 50, y, size: 11, font: boldFont });
+  y -= 20;
+  const afspraken = splitText(formData?.afspraken || 'Beschrijf de gemaakte afspraken...', 80);
+  afspraken.forEach((line) => {
+    page.drawText(line, { x: 50, y, size: 10, font });
+    y -= 15;
+  });
+  y -= 20;
+
+  // Vervolgafspraken
+  page.drawText('Vervolgafspraken:', { x: 50, y, size: 11, font: boldFont });
+  y -= 20;
+  const vervolg = splitText(formData?.acties || 'Volgende contactmoment en actiepunten...', 80);
+  vervolg.forEach((line) => {
+    page.drawText(line, { x: 50, y, size: 10, font });
+    y -= 15;
+  });
+  y -= 30;
+
+  // Handtekeningen
+  y = addSignatureSection(page, font, boldFont, y);
+
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([new Uint8Array(pdfBytes)], { type: 'application/pdf' });
+}
+
 // Helper functie voor handtekening sectie
 function addSignatureSection(
   page: any,

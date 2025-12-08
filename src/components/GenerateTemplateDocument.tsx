@@ -26,6 +26,7 @@ import {
   generateEvaluatie,
   generateHerstelmelding,
   generateUWVMelding,
+  generateGespreksverslag,
   uploadGeneratedDocument,
 } from '@/lib/documentTemplates';
 import {
@@ -61,6 +62,11 @@ export function GenerateTemplateDocument({
   const [belemmeringen, setBelemmeringen] = useState('');
   const [doelstellingen, setDoelstellingen] = useState('');
   const [acties, setActies] = useState('');
+  
+  // Gespreksverslag specific fields
+  const [aanwezigen, setAanwezigen] = useState('');
+  const [gespreksonderwerp, setGespreksonderwerp] = useState('');
+  const [afspraken, setAfspraken] = useState('');
   
   // Preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -104,6 +110,15 @@ export function GenerateTemplateDocument({
           break;
         case 'uwv_melding':
           pdfBlob = await generateUWVMelding(caseData, company);
+          break;
+        case 'gespreksverslag':
+          pdfBlob = await generateGespreksverslag(caseData, company, {
+            probleemanalyse,
+            aanwezigen,
+            gespreksonderwerp,
+            afspraken,
+            acties,
+          });
           break;
         default:
           throw new Error('Onbekend template type');
@@ -175,6 +190,9 @@ export function GenerateTemplateDocument({
     setBelemmeringen('');
     setDoelstellingen('');
     setActies('');
+    setAanwezigen('');
+    setGespreksonderwerp('');
+    setAfspraken('');
   };
 
   // Cleanup preview URL on unmount
@@ -250,6 +268,41 @@ export function GenerateTemplateDocument({
               value={doelstellingen}
               onChange={setDoelstellingen}
               placeholder="Aangepaste doelstellingen indien nodig..."
+            />
+          </>
+        );
+      case 'gespreksverslag':
+        return (
+          <>
+            <FormField
+              label="Aanwezigen bij het gesprek"
+              value={aanwezigen}
+              onChange={setAanwezigen}
+              placeholder="Bijv: Werknemer, Leidinggevende, HR-adviseur..."
+            />
+            <FormField
+              label="Onderwerp van het gesprek"
+              value={gespreksonderwerp}
+              onChange={setGespreksonderwerp}
+              placeholder="Waar ging het gesprek over..."
+            />
+            <FormField
+              label="Besproken punten"
+              value={probleemanalyse}
+              onChange={setProbleemanalyse}
+              placeholder="Welke onderwerpen zijn besproken..."
+            />
+            <FormField
+              label="Gemaakte afspraken"
+              value={afspraken}
+              onChange={setAfspraken}
+              placeholder="Welke concrete afspraken zijn gemaakt..."
+            />
+            <FormField
+              label="Vervolgafspraken en actiepunten"
+              value={acties}
+              onChange={setActies}
+              placeholder="Volgende contactmoment, wie doet wat..."
             />
           </>
         );

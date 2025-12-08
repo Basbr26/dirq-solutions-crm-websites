@@ -8,6 +8,7 @@ export type DocumentType =
   | 'evaluatie_1_jaar'
   | 'herstelmelding'
   | 'uwv_melding'
+  | 'gespreksverslag'
   | 'overig';
 
 export type SignatureRole = 'employee' | 'manager' | 'hr' | 'bedrijfsarts';
@@ -69,6 +70,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   evaluatie_1_jaar: 'Evaluatie 1 jaar',
   herstelmelding: 'Herstelmelding',
   uwv_melding: 'UWV 42-weken melding',
+  gespreksverslag: 'Gespreksverslag',
   overig: 'Overig',
 };
 
@@ -80,6 +82,7 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   evaluatie_1_jaar: '1 jaar - Uitgebreide evaluatie en bijstelling plan',
   herstelmelding: 'Bij (gedeeltelijk) herstel - Officiële herstelmelding',
   uwv_melding: '42 weken - Verplichte ziekmelding aan UWV',
+  gespreksverslag: 'Vastleggen van afspraken uit gesprekken met handtekeningen',
   overig: 'Overige documentatie',
 };
 
@@ -137,6 +140,7 @@ export function getRelevantDocumentTypes(startDate: string): DocumentType[] {
   // Altijd beschikbaar
   relevant.push('overig');
   relevant.push('herstelmelding');
+  relevant.push('gespreksverslag');
   
   // Probleemanalyse: relevant vanaf week 1
   if (weeksSinceStart >= 0) {
