@@ -13,6 +13,8 @@ import DashboardMedewerker from "./pages/DashboardMedewerker";
 import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
 import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
+import EmployeesPage from "./pages/hr/EmployeesPage";
+import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +101,24 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <CaseDetail />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* HR Module Routes */}
+              <Route 
+                path="/hr/medewerkers" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                    <EmployeesPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/medewerkers/:id" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                    <EmployeeDetailPage />
                   </ProtectedRoute>
                 } 
               />
