@@ -46,8 +46,8 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       title: 'HR Beheer',
       items: [
         { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Verzuim', icon: Heart, href: '/hr/verzuim', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Verlof', icon: Calendar, href: '/hr/verlof', roles: ['hr', 'super_admin', 'manager'] },
+        { title: 'Verzuim', icon: Heart, href: '/dashboard/hr', roles: ['hr', 'super_admin', 'manager'] },
+        { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },
         { title: 'Documenten', icon: FileText, href: '/hr/documenten', roles: ['hr', 'super_admin'] },
       ],
     },

@@ -15,6 +15,7 @@ import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
 import EmployeesPage from "./pages/hr/EmployeesPage";
 import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
+import LeavePage from "./pages/hr/LeavePage";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +120,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
                     <EmployeeDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/verlof" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                    <LeavePage />
                   </ProtectedRoute>
                 } 
               />
