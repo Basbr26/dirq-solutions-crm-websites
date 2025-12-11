@@ -259,6 +259,164 @@ export type Database = {
           },
         ]
       }
+      employee_notes: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string
+          employee_id: string
+          id: string
+          is_private: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by: string
+          employee_id: string
+          id?: string
+          is_private?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string
+          employee_id?: string
+          id?: string
+          is_private?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_notes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_notes_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_balances: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          id: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          pending_days: number
+          total_days: number
+          updated_at: string | null
+          used_days: number
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          pending_days?: number
+          total_days?: number
+          updated_at?: string | null
+          used_days?: number
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          leave_type?: Database["public"]["Enums"]["leave_type"]
+          pending_days?: number
+          total_days?: number
+          updated_at?: string | null
+          used_days?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          hours: number | null
+          id: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          reason: string | null
+          rejection_reason: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["leave_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          days: number
+          employee_id: string
+          end_date: string
+          hours?: number | null
+          id?: string
+          leave_type: Database["public"]["Enums"]["leave_type"]
+          reason?: string | null
+          rejection_reason?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["leave_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          days?: number
+          employee_id?: string
+          end_date?: string
+          hours?: number | null
+          id?: string
+          leave_type?: Database["public"]["Enums"]["leave_type"]
+          reason?: string | null
+          rejection_reason?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["leave_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leave_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           case_id: string | null
@@ -323,42 +481,87 @@ export type Database = {
       profiles: {
         Row: {
           achternaam: string
+          address: string | null
+          bank_account: string | null
+          bsn_encrypted: string | null
+          city: string | null
+          contract_type: string | null
           created_at: string | null
+          date_of_birth: string | null
           department_id: string | null
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_number: string | null
+          employment_status: string | null
+          end_date: string | null
           foto_url: string | null
           functie: string | null
+          hours_per_week: number | null
           id: string
           manager_id: string | null
           must_change_password: boolean | null
+          notes: string | null
+          postal_code: string | null
+          start_date: string | null
           telefoon: string | null
           updated_at: string | null
           voornaam: string
         }
         Insert: {
           achternaam: string
+          address?: string | null
+          bank_account?: string | null
+          bsn_encrypted?: string | null
+          city?: string | null
+          contract_type?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           department_id?: string | null
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_number?: string | null
+          employment_status?: string | null
+          end_date?: string | null
           foto_url?: string | null
           functie?: string | null
+          hours_per_week?: number | null
           id: string
           manager_id?: string | null
           must_change_password?: boolean | null
+          notes?: string | null
+          postal_code?: string | null
+          start_date?: string | null
           telefoon?: string | null
           updated_at?: string | null
           voornaam: string
         }
         Update: {
           achternaam?: string
+          address?: string | null
+          bank_account?: string | null
+          bsn_encrypted?: string | null
+          city?: string | null
+          contract_type?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           department_id?: string | null
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_number?: string | null
+          employment_status?: string | null
+          end_date?: string | null
           foto_url?: string | null
           functie?: string | null
+          hours_per_week?: number | null
           id?: string
           manager_id?: string | null
           must_change_password?: boolean | null
+          notes?: string | null
+          postal_code?: string | null
+          start_date?: string | null
           telefoon?: string | null
           updated_at?: string | null
           voornaam?: string
@@ -677,6 +880,14 @@ export type Database = {
         | "herstelmelding"
         | "evaluatie"
         | "statuswijziging"
+      leave_status: "pending" | "approved" | "rejected" | "cancelled"
+      leave_type:
+        | "vakantie"
+        | "adv"
+        | "bijzonder"
+        | "onbetaald"
+        | "ouderschaps"
+        | "zwangerschaps"
       task_status: "open" | "in_progress" | "afgerond" | "overdue"
     }
     CompositeTypes: {
@@ -826,6 +1037,15 @@ export const Constants = {
         "herstelmelding",
         "evaluatie",
         "statuswijziging",
+      ],
+      leave_status: ["pending", "approved", "rejected", "cancelled"],
+      leave_type: [
+        "vakantie",
+        "adv",
+        "bijzonder",
+        "onbetaald",
+        "ouderschaps",
+        "zwangerschaps",
       ],
       task_status: ["open", "in_progress", "afgerond", "overdue"],
     },
