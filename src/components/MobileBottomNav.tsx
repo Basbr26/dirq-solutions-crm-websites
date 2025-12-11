@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, ClipboardList, FileText, BarChart3, User, Users, Bell, Building2, Shield } from 'lucide-react';
+import { Home, ClipboardList, FileText, BarChart3, User, Users, Bell, Building2, Shield, Calendar, Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
@@ -19,27 +19,29 @@ export function MobileBottomNav() {
     switch (role) {
       case 'super_admin':
         return [
-          { icon: Home, label: 'Overzicht', path: '/dashboard/super-admin' },
-          { icon: Users, label: 'Gebruikers', path: '/dashboard/super-admin', action: 'users' },
-          { icon: Building2, label: 'Afdelingen', path: '/dashboard/super-admin', action: 'departments' },
-          { icon: Shield, label: 'HR View', path: '/dashboard/hr' },
+          { icon: Home, label: 'Dashboard', path: '/dashboard/super-admin' },
+          { icon: Users, label: 'Medewerkers', path: '/hr/medewerkers' },
+          { icon: Heart, label: 'Verzuim', path: '/dashboard/hr' },
+          { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
         ];
       case 'hr':
         return [
-          { icon: Home, label: 'Overzicht', path: '/dashboard/hr', action: 'overview' },
-          { icon: Users, label: 'Dossiers', path: '/dashboard/hr', action: 'cases' },
-          { icon: ClipboardList, label: 'Taken', path: '/dashboard/hr', action: 'tasks' },
-          { icon: BarChart3, label: 'Analyse', path: '/dashboard/hr', action: 'analytics' },
+          { icon: Home, label: 'Dashboard', path: '/dashboard/hr' },
+          { icon: Users, label: 'Medewerkers', path: '/hr/medewerkers' },
+          { icon: Heart, label: 'Verzuim', path: '/dashboard/hr', action: 'cases' },
+          { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
         ];
       case 'manager':
         return [
-          { icon: Home, label: 'Overzicht', path: '/dashboard/manager', action: 'overview' },
-          { icon: ClipboardList, label: 'Taken', path: '/dashboard/manager', action: 'tasks' },
-          { icon: BarChart3, label: 'Analyse', path: '/dashboard/manager', action: 'analytics' },
+          { icon: Home, label: 'Dashboard', path: '/dashboard/manager' },
+          { icon: Users, label: 'Team', path: '/hr/medewerkers' },
+          { icon: Heart, label: 'Verzuim', path: '/dashboard/manager' },
+          { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
         ];
       case 'medewerker':
         return [
           { icon: Home, label: 'Status', path: '/dashboard/medewerker' },
+          { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
           { icon: FileText, label: 'Documenten', path: '/dashboard/medewerker', action: 'documents' },
           { icon: Bell, label: 'Updates', path: '/dashboard/medewerker', action: 'timeline' },
         ];
@@ -54,21 +56,20 @@ export function MobileBottomNav() {
 
   const handleNavClick = (item: NavItem) => {
     if (item.path) {
-      // Navigate to the path and emit a custom event for tab switching
       navigate(item.path);
       if (item.action) {
-        // Dispatch custom event for tab switching within the page
         window.dispatchEvent(new CustomEvent('nav-tab-change', { detail: item.action }));
       }
     }
   };
 
   const isActive = (item: NavItem) => {
-    return location.pathname === item.path;
+    if (!item.path) return false;
+    return location.pathname === item.path || location.pathname.startsWith(item.path + '/');
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border sm:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border md:hidden">
       <div className="flex items-center justify-around h-16 px-2 safe-area-inset-bottom">
         {navItems.map((item) => {
           const Icon = item.icon;
