@@ -15,8 +15,10 @@ import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
 import EmployeesPage from "./pages/hr/EmployeesPage";
 import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
+import EmployeeCreatePage from "./pages/hr/EmployeeCreatePage";
 import LeavePage from "./pages/hr/LeavePage";
 import HRDashboardPage from "./pages/hr/HRDashboardPage";
+import DocumentsPage from "./pages/hr/DocumentsPage";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +127,14 @@ const App = () => (
                 } 
               />
               <Route 
+                path="/hr/medewerkers/nieuw" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <EmployeeCreatePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/hr/medewerkers/:id" 
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
@@ -137,6 +147,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
                     <LeavePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/documenten" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <DocumentsPage />
                   </ProtectedRoute>
                 } 
               />
