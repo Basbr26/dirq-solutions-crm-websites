@@ -39,7 +39,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
     {
       title: 'Overzicht',
       items: [
-        { title: 'Dashboard', icon: LayoutDashboard, href: role === 'super_admin' ? '/dashboard/super-admin' : role === 'hr' ? '/dashboard/hr' : role === 'manager' ? '/dashboard/manager' : '/dashboard/medewerker' },
+        { title: 'Dashboard', icon: LayoutDashboard, href: role === 'super_admin' || role === 'hr' ? '/hr/dashboard' : role === 'manager' ? '/dashboard/manager' : '/dashboard/medewerker' },
       ],
     },
     {

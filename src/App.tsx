@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import EmployeesPage from "./pages/hr/EmployeesPage";
 import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
 import LeavePage from "./pages/hr/LeavePage";
+import HRDashboardPage from "./pages/hr/HRDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -37,9 +38,9 @@ function RoleBasedRedirect() {
   // Redirect based on role
   switch (role) {
     case 'super_admin':
-      return <Navigate to="/dashboard/super-admin" replace />;
+      return <Navigate to="/hr/dashboard" replace />;
     case 'hr':
-      return <Navigate to="/dashboard/hr" replace />;
+      return <Navigate to="/hr/dashboard" replace />;
     case 'manager':
       return <Navigate to="/dashboard/manager" replace />;
     case 'medewerker':
@@ -107,6 +108,14 @@ const App = () => (
               />
 
               {/* HR Module Routes */}
+              <Route 
+                path="/hr/dashboard" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <HRDashboardPage />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/hr/medewerkers" 
                 element={
