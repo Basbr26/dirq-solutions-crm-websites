@@ -19,14 +19,14 @@ export function MobileBottomNav() {
     switch (role) {
       case 'super_admin':
         return [
-          { icon: Home, label: 'Dashboard', path: '/dashboard/super-admin' },
+          { icon: Home, label: 'Dashboard', path: '/hr/dashboard' },
           { icon: Users, label: 'Medewerkers', path: '/hr/medewerkers' },
           { icon: Heart, label: 'Verzuim', path: '/dashboard/hr' },
           { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
         ];
       case 'hr':
         return [
-          { icon: Home, label: 'Dashboard', path: '/dashboard/hr' },
+          { icon: Home, label: 'Dashboard', path: '/hr/dashboard' },
           { icon: Users, label: 'Medewerkers', path: '/hr/medewerkers' },
           { icon: Heart, label: 'Verzuim', path: '/dashboard/hr', action: 'cases' },
           { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
