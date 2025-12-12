@@ -39,7 +39,7 @@ export default function Auth() {
           setShowChangePassword(false);
           setShowAnimation(true);
           let path = '/';
-          if (role === 'hr') path = '/dashboard/hr';
+          if (role === 'super_admin' || role === 'hr') path = '/hr/dashboard';
           else if (role === 'manager') path = '/dashboard/manager';
           else if (role === 'medewerker') path = '/dashboard/medewerker';
           setRedirectPath(path);
@@ -51,7 +51,7 @@ export default function Auth() {
   // Redirect if already logged in
   if (user && !showAnimation && !authLoading && !loading) {
     // Redirect naar juiste dashboard per rol
-    if (role === 'hr') navigate('/dashboard/hr');
+    if (role === 'super_admin' || role === 'hr') navigate('/hr/dashboard');
     else if (role === 'manager') navigate('/dashboard/manager');
     else if (role === 'medewerker') navigate('/dashboard/medewerker');
     else navigate('/');
@@ -102,7 +102,7 @@ export default function Auth() {
         setShowAnimation(true);
         // Redirect pad bepalen op basis van rol
         let path = '/';
-        if (role === 'hr') path = '/dashboard/hr';
+        if (role === 'super_admin' || role === 'hr') path = '/hr/dashboard';
         else if (role === 'manager') path = '/dashboard/manager';
         else if (role === 'medewerker') path = '/dashboard/medewerker';
         setRedirectPath(path);
@@ -130,15 +130,18 @@ export default function Auth() {
         }}
       />
     ) : (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-dirq-soft-grey to-white px-4 py-8">
-        <Card className="w-full max-w-md shadow-dirq-lg">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted px-4 py-8">
+        <Card className="w-full max-w-md shadow-lg border-border/50">
           <CardHeader className="space-y-4 text-center px-4 sm:px-6">
             <div className="flex justify-center">
               <DirqLogo size="md" className="max-w-xs" />
             </div>
-            <CardDescription className="text-base">
-              Verzuimbeheer Systeem
-            </CardDescription>
+            <div className="space-y-1">
+              <h1 className="text-xl font-semibold tracking-tight">Welkom terug</h1>
+              <CardDescription className="text-sm">
+                Log in op het HR Management Systeem
+              </CardDescription>
+            </div>
           </CardHeader>
           <CardContent className="px-4 sm:px-6">
             <form onSubmit={handleLogin} className="space-y-4">
