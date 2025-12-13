@@ -23,7 +23,8 @@ import {
   ClipboardList,
   ChevronRight,
   Play,
-  Eye
+  Eye,
+  Settings
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -300,15 +301,22 @@ export default function OnboardingPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           <h2 className="text-lg font-semibold">Onboarding Overzicht</h2>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Nieuwe Onboarding
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link to="/hr/onboarding/templates">
+                <Settings className="h-4 w-4 mr-2" />
+                Templates beheren
+              </Link>
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Nieuwe Onboarding
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Onboarding Starten</DialogTitle>
@@ -361,6 +369,7 @@ export default function OnboardingPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Sessions List */}
