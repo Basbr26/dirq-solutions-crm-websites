@@ -19,6 +19,7 @@ import {
   UserCircle,
   Building2,
   Shield,
+  UserPlus,
 } from 'lucide-react';
 
 interface NavItem {
@@ -46,6 +47,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       title: 'HR Beheer',
       items: [
         { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers', roles: ['hr', 'super_admin', 'manager'] },
+        { title: 'Onboarding', icon: UserPlus, href: '/hr/onboarding', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Verzuim', icon: Heart, href: '/dashboard/hr', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },
         { title: 'Documenten', icon: FileText, href: '/hr/documenten', roles: ['hr', 'super_admin'] },
