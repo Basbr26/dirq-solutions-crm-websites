@@ -32,6 +32,22 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableTaskItem } from '@/components/onboarding/SortableTaskItem';
 
 interface OnboardingTemplate {
   id: string;
@@ -327,6 +343,53 @@ export default function OnboardingTemplatesPage() {
     }
   });
 
+  // Reorder items mutation
+  const reorderItemsMutation = useMutation({
+    mutationFn: async (items: TemplateItem[]) => {
+      const updates = items.map((item, index) => ({
+        id: item.id,
+        sort_order: index
+      }));
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('onboarding_template_items')
+          .update({ sort_order: update.sort_order })
+          .eq('id', update.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['template-items', selectedTemplate?.id] });
+    },
+    onError: () => {
+      toast.error('Fout bij opslaan volgorde');
+    }
+  });
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = templateItems.findIndex((item) => item.id === active.id);
+      const newIndex = templateItems.findIndex((item) => item.id === over.id);
+      const newItems = arrayMove(templateItems, oldIndex, newIndex);
+      reorderItemsMutation.mutate(newItems);
+    }
+  };
+
   const openEditTemplate = (template: OnboardingTemplate) => {
     setEditingTemplate(template);
     setTemplateForm({
@@ -503,58 +566,30 @@ export default function OnboardingTemplatesPage() {
                       Nog geen taken. Voeg de eerste taak toe.
                     </div>
                   ) : (
-                    <div className="space-y-3">
-                      {templateItems.map((item, index) => (
-                        <div key={item.id}>
-                          {index > 0 && <Separator className="my-3" />}
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                              {getCategoryIcon(item.category)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{item.title}</span>
-                                {item.is_required && (
-                                  <Badge variant="outline" className="text-xs">Verplicht</Badge>
-                                )}
-                              </div>
-                              {item.description && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {item.description}
-                                </p>
-                              )}
-                              <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                                <span>
-                                  Categorie: {categoryOptions.find(c => c.value === item.category)?.label || item.category}
-                                </span>
-                                <span>•</span>
-                                <span>Deadline: {item.due_days} dagen</span>
-                                <span>•</span>
-                                <span>
-                                  Toegewezen aan: {roleOptions.find(r => r.value === item.assigned_to_role)?.label || item.assigned_to_role}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditItem(item)}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => {
-                                  setItemToDelete(item);
-                                  setDeleteItemDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={templateItems.map(item => item.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-2">
+                          {templateItems.map((item) => (
+                            <SortableTaskItem
+                              key={item.id}
+                              item={item}
+                              onEdit={openEditItem}
+                              onDelete={(item) => {
+                                setItemToDelete(item);
+                                setDeleteItemDialogOpen(true);
+                              }}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </SortableContext>
+                    </DndContext>
                   )}
                 </CardContent>
               </Card>
