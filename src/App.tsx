@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import EmployeesPage from "./pages/hr/EmployeesPage";
 import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
 import EmployeeCreatePage from "./pages/hr/EmployeeCreatePage";
+import EmployeeEditPage from "./pages/hr/EmployeeEditPage";
 import LeavePage from "./pages/hr/LeavePage";
 import HRDashboardPage from "./pages/hr/HRDashboardPage";
 import DocumentsPage from "./pages/hr/DocumentsPage";
@@ -139,6 +140,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
                     <EmployeeDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/medewerkers/:id/bewerken" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <EmployeeEditPage />
                   </ProtectedRoute>
                 } 
               />
