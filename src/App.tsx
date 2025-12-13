@@ -22,6 +22,7 @@ import HRDashboardPage from "./pages/hr/HRDashboardPage";
 import DocumentsPage from "./pages/hr/DocumentsPage";
 import OnboardingPage from "./pages/hr/OnboardingPage";
 import OnboardingDetailPage from "./pages/hr/OnboardingDetailPage";
+import OnboardingTemplatesPage from "./pages/hr/OnboardingTemplatesPage";
 import WelcomePage from "./pages/employee/WelcomePage";
 
 const queryClient = new QueryClient();
@@ -175,6 +176,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
                     <OnboardingPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/onboarding/templates" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <OnboardingTemplatesPage />
                   </ProtectedRoute>
                 } 
               />
