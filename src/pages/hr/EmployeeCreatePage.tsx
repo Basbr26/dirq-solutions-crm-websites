@@ -132,76 +132,51 @@ export default function EmployeeCreatePage() {
       const validatedData = employeeSchema.parse(formData);
       setLoading(true);
 
-      // Create auth user first (requires admin/service role in real implementation)
-      // For now, we create just the profile - in production this would be handled differently
-      const tempPassword = Math.random().toString(36).slice(-12) + 'A1!';
-      
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: validatedData.email,
-        password: tempPassword,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth`,
-          data: {
-            voornaam: validatedData.voornaam,
-            achternaam: validatedData.achternaam,
-            must_change_password: true,
-          },
+      // Prepare profile data for the edge function
+      const profileData = {
+        telefoon: validatedData.telefoon || null,
+        functie: validatedData.functie || null,
+        employee_number: validatedData.employee_number || null,
+        date_of_birth: validatedData.date_of_birth ? format(validatedData.date_of_birth, 'yyyy-MM-dd') : null,
+        start_date: validatedData.start_date ? format(validatedData.start_date, 'yyyy-MM-dd') : null,
+        end_date: validatedData.end_date ? format(validatedData.end_date, 'yyyy-MM-dd') : null,
+        contract_type: validatedData.contract_type || null,
+        hours_per_week: validatedData.hours_per_week || null,
+        employment_status: validatedData.employment_status || 'actief',
+        department_id: validatedData.department_id || null,
+        manager_id: validatedData.manager_id || null,
+        address: validatedData.address || null,
+        postal_code: validatedData.postal_code || null,
+        city: validatedData.city || null,
+        emergency_contact_name: validatedData.emergency_contact_name || null,
+        emergency_contact_phone: validatedData.emergency_contact_phone || null,
+        bank_account: validatedData.bank_account || null,
+        notes: validatedData.notes || null,
+      };
+
+      // Call secure edge function for user creation
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: validatedData.email,
+          voornaam: validatedData.voornaam,
+          achternaam: validatedData.achternaam,
+          role: 'medewerker',
+          profileData,
         },
       });
 
-      if (authError) {
-        // If user already exists, show appropriate message
-        if (authError.message.includes('already registered')) {
-          toast.error('Er bestaat al een gebruiker met dit e-mailadres');
-        } else {
-          throw authError;
-        }
+      if (error) {
+        toast.error(error.message || 'Er is een fout opgetreden bij het aanmaken');
         return;
       }
 
-      if (!authData.user) {
-        throw new Error('Gebruiker kon niet worden aangemaakt');
+      if (data?.error) {
+        toast.error(data.error);
+        return;
       }
 
-      // Update the profile with additional data
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          telefoon: validatedData.telefoon || null,
-          functie: validatedData.functie || null,
-          employee_number: validatedData.employee_number || null,
-          date_of_birth: validatedData.date_of_birth ? format(validatedData.date_of_birth, 'yyyy-MM-dd') : null,
-          start_date: validatedData.start_date ? format(validatedData.start_date, 'yyyy-MM-dd') : null,
-          end_date: validatedData.end_date ? format(validatedData.end_date, 'yyyy-MM-dd') : null,
-          contract_type: validatedData.contract_type || null,
-          hours_per_week: validatedData.hours_per_week || null,
-          employment_status: validatedData.employment_status || 'actief',
-          department_id: validatedData.department_id || null,
-          manager_id: validatedData.manager_id || null,
-          address: validatedData.address || null,
-          postal_code: validatedData.postal_code || null,
-          city: validatedData.city || null,
-          emergency_contact_name: validatedData.emergency_contact_name || null,
-          emergency_contact_phone: validatedData.emergency_contact_phone || null,
-          bank_account: validatedData.bank_account || null,
-          notes: validatedData.notes || null,
-        })
-        .eq('id', authData.user.id);
-
-      if (profileError) throw profileError;
-
-      // Assign default role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: 'medewerker',
-        });
-
-      if (roleError) throw roleError;
-
-      toast.success('Medewerker succesvol aangemaakt');
-      navigate(`/hr/medewerkers/${authData.user.id}`);
+      toast.success('Medewerker succesvol aangemaakt. Een e-mail met instructies is verstuurd.');
+      navigate(`/hr/medewerkers/${data.userId}`);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};

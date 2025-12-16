@@ -37,60 +37,32 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
       createUserSchema.parse({ email, voornaam, achternaam, role });
       setLoading(true);
 
-      // Create user via Supabase Auth Admin API
-      const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password: 'Welkom123',
-        options: {
-          data: {
-            voornaam,
-            achternaam,
-            must_change_password: true,
-          },
-          emailRedirectTo: `${window.location.origin}/`,
-        },
+      // Call secure edge function for user creation
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { email, voornaam, achternaam, role },
       });
 
-      if (signUpError) {
+      if (error) {
         toast({
           variant: 'destructive',
           title: 'Gebruiker aanmaken mislukt',
-          description: signUpError.message === 'User already registered' 
-            ? 'Dit e-mailadres is al geregistreerd' 
-            : signUpError.message,
+          description: error.message || 'Er is een fout opgetreden',
         });
         return;
       }
 
-      if (!user) {
+      if (data?.error) {
         toast({
           variant: 'destructive',
-          title: 'Fout',
-          description: 'Geen gebruiker data ontvangen',
-        });
-        return;
-      }
-
-      // Add role to user_roles table
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: role,
-        });
-
-      if (roleError) {
-        toast({
-          variant: 'destructive',
-          title: 'Rol toewijzen mislukt',
-          description: roleError.message,
+          title: 'Gebruiker aanmaken mislukt',
+          description: data.error,
         });
         return;
       }
 
       toast({
         title: 'Gebruiker aangemaakt',
-        description: `${voornaam} ${achternaam} is aangemaakt met rol ${role}. Standaard wachtwoord: Welkom123`,
+        description: `${voornaam} ${achternaam} is aangemaakt met rol ${role}. Een e-mail met instructies is verstuurd.`,
       });
 
       // Reset form
@@ -119,7 +91,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Nieuwe gebruiker aanmaken</DialogTitle>
           <DialogDescription>
-            Maak een nieuwe gebruiker aan. Het standaard wachtwoord is Welkom123 en moet bij eerste inlog gewijzigd worden.
+            Maak een nieuwe gebruiker aan. De gebruiker ontvangt een e-mail om het wachtwoord in te stellen.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-1">
