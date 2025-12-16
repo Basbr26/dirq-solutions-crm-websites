@@ -2,3 +2,6 @@ project_id = "fnhyekshkdcxuhcvhvfz"
 
 [functions.check-deadlines]
 verify_jwt = false
+
+[functions.reset-password]
+verify_jwt = false
