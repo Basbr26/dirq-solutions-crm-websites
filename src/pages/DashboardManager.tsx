@@ -6,8 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TasksList } from '@/components/TasksList';
 import { CheckCircle2, Clock, Users, AlertTriangle } from 'lucide-react';
-import { DashboardHeader } from '@/components/DashboardHeader';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { useAuth } from '@/hooks/useAuth';
 import { getManagerCases, getManagerTasks } from '@/lib/supabaseHelpers';
@@ -18,10 +17,10 @@ import { toast } from 'sonner';
 import { StatsCardsSkeleton, TasksListSkeleton } from '@/components/DashboardSkeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const statusConfig = {
-  actief: { label: 'Actief', variant: 'destructive' as const },
-  herstel: { label: 'Herstel', variant: 'default' as const },
-  afgesloten: { label: 'Afgesloten', variant: 'secondary' as const },
+const statusConfig: Record<string, { label: string; variant: 'destructive' | 'default' | 'secondary' }> = {
+  actief: { label: 'Actief', variant: 'destructive' },
+  herstel_gemeld: { label: 'Herstel', variant: 'default' },
+  gesloten: { label: 'Afgesloten', variant: 'secondary' },
 };
 
 export default function DashboardManager() {
@@ -100,9 +99,8 @@ export default function DashboardManager() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
-        <DashboardHeader title="Manager Dashboard" />
-        <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+      <AppLayout title="Manager Dashboard">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
           <StatsCardsSkeleton />
           <Card className="shadow-dirq mt-6">
             <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
@@ -113,187 +111,195 @@ export default function DashboardManager() {
               <TasksListSkeleton count={3} />
             </CardContent>
           </Card>
-        </main>
-        <MobileBottomNav />
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
-      <DashboardHeader title="Manager Dashboard" />
+    <AppLayout title="Manager Dashboard" subtitle={format(new Date(), 'EEEE d MMMM yyyy', { locale: nl })}>
+      <PullToRefresh onRefresh={loadData} className="h-[calc(100vh-4rem)] md:h-auto md:overflow-visible">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+          <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+            <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
+              <TabsTrigger value="overview" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
+              <TabsTrigger value="tasks" className="text-xs sm:text-sm">Taken</TabsTrigger>
+              <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analyse</TabsTrigger>
+            </TabsList>
 
-      <PullToRefresh onRefresh={loadData} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
-        <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-          <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
-            <TabsTrigger value="tasks" className="text-xs sm:text-sm">Taken</TabsTrigger>
-            <TabsTrigger value="analytics" className="text-xs sm:text-sm">Analyse</TabsTrigger>
-          </TabsList>
+            <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+              <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
+                <Card className="shadow-dirq">
+                  <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                    <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                      Actief Ziek
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.sickCount}</div>
+                      <Users className="h-6 w-6 sm:h-8 sm:w-8 text-destructive" />
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
+                      {stats.recoveryCount} in herstel
+                    </p>
+                  </CardContent>
+                </Card>
 
-          <TabsContent value="overview" className="space-y-4 sm:space-y-6">
-        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-4">
-          <Card className="shadow-dirq">
-            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Actief Ziek
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-              <div className="flex items-center justify-between">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.sickCount}</div>
-                <Users className="h-6 w-6 sm:h-8 sm:w-8 text-destructive" />
+                <Card className="shadow-dirq">
+                  <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                    <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                      Openstaande Taken
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.openTasks}</div>
+                      <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
+                      {stats.tasksToday} vandaag
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-dirq">
+                  <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                    <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                      Afgerond Deze Week
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.completedThisWeek}</div>
+                      <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
+                      Goed werk!
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-dirq">
+                  <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
+                    <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+                      Vertraagde Taken
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.overdueTasks}</div>
+                      <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600" />
+                    </div>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
+                      Actie vereist
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
-                {stats.recoveryCount} in herstel
-              </p>
-            </CardContent>
-          </Card>
 
-          <Card className="shadow-dirq">
-            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Openstaande Taken
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-              <div className="flex items-center justify-between">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.openTasks}</div>
-                <Clock className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-              </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
-                {stats.tasksToday} vandaag
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="shadow-dirq mb-4 sm:mb-6">
+                <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+                  <CardTitle className="text-base sm:text-lg">Mijn Taken</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Taken die op jou wachten
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                  {myTasks.length === 0 ? (
+                    <p className="text-muted-foreground text-xs sm:text-sm">Geen openstaande taken</p>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3">
+                      {myTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer gap-2 sm:gap-0"
+                          onClick={() => navigate(`/case/${task.case_id}`)}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm sm:text-base text-foreground truncate">{task.title}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Deadline: {getDeadlineLabel(task.deadline)}
+                            </p>
+                          </div>
+                          <Button size="sm" className="text-xs sm:text-sm w-full sm:w-auto" onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/case/${task.case_id}`);
+                          }}>
+                            Bekijk Case
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-          <Card className="shadow-dirq">
-            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Afgerond Deze Week
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-              <div className="flex items-center justify-between">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.completedThisWeek}</div>
-                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
-              </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
-                Goed werk!
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="shadow-dirq">
+                <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
+                  <CardTitle className="text-base sm:text-lg">Mijn Team - Verzuimoverzicht</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    Teamleden met actief verzuim
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+                  {activeCases.length === 0 ? (
+                    <p className="text-muted-foreground text-xs sm:text-sm">Geen actieve verzuimcases</p>
+                  ) : (
+                    <div className="space-y-2 sm:space-y-3">
+                      {activeCases.map((case_) => (
+                        <div
+                          key={case_.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer gap-3"
+                          onClick={() => navigate(`/case/${case_.id}`)}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 flex-wrap">
+                              <p className="font-medium text-sm sm:text-base text-foreground">
+                                {case_.employee?.voornaam && case_.employee?.achternaam 
+                                  ? `${case_.employee.voornaam} ${case_.employee.achternaam}` 
+                                  : case_.employee?.email || 'Onbekende medewerker'}
+                              </p>
+                              <Badge variant={statusConfig[case_.case_status]?.variant || 'secondary'} className="text-[10px] sm:text-xs">
+                                {statusConfig[case_.case_status]?.label || case_.case_status}
+                              </Badge>
+                            </div>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
+                              Ziek sinds: {format(new Date(case_.start_date), 'd MMM yyyy', { locale: nl })}
+                            </p>
+                            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
+                              {case_.functional_limitations || 'Geen functionele beperkingen opgegeven'}
+                            </p>
+                          </div>
+                          <Button size="sm" variant="outline" className="text-xs sm:text-sm w-full sm:w-auto flex-shrink-0">
+                            Bekijk
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-          <Card className="shadow-dirq">
-            <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
-                Vertraagde Taken
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-              <div className="flex items-center justify-between">
-                <div className="text-2xl sm:text-3xl font-bold text-foreground">{stats.overdueTasks}</div>
-                <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-orange-600" />
-              </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
-                Actie vereist
-              </p>
-            </CardContent>
-          </Card>
+            <TabsContent value="tasks">
+              <TasksList tasks={tasks} />
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Analyse</CardTitle>
+                  <CardDescription>Statistieken en trends voor jouw team</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">Analyse functionaliteit komt binnenkort beschikbaar.</p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <Card className="shadow-dirq mb-4 sm:mb-6">
-          <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
-            <CardTitle className="text-base sm:text-lg">Mijn Taken</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Taken die op jou wachten
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-            {myTasks.length === 0 ? (
-              <p className="text-muted-foreground text-xs sm:text-sm">Geen openstaande taken</p>
-            ) : (
-              <div className="space-y-2 sm:space-y-3">
-                {myTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer gap-2 sm:gap-0"
-                    onClick={() => navigate(`/case/${task.case_id}`)}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm sm:text-base text-foreground truncate">{task.title}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Deadline: {getDeadlineLabel(task.deadline)}
-                      </p>
-                    </div>
-                    <Button size="sm" className="text-xs sm:text-sm w-full sm:w-auto" onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/case/${task.case_id}`);
-                    }}>
-                      Bekijk Case
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-dirq">
-          <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6">
-            <CardTitle className="text-base sm:text-lg">Mijn Team - Verzuimoverzicht</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Teamleden met actief verzuim
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-            {activeCases.length === 0 ? (
-              <p className="text-muted-foreground text-xs sm:text-sm">Geen actieve verzuimcases</p>
-            ) : (
-              <div className="space-y-2 sm:space-y-3">
-                {activeCases.map((case_) => (
-                  <div
-                    key={case_.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer gap-3"
-                    onClick={() => navigate(`/case/${case_.id}`)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2 flex-wrap">
-                        <p className="font-medium text-sm sm:text-base text-foreground">
-                          {case_.employee?.voornaam && case_.employee?.achternaam 
-                            ? `${case_.employee.voornaam} ${case_.employee.achternaam}` 
-                            : case_.employee?.email || 'Onbekende medewerker'}
-                        </p>
-                        <Badge variant={statusConfig[case_.case_status].variant} className="text-[10px] sm:text-xs">
-                          {statusConfig[case_.case_status].label}
-                        </Badge>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        Ziek sinds: {format(new Date(case_.start_date), 'd MMM yyyy', { locale: nl })}
-                      </p>
-                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
-                        {case_.functional_limitations || 'Geen functionele beperkingen opgegeven'}
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline" className="text-xs sm:text-sm w-full sm:w-auto flex-shrink-0">
-                      Bekijk
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-          </TabsContent>
-
-          <TabsContent value="tasks">
-            <TasksList tasks={tasks} />
-          </TabsContent>
-        </Tabs>
-      </main>
       </PullToRefresh>
-      <MobileBottomNav />
-    </div>
+    </AppLayout>
   );
 }
