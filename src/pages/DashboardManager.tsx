@@ -31,13 +31,7 @@ export default function DashboardManager() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user && profile) {
-      loadData();
-    }
-  }, [user, profile]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) return;
     
     setLoading(true);
@@ -55,7 +49,13 @@ export default function DashboardManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user && profile) {
+      loadData();
+    }
+  }, [user, profile, loadData]);
 
   const stats = {
     totalTeam: cases.length > 0 ? cases.filter(c => c.case_status !== 'gesloten').length : 0,
@@ -119,15 +119,11 @@ export default function DashboardManager() {
     );
   }
 
-  const handleRefresh = useCallback(async () => {
-    await loadData();
-  }, [user]);
-
   return (
     <div className="min-h-screen bg-secondary pb-20 sm:pb-0">
       <DashboardHeader title="Manager Dashboard" />
 
-      <PullToRefresh onRefresh={handleRefresh} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
+      <PullToRefresh onRefresh={loadData} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
         <main className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
           <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
