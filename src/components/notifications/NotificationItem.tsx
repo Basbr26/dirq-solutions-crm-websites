@@ -74,7 +74,7 @@ export function NotificationItem({
     onAction(notification.id, action);
 
     // Navigate if action has URL
-    const actionConfig = notification.actions.find((a) => a.action === action);
+    const actionConfig = notification.actions.find((a) => a.type === action);
     if (actionConfig?.url) {
       navigate(actionConfig.url);
     }
@@ -165,8 +165,8 @@ export function NotificationItem({
                 <Button
                   key={index}
                   size="sm"
-                  variant={action.variant === 'primary' ? 'default' : (action.variant || 'outline')}
-                  onClick={(e) => handleActionClick(action.action, e)}
+                  variant={action.style === 'primary' ? 'default' : action.style === 'destructive' ? 'destructive' : 'outline'}
+                  onClick={(e) => handleActionClick(action.type, e)}
                   className="text-xs h-8"
                 >
                   {action.label}

@@ -1,16 +1,20 @@
 /**
  * Escalation Engine
  * Automatic escalation of notifications based on rules and timers
+ * Enhanced with smart routing and deadline tracking
  */
 
 import { supabase } from '@/integrations/supabase/client';
 import { safeFrom } from '@/lib/supabaseTypeHelpers';
 import { NotificationRouter } from './router';
+import { differenceInHours, differenceInDays } from 'date-fns';
 import type {
   NotificationRule,
   EscalationStep,
   CreateNotificationParams,
 } from '@/types/notifications';
+import type { NotificationAction } from './types';
+import type { EscalationRule, Escalation, Notification } from './types';
 
 export class EscalationEngine {
   /**
@@ -63,7 +67,7 @@ export class EscalationEngine {
   /**
    * Find entities matching rule conditions
    */
-  private static async findMatchingEntities(rule: NotificationRule): Promise<any[]> {
+  private static async findMatchingEntities(rule: NotificationRule): Promise<unknown[]> {
     const { entity_type, trigger_event } = rule;
 
     switch (entity_type) {
@@ -83,7 +87,7 @@ export class EscalationEngine {
   /**
    * Find tasks requiring escalation
    */
-  private static async findTasksForEscalation(event: string): Promise<any[]> {
+  private static async findTasksForEscalation(event: string): Promise<unknown[]> {
     let query = supabase
       .from('tasks')
       .select('*, assigned_to_profile:profiles!tasks_assigned_to_fkey(id, voornaam, achternaam, role, manager_id)');
@@ -113,7 +117,7 @@ export class EscalationEngine {
   /**
    * Find approvals requiring escalation
    */
-  private static async findApprovalsForEscalation(event: string): Promise<any[]> {
+  private static async findApprovalsForEscalation(event: string): Promise<unknown[]> {
     if (event !== 'pending') return [];
 
     const { data, error } = await supabase
@@ -133,7 +137,7 @@ export class EscalationEngine {
   /**
    * Find cases requiring escalation
    */
-  private static async findCasesForEscalation(event: string): Promise<any[]> {
+  private static async findCasesForEscalation(event: string): Promise<unknown[]> {
     if (event !== 'deadline_approaching') return [];
 
     // Find cases approaching Wet Poortwachter deadlines
@@ -167,7 +171,7 @@ export class EscalationEngine {
   /**
    * Find employees requiring notification (e.g., contract expiry)
    */
-  private static async findEmployeesForEscalation(event: string): Promise<any[]> {
+  private static async findEmployeesForEscalation(event: string): Promise<unknown[]> {
     if (event !== 'contract_expiring') return [];
 
     const in90Days = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
@@ -191,7 +195,7 @@ export class EscalationEngine {
    * Check if escalation is needed for entity
    */
   private static async checkEscalationNeeded(
-    _entity: any,
+    _entity: unknown,
     _rule: NotificationRule
   ): Promise<boolean> {
     // escalation_history table doesn't exist yet
@@ -202,7 +206,8 @@ export class EscalationEngine {
   /**
    * Execute escalation
    */
-  private static async escalate(entity: any, rule: NotificationRule): Promise<void> {
+  private static async escalate(entity: unknown, rule: NotificationRule): Promise<void> {
+    const entityRecord = entity as Record<string, unknown>;
     const escalationChain = rule.escalation_chain as EscalationStep[];
 
     // escalation_history table doesn't exist yet, start from level 0
@@ -216,24 +221,24 @@ export class EscalationEngine {
     const step = escalationChain[nextLevel];
 
     // Find target user(s) to escalate to
-    const targetUsers = await this.findEscalationTargets(entity, step);
+    const targetUsers = await this.findEscalationTargets(entityRecord, step);
 
     for (const targetUserId of targetUsers) {
       // Create escalation notification
       const notification: CreateNotificationParams = {
         user_id: targetUserId,
-        title: `Escalatie: ${this.getEntityTitle(entity, rule.entity_type)}`,
-        message: this.getEscalationMessage(entity, rule, nextLevel),
+        title: `Escalatie: ${this.getEntityTitle(entityRecord, rule.entity_type)}`,
+        message: this.getEscalationMessage(entityRecord, rule, nextLevel),
         type: 'escalation',
         metadata: {
           is_critical: nextLevel >= 2,
           legal_compliance: rule.entity_type === 'case',
           entity_type: rule.entity_type,
-          entity_id: entity.id,
+          entity_id: entityRecord['id'] as string,
           escalation_level: nextLevel,
         },
-        actions: this.getEscalationActions(entity, rule.entity_type),
-        deep_link: this.getEntityDeepLink(entity, rule.entity_type),
+        actions: this.getEscalationActions(entityRecord, rule.entity_type),
+        deep_link: this.getEntityDeepLink(entityRecord, rule.entity_type),
       };
 
       const notificationId = await NotificationRouter.createNotification(notification);
@@ -243,7 +248,7 @@ export class EscalationEngine {
         await safeFrom(supabase, 'escalation_history').insert({
           notification_id: notificationId,
           rule_id: rule.id,
-          from_user_id: entity.assigned_to || entity.employee_id,
+          from_user_id: (entityRecord['assigned_to'] || entityRecord['employee_id']) as string,
           to_user_id: targetUserId,
           escalation_level: nextLevel,
           reason: `Auto-escalated: ${rule.name}`,
@@ -256,7 +261,7 @@ export class EscalationEngine {
    * Find users to escalate to based on role
    */
   private static async findEscalationTargets(
-    entity: any,
+    entity: Record<string, unknown>,
     step: EscalationStep
   ): Promise<string[]> {
     // If specific user ID provided
@@ -265,10 +270,11 @@ export class EscalationEngine {
     }
 
     // Find users by role from user_roles table
+    type ValidRole = 'hr' | 'manager' | 'medewerker' | 'super_admin';
     const { data: roleData, error } = await supabase
       .from('user_roles')
       .select('user_id')
-      .eq('role', step.role as any);
+      .eq('role', step.role as ValidRole);
 
     if (error) {
       console.error('Error finding escalation targets:', error);
@@ -276,12 +282,14 @@ export class EscalationEngine {
     }
 
     // If entity has manager and step is 'manager', use that
-    if (step.role === 'manager' && entity.assigned_to_profile?.manager_id) {
-      return [entity.assigned_to_profile.manager_id];
+    const assignedToProfile = entity['assigned_to_profile'] as Record<string, unknown> | undefined;
+    if (step.role === 'manager' && assignedToProfile?.['manager_id']) {
+      return [assignedToProfile['manager_id'] as string];
     }
 
-    if (step.role === 'manager' && entity.employee?.manager_id) {
-      return [entity.employee.manager_id];
+    const employee = entity['employee'] as Record<string, unknown> | undefined;
+    if (step.role === 'manager' && employee?.['manager_id']) {
+      return [employee['manager_id'] as string];
     }
 
     // Otherwise return all users with the role
@@ -291,16 +299,18 @@ export class EscalationEngine {
   /**
    * Get entity title for notification
    */
-  private static getEntityTitle(entity: any, entityType: string): string {
+  private static getEntityTitle(entity: Record<string, unknown>, entityType: string): string {
     switch (entityType) {
       case 'task':
-        return entity.task_title || 'Taak';
+        return (entity['task_title'] as string) || 'Taak';
       case 'approval':
         return 'Goedkeuringsverzoek';
-      case 'case':
-        return `Verzuimzaak ${entity.employee?.voornaam} ${entity.employee?.achternaam}`;
+      case 'case': {
+        const employee = entity['employee'] as Record<string, unknown> | undefined;
+        return `Verzuimzaak ${employee?.['voornaam']} ${employee?.['achternaam']}`;
+      }
       case 'employee':
-        return `Contract ${entity.voornaam} ${entity.achternaam}`;
+        return `Contract ${entity['voornaam']} ${entity['achternaam']}`;
       default:
         return 'Item';
     }
@@ -310,7 +320,7 @@ export class EscalationEngine {
    * Get escalation message
    */
   private static getEscalationMessage(
-    entity: any,
+    entity: Record<string, unknown>,
     rule: NotificationRule,
     level: number
   ): string {
@@ -322,45 +332,45 @@ export class EscalationEngine {
   /**
    * Get actions for escalation notification
    */
-  private static getEscalationActions(entity: any, entityType: string): any[] {
+  private static getEscalationActions(entity: Record<string, unknown>, entityType: string): NotificationAction[] {
     switch (entityType) {
       case 'task':
         return [
-          { label: 'Bekijken', action: 'view', variant: 'primary' },
-          { label: 'Toewijzen', action: 'reassign' },
+          { label: 'Bekijken', type: 'view', style: 'primary' },
+          { label: 'Toewijzen', type: 'custom', style: 'default' },
         ];
       case 'approval':
         return [
-          { label: 'Goedkeuren', action: 'approve', variant: 'primary' },
-          { label: 'Afwijzen', action: 'reject', variant: 'destructive' },
+          { label: 'Goedkeuren', type: 'approve', style: 'primary' },
+          { label: 'Afwijzen', type: 'deny', style: 'destructive' },
         ];
       case 'case':
         return [
-          { label: 'Open zaak', action: 'view', variant: 'primary' },
+          { label: 'Open zaak', type: 'view', style: 'primary' },
         ];
       case 'employee':
         return [
-          { label: 'Contract verlengen', action: 'extend', variant: 'primary' },
-          { label: 'Bekijken', action: 'view' },
+          { label: 'Contract verlengen', type: 'custom', style: 'primary' },
+          { label: 'Bekijken', type: 'view', style: 'default' },
         ];
       default:
-        return [{ label: 'Bekijken', action: 'view' }];
+        return [{ label: 'Bekijken', type: 'view', style: 'default' }];
     }
   }
 
   /**
    * Get deep link for entity
    */
-  private static getEntityDeepLink(entity: any, entityType: string): string {
+  private static getEntityDeepLink(entity: Record<string, unknown>, entityType: string): string {
     switch (entityType) {
       case 'task':
-        return `/tasks/${entity.id}`;
+        return `/tasks/${entity['id']}`;
       case 'approval':
         return `/hr/verlof`;
       case 'case':
-        return `/case/${entity.id}`;
+        return `/case/${entity['id']}`;
       case 'employee':
-        return `/hr/medewerkers/${entity.id}`;
+        return `/hr/medewerkers/${entity['id']}`;
       default:
         return '/';
     }

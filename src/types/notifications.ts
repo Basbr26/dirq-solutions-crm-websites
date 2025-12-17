@@ -27,9 +27,10 @@ export type DigestFrequency = 'instant' | 'hourly' | 'daily' | 'weekly';
 
 export interface NotificationAction {
   label: string;
-  action: string; // 'approve', 'reject', 'view', 'complete', etc.
+  type: string; // 'approve', 'reject', 'view', 'complete', etc.
+  style?: 'default' | 'primary' | 'destructive';
   url?: string;
-  variant?: 'default' | 'primary' | 'destructive';
+  handler?: (notificationId: string) => void | Promise<void>;
 }
 
 export interface Notification {
