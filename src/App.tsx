@@ -168,6 +168,14 @@ const App = () => (
                 } 
               />
               <Route 
+                path="/verzuim" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                    <DashboardHR />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
                 path="/hr/medewerkers" 
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
