@@ -42,6 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle auth errors (expired/invalid tokens)
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        console.warn('Token refresh failed, clearing session');
+        localStorage.clear();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setRole(null);
+        setLoading(false);
+        return;
+      }
+
+      if (event === 'SIGNED_OUT') {
+        localStorage.clear();
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -58,7 +74,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error, clearing tokens:', error);
+        localStorage.clear();
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -67,6 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setLoading(false);
       }
+    }).catch((error) => {
+      console.error('Fatal auth error, clearing all data:', error);
+      localStorage.clear();
+      setSession(null);
+      setUser(null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -81,7 +112,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        // If profile fetch fails due to auth error, sign out
+        if (profileError.message?.includes('JWT') || profileError.message?.includes('token')) {
+          console.error('Auth error loading profile, signing out:', profileError);
+          await signOut();
+          return;
+        }
+        throw profileError;
+      }
       setProfile(profileData);
 
       // Fetch role
@@ -91,7 +130,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('user_id', userId)
         .single();
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        // If role fetch fails due to auth error, sign out
+        if (roleError.message?.includes('JWT') || roleError.message?.includes('token')) {
+          console.error('Auth error loading role, signing out:', roleError);
+          await signOut();
+          return;
+        }
+        throw roleError;
+      }
       setRole(roleData.role as AppRole);
     } catch (error) {
       console.error('Error fetching profile/role:', error);
@@ -134,11 +181,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setRole(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    } finally {
+      // Always clear local state and storage
+      localStorage.clear();
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setRole(null);
+    }
   };
 
   const value: AuthContextType = {

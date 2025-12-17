@@ -154,7 +154,8 @@ export default function EmployeeEditPage() {
       });
     } catch (error) {
       console.error('Error loading employee:', error);
-      toast.error('Fout bij laden medewerker');
+      const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
+      toast.error(`Fout bij laden medewerker: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

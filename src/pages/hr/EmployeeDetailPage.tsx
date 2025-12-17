@@ -116,7 +116,8 @@ export default function EmployeeDetailPage() {
       setSickLeaveCases(casesResult.data || []);
     } catch (error) {
       console.error('Error loading employee:', error);
-      toast.error('Fout bij laden van medewerker');
+      const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
+      toast.error(`Fout bij laden van medewerker: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
