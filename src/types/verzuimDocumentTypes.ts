@@ -1,6 +1,8 @@
-// Extended types for verzuim document signing integration
+// Extended types for document generation and signing
 
+// Document Types - Verzuim + HR
 export type DocumentType = 
+  // Verzuim (Wet Poortwachter)
   | 'probleemanalyse'
   | 'plan_van_aanpak'
   | 'evaluatie_3_maanden'
@@ -9,6 +11,13 @@ export type DocumentType =
   | 'herstelmelding'
   | 'uwv_melding'
   | 'gespreksverslag'
+  // HR Documents
+  | 'arbeidsovereenkomst'
+  | 'nda'
+  | 'onboarding_checklist'
+  | 'bewijs_van_indiensttreding'
+  | 'referentie_brief'
+  | 'contract_verlenging'
   | 'overig';
 
 export type SignatureRole = 'employee' | 'manager' | 'hr' | 'bedrijfsarts';
@@ -63,6 +72,7 @@ export interface SickLeaveCase {
 }
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
+  // Verzuim
   probleemanalyse: 'Probleemanalyse',
   plan_van_aanpak: 'Plan van Aanpak',
   evaluatie_3_maanden: 'Evaluatie 3 maanden',
@@ -71,10 +81,18 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   herstelmelding: 'Herstelmelding',
   uwv_melding: 'UWV 42-weken melding',
   gespreksverslag: 'Gespreksverslag',
+  // HR
+  arbeidsovereenkomst: 'Arbeidsovereenkomst',
+  nda: 'Geheimhoudingsverklaring (NDA)',
+  onboarding_checklist: 'Onboarding Checklist',
+  bewijs_van_indiensttreding: 'Bewijs van Indiensttreding',
+  referentie_brief: 'Referentiebrief',
+  contract_verlenging: 'Contract Verlenging',
   overig: 'Overig',
 };
 
 export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
+  // Verzuim
   probleemanalyse: 'Verplicht binnen 6 weken - Analyse van verzuimoorzaak en belemmeringen',
   plan_van_aanpak: 'Week 6-8 - Concrete stappen en doelstellingen voor re-integratie',
   evaluatie_3_maanden: '3 maanden - Voortgangsevaluatie re-integratie',
@@ -83,8 +101,21 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   herstelmelding: 'Bij (gedeeltelijk) herstel - Officiële herstelmelding',
   uwv_melding: '42 weken - Verplichte ziekmelding aan UWV',
   gespreksverslag: 'Vastleggen van afspraken uit gesprekken met handtekeningen',
+  // HR
+  arbeidsovereenkomst: 'Contract tussen werkgever en werknemer',
+  nda: 'Geheimhoudingsverklaring voor vertrouwelijke informatie',
+  onboarding_checklist: 'Checklist met alle onboarding stappen',
+  bewijs_van_indiensttreding: 'Officieel document voor gemeente/instanties',
+  referentie_brief: 'Referentie voor voormalige medewerker',
+  contract_verlenging: 'Verlenging van bestaand contract',
   overig: 'Overige documentatie',
 };
+
+// Helper to categorize document types
+export const DOCUMENT_CATEGORIES = {
+  verzuim: ['probleemanalyse', 'plan_van_aanpak', 'evaluatie_3_maanden', 'evaluatie_6_maanden', 'evaluatie_1_jaar', 'herstelmelding', 'uwv_melding', 'gespreksverslag'] as DocumentType[],
+  hr: ['arbeidsovereenkomst', 'nda', 'onboarding_checklist', 'bewijs_van_indiensttreding', 'referentie_brief', 'contract_verlenging'] as DocumentType[],
+} as const;
 
 export const SIGNATURE_ROLE_LABELS: Record<SignatureRole, string> = {
   employee: 'Medewerker',
