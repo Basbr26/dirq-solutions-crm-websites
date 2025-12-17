@@ -28,6 +28,8 @@ import {
   CreditCard,
   AlertTriangle,
 } from 'lucide-react';
+import { UniversalDocumentGenerator } from '@/components/documents/UniversalDocumentGenerator';
+import { DocumentCard } from '@/components/documents/DocumentCard';
 
 interface EmployeeDetail {
   id: string;
@@ -63,6 +65,82 @@ interface SickLeaveCase {
   end_date: string | null;
   case_status: string;
   functional_limitations: string | null;
+}
+
+interface Document {
+  id: string;
+  title: string;
+  document_type?: string;
+  file_name: string;
+  file_path: string;
+  status: string;
+  created_at: string;
+  uploaded_by?: string;
+  requires_signatures?: string[];
+  owner_signed?: boolean;
+}
+
+function EmployeeDocuments({ employeeId }: { employeeId: string }) {
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadDocuments = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+      toast.error('Fout bij laden van documenten');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, [employeeId]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <Clock className="h-8 w-8 animate-spin mx-auto mb-2" />
+        Documenten laden...
+      </div>
+    );
+  }
+
+  if (documents.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+        <h3 className="text-lg font-medium mb-2">Geen documenten</h3>
+        <p className="text-sm text-muted-foreground">
+          Er zijn nog geen documenten voor deze medewerker.
+          <br />
+          Gebruik de knop hierboven om een document te genereren.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {documents.map((doc) => (
+        <DocumentCard
+          key={doc.id}
+          document={doc}
+          onDelete={loadDocuments}
+        />
+      ))}
+    </div>
+  );
 }
 
 export default function EmployeeDetailPage() {
@@ -433,8 +511,22 @@ export default function EmployeeDetailPage() {
 
           <TabsContent value="documenten" className="space-y-6">
             <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                Documentenbeheer module komt binnenkort...
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Documenten</CardTitle>
+                    <CardDescription>
+                      Beheer documenten voor deze medewerker
+                    </CardDescription>
+                  </div>
+                  <UniversalDocumentGenerator 
+                    employeeId={id!} 
+                    onGenerated={loadEmployee}
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <EmployeeDocuments employeeId={id!} />
               </CardContent>
             </Card>
           </TabsContent>

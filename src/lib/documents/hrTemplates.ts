@@ -230,7 +230,8 @@ export async function generateArbeidsovereenkomst(
   page.drawText(`Datum: ____________`, { x: 50, y, size: 10, font });
   page.drawText(`Datum: ____________`, { x: 320, y, size: 10, font });
 
-  return pdfDoc.save();
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
 }
 
 /**
@@ -292,7 +293,8 @@ export async function generateNDA(
   y -= 40;
   page.drawText('_____________________', { x: 50, y, size: 10, font });
 
-  return pdfDoc.save();
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
 }
 
 /**
@@ -352,10 +354,12 @@ export async function generateOnboardingChecklist(
   // Footer
   y -= 30;
   page.drawText('HR Manager:', { x: 50, y, size: 10, font: boldFont });
-  page.drawText('_____________________', { x: 50, y - 30, size: 10, font });
-  page.drawText(`Datum: ____________`, { x: 50, y - 45, size: 10, font });
+  const footerY = y - 30;
+  page.drawText('_____________________', { x: 50, y: footerY, size: 10, font });
+  page.drawText(`Datum: ____________`, { x: 50, y: footerY - 15, size: 10, font });
 
-  return pdfDoc.save();
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
 }
 
 /**
@@ -417,5 +421,6 @@ export async function generateBewijsVanIndiensttreding(
   y -= 30;
   page.drawText('Handtekening en stempel:', { x: 50, y, size: 10, font });
 
-  return pdfDoc.save();
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
 }
