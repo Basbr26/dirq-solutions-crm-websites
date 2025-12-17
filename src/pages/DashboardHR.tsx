@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { DashboardHeader } from '@/components/DashboardHeader';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { ZiekmeldingWizard } from '@/components/ZiekmeldingWizard';
 import { CaseCard } from '@/components/CaseCard';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
@@ -17,9 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { generateInitialTasks, createTimelineEvent } from '@/lib/supabaseHelpers';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { PullToRefresh } from '@/components/PullToRefresh';
-import { StatsCardsSkeleton, CaseCardsSkeleton, DashboardHeaderSkeleton } from '@/components/DashboardSkeleton';
 
 export default function DashboardHR() {
     const handleDeleteCase = async (caseId: string) => {
@@ -226,115 +224,107 @@ export default function DashboardHR() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-0">
-      <DashboardHeader title="HR Dashboard" />
-      
-      <PullToRefresh onRefresh={handleRefresh} className="h-[calc(100vh-4rem)] sm:h-auto sm:overflow-visible">
-      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">Verzuimdossiers</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Overzicht van alle verzuimcases
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportCases} className="text-xs sm:text-sm">
-              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Export Gevallen</span>
-              <span className="sm:hidden">Gevallen</span>
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportTasks} className="text-xs sm:text-sm">
-              <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Export Taken</span>
-              <span className="sm:hidden">Taken</span>
-            </Button>
-            <ZiekmeldingWizard onSubmit={handleNewCase} />
-          </div>
+    <AppLayout 
+      title="Verzuimbeheer"
+      subtitle="Overzicht van alle verzuimcases en taken"
+      actions={
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleExportCases}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Gevallen
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportTasks}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Taken
+          </Button>
+          <ZiekmeldingWizard onSubmit={handleNewCase} />
         </div>
+      }
+    >
+      <PullToRefresh onRefresh={handleRefresh}>
+      <div className="container mx-auto px-6 py-8 space-y-6">
 
-        <Tabs defaultValue="overzicht" className="w-full">
-          <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-3 sm:flex">
-            <TabsTrigger value="overzicht" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
-            <TabsTrigger value="taken" className="text-xs sm:text-sm">Taken</TabsTrigger>
-            <TabsTrigger value="analyse" className="text-xs sm:text-sm gap-1 sm:gap-2">
-              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Analyse & Rapportage</span>
-              <span className="sm:hidden">Analyse</span>
+        <Tabs defaultValue="overzicht" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overzicht">Overzicht</TabsTrigger>
+            <TabsTrigger value="taken">Taken</TabsTrigger>
+            <TabsTrigger value="analyse" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analyse & Rapportage
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overzicht" className="space-y-4 sm:space-y-6">
-            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <TabsContent value="overzicht" className="space-y-6">
+            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
               <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
-                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Users className="h-6 w-6 text-primary" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Totaal</p>
-                      <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Totaal</p>
+                      <p className="text-2xl font-bold">{stats.total}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-lg bg-destructive/10 flex-shrink-0">
-                      <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-destructive" />
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-red-500/10">
+                      <TrendingUp className="h-6 w-6 text-red-500" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Actief</p>
-                      <p className="text-xl sm:text-2xl font-bold">{stats.actief}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
-                      <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground truncate">Herstel Gemeld</p>
-                      <p className="text-xl sm:text-2xl font-bold">{stats.herstel_gemeld}</p>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Actief</p>
+                      <p className="text-2xl font-bold">{stats.actief}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4 sm:p-6">
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div className="p-2 sm:p-3 rounded-lg bg-secondary/10 flex-shrink-0">
-                      <Users className="h-4 w-4 sm:h-6 sm:w-6 text-secondary-foreground" />
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-orange-500/10">
+                      <Clock className="h-6 w-6 text-orange-500" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gesloten</p>
-                      <p className="text-xl sm:text-2xl font-bold">{stats.gesloten}</p>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Herstel Gemeld</p>
+                      <p className="text-2xl font-bold">{stats.herstel_gemeld}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-green-500/10">
+                      <Users className="h-6 w-6 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Gesloten</p>
+                      <p className="text-2xl font-bold">{stats.gesloten}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Zoek op naam..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 sm:pl-10 text-sm h-9 sm:h-10"
+                  className="pl-10"
                 />
               </div>
               <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as CaseStatus | 'all')}>
-                <SelectTrigger className="w-full sm:w-48 text-sm h-9 sm:h-10">
+                <SelectTrigger className="w-full sm:w-64">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,7 +347,7 @@ export default function DashboardHR() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {filteredCases.map((caseItem) => (
                   <CaseCard 
                     key={caseItem.id}
@@ -379,8 +369,6 @@ export default function DashboardHR() {
         </Tabs>
       </div>
       </PullToRefresh>
-      
-      <MobileBottomNav />
-    </div>
+    </AppLayout>
   );
 }
