@@ -208,6 +208,7 @@ export function UniversalDocumentGenerator({
           title: DOCUMENT_TYPE_LABELS[documentType],
           file_path: filePath,
           file_name: fileName,
+          file_url: filePath, // For backwards compatibility
           uploaded_by: (await supabase.auth.getUser()).data.user?.id,
           status: 'completed',
         });

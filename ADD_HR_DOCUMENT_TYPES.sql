@@ -150,6 +150,9 @@ END $$;
 -- Make case_id nullable since HR documents don't need a case
 ALTER TABLE documents ALTER COLUMN case_id DROP NOT NULL;
 
+-- Make file_url nullable (we use file_path for storage, file_url is legacy)
+ALTER TABLE documents ALTER COLUMN file_url DROP NOT NULL;
+
 -- Add comments for clarity
 COMMENT ON COLUMN documents.employee_id IS 'Direct link to employee for HR documents (arbeidsovereenkomst, NDA, etc). For verzuim documents, use case_id instead.';
 COMMENT ON COLUMN documents.case_id IS 'Link to sick leave case for verzuim documents. NULL for HR documents.';
