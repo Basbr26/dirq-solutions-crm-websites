@@ -5,12 +5,14 @@ import { Card } from '@/components/ui/card';
 import { PersonalFeed } from '@/components/employee/PersonalFeed';
 import { QuickActions } from '@/components/employee/QuickActions';
 import { AchievementBadges } from '@/components/employee/AchievementBadges';
+import { MyDocuments } from '@/components/employee/MyDocuments';
 import { motion } from 'framer-motion';
 import {
   Home,
   Zap,
   Award,
   Settings,
+  FileText,
 } from 'lucide-react';
 
 export default function EmployeePortal() {
@@ -46,13 +48,20 @@ export default function EmployeePortal() {
       <div className="max-w-lg mx-auto">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {/* Tab Navigation */}
-          <TabsList className="sticky top-16 z-30 grid w-full grid-cols-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-0 h-auto rounded-none">
+          <TabsList className="sticky top-16 z-30 grid w-full grid-cols-5 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-0 h-auto rounded-none">
             <TabsTrigger
               value="home"
               className="flex flex-col items-center gap-1 py-3 rounded-none border-b-2 data-[state=active]:border-b-blue-500"
             >
               <Home className="w-5 h-5" />
               <span className="text-xs">Home</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="documents"
+              className="flex flex-col items-center gap-1 py-3 rounded-none border-b-2 data-[state=active]:border-b-blue-500"
+            >
+              <FileText className="w-5 h-5" />
+              <span className="text-xs">Docs</span>
             </TabsTrigger>
             <TabsTrigger
               value="benefits"
@@ -73,13 +82,18 @@ export default function EmployeePortal() {
               className="flex flex-col items-center gap-1 py-3 rounded-none border-b-2 data-[state=active]:border-b-blue-500"
             >
               <Settings className="w-5 h-5" />
-              <span className="text-xs">Instellingen</span>
+              <span className="text-xs">Meer</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Home Tab */}
           <TabsContent value="home" className="mt-0">
             <PersonalFeed />
+          </TabsContent>
+
+          {/* Documents Tab */}
+          <TabsContent value="documents" className="mt-0 p-4 pb-24">
+            <MyDocuments />
           </TabsContent>
 
           {/* Benefits Tab */}
