@@ -29,6 +29,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { UniversalDocumentGenerator } from '@/components/documents/UniversalDocumentGenerator';
+import { EmployeeDocumentUpload } from '@/components/documents/EmployeeDocumentUpload';
 import { DocumentCard } from '@/components/documents/DocumentCard';
 import { EditEmployeeDialog } from '@/components/employee/EditEmployeeDialog';
 
@@ -618,10 +619,16 @@ export default function EmployeeDetailPage() {
                       Beheer documenten voor deze medewerker
                     </CardDescription>
                   </div>
-                  <UniversalDocumentGenerator 
-                    employeeId={id!} 
-                    onGenerated={loadEmployee}
-                  />
+                  <div className="flex gap-2">
+                    <EmployeeDocumentUpload 
+                      employeeId={id!}
+                      onUploaded={loadEmployee}
+                    />
+                    <UniversalDocumentGenerator 
+                      employeeId={id!} 
+                      onGenerated={loadEmployee}
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
