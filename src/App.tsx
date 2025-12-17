@@ -15,6 +15,7 @@ import DashboardExecutive from "./pages/DashboardExecutive";
 import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
 import EmployeePortal from "./pages/EmployeePortal";
+import ManagerMobile from "./pages/ManagerMobile";
 import EmployeesPage from "./pages/hr/EmployeesPage";
 import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
 import EmployeeCreatePage from "./pages/hr/EmployeeCreatePage";
@@ -116,6 +117,15 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['manager']}>
                     <DashboardManager />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/manager-mobile" 
+                element={
+                  <ProtectedRoute allowedRoles={['manager']}>
+                    <ManagerMobile />
                   </ProtectedRoute>
                 } 
               />
