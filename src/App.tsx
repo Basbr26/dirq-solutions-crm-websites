@@ -26,6 +26,8 @@ import OnboardingDetailPage from "./pages/hr/OnboardingDetailPage";
 import OnboardingTemplatesPage from "./pages/hr/OnboardingTemplatesPage";
 import WelcomePage from "./pages/employee/WelcomePage";
 import DocumentProcessing from "./pages/DocumentProcessing";
+import WorkflowBuilder from "./pages/WorkflowBuilder";
+import WorkflowExecutions from "./pages/WorkflowExecutions";
 import { HRChatbot } from "./components/ai/HRChatbot";
 
 const queryClient = new QueryClient();
@@ -221,6 +223,24 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['medewerker']}>
                     <WelcomePage />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Workflow Automation Routes */}
+              <Route 
+                path="/hr/workflows/builder" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <WorkflowBuilder />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/workflows/executions" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                    <WorkflowExecutions />
                   </ProtectedRoute>
                 } 
               />

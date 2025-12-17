@@ -1,0 +1,488 @@
+/**
+ * Workflow Builder Page
+ * Visual workflow automation builder
+ */
+
+import { useState, useCallback, useRef } from 'react';
+import { ReactFlowProvider, Node, Edge, useReactFlow, addEdge, Connection } from '@xyflow/react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Save, Play, Download, Upload, Layout } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas';
+import { NodeConfigurator } from '@/components/workflow/NodeConfigurator';
+import { WorkflowNodeData, WorkflowDefinition } from '@/types/workflow';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+// Node palette items
+const nodeTypes = [
+  { type: 'trigger', label: 'Trigger', icon: '▶️' },
+  { type: 'action', label: 'Action', icon: '⚡' },
+  { type: 'condition', label: 'Condition', icon: '🔀' },
+  { type: 'wait', label: 'Wait', icon: '⏰' },
+];
+
+function WorkflowBuilderContent() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const reactFlowInstance = useReactFlow();
+  
+  const [nodes, setNodes] = useState<Node<WorkflowNodeData>[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const [selectedNode, setSelectedNode] = useState<Node<WorkflowNodeData> | null>(null);
+  const [workflowName, setWorkflowName] = useState('New Workflow');
+  const [workflowDescription, setWorkflowDescription] = useState('');
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const dragRef = useRef<{ type: string; label: string } | null>(null);
+
+  // Load templates
+  const loadTemplates = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('workflow_templates')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      toast({
+        title: 'Error loading templates',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setTemplates(data || []);
+  }, [toast]);
+
+  // Open templates dialog
+  const handleOpenTemplates = useCallback(() => {
+    loadTemplates();
+    setShowTemplates(true);
+  }, [loadTemplates]);
+
+  // Load template
+  const handleLoadTemplate = useCallback((template: any) => {
+    const definition = template.definition as WorkflowDefinition;
+    setNodes(definition.nodes);
+    setEdges(definition.edges);
+    setWorkflowName(template.name);
+    setWorkflowDescription(template.description);
+    setShowTemplates(false);
+
+    toast({
+      title: 'Template loaded',
+      description: `Loaded template: ${template.name}`,
+    });
+  }, [toast]);
+
+  // Handle node drag start from palette
+  const onDragStart = useCallback((event: React.DragEvent, nodeType: string, label: string) => {
+    dragRef.current = { type: nodeType, label };
+    event.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  // Handle drop on canvas
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+
+      if (!dragRef.current || !reactFlowInstance) return;
+
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY,
+      });
+
+      const { type, label } = dragRef.current;
+      const newNode: Node<WorkflowNodeData> = {
+        id: `${type}-${Date.now()}`,
+        type,
+        position,
+        data: {
+          label,
+          ...(type === 'trigger' && { triggerType: 'manual' }),
+          ...(type === 'action' && { actionType: 'send_email', config: {} }),
+          ...(type === 'condition' && { condition: '' }),
+          ...(type === 'wait' && { waitType: 'duration', config: {} }),
+        } as WorkflowNodeData,
+      };
+
+      setNodes((nds) => [...nds, newNode]);
+      dragRef.current = null;
+    },
+    [reactFlowInstance]
+  );
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  // Handle node click
+  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node<WorkflowNodeData>) => {
+    setSelectedNode(node);
+  }, []);
+
+  // Handle node save from configurator
+  const handleSaveNode = useCallback((updatedNode: Node<WorkflowNodeData>) => {
+    setNodes((nds) =>
+      nds.map((node) => (node.id === updatedNode.id ? updatedNode : node))
+    );
+  }, []);
+
+  // Handle connection
+  const onConnect = useCallback(
+    (params: Connection) => {
+      setEdges((eds) =>
+        addEdge(
+          {
+            ...params,
+            animated: true,
+            style: { stroke: '#94a3b8', strokeWidth: 2 },
+          },
+          eds
+        )
+      );
+    },
+    []
+  );
+
+  // Save workflow
+  const handleSave = useCallback(async () => {
+    if (!workflowName.trim()) {
+      toast({
+        title: 'Name required',
+        description: 'Please enter a workflow name',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const definition: WorkflowDefinition = {
+      nodes,
+      edges,
+      variables: {},
+    };
+
+    const workflowData = {
+      name: workflowName,
+      description: workflowDescription,
+      definition,
+      active: false,
+    };
+
+    if (workflowId) {
+      // Update existing
+      const { error } = await supabase
+        .from('workflows')
+        .update(workflowData)
+        .eq('id', workflowId);
+
+      if (error) {
+        toast({
+          title: 'Error saving workflow',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+    } else {
+      // Create new
+      const { data, error } = await supabase
+        .from('workflows')
+        .insert(workflowData)
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: 'Error creating workflow',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setWorkflowId(data.id);
+    }
+
+    toast({
+      title: 'Workflow saved',
+      description: 'Your workflow has been saved successfully',
+    });
+  }, [workflowName, workflowDescription, nodes, edges, workflowId, toast]);
+
+  // Test workflow
+  const handleTest = useCallback(async () => {
+    if (!workflowId) {
+      toast({
+        title: 'Save first',
+        description: 'Please save the workflow before testing',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const { data, error } = await supabase.rpc('start_workflow', {
+      p_workflow_id: workflowId,
+      p_trigger_data: {},
+      p_test_mode: true,
+    });
+
+    if (error) {
+      toast({
+        title: 'Test failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    toast({
+      title: 'Test started',
+      description: `Execution ID: ${data}`,
+    });
+  }, [workflowId, toast]);
+
+  // Export workflow
+  const handleExport = useCallback(() => {
+    const definition: WorkflowDefinition = {
+      nodes,
+      edges,
+      variables: {},
+    };
+
+    const exportData = {
+      name: workflowName,
+      description: workflowDescription,
+      definition,
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${workflowName.replace(/\s+/g, '_')}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: 'Workflow exported',
+      description: 'Downloaded as JSON file',
+    });
+  }, [workflowName, workflowDescription, nodes, edges, toast]);
+
+  // Import workflow
+  const handleImport = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        setWorkflowName(data.name);
+        setWorkflowDescription(data.description);
+        setNodes(data.definition.nodes);
+        setEdges(data.definition.edges);
+
+        toast({
+          title: 'Workflow imported',
+          description: 'Successfully loaded workflow',
+        });
+      } catch (error) {
+        toast({
+          title: 'Import failed',
+          description: 'Invalid workflow file',
+          variant: 'destructive',
+        });
+      }
+    };
+    input.click();
+  }, [toast]);
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <Input
+              value={workflowName}
+              onChange={(e) => setWorkflowName(e.target.value)}
+              className="text-lg font-semibold border-none shadow-none focus-visible:ring-0 px-0"
+            />
+            <Input
+              value={workflowDescription}
+              onChange={(e) => setWorkflowDescription(e.target.value)}
+              placeholder="Add description..."
+              className="text-sm text-muted-foreground border-none shadow-none focus-visible:ring-0 px-0"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleOpenTemplates}>
+            <Layout className="h-4 w-4 mr-2" />
+            Templates
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleImport}>
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleTest}>
+            <Play className="h-4 w-4 mr-2" />
+            Test
+          </Button>
+          <Button size="sm" onClick={handleSave}>
+            <Save className="h-4 w-4 mr-2" />
+            Save
+          </Button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Sidebar - Node Palette */}
+        <div className="w-64 bg-white border-r p-4 overflow-y-auto">
+          <Label className="text-sm font-semibold mb-3 block">Nodes</Label>
+          <div className="space-y-2">
+            {nodeTypes.map((item) => (
+              <div
+                key={item.type}
+                draggable
+                onDragStart={(e) => onDragStart(e, item.type, item.label)}
+                className="p-3 border rounded-lg cursor-move hover:bg-gray-50 hover:border-gray-400 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <h4 className="text-xs font-semibold text-blue-900 mb-2">Tips</h4>
+            <ul className="text-xs text-blue-800 space-y-1">
+              <li>• Drag nodes onto canvas</li>
+              <li>• Click node to configure</li>
+              <li>• Connect nodes with edges</li>
+              <li>• Test before activating</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Canvas */}
+        <div className="flex-1" onDrop={onDrop} onDragOver={onDragOver}>
+          <WorkflowCanvas
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={(changes) => {
+              setNodes((nds) => {
+                const updated = [...nds];
+                changes.forEach((change) => {
+                  if (change.type === 'remove') {
+                    const index = updated.findIndex((n) => n.id === change.id);
+                    if (index !== -1) updated.splice(index, 1);
+                  } else if (change.type === 'position' && change.position) {
+                    const node = updated.find((n) => n.id === change.id);
+                    if (node) node.position = change.position;
+                  }
+                });
+                return updated;
+              });
+            }}
+            onEdgesChange={(changes) => {
+              setEdges((eds) => {
+                const updated = [...eds];
+                changes.forEach((change) => {
+                  if (change.type === 'remove') {
+                    const index = updated.findIndex((e) => e.id === change.id);
+                    if (index !== -1) updated.splice(index, 1);
+                  }
+                });
+                return updated;
+              });
+            }}
+            onConnect={onConnect}
+            onNodeClick={onNodeClick}
+          />
+        </div>
+      </div>
+
+      {/* Node Configurator */}
+      {selectedNode && (
+        <NodeConfigurator
+          node={selectedNode}
+          onClose={() => setSelectedNode(null)}
+          onSave={handleSaveNode}
+        />
+      )}
+
+      {/* Templates Dialog */}
+      <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Workflow Templates</DialogTitle>
+            <DialogDescription>
+              Choose a template to start with
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 mt-4">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleLoadTemplate(template)}
+              >
+                <h4 className="font-semibold">{template.name}</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {template.description}
+                </p>
+                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                  <span>{template.category}</span>
+                  <span>•</span>
+                  <span>{template.definition.nodes.length} nodes</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export default function WorkflowBuilder() {
+  return (
+    <ReactFlowProvider>
+      <WorkflowBuilderContent />
+    </ReactFlowProvider>
+  );
+}
