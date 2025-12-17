@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { safeRpc } from '@/lib/supabaseTypeHelpers';
 import type {
   NotificationChannel,
   NotificationPriority,
@@ -18,7 +19,7 @@ export class NotificationRouter {
    */
   static async createNotification(params: CreateNotificationParams): Promise<string | null> {
     try {
-      const { data, error } = await supabase.rpc('create_notification', {
+      const { data, error } = await safeRpc(supabase, 'create_notification', {
         p_user_id: params.user_id,
         p_title: params.title,
         p_message: params.message,
@@ -115,21 +116,13 @@ export class NotificationRouter {
     const count = group.notifications.length;
     const typeName = this.getTypeDisplayName(group.type);
 
-    const { data, error } = await supabase
-      .from('notifications')
+    const { data, error } = await safeFrom(supabase, 'notifications')
       .insert({
         user_id: group.user_id,
         title: `${count} nieuwe ${typeName}`,
         message: group.notifications.map((n) => `• ${n.title}`).join('\n'),
-        type: 'digest',
-        is_digest: true,
-        digest_items: group.notifications.map((n) => ({
-          type: n.type,
-          title: n.title,
-          deep_link: n.deep_link,
-        })),
-        channels: ['in_app', 'email'],
-      })
+        notification_type: 'system',
+      } as never)
       .select('id')
       .single();
 
@@ -173,8 +166,7 @@ export class NotificationRouter {
     userId: string,
     preferences: Partial<NotificationPreferences>
   ): Promise<boolean> {
-    const { error } = await supabase
-      .from('notification_preferences')
+    const { error } = await safeFrom(supabase, 'notification_preferences')
       .upsert({
         user_id: userId,
         ...preferences,
@@ -329,7 +321,7 @@ export class NotificationRouter {
    * Mark notification as read
    */
   static async markAsRead(notificationId: string): Promise<boolean> {
-    const { error } = await supabase.rpc('mark_notification_read', {
+    const { error } = await safeRpc(supabase, 'mark_notification_read', {
       p_notification_id: notificationId,
     });
 
@@ -345,7 +337,7 @@ export class NotificationRouter {
    * Mark notification as acted upon
    */
   static async markAsActed(notificationId: string): Promise<boolean> {
-    const { error } = await supabase.rpc('mark_notification_acted', {
+    const { error } = await safeRpc(supabase, 'mark_notification_acted', {
       p_notification_id: notificationId,
     });
 
@@ -361,9 +353,8 @@ export class NotificationRouter {
    * Mark all notifications as read
    */
   static async markAllAsRead(userId: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read_at: new Date().toISOString(), status: 'read' })
+    const { error } = await safeFrom(supabase, 'notifications')
+      .update({ is_read: true } as never)
       .eq('user_id', userId)
       .is('read_at', null);
 

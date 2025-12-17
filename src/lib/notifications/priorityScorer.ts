@@ -17,7 +17,7 @@ export class PriorityScorer {
     type: NotificationType,
     deadline: Date | null,
     userRole: string,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, unknown> = {}
   ): { score: number; priority: NotificationPriority; factors: PriorityScoreFactors } {
     const factors: PriorityScoreFactors = {
       base_type_score: this.getBaseTypeScore(type),
@@ -104,7 +104,7 @@ export class PriorityScorer {
   /**
    * Critical flag modifier (0-25)
    */
-  private static getCriticalModifier(metadata: Record<string, any>): number {
+  private static getCriticalModifier(metadata: Record<string, unknown>): number {
     if (metadata.is_critical === true) return 25;
     if (metadata.is_urgent === true) return 15;
     if (metadata.is_important === true) return 10;
@@ -115,7 +115,7 @@ export class PriorityScorer {
   /**
    * Legal compliance modifier (0-20)
    */
-  private static getLegalComplianceModifier(metadata: Record<string, any>): number {
+  private static getLegalComplianceModifier(metadata: Record<string, unknown>): number {
     if (metadata.legal_compliance === true) return 20;
     if (metadata.wet_poortwachter === true) return 20;
     if (metadata.compliance_required === true) return 15;
@@ -267,7 +267,7 @@ export class PriorityScorer {
       type: NotificationType;
       deadline?: Date;
       userRole: string;
-      metadata: Record<string, any>;
+      metadata: Record<string, unknown>;
       historicalEngagement?: number;
       similarNotificationPriority?: number;
     }

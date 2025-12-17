@@ -56,6 +56,7 @@ export function NotificationPreferencesDialog({
     if (open && user) {
       loadPreferences();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, user]);
 
   const loadPreferences = async () => {

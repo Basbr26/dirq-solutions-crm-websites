@@ -3,7 +3,7 @@
  * Monitor and view workflow execution logs
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, RefreshCw, CheckCircle2, XCircle, Clock, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { safeFrom } from '@/lib/supabaseTypeHelpers';
 import { formatDistanceToNow } from 'date-fns';
 
 interface WorkflowExecution {
@@ -35,8 +36,8 @@ interface WorkflowExecution {
   started_at: string;
   completed_at?: string;
   error?: string;
-  context: any;
-  result?: any;
+  context: unknown;
+  result?: unknown;
   workflow: {
     name: string;
   };
@@ -51,7 +52,7 @@ interface WorkflowLog {
   started_at: string;
   completed_at?: string;
   error?: string;
-  output?: any;
+  output?: unknown;
 }
 
 export default function WorkflowExecutions() {
@@ -65,11 +66,10 @@ export default function WorkflowExecutions() {
   const [showLogsDialog, setShowLogsDialog] = useState(false);
 
   // Load executions
-  const loadExecutions = async () => {
+  const loadExecutions = useCallback(async () => {
     setLoading(true);
     
-    const { data, error } = await supabase
-      .from('workflow_executions')
+    const { data, error } = await safeFrom(supabase, 'workflow_executions')
       .select(`
         *,
         workflow:workflows(name)
@@ -89,12 +89,11 @@ export default function WorkflowExecutions() {
 
     setExecutions(data || []);
     setLoading(false);
-  };
+  }, [toast]);
 
   // Load logs for execution
   const loadLogs = async (executionId: string) => {
-    const { data, error } = await supabase
-      .from('workflow_logs')
+    const { data, error } = await safeFrom(supabase, 'workflow_logs')
       .select('*')
       .eq('execution_id', executionId)
       .order('started_at', { ascending: true });
@@ -140,7 +139,7 @@ export default function WorkflowExecutions() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [loadExecutions]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

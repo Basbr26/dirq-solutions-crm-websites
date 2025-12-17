@@ -30,7 +30,7 @@ export type WaitType = 'duration' | 'until_date' | 'approval';
 // NODE DATA INTERFACES
 // ============================================================================
 
-export interface TriggerNodeData {
+export interface TriggerNodeData extends Record<string, unknown> {
   label: string;
   triggerType: TriggerType;
   event?: string; // e.g., 'employee.status_hired', 'sick_leave.day_42_reached'
@@ -39,20 +39,20 @@ export interface TriggerNodeData {
   config?: Record<string, unknown>;
 }
 
-export interface ActionNodeData {
+export interface ActionNodeData extends Record<string, unknown> {
   label: string;
   actionType: ActionType;
   config: Record<string, unknown>;
 }
 
-export interface ConditionNodeData {
+export interface ConditionNodeData extends Record<string, unknown> {
   label: string;
   condition: string; // JavaScript expression, e.g., "{{employee.age}} > 55"
   trueLabel?: string;
   falseLabel?: string;
 }
 
-export interface WaitNodeData {
+export interface WaitNodeData extends Record<string, unknown> {
   label: string;
   waitType: WaitType;
   config: {
@@ -64,7 +64,7 @@ export interface WaitNodeData {
   };
 }
 
-export interface NotificationNodeData {
+export interface NotificationNodeData extends Record<string, unknown> {
   label: string;
   to: string | string[]; // user_id, email, or "role:hr"
   subject?: string;
@@ -87,6 +87,7 @@ export type WorkflowNodeData =
 export interface WorkflowDefinition {
   nodes: Node<WorkflowNodeData>[];
   edges: Edge[];
+  variables?: Record<string, unknown>;
 }
 
 export interface Workflow {

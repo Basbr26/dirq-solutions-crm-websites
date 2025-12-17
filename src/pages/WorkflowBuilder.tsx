@@ -15,6 +15,7 @@ import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas';
 import { NodeConfigurator } from '@/components/workflow/NodeConfigurator';
 import { WorkflowNodeData, WorkflowDefinition } from '@/types/workflow';
 import { supabase } from '@/integrations/supabase/client';
+import { safeFrom, safeRpc } from '@/lib/supabaseTypeHelpers';
 import {
   Dialog,
   DialogContent,
@@ -43,13 +44,12 @@ function WorkflowBuilderContent() {
   const [workflowDescription, setWorkflowDescription] = useState('');
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string; definition: WorkflowDefinition; category: string }>>([]);
   const dragRef = useRef<{ type: string; label: string } | null>(null);
 
   // Load templates
   const loadTemplates = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('workflow_templates')
+    const { data, error } = await safeFrom(supabase, 'workflow_templates')
       .select('*')
       .order('name');
 
@@ -72,7 +72,7 @@ function WorkflowBuilderContent() {
   }, [loadTemplates]);
 
   // Load template
-  const handleLoadTemplate = useCallback((template: any) => {
+  const handleLoadTemplate = useCallback((template: { id: string; name: string; description: string; definition: WorkflowDefinition }) => {
     const definition = template.definition as WorkflowDefinition;
     setNodes(definition.nodes);
     setEdges(definition.edges);
@@ -130,7 +130,7 @@ function WorkflowBuilderContent() {
   }, []);
 
   // Handle node click
-  const onNodeClick = useCallback((_event: React.MouseEvent, node: Node<WorkflowNodeData>) => {
+  const onNodeClick = useCallback((node: Node<WorkflowNodeData>) => {
     setSelectedNode(node);
   }, []);
 
@@ -184,8 +184,7 @@ function WorkflowBuilderContent() {
 
     if (workflowId) {
       // Update existing
-      const { error } = await supabase
-        .from('workflows')
+      const { error } = await safeFrom(supabase, 'workflows')
         .update(workflowData)
         .eq('id', workflowId);
 
@@ -199,8 +198,7 @@ function WorkflowBuilderContent() {
       }
     } else {
       // Create new
-      const { data, error } = await supabase
-        .from('workflows')
+      const { data, error } = await safeFrom(supabase, 'workflows')
         .insert(workflowData)
         .select()
         .single();
@@ -234,7 +232,7 @@ function WorkflowBuilderContent() {
       return;
     }
 
-    const { data, error } = await supabase.rpc('start_workflow', {
+    const { data, error } = await safeRpc(supabase, 'start_workflow', {
       p_workflow_id: workflowId,
       p_trigger_data: {},
       p_test_mode: true,
@@ -400,8 +398,8 @@ function WorkflowBuilderContent() {
         {/* Canvas */}
         <div className="flex-1" onDrop={onDrop} onDragOver={onDragOver}>
           <WorkflowCanvas
-            nodes={nodes}
-            edges={edges}
+            initialNodes={nodes}
+            initialEdges={edges}
             onNodesChange={(changes) => {
               setNodes((nds) => {
                 const updated = [...nds];

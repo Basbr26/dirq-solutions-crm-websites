@@ -32,6 +32,7 @@ interface WorkflowCanvasProps {
   onNodesChange?: (nodes: Node<WorkflowNodeData>[]) => void;
   onEdgesChange?: (edges: Edge[]) => void;
   onNodeClick?: (node: Node<WorkflowNodeData>) => void;
+  onConnect?: (params: Connection) => void;
   readOnly?: boolean;
 }
 
@@ -41,6 +42,7 @@ export function WorkflowCanvas({
   onNodesChange,
   onEdgesChange,
   onNodeClick,
+  onConnect: onConnectProp,
   readOnly = false,
 }: WorkflowCanvasProps) {
   const [nodes, setNodes, onNodesChangeInternal] = useNodesState(initialNodes);
@@ -72,8 +74,12 @@ export function WorkflowCanvas({
         const updatedEdges = addEdge(newEdge, edges);
         onEdgesChange(updatedEdges);
       }
+      
+      if (onConnectProp) {
+        onConnectProp(params);
+      }
     },
-    [edges, onEdgesChange, setEdges]
+    [edges, onEdgesChange, onConnectProp, setEdges]
   );
 
   // Handle node changes
@@ -111,9 +117,9 @@ export function WorkflowCanvas({
 
   // Handle node click
   const handleNodeClick = useCallback(
-    (_event: React.MouseEvent, node: Node<WorkflowNodeData>) => {
+    (_event: React.MouseEvent, node: any) => {
       if (onNodeClick && !readOnly) {
-        onNodeClick(node);
+        onNodeClick(node as Node<WorkflowNodeData>);
       }
     },
     [onNodeClick, readOnly]

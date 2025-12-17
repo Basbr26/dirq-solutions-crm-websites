@@ -165,7 +165,7 @@ export function NotificationItem({
                 <Button
                   key={index}
                   size="sm"
-                  variant={action.variant || 'outline'}
+                  variant={action.variant === 'primary' ? 'default' : (action.variant || 'outline')}
                   onClick={(e) => handleActionClick(action.action, e)}
                   className="text-xs h-8"
                 >

@@ -42,7 +42,7 @@ export interface Notification {
   priority: NotificationPriority;
   priority_score: number; // 0-100
   
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   related_entity_type?: string;
   related_entity_id?: string;
   
@@ -115,10 +115,10 @@ export interface NotificationRule {
   delay_hours: number;
   
   escalation_chain: EscalationStep[];
-  conditions: Record<string, any>;
+  conditions: Record<string, unknown>;
   
   base_priority: NotificationPriority;
-  priority_modifiers: Record<string, any>;
+  priority_modifiers: Record<string, unknown>;
   
   created_at: string;
   updated_at: string;
@@ -174,7 +174,7 @@ export interface CreateNotificationParams {
   title: string;
   message: string;
   type: NotificationType;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   deadline?: string;
   actions?: NotificationAction[];
   deep_link?: string;

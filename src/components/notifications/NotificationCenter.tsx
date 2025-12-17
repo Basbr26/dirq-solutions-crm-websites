@@ -24,8 +24,8 @@ import { NotificationRouter } from '@/lib/notifications/router';
 import { PriorityScorer } from '@/lib/notifications/priorityScorer';
 import { useAuth } from '@/hooks/useAuth';
 import type { Notification, NotificationStats } from '@/types/notifications';
-import { NotificationItem } from './NotificationItem';
-import { NotificationPreferencesDialog } from './NotificationPreferencesDialog';
+import { NotificationItem } from '@/components/notifications/NotificationItem';
+import { NotificationPreferencesDialog } from '@/components/notifications/NotificationPreferencesDialog';
 
 export function NotificationCenter() {
   const { user } = useAuth();
@@ -64,8 +64,9 @@ export function NotificationCenter() {
       return;
     }
 
-    const sortedNotifications = PriorityScorer.sortByPriority(data || []);
-    setNotifications(sortedNotifications);
+    const typedData = (data || []) as unknown as Notification[];
+    const sortedNotifications = PriorityScorer.sortByPriority(typedData);
+    setNotifications(sortedNotifications as Notification[]);
     
     // Calculate stats
     calculateStats(sortedNotifications);
@@ -217,6 +218,7 @@ export function NotificationCenter() {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Recalculate stats when notifications change

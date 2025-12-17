@@ -21,14 +21,14 @@ export function MobileBottomNav() {
         return [
           { icon: Home, label: 'Dashboard', path: '/hr/dashboard' },
           { icon: Users, label: 'Medewerkers', path: '/hr/medewerkers' },
-          { icon: Heart, label: 'Verzuim', path: '/dashboard/hr' },
+          { icon: Heart, label: 'Verzuim', path: '/hr/dashboard' },
           { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
         ];
       case 'hr':
         return [
           { icon: Home, label: 'Dashboard', path: '/hr/dashboard' },
           { icon: Users, label: 'Medewerkers', path: '/hr/medewerkers' },
-          { icon: Heart, label: 'Verzuim', path: '/dashboard/hr', action: 'cases' },
+          { icon: Heart, label: 'Verzuim', path: '/hr/dashboard', action: 'cases' },
           { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
         ];
       case 'manager':

@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { safeFrom } from '@/lib/supabaseTypeHelpers';
 import type {
   Workflow,
   WorkflowExecution,
@@ -36,19 +37,19 @@ export async function startWorkflowExecution(
   triggerEvent?: string
 ): Promise<string> {
   // Fetch workflow definition
-  const { data: workflow, error: workflowError } = await supabase
-    .from('workflows')
+  const result = await safeFrom(supabase, 'workflows')
     .select('*')
     .eq('id', workflowId)
     .single();
+  
+  const { data: workflow, error: workflowError } = result as { data: unknown; error: unknown };
 
   if (workflowError || !workflow) {
     throw new Error(`Workflow not found: ${workflowId}`);
   }
 
   // Create execution record
-  const { data: execution, error: executionError } = await supabase
-    .from('workflow_executions')
+  const { data: execution, error: executionError } = await safeFrom(supabase, 'workflow_executions')
     .insert({
       workflow_id: workflowId,
       workflow_version: workflow.version,
@@ -451,10 +452,10 @@ async function updateDatabase(
     const value = config.value;
 
     // Build update query
-    let query = supabase.from(tableName).update({ [field]: value } as never);
+    let query = safeFrom(supabase, tableName).update({ [field]: value } as never);
 
     if (config.recordId) {
-      query = query.eq('id', config.recordId);
+      query = query.eq('id', config.recordId as string);
     }
 
     const { error } = await query;
@@ -504,7 +505,7 @@ async function sendNotification(
     const to = Array.isArray(config.to) ? config.to : [config.to];
 
     for (const userId of to) {
-      await supabase.from('notifications').insert({
+      await safeFrom(supabase, 'notifications').insert({
         user_id: resolveUserId(userId as string),
         title: config.subject || 'Workflow Notification',
         message: config.message,
@@ -583,8 +584,7 @@ async function triggerWorkflow(
     const workflowName = config.workflowName as string;
 
     // Find workflow by name
-    const { data: workflow, error } = await supabase
-      .from('workflows')
+    const { data: workflow, error } = await safeFrom(supabase, 'workflows')
       .select('id')
       .eq('name', workflowName)
       .eq('is_active', true)
@@ -747,15 +747,14 @@ async function updateExecutionStatus(
   if (result) updates.result = result;
   if (errorMessage) updates.error_message = errorMessage;
 
-  await supabase.from('workflow_executions').update(updates as never).eq('id', executionId);
+  await safeFrom(supabase, 'workflow_executions').update(updates as never).eq('id', executionId);
 }
 
 /**
  * Update current node being executed
  */
 async function updateExecutionCurrentNode(executionId: string, nodeId: string): Promise<void> {
-  await supabase
-    .from('workflow_executions')
+  await safeFrom(supabase, 'workflow_executions')
     .update({ current_node_id: nodeId } as never)
     .eq('id', executionId);
 }
@@ -771,7 +770,7 @@ async function log(
   details: Record<string, unknown> = {},
   durationMs?: number
 ): Promise<void> {
-  await supabase.from('workflow_logs').insert({
+  await safeFrom(supabase, 'workflow_logs').insert({
     execution_id: executionId,
     node_id: nodeId,
     node_type: 'action',

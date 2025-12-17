@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { safeFrom } from '@/lib/supabaseTypeHelpers';
 import { NotificationRouter } from './router';
 import type {
   NotificationRule,
@@ -20,8 +21,7 @@ export class EscalationEngine {
     let escalationsProcessed = 0;
 
     // Get all active rules
-    const { data: rules, error } = await supabase
-      .from('notification_rules')
+    const { data: rules, error } = await safeFrom(supabase, 'notification_rules')
       .select('*')
       .eq('active', true);
 
@@ -219,14 +219,13 @@ export class EscalationEngine {
     const escalationChain = rule.escalation_chain as EscalationStep[];
 
     // Determine current escalation level
-    const { data: history } = await supabase
-      .from('escalation_history')
+    const { data: history } = await safeFrom(supabase, 'escalation_history')
       .select('*')
       .eq('notification_id', entity.id)
       .order('escalation_level', { ascending: false })
       .limit(1);
 
-    const currentLevel = history && history.length > 0 ? history[0].escalation_level : -1;
+    const currentLevel = history && history.length > 0 ? (history[0] as any).escalation_level : -1;
     const nextLevel = currentLevel + 1;
 
     if (nextLevel >= escalationChain.length) {
@@ -261,7 +260,7 @@ export class EscalationEngine {
 
       if (notificationId) {
         // Log escalation
-        await supabase.from('escalation_history').insert({
+        await safeFrom(supabase, 'escalation_history').insert({
           notification_id: notificationId,
           rule_id: rule.id,
           from_user_id: entity.assigned_to || entity.employee_id,
@@ -392,9 +391,8 @@ export class EscalationEngine {
    * Create escalation rule
    */
   static async createRule(rule: Omit<NotificationRule, 'id' | 'created_at' | 'updated_at'>): Promise<string | null> {
-    const { data, error } = await supabase
-      .from('notification_rules')
-      .insert(rule)
+    const { data, error } = await safeFrom(supabase, 'notification_rules')
+      .insert(rule as never)
       .select('id')
       .single();
 
@@ -413,9 +411,8 @@ export class EscalationEngine {
     ruleId: string,
     updates: Partial<NotificationRule>
   ): Promise<boolean> {
-    const { error } = await supabase
-      .from('notification_rules')
-      .update(updates)
+    const { error } = await safeFrom(supabase, 'notification_rules')
+      .update(updates as never)
       .eq('id', ruleId);
 
     if (error) {
@@ -430,8 +427,7 @@ export class EscalationEngine {
    * Delete escalation rule
    */
   static async deleteRule(ruleId: string): Promise<boolean> {
-    const { error } = await supabase
-      .from('notification_rules')
+    const { error } = await safeFrom(supabase, 'notification_rules')
       .delete()
       .eq('id', ruleId);
 

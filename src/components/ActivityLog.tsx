@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +18,7 @@ import {
   Clock
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { actionTypeLabels, entityTypeLabels, ActionType, EntityType } from '@/lib/activityLogger';
+import { actionTypeLabels, ActionType } from '@/lib/activityLogger';
 
 interface ActivityLogEntry {
   id: string;
@@ -41,7 +42,7 @@ interface ActivityLogProps {
   showHeader?: boolean;
 }
 
-const actionIcons: Record<string, React.ReactNode> = {
+const actionIcons: Record<string, ReactNode> = {
   case_created: <Plus className="h-4 w-4" />,
   case_updated: <Edit className="h-4 w-4" />,
   case_closed: <CheckCircle2 className="h-4 w-4" />,
@@ -73,6 +74,7 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
 
   useEffect(() => {
     loadActivities();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
 
   const loadActivities = async () => {
@@ -153,7 +155,6 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
             <div className="space-y-4">
               {activities.map((activity) => {
                 const actionType = activity.action_type as ActionType;
-                const entityType = activity.entity_type as EntityType;
                 const userName = activity.user 
                   ? `${activity.user.voornaam} ${activity.user.achternaam}`
                   : 'Onbekend';
