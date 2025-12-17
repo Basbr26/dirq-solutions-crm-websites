@@ -88,9 +88,72 @@ BEGIN
     END IF;
 END $$;
 
+-- Add file_path column (alias for storage path)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'file_path'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN file_path TEXT;
+    END IF;
+END $$;
+
+-- Add title column for document display name
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'title'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN title TEXT NOT NULL DEFAULT 'Untitled';
+    END IF;
+END $$;
+
+-- Add status column for document workflow
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'status'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN status TEXT DEFAULT 'draft';
+    END IF;
+END $$;
+
+-- Add signature tracking columns
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'requires_signatures'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN requires_signatures TEXT[];
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'owner_signed'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN owner_signed BOOLEAN DEFAULT FALSE;
+    END IF;
+END $$;
+
 -- Make case_id nullable since HR documents don't need a case
 ALTER TABLE documents ALTER COLUMN case_id DROP NOT NULL;
 
--- Add comment for clarity
+-- Add comments for clarity
 COMMENT ON COLUMN documents.employee_id IS 'Direct link to employee for HR documents (arbeidsovereenkomst, NDA, etc). For verzuim documents, use case_id instead.';
 COMMENT ON COLUMN documents.case_id IS 'Link to sick leave case for verzuim documents. NULL for HR documents.';
+COMMENT ON COLUMN documents.file_path IS 'Storage path in Supabase Storage bucket';
+COMMENT ON COLUMN documents.file_url IS 'Legacy column - may contain signed URLs or public URLs';
+COMMENT ON COLUMN documents.title IS 'Display name for the document';
+COMMENT ON COLUMN documents.status IS 'Document status: draft, completed, archived';
