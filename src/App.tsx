@@ -14,6 +14,7 @@ import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
 import DashboardExecutive from "./pages/DashboardExecutive";
 import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
+import EmployeePortal from "./pages/EmployeePortal";
 import EmployeesPage from "./pages/hr/EmployeesPage";
 import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
 import EmployeeCreatePage from "./pages/hr/EmployeeCreatePage";
@@ -56,7 +57,7 @@ function RoleBasedRedirect() {
     case 'manager':
       return <Navigate to="/dashboard/manager" replace />;
     case 'medewerker':
-      return <Navigate to="/dashboard/medewerker" replace />;
+      return <Navigate to="/employee" replace />;
     default:
       return <Navigate to="/auth" replace />;
   }
@@ -124,6 +125,15 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['medewerker']}>
                     <DashboardMedewerker />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/employee" 
+                element={
+                  <ProtectedRoute allowedRoles={['medewerker']}>
+                    <EmployeePortal />
                   </ProtectedRoute>
                 } 
               />

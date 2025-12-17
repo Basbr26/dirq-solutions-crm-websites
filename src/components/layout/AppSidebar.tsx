@@ -41,6 +41,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       title: 'Overzicht',
       items: [
         { title: 'Dashboard', icon: LayoutDashboard, href: role === 'super_admin' || role === 'hr' ? '/hr/dashboard' : role === 'manager' ? '/dashboard/manager' : '/dashboard/medewerker' },
+        { title: 'Employee Portal', icon: UserCircle, href: '/employee', roles: ['medewerker'] },
       ],
     },
     {

@@ -40,10 +40,10 @@ export function MobileBottomNav() {
         ];
       case 'medewerker':
         return [
-          { icon: Home, label: 'Status', path: '/dashboard/medewerker' },
-          { icon: Calendar, label: 'Verlof', path: '/hr/verlof' },
-          { icon: FileText, label: 'Documenten', path: '/dashboard/medewerker', action: 'documents' },
-          { icon: Bell, label: 'Updates', path: '/dashboard/medewerker', action: 'timeline' },
+          { icon: Home, label: 'Portal', path: '/employee' },
+          { icon: Calendar, label: 'Verlof', path: '/employee', action: 'leave' },
+          { icon: FileText, label: 'Documenten', path: '/employee', action: 'documents' },
+          { icon: Bell, label: 'Updates', path: '/employee', action: 'feed' },
         ];
       default:
         return [];

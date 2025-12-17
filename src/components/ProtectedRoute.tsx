@@ -26,13 +26,13 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     // Redirect to appropriate dashboard based on role
     switch (role) {
       case 'super_admin':
-        return <Navigate to="/dashboard/super-admin" replace />;
+        return <Navigate to="/hr/dashboard" replace />;
       case 'hr':
-        return <Navigate to="/dashboard/hr" replace />;
+        return <Navigate to="/hr/dashboard" replace />;
       case 'manager':
         return <Navigate to="/dashboard/manager" replace />;
       case 'medewerker':
-        return <Navigate to="/dashboard/medewerker" replace />;
+        return <Navigate to="/employee" replace />;
       default:
         return <Navigate to="/" replace />;
     }
