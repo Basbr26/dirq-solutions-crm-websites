@@ -24,6 +24,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Search, Plus, Filter, Users, UserCheck, UserMinus, Clock } from 'lucide-react';
+import { CreateEmployeeDialog } from '@/components/employee/CreateEmployeeDialog';
 
 interface Employee {
   id: string;
@@ -51,6 +52,7 @@ export default function EmployeesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -156,7 +158,7 @@ export default function EmployeesPage() {
       title="Medewerkers" 
       subtitle={`${stats.total} medewerkers in totaal`}
       actions={
-        <Button onClick={() => navigate('/hr/medewerkers/nieuw')} className="gap-2">
+        <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">Nieuwe medewerker</span>
         </Button>
@@ -322,6 +324,12 @@ export default function EmployeesPage() {
           </CardContent>
         </Card>
       </div>
+
+      <CreateEmployeeDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={loadData}
+      />
     </AppLayout>
   );
 }
