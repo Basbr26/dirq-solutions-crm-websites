@@ -169,6 +169,18 @@ BEGIN
     END IF;
 END $$;
 
+-- Add signed_file_path column for storing signed PDF path
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'signed_file_path'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN signed_file_path TEXT;
+    END IF;
+END $$;
+
 -- Make case_id nullable since HR documents don't need a case
 ALTER TABLE documents ALTER COLUMN case_id DROP NOT NULL;
 
@@ -178,7 +190,8 @@ ALTER TABLE documents ALTER COLUMN file_url DROP NOT NULL;
 -- Add comments for clarity
 COMMENT ON COLUMN documents.employee_id IS 'Direct link to employee for HR documents (arbeidsovereenkomst, NDA, etc). For verzuim documents, use case_id instead.';
 COMMENT ON COLUMN documents.case_id IS 'Link to sick leave case for verzuim documents. NULL for HR documents.';
-COMMENT ON COLUMN documents.file_path IS 'Storage path in Supabase Storage bucket';
+COMMENT ON COLUMN documents.file_path IS 'Storage path in Supabase Storage bucket for original document';
+COMMENT ON COLUMN documents.signed_file_path IS 'Storage path in signed-documents bucket for signed PDF with embedded signature';
 COMMENT ON COLUMN documents.file_url IS 'Legacy column - may contain signed URLs or public URLs';
 COMMENT ON COLUMN documents.title IS 'Display name for the document';
 COMMENT ON COLUMN documents.status IS 'Document status: draft, completed, archived';

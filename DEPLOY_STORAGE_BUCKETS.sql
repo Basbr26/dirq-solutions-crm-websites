@@ -47,6 +47,19 @@ ON CONFLICT (id) DO UPDATE SET
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+-- Signed Documents bucket (private - requires authentication)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'signed-documents',
+  'signed-documents',
+  false,
+  52428800, -- 50MB limit
+  ARRAY['application/pdf']
+)
+ON CONFLICT (id) DO UPDATE SET
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
+
 -- ============================================
 -- PART 2: DOCUMENTS BUCKET RLS POLICIES
 -- ============================================
@@ -125,7 +138,41 @@ USING (
 );
 
 -- ============================================
--- PART 3: AVATARS BUCKET RLS POLICIES
+-- PART 3: SIGNED DOCUMENTS BUCKET RLS POLICIES
+-- ============================================
+
+-- Drop existing signed-documents policies
+DROP POLICY IF EXISTS "Authenticated users can upload signed documents" ON storage.objects;
+DROP POLICY IF EXISTS "Authenticated users can view signed documents" ON storage.objects;
+DROP POLICY IF EXISTS "HR can delete signed documents" ON storage.objects;
+
+-- Authenticated users can upload signed documents
+CREATE POLICY "Authenticated users can upload signed documents"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (bucket_id = 'signed-documents');
+
+-- Authenticated users can view signed documents
+CREATE POLICY "Authenticated users can view signed documents"
+ON storage.objects FOR SELECT
+TO authenticated
+USING (bucket_id = 'signed-documents');
+
+-- HR can delete signed documents
+CREATE POLICY "HR can delete signed documents"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'signed-documents'
+  AND EXISTS (
+    SELECT 1 FROM user_roles
+    WHERE user_id = auth.uid()
+    AND role IN ('hr', 'hr_medewerker', 'super_admin')
+  )
+);
+
+-- ============================================
+-- PART 4: AVATARS BUCKET RLS POLICIES
 -- ============================================
 
 -- Drop existing avatar policies
@@ -174,7 +221,7 @@ USING (
 -- Check if buckets were created
 SELECT 
   'Storage buckets configured!' as status,
-  (SELECT COUNT(*) FROM storage.buckets WHERE id IN ('documents', 'avatars')) as buckets_created,
+  (SELECT COUNT(*) FROM storage.buckets WHERE id IN ('documents', 'signed-documents', 'avatars')) as buckets_created,
   (SELECT COUNT(*) FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects') as policies_created;
 
 -- Show bucket details
