@@ -87,7 +87,7 @@ export default function EmployeeDetailPage() {
       const [employeeResult, casesResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('*, department:departments(name), manager:profiles!profiles_manager_id_fkey(voornaam, achternaam)')
+          .select('*, department:departments!profiles_department_id_fkey(name), manager:profiles!profiles_manager_id_fkey(voornaam, achternaam)')
           .eq('id', id)
           .maybeSingle(),
         supabase
