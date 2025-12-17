@@ -13,6 +13,7 @@ import { nl } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DOCUMENT_TYPE_LABELS } from '@/types/verzuimDocumentTypes';
+import { DocumentSigningDialog } from './DocumentSigningDialog';
 
 interface Document {
   id: string;
@@ -168,7 +169,17 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* Show sign button if document requires signature and not yet signed */}
+            {document.requires_signatures && 
+             document.requires_signatures.length > 0 && 
+             !document.owner_signed && (
+              <DocumentSigningDialog 
+                document={document} 
+                onSigned={onDelete} 
+              />
+            )}
+            
             <Button variant="ghost" size="icon" onClick={handleView} title="Bekijken">
               <Eye className="h-4 w-4" />
             </Button>

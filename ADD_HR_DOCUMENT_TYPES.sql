@@ -147,6 +147,28 @@ BEGIN
     END IF;
 END $$;
 
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'owner_signed_at'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN owner_signed_at TIMESTAMPTZ;
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'documents' 
+        AND column_name = 'owner_signature_data'
+    ) THEN
+        ALTER TABLE documents ADD COLUMN owner_signature_data TEXT;
+    END IF;
+END $$;
+
 -- Make case_id nullable since HR documents don't need a case
 ALTER TABLE documents ALTER COLUMN case_id DROP NOT NULL;
 
