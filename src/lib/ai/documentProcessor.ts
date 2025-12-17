@@ -497,8 +497,7 @@ export async function saveDocumentAnalysis(
   analysis: DocumentAnalysisResult,
   extractedText: string
 ): Promise<void> {
-  // @ts-expect-error - Table not yet in generated types
-  const { error } = await supabase.from('document_metadata').insert({
+  const { error } = await (supabase.from('document_metadata') as any).insert({
     document_id: documentId,
     detected_category: analysis.category,
     confidence_score: analysis.confidence,
@@ -533,7 +532,6 @@ export async function generateDocumentTasks(
 ): Promise<void> {
   for (const action of analysis.suggestedActions) {
     if (action.type === 'create_task') {
-      // @ts-expect-error - Table not yet in generated types
       await supabase.from('document_tasks').insert({
         document_id: documentId,
         task_type: action.type,

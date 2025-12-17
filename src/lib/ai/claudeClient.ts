@@ -210,8 +210,7 @@ async function logAuditEntry(entry: {
   responseTimeMs: number;
 }) {
   try {
-    // @ts-expect-error - Table not yet in generated types
-    await supabase.from('ai_audit_log').insert({
+    await (supabase.from('ai_audit_log') as any).insert({
       user_id: entry.userId,
       user_role: entry.userRole,
       query: entry.query,
@@ -235,8 +234,7 @@ export async function saveMessage(
   content: string,
   metadata?: Record<string, unknown>
 ) {
-  // @ts-expect-error - Table not yet in generated types
-  const { error } = await supabase.from('chat_messages').insert({
+  const { error } = await (supabase.from('chat_messages') as any).insert({
     session_id: sessionId,
     user_id: userId,
     role,
@@ -256,9 +254,7 @@ export async function saveMessage(
 export async function getOrCreateSession(userId: string): Promise<string> {
   try {
     // Try to get most recent session
-    // @ts-expect-error - Table not yet in generated types
     const { data: sessions, error: fetchError } = await supabase
-      // @ts-expect-error - Table not yet in generated types
       .from('chat_sessions')
       .select('id')
       .eq('user_id', userId)
@@ -275,11 +271,8 @@ export async function getOrCreateSession(userId: string): Promise<string> {
     }
 
     // Create new session
-    // @ts-expect-error - Table not yet in generated types
     const { data: newSession, error: createError } = await supabase
-      // @ts-expect-error - Table not yet in generated types
       .from('chat_sessions')
-      // @ts-expect-error - Table not yet in generated types
       .insert({
         user_id: userId,
         title: 'Nieuwe conversatie',
@@ -303,9 +296,7 @@ export async function getOrCreateSession(userId: string): Promise<string> {
  * Get chat history for session
  */
 export async function getChatHistory(sessionId: string, limit = 10): Promise<Message[]> {
-  // @ts-expect-error - Table not yet in generated types
   const { data, error } = await supabase
-    // @ts-expect-error - Table not yet in generated types
     .from('chat_messages')
     .select('role, content')
     .eq('session_id', sessionId)
@@ -318,7 +309,6 @@ export async function getChatHistory(sessionId: string, limit = 10): Promise<Mes
   }
 
   // Reverse to get chronological order
-  // @ts-expect-error - Type casting for database response
   return ((data || []) as unknown as Message[]).reverse();
 }
 
@@ -331,11 +321,8 @@ export async function submitFeedback(
   isHelpful: boolean,
   feedbackText?: string
 ) {
-  // @ts-expect-error - Table not yet in generated types
   const { error } = await supabase
-    // @ts-expect-error - Table not yet in generated types
     .from('chat_feedback')
-    // @ts-expect-error - Table not yet in generated types
     .insert({
       message_id: messageId,
       user_id: userId,

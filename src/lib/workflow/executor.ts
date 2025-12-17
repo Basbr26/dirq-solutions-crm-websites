@@ -49,10 +49,11 @@ export async function startWorkflowExecution(
   }
 
   // Create execution record
+  const workflowData = workflow as { version?: number };
   const { data: execution, error: executionError } = await safeFrom(supabase, 'workflow_executions')
     .insert({
       workflow_id: workflowId,
-      workflow_version: workflow.version,
+      workflow_version: workflowData.version || 1,
       triggered_by: triggeredBy,
       trigger_type: triggerType,
       trigger_event: triggerEvent,
