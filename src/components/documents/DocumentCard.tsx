@@ -21,6 +21,7 @@ interface Document {
   document_type?: string;
   file_name: string;
   file_path: string;
+  signed_file_path?: string;
   status: string;
   created_at: string;
   uploaded_by?: string;
@@ -36,9 +37,13 @@ interface DocumentCardProps {
 export function DocumentCard({ document, onDelete }: DocumentCardProps) {
   const handleDownload = async () => {
     try {
+      // Use signed PDF if available, otherwise original
+      const filePath = document.signed_file_path || document.file_path;
+      const bucketName = document.signed_file_path ? 'signed-documents' : 'documents';
+      
       const { data, error } = await supabase.storage
-        .from('documents')
-        .download(document.file_path);
+        .from(bucketName)
+        .download(filePath);
 
       if (error) throw error;
 
@@ -46,7 +51,7 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
       const url = URL.createObjectURL(data);
       const a = window.document.createElement('a');
       a.href = url;
-      a.download = document.file_name;
+      a.download = document.signed_file_path ? `signed_${document.file_name}` : document.file_name;
       a.click();
       URL.revokeObjectURL(url);
 
@@ -59,9 +64,13 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
 
   const handleView = async () => {
     try {
+      // Use signed PDF if available, otherwise original
+      const filePath = document.signed_file_path || document.file_path;
+      const bucketName = document.signed_file_path ? 'signed-documents' : 'documents';
+      
       const { data, error } = await supabase.storage
-        .from('documents')
-        .createSignedUrl(document.file_path, 3600); // 1 hour
+        .from(bucketName)
+        .createSignedUrl(filePath, 3600); // 1 hour
 
       if (error) throw error;
       if (!data?.signedUrl) throw new Error('Geen URL ontvangen');
