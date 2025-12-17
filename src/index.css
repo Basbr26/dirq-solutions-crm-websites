@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,108 +6,134 @@
 
 @layer base {
   :root {
-    /* Dirq Brand Colors */
-    --dirq-turquoise: 173 80% 40%;
-    --dirq-dark-navy: 210 57% 9%;
-    --dirq-soft-grey: 206 33% 93%;
-    --dirq-grey: 200 20% 75%;
-    --dirq-white: 0 0% 100%;
-
-    /* Semantic Tokens */
-    --background: 0 0% 100%;
-    --foreground: 210 57% 9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 210 57% 9%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 57% 9%;
-    
-    --primary: 173 80% 40%;
+    /* Primary - Teal #06BDC7 */
+    --primary: 183 94% 40%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 206 33% 93%;
-    --secondary-foreground: 210 57% 9%;
+    /* Secondary - Dark Navy #0F172A */
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 0 0% 100%;
     
-    --muted: 206 33% 93%;
-    --muted-foreground: 200 20% 40%;
+    /* Background - Light #F8FAFC */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
     
-    --accent: 173 80% 40%;
-    --accent-foreground: 0 0% 100%;
+    /* Card */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
     
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Accent - Light Teal #E6FAFB */
+    --accent: 183 60% 95%;
+    --accent-foreground: 183 94% 30%;
+    
+    /* Muted - #F1F5F9 */
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
+    /* Warning */
     --warning: 38 92% 50%;
     --warning-foreground: 48 96% 89%;
     
+    /* Success */
     --success: 142 71% 45%;
     --success-foreground: 144 61% 20%;
     
-    --border: 200 20% 85%;
-    --input: 200 20% 85%;
-    --ring: 173 80% 40%;
+    /* Borders */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 183 94% 40%;
     
-    --radius: 0.5rem;
+    /* Border Radius */
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 183 94% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 183 60% 95%;
+    --sidebar-accent-foreground: 183 94% 30%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 183 94% 40%;
 
     /* Shadows */
-    --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.06);
-    --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.06);
-    --shadow-large: 0 10px 20px rgba(0, 0, 0, 0.08);
+    --shadow-soft: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+    --shadow-card: 0 8px 30px -4px rgba(15, 23, 42, 0.1);
+    --shadow-glow: 0 0 40px rgba(6, 189, 199, 0.2);
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(222 47% 11%) 0%, hsl(222 40% 18%) 100%);
+    --gradient-teal: linear-gradient(135deg, hsl(183 94% 40%) 0%, hsl(183 94% 32%) 100%);
   }
 
   .dark {
-    --background: 210 57% 9%;
-    --foreground: 0 0% 100%;
-    
-    --card: 210 50% 12%;
-    --card-foreground: 0 0% 100%;
-    
-    --popover: 210 50% 12%;
-    --popover-foreground: 0 0% 100%;
-    
-    --primary: 173 80% 40%;
+    /* Primary - Teal stays vibrant in dark mode */
+    --primary: 183 94% 45%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 210 50% 15%;
+    /* Secondary - Dark Navy */
+    --secondary: 222 40% 18%;
     --secondary-foreground: 0 0% 100%;
     
-    --muted: 210 50% 15%;
-    --muted-foreground: 200 20% 70%;
+    /* Background - Dark */
+    --background: 222 47% 11%;
+    --foreground: 210 20% 98%;
     
-    --accent: 173 80% 40%;
-    --accent-foreground: 0 0% 100%;
+    /* Card */
+    --card: 222 40% 14%;
+    --card-foreground: 210 20% 98%;
     
+    /* Popover */
+    --popover: 222 40% 14%;
+    --popover-foreground: 210 20% 98%;
+    
+    /* Accent */
+    --accent: 183 50% 20%;
+    --accent-foreground: 183 94% 70%;
+    
+    /* Muted */
+    --muted: 222 40% 18%;
+    --muted-foreground: 215 16% 65%;
+    
+    /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     
+    /* Warning */
     --warning: 48 96% 89%;
     --warning-foreground: 38 92% 50%;
     
+    /* Success */
     --success: 142 71% 45%;
     --success-foreground: 144 61% 20%;
     
-    --border: 210 50% 20%;
-    --input: 210 50% 20%;
-    --ring: 173 80% 40%;
+    /* Borders */
+    --border: 222 40% 22%;
+    --input: 222 40% 22%;
+    --ring: 183 94% 45%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    /* Sidebar Dark */
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 183 94% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 183 50% 20%;
+    --sidebar-accent-foreground: 183 94% 70%;
+    --sidebar-border: 222 40% 22%;
+    --sidebar-ring: 183 94% 45%;
+
+    /* Dark Shadows */
+    --shadow-soft: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 8px 30px -4px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 40px rgba(6, 189, 199, 0.15);
   }
 }
 
@@ -117,26 +143,47 @@
   }
   
   body {
-    @apply bg-background text-foreground font-sans;
+    @apply bg-background text-foreground antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-bold;
+    @apply font-heading font-semibold tracking-tight;
   }
 }
 
 @layer utilities {
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .gradient-teal {
+    background: var(--gradient-teal);
+  }
+
+  /* Legacy support */
   .shadow-dirq {
-    box-shadow: var(--shadow-subtle);
+    box-shadow: var(--shadow-soft);
   }
   
   .shadow-dirq-md {
-    box-shadow: var(--shadow-medium);
+    box-shadow: var(--shadow-card);
   }
   
   .shadow-dirq-lg {
-    box-shadow: var(--shadow-large);
+    box-shadow: var(--shadow-card);
   }
 }

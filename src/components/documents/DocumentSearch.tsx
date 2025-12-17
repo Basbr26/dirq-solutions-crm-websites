@@ -39,7 +39,6 @@ export function DocumentSearch({ onDocumentSelect }: DocumentSearchProps) {
       if (!searchQuery.trim()) return [];
 
       if (searchMode === 'fulltext') {
-        // @ts-expect-error - Custom RPC function
         const { data, error } = await supabase.rpc('search_documents_fulltext', {
           search_query: searchQuery,
           doc_category: selectedCategory === 'all' ? null : selectedCategory,
@@ -50,7 +49,6 @@ export function DocumentSearch({ onDocumentSelect }: DocumentSearchProps) {
       } else {
         // Semantic search would require generating embeddings first
         // For now, fallback to fulltext
-        // @ts-expect-error - Custom RPC function search_documents_fulltext not yet in generated types
         const { data, error } = await supabase.rpc('search_documents_fulltext', {
           search_query: searchQuery,
           doc_category: selectedCategory === 'all' ? null : selectedCategory,

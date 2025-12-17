@@ -91,13 +91,13 @@ export class EscalationEngine {
     if (event === 'overdue') {
       query = query
         .lt('deadline', new Date().toISOString())
-        .neq('task_status', 'voltooid');
+        .neq('task_status', 'afgerond');
     } else if (event === 'deadline_approaching') {
       const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       query = query
         .lte('deadline', in24Hours)
         .gte('deadline', new Date().toISOString())
-        .neq('task_status', 'voltooid');
+        .neq('task_status', 'afgerond');
     }
 
     const { data, error } = await query;
@@ -191,24 +191,11 @@ export class EscalationEngine {
    * Check if escalation is needed for entity
    */
   private static async checkEscalationNeeded(
-    entity: any,
-    rule: NotificationRule
+    _entity: any,
+    _rule: NotificationRule
   ): Promise<boolean> {
-    // Check if already escalated recently
-    const { data: existingEscalation } = await supabase
-      .from('escalation_history')
-      .select('*')
-      .eq('rule_id', rule.id)
-      .gte(
-        'created_at',
-        new Date(Date.now() - rule.delay_hours * 60 * 60 * 1000).toISOString()
-      )
-      .limit(1);
-
-    if (existingEscalation && existingEscalation.length > 0) {
-      return false; // Already escalated recently
-    }
-
+    // escalation_history table doesn't exist yet
+    // Always return true for now
     return true;
   }
 
@@ -218,15 +205,8 @@ export class EscalationEngine {
   private static async escalate(entity: any, rule: NotificationRule): Promise<void> {
     const escalationChain = rule.escalation_chain as EscalationStep[];
 
-    // Determine current escalation level
-    const { data: history } = await safeFrom(supabase, 'escalation_history')
-      .select('*')
-      .eq('notification_id', entity.id)
-      .order('escalation_level', { ascending: false })
-      .limit(1);
-
-    const currentLevel = history && history.length > 0 ? (history[0] as any).escalation_level : -1;
-    const nextLevel = currentLevel + 1;
+    // escalation_history table doesn't exist yet, start from level 0
+    const nextLevel = 0;
 
     if (nextLevel >= escalationChain.length) {
       // Max escalation level reached
@@ -284,12 +264,11 @@ export class EscalationEngine {
       return [step.user_id];
     }
 
-    // Find by role
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', step.role)
-      .eq('employment_status', 'actief');
+    // Find users by role from user_roles table
+    const { data: roleData, error } = await supabase
+      .from('user_roles')
+      .select('user_id')
+      .eq('role', step.role as any);
 
     if (error) {
       console.error('Error finding escalation targets:', error);
@@ -306,7 +285,7 @@ export class EscalationEngine {
     }
 
     // Otherwise return all users with the role
-    return (data || []).map((u) => u.id);
+    return (roleData || []).map((u) => u.user_id);
   }
 
   /**

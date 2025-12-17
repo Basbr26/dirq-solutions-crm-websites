@@ -68,6 +68,172 @@ export type Database = {
           },
         ]
       }
+      ai_audit_log: {
+        Row: {
+          created_at: string | null
+          id: string
+          query: string
+          response: string
+          response_time_ms: number | null
+          tokens_used: number | null
+          user_id: string
+          user_role: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          query: string
+          response: string
+          response_time_ms?: number | null
+          tokens_used?: number | null
+          user_id: string
+          user_role: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          query?: string
+          response?: string
+          response_time_ms?: number | null
+          tokens_used?: number | null
+          user_id?: string
+          user_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_feedback: {
+        Row: {
+          created_at: string | null
+          feedback_text: string | null
+          id: string
+          is_helpful: boolean
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          is_helpful: boolean
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_text?: string | null
+          id?: string
+          is_helpful?: boolean
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_feedback_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          role: string
+          session_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role: string
+          session_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          role?: string
+          session_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_message_at: string | null
+          title: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_message_at?: string | null
+          title?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_notes: {
         Row: {
           agreements: string | null
@@ -156,6 +322,102 @@ export type Database = {
           },
         ]
       }
+      document_access_log: {
+        Row: {
+          access_granted: boolean | null
+          access_type: string
+          created_at: string | null
+          denial_reason: string | null
+          document_id: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          access_granted?: boolean | null
+          access_type: string
+          created_at?: string | null
+          denial_reason?: string | null
+          document_id: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          access_granted?: boolean | null
+          access_type?: string
+          created_at?: string | null
+          denial_reason?: string | null
+          document_id?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_access_log_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_access_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_embeddings: {
+        Row: {
+          chunk_index: number | null
+          chunk_text: string
+          created_at: string | null
+          document_id: string
+          embedding: string | null
+          id: string
+          metadata_id: string | null
+        }
+        Insert: {
+          chunk_index?: number | null
+          chunk_text: string
+          created_at?: string | null
+          document_id: string
+          embedding?: string | null
+          id?: string
+          metadata_id?: string | null
+        }
+        Update: {
+          chunk_index?: number | null
+          chunk_text?: string
+          created_at?: string | null
+          document_id?: string
+          embedding?: string | null
+          id?: string
+          metadata_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_embeddings_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_embeddings_metadata_id_fkey"
+            columns: ["metadata_id"]
+            isOneToOne: false
+            referencedRelation: "document_metadata"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_invitations: {
         Row: {
           created_at: string | null
@@ -199,6 +461,163 @@ export type Database = {
             columns: ["document_id"]
             isOneToOne: false
             referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_metadata: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          detected_category: string | null
+          document_id: string
+          expiry_date: string | null
+          extracted_data: Json | null
+          extracted_text: string | null
+          has_signature: boolean | null
+          id: string
+          is_complete: boolean | null
+          is_valid: boolean | null
+          key_dates: Json | null
+          mentioned_amounts: number[] | null
+          mentioned_names: string[] | null
+          missing_elements: string[] | null
+          ocr_language: string | null
+          page_count: number | null
+          processed_at: string | null
+          processed_by: string | null
+          processing_error: string | null
+          processing_status: string | null
+          updated_at: string | null
+          validation_notes: Json | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          detected_category?: string | null
+          document_id: string
+          expiry_date?: string | null
+          extracted_data?: Json | null
+          extracted_text?: string | null
+          has_signature?: boolean | null
+          id?: string
+          is_complete?: boolean | null
+          is_valid?: boolean | null
+          key_dates?: Json | null
+          mentioned_amounts?: number[] | null
+          mentioned_names?: string[] | null
+          missing_elements?: string[] | null
+          ocr_language?: string | null
+          page_count?: number | null
+          processed_at?: string | null
+          processed_by?: string | null
+          processing_error?: string | null
+          processing_status?: string | null
+          updated_at?: string | null
+          validation_notes?: Json | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          detected_category?: string | null
+          document_id?: string
+          expiry_date?: string | null
+          extracted_data?: Json | null
+          extracted_text?: string | null
+          has_signature?: boolean | null
+          id?: string
+          is_complete?: boolean | null
+          is_valid?: boolean | null
+          key_dates?: Json | null
+          mentioned_amounts?: number[] | null
+          mentioned_names?: string[] | null
+          missing_elements?: string[] | null
+          ocr_language?: string | null
+          page_count?: number | null
+          processed_at?: string | null
+          processed_by?: string | null
+          processing_error?: string | null
+          processing_status?: string | null
+          updated_at?: string | null
+          validation_notes?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_metadata_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_metadata_processed_by_fkey"
+            columns: ["processed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_tasks: {
+        Row: {
+          assigned_to: string | null
+          auto_generated: boolean | null
+          created_at: string | null
+          document_id: string
+          due_date: string | null
+          generation_reason: string | null
+          id: string
+          priority: string | null
+          task_description: string | null
+          task_id: string | null
+          task_type: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          auto_generated?: boolean | null
+          created_at?: string | null
+          document_id: string
+          due_date?: string | null
+          generation_reason?: string | null
+          id?: string
+          priority?: string | null
+          task_description?: string | null
+          task_id?: string | null
+          task_type: string
+        }
+        Update: {
+          assigned_to?: string | null
+          auto_generated?: boolean | null
+          created_at?: string | null
+          document_id?: string
+          due_date?: string | null
+          generation_reason?: string | null
+          id?: string
+          priority?: string | null
+          task_description?: string | null
+          task_id?: string | null
+          task_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_tasks_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_tasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -1081,6 +1500,28 @@ export type Database = {
       is_manager_of: {
         Args: { _employee_id: string; _manager_id: string }
         Returns: boolean
+      }
+      search_documents_fulltext: {
+        Args: { doc_category?: string; search_query: string }
+        Returns: {
+          category: string
+          document_id: string
+          extracted_text: string
+          rank: number
+          title: string
+        }[]
+      }
+      search_documents_semantic: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          chunk_text: string
+          document_id: string
+          similarity: number
+        }[]
       }
     }
     Enums: {

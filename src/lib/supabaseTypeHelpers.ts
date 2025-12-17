@@ -14,10 +14,10 @@ export function safeFrom<T = any>(
 }
 
 // Helper for RPC calls
-export function safeRpc<T = any>(
+export async function safeRpc<T = any>(
   client: SupabaseClient,
   fn: string,
   params?: Record<string, any>
-) {
-  return client.rpc(fn as any, params) as Promise<{ data: T | null; error: any }>;
+): Promise<{ data: T | null; error: any }> {
+  return client.rpc(fn as any, params) as unknown as Promise<{ data: T | null; error: any }>;
 }
