@@ -87,7 +87,7 @@ export default function EmployeeDetailPage() {
       const [employeeResult, casesResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('*, department:departments!profiles_department_id_fkey(name), manager:profiles!profiles_manager_id_fkey(voornaam, achternaam)')
+          .select('*, department:departments!profiles_department_id_fkey(name)')
           .eq('id', id)
           .maybeSingle(),
         supabase
@@ -122,12 +122,20 @@ export default function EmployeeDetailPage() {
         return;
       }
 
-      // Transform manager array to single object
+      // Fetch manager data separately if manager_id exists
+      let managerData = null;
+      if (employeeResult.data.manager_id) {
+        const { data: manager } = await supabase
+          .from('profiles')
+          .select('id, voornaam, achternaam')
+          .eq('id', employeeResult.data.manager_id)
+          .single();
+        managerData = manager;
+      }
+
       const employeeData = {
         ...employeeResult.data,
-        manager: Array.isArray(employeeResult.data.manager) 
-          ? employeeResult.data.manager[0] || null 
-          : employeeResult.data.manager,
+        manager: managerData,
       };
 
       console.log('✅ Employee loaded successfully:', employeeData.voornaam, employeeData.achternaam);
