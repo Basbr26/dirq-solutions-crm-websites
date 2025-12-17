@@ -80,42 +80,13 @@ interface Document {
   owner_signed?: boolean;
 }
 
-function EmployeeDocuments({ employeeId }: { employeeId: string }) {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadDocuments = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('employee_id', employeeId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setDocuments(data || []);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-      toast.error('Fout bij laden van documenten');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadDocuments();
-  }, [employeeId]);
-
-  if (loading) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <Clock className="h-8 w-8 animate-spin mx-auto mb-2" />
-        Documenten laden...
-      </div>
-    );
-  }
-
+function EmployeeDocuments({ 
+  documents, 
+  onRefresh 
+}: { 
+  documents: Document[];
+  onRefresh: () => void;
+}) {
   if (documents.length === 0) {
     return (
       <div className="text-center py-12">
@@ -136,7 +107,7 @@ function EmployeeDocuments({ employeeId }: { employeeId: string }) {
         <DocumentCard
           key={doc.id}
           document={doc}
-          onDelete={loadDocuments}
+          onDelete={onRefresh}
         />
       ))}
     </div>
@@ -148,6 +119,7 @@ export default function EmployeeDetailPage() {
   const navigate = useNavigate();
   const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
   const [sickLeaveCases, setSickLeaveCases] = useState<SickLeaveCase[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -162,7 +134,7 @@ export default function EmployeeDetailPage() {
     try {
       console.log('🔍 Loading employee with ID:', id);
       
-      const [employeeResult, casesResult] = await Promise.all([
+      const [employeeResult, casesResult, documentsResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('*, department:departments!profiles_department_id_fkey(name)')
@@ -173,6 +145,11 @@ export default function EmployeeDetailPage() {
           .select('*')
           .eq('employee_id', id)
           .order('start_date', { ascending: false }),
+        supabase
+          .from('documents')
+          .select('*')
+          .eq('employee_id', id)
+          .order('created_at', { ascending: false }),
       ]);
 
       console.log('📊 Employee query result:', {
@@ -219,6 +196,7 @@ export default function EmployeeDetailPage() {
       console.log('✅ Employee loaded successfully:', employeeData.voornaam, employeeData.achternaam);
       setEmployee(employeeData as EmployeeDetail);
       setSickLeaveCases(casesResult.data || []);
+      setDocuments(documentsResult.data || []);
     } catch (error) {
       console.error('❌ Error loading employee:', error);
       console.error('Error details:', {
@@ -526,7 +504,10 @@ export default function EmployeeDetailPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <EmployeeDocuments employeeId={id!} />
+                <EmployeeDocuments 
+                  documents={documents} 
+                  onRefresh={loadEmployee} 
+                />
               </CardContent>
             </Card>
           </TabsContent>
