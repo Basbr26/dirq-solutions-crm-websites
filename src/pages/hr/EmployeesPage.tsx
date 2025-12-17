@@ -61,7 +61,7 @@ export default function EmployeesPage() {
       const [employeesResult, departmentsResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('*, department:departments(name)')
+          .select('*, department:departments!profiles_department_id_fkey(name)')
           .order('achternaam', { ascending: true }),
         supabase
           .from('departments')
