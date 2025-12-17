@@ -5,6 +5,7 @@ Een uitgebreid HR-managementsysteem (HRIS) voor Nederlandse MKB-bedrijven (10-25
 ## 🚀 Technologie Stack
 
 - **Frontend:** React 18, TypeScript, Vite
+- **Runtime:** Node.js (Vite development server)
 - **Styling:** Tailwind CSS, shadcn/ui componenten
 - **Database:** Supabase (PostgreSQL)
 - **Authenticatie:** Supabase Auth
@@ -12,6 +13,8 @@ Een uitgebreid HR-managementsysteem (HRIS) voor Nederlandse MKB-bedrijven (10-25
 - **Formulieren:** React Hook Form met Zod validatie
 - **Grafieken:** Recharts
 - **Drag & Drop:** dnd-kit
+- **PDF Generatie:** pdf-lib
+- **Edge Functions:** Deno runtime (Supabase Functions)
 
 ## 📋 Functionaliteiten
 
@@ -165,6 +168,14 @@ Een uitgebreid HR-managementsysteem (HRIS) voor Nederlandse MKB-bedrijven (10-25
 - **Verzuimanalyse:** Grafieken en statistieken
 - **Trend overzichten:** Verzuim trends over tijd
 - **Export functionaliteit:** Data exporteren
+- **Manager Analytics:** Team performance metrics (real-time berekend)
+- **Team Capacity Dashboard:** Live beschikbaarheid en bezetting
+
+### 🤖 AI Features
+
+- **AI Chatbot:** Intelligente assistent voor HR-vragen en beleid (zie `AI_CHATBOT.md`)
+- **Document Processing:** Automatische verwerking en analyse van HR-documenten (zie `AI_DOCUMENT_PROCESSING.md`)
+- **Natural Language Queries:** Vraag informatie op in natuurlijke taal
 
 ### 📅 Kalender Integratie
 
@@ -186,29 +197,40 @@ Een uitgebreid HR-managementsysteem (HRIS) voor Nederlandse MKB-bedrijven (10-25
 - **Touch-optimized:** Grote knoppen en touch-vriendelijke UI
 
 ### 🎨 Theming
-
-- **Dark mode:** Schakel tussen licht en donker thema
-- **Dirq Turquoise:** Primaire merkkleur (#14B8A6)
-- **Consistent design system:** shadcn/ui componenten
-
-## 🗄️ Database Schema
-
-### Belangrijkste tabellen:
-- `profiles` - Medewerkergegevens
-- `departments` - Afdelingen
-- `user_roles` - Gebruikersrollen
-- `sick_leave_cases` - Verzuimdossiers
-- `tasks` - Wet Poortwachter taken
-- `documents` - Documenten
+ (voornaam, achternaam, functie, department_id, manager_id)
+- `departments` - Afdelingen met manager toewijzing
+- `user_roles` - Gebruikersrollen (super_admin, hr, manager, medewerker)
+- `sick_leave_cases` - Verzuimdossiers (case_status: actief/herstel/gesloten/archief)
+- `tasks` - Wet Poortwachter taken (task_status: open/in_progress/afgerond)
+- `documents` - Documenten met Supabase Storage integratie
 - `timeline_events` - Dossier tijdlijn
+- `conversation_notes` - Gespreksnotities
+- `leave_requests` - Verlofaanvragen (status: pending/approved/rejected/cancelled)
+- `leave_balances` - Verlofsaldo's per medewerker
+- `onboarding_templates` - Onboarding templates
+- `onboarding_sessions` - Onboarding sessies per medewerker
+- `onboarding_tasks` - Onboarding taken
+- `notifications` - Notificaties (in-app + email)
+- `activity_logs` - Audit logs (compliance)
+
+### Database Features:
+- **Row Level Security (RLS):** Alle tabellen beveiligd op database niveau
+- **Relaties:** Foreign keys tussen profiles, cases, tasks, documents
+- **Real-time subscriptions:** Live updates via Supabase Realtime
+- **Computed metrics:** Team analytics berekend uit bestaande data (geen aparte views)tijdlijn
 - `conversation_notes` - Gespreksnotities
 - `leave_requests` - Verlofaanvragen
 - `leave_balances` - Verlofsaldo's
-- `onboarding_templates` - Onboarding templates
-- `onboarding_sessions` - Onboarding sessies
-- `onboarding_tasks` - Onboarding taken
-- `notifications` - Notificaties
-- `activity_logs` - Audit logs
+- `onboarding_templa (Deno Runtime)
+
+- `create-user` - Nieuwe gebruiker aanmaken met email notificatie
+- `reset-password` - Server-side wachtwoord reset
+- `check-deadlines` - Dagelijkse deadline controle (cron job)
+- `process-notifications` - Notificatie verwerkingslogica
+- `check-escalations` - Automatische escalaties voor urgente taken
+- `send-digests` - Dagelijkse digest emails
+
+**Note:** Edge Functions draaien op Deno runtime (geïsoleerd van main app
 
 ## 🔧 Edge Functions
 
@@ -229,11 +251,58 @@ cd <YOUR_PROJECT_NAME>
 npm install
 
 # Start de development server
-npm run dev
-```
+### Algemene Documentatie:
+- `DOCUMENTATIE.md` - Uitgebreide technische documentatie
+- `IMPLEMENTATIE_CHECKLIST.md` - Implementatie status
+- `PROJECT_STATUS.md` - Project voortgang
+- `SUPABASE_SETUP.md` - Supabase configuratie instructies
 
-## 🔑 Environment Variables
+### AI Features:
+- `AI_CHATBOT.md` - AI Chatbot implementatie en gebruik
+- `AI_CHATBOT_QUICKSTART.md` - Snelstart gids voor chatbot
+- `AI_DOCUMENT_PROCESSING.md` - Document processing met AI
+- `AI_DOCUMENT_PROCESSING_QUICKSTART.md` - Snelstart gids
 
+### Notificatie Systeem:
+- `NOTIFICATION_SYSTEM_GUIDE.md` - Complete notificatie architectuur
+- `NOTIFICATION_QUICKSTART.md` - Snelstart gids voor notificaties
+- `NOTIFICATION_CHECKLIST.md` - Implementatie checklist
+- `NOTIFICATION_COMPLETE.md` - Volledige implementatie details
+
+### SQL Scripts:
+- `supabase-setup.sql` - Database schema en RLS policies
+- `DEPLOY_COMPLETE_SYSTEM.sql` - Volledige systeem deployment
+- `DEPLOY_AI_FEATURES.sql` - AI features deployment
+- `DEPLOY_NOTIFICATIONS_SQL.sql` - Notificaties deployment
+- `DEPLOY_STORAGE_BUCKETS.sql` - Storage buckets configuratie
+
+## 🔧 Technische Notities
+
+### TypeScript Configuratie
+- **Main app:** Node.js/Vite runtime met TypeScript
+- **Edge Functions:** Deno runtime (apart geconfigureerd in `supabase/functions/`)
+- **Type Safety:** Strict TypeScript met Supabase generated types
+- **tsconfig.json:** Excludes Edge Functions van main compilation
+
+### Database Schema Beperkingen
+De applicatie gebruikt **bestaande tabellen** voor alle queries. Team analytics en performance metrics worden **real-time berekend** uit:
+- `profiles` (team members via manager_id)
+- `leave_requests` (approved requests voor capacity)
+- `sick_leave_cases` (actieve verzuim voor beschikbaarheid)
+- `tasks` (taak completion rates)
+- `activity_logs` (gebruiker activiteit voor metrics)
+
+Er zijn **geen aparte views** voor:
+- ❌ `manager_team_assignments` (gebruikt `profiles.manager_id`)
+- ❌ `team_daily_status` (berekend uit real-time queries)
+- ❌ `performance_metrics` (berekend uit tasks/logs)
+
+### Recent Opgeloste Issues
+- ✅ Deno configuratie conflicten opgelost (Deno only voor Edge Functions)
+- ✅ Database schema mismatches gefixed (94 TypeScript errors → 0)
+- ✅ Type safety verbeterd met proper interfaces
+- ✅ Real-time team analytics zonder database views
+- ✅ Alle queries gebruiken verified schema kolommen
 De applicatie gebruikt Supabase voor de backend. De volgende variabelen zijn geconfigureerd:
 - Supabase URL en Anon Key (automatisch via Lovable)
 - `RESEND_API_KEY` (optioneel, voor e-mail notificaties)

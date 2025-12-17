@@ -45,17 +45,25 @@ const COMMANDS: RecognitionCommand[] = [
   },
 ];
 
+// Browser SpeechRecognition API types
+/* eslint-disable @typescript-eslint/no-explicit-any */
+interface SpeechRecognitionWindow extends Window {
+  SpeechRecognition?: any;
+  webkitSpeechRecognition?: any;
+}
+
 export function useVoiceCommands(onCommand?: (action: string) => void) {
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
   const [isListening, setIsListening] = useState(false);
   const [command, setCommand] = useState<VoiceCommand | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Check browser support
+    const windowWithSpeech = window as unknown as SpeechRecognitionWindow;
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      windowWithSpeech.SpeechRecognition ||
+      windowWithSpeech.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setError('Speech recognition not supported in this browser');

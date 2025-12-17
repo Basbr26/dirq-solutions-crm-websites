@@ -15,7 +15,7 @@ export default function ManagerMobile() {
   const [currentView, setCurrentView] = useState<DashboardView>('approvals');
   const [approvals, setApprovals] = useState<ApprovalQueueItem[]>([]);
   const [isLoadingApprovals, setIsLoadingApprovals] = useState(true);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<Awaited<ReturnType<typeof TeamAnalyticsService.getTeamSummary>> | null>(null);
   const [teamMembers, setTeamMembers] = useState<string[]>([]);
   const [currentMemberIndex, setCurrentMemberIndex] = useState(0);
 
@@ -28,6 +28,7 @@ export default function ManagerMobile() {
       loadApprovals();
       loadTeamStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   async function loadApprovals() {
@@ -206,9 +207,9 @@ export default function ManagerMobile() {
                     <p className="text-2xl font-bold">{approvals.length}</p>
                   </div>
                   <div className="bg-green-600/10 rounded-lg p-3 border border-green-600/20">
-                    <p className="text-xs text-muted-foreground">Today Approved</p>
+                    <p className="text-xs text-muted-foreground">Team Size</p>
                     <p className="text-2xl font-bold">
-                      {stats?.approved || 0}
+                      {stats?.totalMembers || 0}
                     </p>
                   </div>
                 </div>
@@ -250,7 +251,7 @@ export default function ManagerMobile() {
                     ⚠️ Critical Alerts ({stats.criticalAlerts.length})
                   </h3>
                   <div className="space-y-1">
-                    {stats.criticalAlerts.map((alert: any, idx: number) => (
+                    {stats.criticalAlerts.map((alert: { type: string; message: string; memberId: string }, idx: number) => (
                       <p key={idx} className="text-sm">
                         {alert.message}
                       </p>
@@ -278,16 +279,16 @@ export default function ManagerMobile() {
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-card rounded-lg p-3 border border-border text-center">
-                  <p className="text-xs text-muted-foreground">Today Approved</p>
-                  <p className="text-lg font-bold">{stats?.approved || 0}</p>
+                  <p className="text-xs text-muted-foreground">On Leave</p>
+                  <p className="text-lg font-bold">{stats?.onLeave || 0}</p>
                 </div>
                 <div className="bg-card rounded-lg p-3 border border-border text-center">
-                  <p className="text-xs text-muted-foreground">Denied</p>
-                  <p className="text-lg font-bold">{stats?.denied || 0}</p>
+                  <p className="text-xs text-muted-foreground">Sick</p>
+                  <p className="text-lg font-bold">{stats?.sick || 0}</p>
                 </div>
                 <div className="bg-card rounded-lg p-3 border border-border text-center">
-                  <p className="text-xs text-muted-foreground">Undone</p>
-                  <p className="text-lg font-bold">{stats?.undone || 0}</p>
+                  <p className="text-xs text-muted-foreground">Capacity</p>
+                  <p className="text-lg font-bold">{stats?.averageCapacity || 0}%</p>
                 </div>
               </div>
             </motion.div>

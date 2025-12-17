@@ -31,7 +31,16 @@ export function useEmployeeFeed() {
 
       if (error) throw error;
 
-      return (data || []).map((event: any) => ({
+      interface NotificationEvent {
+        id: string;
+        notification_type: string;
+        title: string;
+        message: string | null;
+        created_at: string;
+        is_read: boolean;
+      }
+
+      return (data || []).map((event: NotificationEvent) => ({
         id: event.id,
         type: event.notification_type,
         title: event.title,

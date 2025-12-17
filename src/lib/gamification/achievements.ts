@@ -102,11 +102,22 @@ export const POINT_REDEMPTION = {
   parking_spot: { points: 200, label: 'VIP parkeerplaats (1 maand)' },
 };
 
+interface EmployeeMetrics {
+  yearsOfService?: number;
+  goalsExceededCount?: number;
+  absenceCount?: number;
+  helpEventsCount?: number;
+  successfulReferralsCount?: number;
+  certificationsCount?: number;
+  completedCoursesCount?: number;
+  earnedAchievements?: string[];
+}
+
 /**
  * Check if employee earned an achievement
  */
 export function checkAchievement(
-  employeeMetrics: any,
+  employeeMetrics: EmployeeMetrics,
   achievementKey: string
 ): boolean {
   const achievement = ACHIEVEMENT_DEFINITIONS[achievementKey];
@@ -171,7 +182,7 @@ export function calculateStreak(
 /**
  * Get recommended achievements for employee based on metrics
  */
-export function getRecommendedAchievements(employeeMetrics: any): string[] {
+export function getRecommendedAchievements(employeeMetrics: EmployeeMetrics): string[] {
   const recommended: string[] = [];
 
   Object.entries(ACHIEVEMENT_DEFINITIONS).forEach(([key, achievement]) => {

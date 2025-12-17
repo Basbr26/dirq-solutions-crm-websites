@@ -30,32 +30,57 @@ export function useTeamCalendar(managerId: string) {
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
 
-        // Fetch team status for entire month
-        const { data, error: err } = await supabase
-          .from('team_daily_status')
-          .select('*')
-          .eq('manager_id', managerId)
-          .gte('date', firstDay.toISOString().split('T')[0])
-          .lte('date', lastDay.toISOString().split('T')[0]);
+        // Fetch leave requests for the month
+        const { data: leaveData } = await supabase
+          .from('leave_requests')
+          .select('start_date, end_date, status')
+          .eq('status', 'approved')
+          .gte('start_date', firstDay.toISOString().split('T')[0])
+          .lte('end_date', lastDay.toISOString().split('T')[0]);
 
-        if (err) throw err;
+        // Fetch sick leave cases for the month (active cases without end_date or end_date in future)
+        const { data: sickData } = await supabase
+          .from('sick_leave_cases')
+          .select('start_date, end_date')
+          .gte('start_date', firstDay.toISOString().split('T')[0]);
+
+        // Get team size (count of profiles managed by this manager)
+        const { count: teamSize } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .eq('manager_id', managerId);
 
         // Build calendar structure
         const daysInMonth = lastDay.getDate();
         const days: TeamCalendarDay[] = [];
 
         for (let day = 1; day <= daysInMonth; day++) {
-          const dateStr = new Date(year, month, day)
-            .toISOString()
-            .split('T')[0];
-          const dayData = data?.find((d) => d.date === dateStr);
+          const currentDate = new Date(year, month, day);
+          const dateStr = currentDate.toISOString().split('T')[0];
+
+          // Count people on leave this day
+          const onLeave = leaveData?.filter((leave) => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            return currentDate >= start && currentDate <= end;
+          }).length || 0;
+
+          // Count people sick this day
+          const sick = sickData?.filter((sickLeave) => {
+            const start = new Date(sickLeave.start_date);
+            const end = sickLeave.end_date ? new Date(sickLeave.end_date) : new Date();
+            return currentDate >= start && currentDate <= end;
+          }).length || 0;
+
+          const totalAbsent = onLeave + sick;
+          const capacity = teamSize ? Math.max(0, Math.round(((teamSize - totalAbsent) / teamSize) * 100)) : 100;
 
           days.push({
-            date: new Date(year, month, day),
-            capacity: dayData?.capacity_percentage || 100,
-            onLeave: dayData?.on_leave || 0,
-            sick: dayData?.sick || 0,
-            teamSize: dayData?.total_team_size || 0,
+            date: currentDate,
+            capacity,
+            onLeave,
+            sick,
+            teamSize: teamSize || 0,
           });
         }
 

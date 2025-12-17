@@ -36,15 +36,7 @@ export default function EmployeePortal() {
               </p>
             </div>
             <div className="text-3xl">
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt="Avatar"
-                  className="w-10 h-10 rounded-full"
-                />
-              ) : (
-                '👤'
-              )}
+              👤
             </div>
           </div>
         </div>

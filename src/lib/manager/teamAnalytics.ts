@@ -35,12 +35,11 @@ export class TeamAnalyticsService {
   // Get team performance overview
   static async getTeamSummary(managerId: string): Promise<TeamSummary> {
     try {
-      // Fetch team members
+      // Fetch team members from profiles table
       const { data: teamMembers, error: membersError } = await supabase
-        .from('manager_team_assignments')
-        .select('team_member_id, active')
-        .eq('manager_id', managerId)
-        .eq('active', true);
+        .from('profiles')
+        .select('id')
+        .eq('manager_id', managerId);
 
       if (membersError) throw membersError;
 
@@ -56,23 +55,31 @@ export class TeamAnalyticsService {
         };
       }
 
-      // Fetch team capacity for today
-      const { data: capacityData, error: capacityError } = await supabase
-        .from('team_daily_status')
-        .select('*')
-        .eq('manager_id', managerId)
-        .eq('date', new Date().toISOString().split('T')[0])
-        .single();
+      const today = new Date().toISOString().split('T')[0];
 
-      if (capacityError && capacityError.code !== 'PGRST116') {
-        throw capacityError;
-      }
+      // Calculate team capacity for today
+      const { data: leaveToday } = await supabase
+        .from('leave_requests')
+        .select('id')
+        .eq('status', 'approved')
+        .lte('start_date', today)
+        .gte('end_date', today);
+
+      const { data: sickToday } = await supabase
+        .from('sick_leave_cases')
+        .select('id')
+        .lte('start_date', today)
+        .or(`end_date.is.null,end_date.gte.${today}`);
+
+      const onLeave = leaveToday?.length || 0;
+      const sick = sickToday?.length || 0;
+      const totalMembers = teamMembers.length;
+      const available = totalMembers - onLeave - sick;
+      const capacity = totalMembers > 0 ? Math.round((available / totalMembers) * 100) : 100;
 
       // Fetch individual metrics for each team member
       const memberMetrics = await Promise.all(
-        teamMembers.map((member) =>
-          this.getMemberMetrics(member.team_member_id)
-        )
+        teamMembers.map((member) => this.getMemberMetrics(member.id))
       );
 
       const topPerformer = memberMetrics.reduce((best, current) =>
@@ -84,11 +91,11 @@ export class TeamAnalyticsService {
         .slice(0, 5); // Limit to 5 alerts
 
       return {
-        totalMembers: teamMembers.length,
-        availableToday: (capacityData?.total_team_size || 0) - (capacityData?.on_leave || 0) - (capacityData?.sick || 0),
-        onLeave: capacityData?.on_leave || 0,
-        sick: capacityData?.sick || 0,
-        averageCapacity: Math.round(capacityData?.capacity_percentage || 0),
+        totalMembers,
+        availableToday: available,
+        onLeave,
+        sick,
+        averageCapacity: capacity,
         topPerformer: topPerformer || null,
         criticalAlerts: alerts,
       };
@@ -112,42 +119,97 @@ export class TeamAnalyticsService {
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, voornaam, achternaam, avatar_url, department')
+        .select('id, voornaam, achternaam, functie')
         .eq('id', memberId)
         .single();
 
       if (profileError) throw profileError;
 
-      // Fetch performance metrics
-      const { data: metrics, error: metricsError } = await supabase
-        .from('performance_metrics')
-        .select('*')
-        .eq('employee_id', memberId)
+      // Calculate real metrics from actual data
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // Get leave requests stats (approval rate calculated from approved requests)
+      const { data: leaveRequests } = await supabase
+        .from('leave_requests')
+        .select('status, created_at')
+        .eq('employee_id', memberId);
+
+      const totalRequests = leaveRequests?.length || 0;
+      const approvedRequests = leaveRequests?.filter(r => r.status === 'approved').length || 0;
+      const approvalRate = totalRequests > 0 ? Math.round((approvedRequests / totalRequests) * 100) : 85;
+
+      // Get tasks stats
+      const { data: tasks } = await supabase
+        .from('tasks')
+        .select('task_status, deadline, updated_at')
+        .eq('assigned_to', memberId);
+
+      const completedTasks = tasks?.filter(t => t.task_status === 'afgerond').length || 0;
+      const overdueTasks = tasks?.filter(t => {
+        if (t.task_status === 'afgerond') return false;
+        if (!t.deadline) return false;
+        return new Date(t.deadline) < now;
+      }).length || 0;
+
+      // Calculate average response time from activity logs
+      const { data: activities } = await supabase
+        .from('activity_logs')
+        .select('created_at, action_type')
+        .eq('user_id', memberId)
+        .in('action_type', ['approve_leave', 'deny_leave', 'complete_task'])
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(10);
 
-      if (metricsError && metricsError.code !== 'PGRST116') {
-        throw metricsError;
-      }
+      const avgResponseTime = activities && activities.length > 1
+        ? Math.round((new Date(activities[0].created_at).getTime() - new Date(activities[activities.length - 1].created_at).getTime()) / (activities.length * 60 * 60 * 1000))
+        : 2;
 
-      // Calculate performance score (0-100)
-      const performanceScore = calculatePerformanceScore(metrics);
+      // Calculate absence rate from sick leave cases
+      const { data: sickCases } = await supabase
+        .from('sick_leave_cases')
+        .select('start_date, end_date')
+        .eq('employee_id', memberId)
+        .gte('start_date', oneMonthAgo.toISOString().split('T')[0]);
+
+      const sickDays = sickCases?.reduce((total, c) => {
+        const start = new Date(c.start_date);
+        const end = c.end_date ? new Date(c.end_date) : now;
+        const days = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+        return total + days;
+      }, 0) || 0;
+      const absenceRate = Math.round((sickDays / 30) * 100);
+
+      // Calculate trends
+      const recentTasks = tasks?.filter(t => new Date(t.updated_at || t.deadline || 0) >= oneWeekAgo).length || 0;
+      const monthTasks = tasks?.filter(t => new Date(t.updated_at || t.deadline || 0) >= oneMonthAgo).length || 0;
+
+      const weekTrend = recentTasks > 0 ? Math.round((recentTasks / 7) * 100) : 0;
+      const monthTrend = monthTasks > 0 ? Math.round((monthTasks / 30) * 100) : 0;
+
+      // Calculate performance score
+      const performanceScore = calculatePerformanceScore({
+        approval_rate: approvalRate,
+        avg_response_time_hours: avgResponseTime,
+        tasks_completed: completedTasks,
+        absence_rate: absenceRate,
+      });
 
       return {
         memberId,
-        memberName: `${profile?.voornaam} ${profile?.achternaam}`,
-        memberAvatar: profile?.avatar_url,
-        department: profile?.department || 'Unknown',
-        approvalRate: metrics?.approval_rate || 85,
-        averageResponseTime: metrics?.avg_response_time_hours || 2,
-        tasksCompleted: metrics?.tasks_completed || 0,
-        tasksOverdue: metrics?.tasks_overdue || 0,
-        absenceRate: metrics?.absence_rate || 5,
+        memberName: profile ? `${profile.voornaam} ${profile.achternaam}` : 'Unknown',
+        memberAvatar: null, // Avatar URL not available in current schema
+        department: profile?.functie || 'Unknown',
+        approvalRate,
+        averageResponseTime: avgResponseTime,
+        tasksCompleted: completedTasks,
+        tasksOverdue: overdueTasks,
+        absenceRate,
         performanceScore,
         trends: {
-          thisWeek: metrics?.week_trend || 0,
-          thisMonth: metrics?.month_trend || 0,
+          thisWeek: weekTrend,
+          thisMonth: monthTrend,
         },
       };
     } catch (error) {
@@ -203,7 +265,14 @@ export class TeamAnalyticsService {
 }
 
 // Helper: Calculate performance score
-function calculatePerformanceScore(metrics: any): number {
+interface PerformanceMetrics {
+  approval_rate: number;
+  avg_response_time_hours: number;
+  tasks_completed: number;
+  absence_rate: number;
+}
+
+function calculatePerformanceScore(metrics: PerformanceMetrics | null): number {
   if (!metrics) return 50; // Default mid-score
 
   const approval = (metrics.approval_rate || 85) * 0.3;

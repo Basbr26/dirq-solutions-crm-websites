@@ -25,7 +25,7 @@ export function AchievementBadges() {
     return acc;
   }, {} as Record<string, typeof achievements>);
 
-  const shareToLinkedIn = (badge: any) => {
+  const shareToLinkedIn = (badge: { name: string; id: string }) => {
     const text = `🎉 Ik heb zojuist het "${badge.name}" badge verdiend! 🏆 #HR #Development`;
     const url = `https://www.linkedin.com/feed/?linkOrigin=LI_BADGE`;
     // In reality, would use LinkedIn Share API
