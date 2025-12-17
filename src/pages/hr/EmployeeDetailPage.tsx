@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { UniversalDocumentGenerator } from '@/components/documents/UniversalDocumentGenerator';
 import { DocumentCard } from '@/components/documents/DocumentCard';
+import { EditEmployeeDialog } from '@/components/employee/EditEmployeeDialog';
 
 interface EmployeeDetail {
   id: string;
@@ -121,6 +122,7 @@ export default function EmployeeDetailPage() {
   const [sickLeaveCases, setSickLeaveCases] = useState<SickLeaveCase[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -264,7 +266,7 @@ export default function EmployeeDetailPage() {
       title={`${employee.voornaam} ${employee.achternaam}`}
       subtitle={employee.functie || undefined}
       actions={
-        <Button variant="outline" onClick={() => navigate(`/hr/medewerkers/${id}/bewerken`)} className="gap-2">
+        <Button variant="outline" onClick={() => setEditDialogOpen(true)} className="gap-2">
           <Edit className="h-4 w-4" />
           Bewerken
         </Button>
@@ -521,6 +523,16 @@ export default function EmployeeDetailPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Edit Dialog */}
+      {employee && (
+        <EditEmployeeDialog
+          employee={employee}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSuccess={loadEmployee}
+        />
+      )}
     </AppLayout>
   );
 }
