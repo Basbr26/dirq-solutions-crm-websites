@@ -58,6 +58,8 @@ export default function EmployeesPage() {
 
   const loadData = async () => {
     try {
+      console.log('🔍 Loading employees list...');
+      
       const [employeesResult, departmentsResult] = await Promise.all([
         supabase
           .from('profiles')
@@ -69,13 +71,35 @@ export default function EmployeesPage() {
           .order('name', { ascending: true }),
       ]);
 
-      if (employeesResult.error) throw employeesResult.error;
-      if (departmentsResult.error) throw departmentsResult.error;
+      console.log('📊 Employees query:', {
+        count: employeesResult.data?.length || 0,
+        error: employeesResult.error
+      });
+      console.log('📊 Departments query:', {
+        count: departmentsResult.data?.length || 0,
+        error: departmentsResult.error
+      });
 
+      if (employeesResult.error) {
+        console.error('❌ Employees query error:', employeesResult.error);
+        throw employeesResult.error;
+      }
+      if (departmentsResult.error) {
+        console.error('❌ Departments query error:', departmentsResult.error);
+        throw departmentsResult.error;
+      }
+
+      console.log('✅ Employees loaded:', employeesResult.data?.length || 0);
       setEmployees(employeesResult.data || []);
       setDepartments(departmentsResult.data || []);
     } catch (error) {
-      console.error('Error loading employees:', error);
+      console.error('❌ Error loading employees:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown',
+        code: (error as any)?.code,
+        details: (error as any)?.details,
+        hint: (error as any)?.hint
+      });
       toast.error('Fout bij laden van medewerkers');
     } finally {
       setLoading(false);

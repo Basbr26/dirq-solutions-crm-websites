@@ -82,6 +82,8 @@ export default function EmployeeDetailPage() {
     if (!id) return;
 
     try {
+      console.log('🔍 Loading employee with ID:', id);
+      
       const [employeeResult, casesResult] = await Promise.all([
         supabase
           .from('profiles')
@@ -95,10 +97,26 @@ export default function EmployeeDetailPage() {
           .order('start_date', { ascending: false }),
       ]);
 
-      if (employeeResult.error) throw employeeResult.error;
-      if (casesResult.error) throw casesResult.error;
+      console.log('📊 Employee query result:', {
+        data: employeeResult.data,
+        error: employeeResult.error
+      });
+      console.log('📊 Cases query result:', {
+        count: casesResult.data?.length || 0,
+        error: casesResult.error
+      });
+
+      if (employeeResult.error) {
+        console.error('❌ Employee query error:', employeeResult.error);
+        throw employeeResult.error;
+      }
+      if (casesResult.error) {
+        console.error('❌ Cases query error:', casesResult.error);
+        throw casesResult.error;
+      }
 
       if (!employeeResult.data) {
+        console.warn('⚠️ No employee data found for ID:', id);
         toast.error('Medewerker niet gevonden');
         navigate('/hr/medewerkers');
         return;
@@ -112,10 +130,16 @@ export default function EmployeeDetailPage() {
           : employeeResult.data.manager,
       };
 
+      console.log('✅ Employee loaded successfully:', employeeData.voornaam, employeeData.achternaam);
       setEmployee(employeeData as EmployeeDetail);
       setSickLeaveCases(casesResult.data || []);
     } catch (error) {
-      console.error('Error loading employee:', error);
+      console.error('❌ Error loading employee:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown',
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined
+      });
       const errorMessage = error instanceof Error ? error.message : 'Onbekende fout';
       toast.error(`Fout bij laden van medewerker: ${errorMessage}`);
     } finally {
