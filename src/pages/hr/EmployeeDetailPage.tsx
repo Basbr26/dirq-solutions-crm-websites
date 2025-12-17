@@ -373,16 +373,140 @@ export default function EmployeeDetailPage() {
               {/* Personal Info */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Persoonlijke gegevens</CardTitle>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    Persoonlijke gegevens
+                  </CardTitle>
+                  <CardDescription>Basis informatie van de medewerker</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <InfoRow label="Geboortedatum" value={formatDate(employee.date_of_birth)} />
-                  <InfoRow label="E-mail" value={employee.email} />
-                  <InfoRow label="Telefoon" value={employee.telefoon || '-'} />
-                  <Separator />
-                  <InfoRow label="Adres" value={employee.address || '-'} />
-                  <InfoRow label="Postcode" value={employee.postal_code || '-'} />
-                  <InfoRow label="Plaats" value={employee.city || '-'} />
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Volledige naam</p>
+                        <p className="font-medium">{employee.voornaam} {employee.achternaam}</p>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-start gap-3">
+                      <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Geboortedatum</p>
+                        <p className="font-medium">{formatDate(employee.date_of_birth)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">E-mail</p>
+                        <a href={`mailto:${employee.email}`} className="font-medium text-primary hover:underline">
+                          {employee.email}
+                        </a>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Telefoon</p>
+                        {employee.telefoon ? (
+                          <a href={`tel:${employee.telefoon}`} className="font-medium text-primary hover:underline">
+                            {employee.telefoon}
+                          </a>
+                        ) : (
+                          <p className="font-medium text-muted-foreground">-</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Address Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    Adresgegevens
+                  </CardTitle>
+                  <CardDescription>Woonadres van de medewerker</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Straat + huisnummer</p>
+                        <p className="font-medium">{employee.address || '-'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col">
+                        <p className="text-sm text-muted-foreground">Postcode</p>
+                        <p className="font-medium">{employee.postal_code || '-'}</p>
+                      </div>
+                      
+                      <div className="flex flex-col">
+                        <p className="text-sm text-muted-foreground">Plaats</p>
+                        <p className="font-medium">{employee.city || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Work Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-primary" />
+                    Werkgegevens
+                  </CardTitle>
+                  <CardDescription>Functie en organisatie informatie</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Functie</p>
+                        <p className="font-medium">{employee.functie || '-'}</p>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="flex items-start gap-3">
+                      <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Afdeling</p>
+                        <p className="font-medium">{employee.department?.name || '-'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Leidinggevende</p>
+                        <p className="font-medium">
+                          {employee.manager ? `${employee.manager.voornaam} ${employee.manager.achternaam}` : '-'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <CreditCard className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Personeelsnummer</p>
+                        <p className="font-medium">{employee.employee_number || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -390,40 +514,35 @@ export default function EmployeeDetailPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    <Heart className="h-5 w-5 text-red-500" />
                     Noodcontact
                   </CardTitle>
+                  <CardDescription>Te bereiken in geval van nood</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <InfoRow label="Naam" value={employee.emergency_contact_name || '-'} />
-                  <InfoRow label="Telefoon" value={employee.emergency_contact_phone || '-'} />
-                </CardContent>
-              </Card>
-
-              {/* Bank Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Financieel
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <InfoRow label="Bankrekening (IBAN)" value={employee.bank_account || '-'} />
-                </CardContent>
-              </Card>
-
-              {/* Manager */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Organisatie</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <InfoRow label="Afdeling" value={employee.department?.name || '-'} />
-                  <InfoRow 
-                    label="Leidinggevende" 
-                    value={employee.manager ? `${employee.manager.voornaam} ${employee.manager.achternaam}` : '-'} 
-                  />
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Naam</p>
+                        <p className="font-medium">{employee.emergency_contact_name || '-'}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3">
+                      <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground">Telefoon</p>
+                        {employee.emergency_contact_phone ? (
+                          <a href={`tel:${employee.emergency_contact_phone}`} className="font-medium text-red-600 hover:underline">
+                            {employee.emergency_contact_phone}
+                          </a>
+                        ) : (
+                          <p className="font-medium text-muted-foreground">-</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>
