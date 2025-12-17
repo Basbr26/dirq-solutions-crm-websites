@@ -228,7 +228,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSuccess }: 
               </TabsTrigger>
               <TabsTrigger value="work">
                 <Briefcase className="h-4 w-4 mr-1" />
-                Werk
+                Dienstverband
               </TabsTrigger>
               <TabsTrigger value="contract">
                 <CreditCard className="h-4 w-4 mr-1" />
@@ -308,7 +308,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSuccess }: 
               </div>
             </TabsContent>
 
-            {/* Work Tab */}
+            {/* Dienstverband Tab */}
             <TabsContent value="work" className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
