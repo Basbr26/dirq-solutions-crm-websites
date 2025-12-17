@@ -11,6 +11,7 @@ import DashboardHR from "./pages/DashboardHR";
 import DashboardManager from "./pages/DashboardManager";
 import DashboardMedewerker from "./pages/DashboardMedewerker";
 import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
+import DashboardExecutive from "./pages/DashboardExecutive";
 import CaseDetail from "./pages/CaseDetail";
 import NotFound from "./pages/NotFound";
 import EmployeesPage from "./pages/hr/EmployeesPage";
@@ -24,6 +25,8 @@ import OnboardingPage from "./pages/hr/OnboardingPage";
 import OnboardingDetailPage from "./pages/hr/OnboardingDetailPage";
 import OnboardingTemplatesPage from "./pages/hr/OnboardingTemplatesPage";
 import WelcomePage from "./pages/employee/WelcomePage";
+import DocumentProcessing from "./pages/DocumentProcessing";
+import { HRChatbot } from "./components/ai/HRChatbot";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +86,24 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
                     <DashboardHR />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/dashboard/executive" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <DashboardExecutive />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/documents/processing" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                    <DocumentProcessing />
                   </ProtectedRoute>
                 } 
               />
@@ -206,6 +227,9 @@ const App = () => (
               
               <Route path="*" element={<NotFound />} />
             </Routes>
+            
+            {/* AI HR Chatbot - available on all authenticated pages */}
+            <HRChatbot />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

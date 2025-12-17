@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LogOut, Shield, Users } from 'lucide-react';
+import { LogOut, Shield, Users, BarChart3 } from 'lucide-react';
 import { DirqLogo } from './DirqLogo';
 import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from './ThemeToggle';
@@ -33,6 +33,7 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
 
   const isOnSuperAdminDashboard = location.pathname === '/dashboard/super-admin';
   const isOnHRDashboard = location.pathname === '/dashboard/hr';
+  const isOnExecutiveDashboard = location.pathname === '/dashboard/executive';
 
   return (
     <header className="bg-card border-b border-border">
@@ -50,6 +51,19 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
           
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {children}
+            
+            {/* Executive Dashboard button for HR/Super Admin */}
+            {(role === 'hr' || role === 'super_admin') && !isOnExecutiveDashboard && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/dashboard/executive')}
+                className="gap-2 hidden sm:flex"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Executive
+              </Button>
+            )}
             
             {/* Dashboard switcher for super_admin */}
             {role === 'super_admin' && (
@@ -99,6 +113,14 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                
+                {/* Executive Dashboard for HR/Super Admin */}
+                {(role === 'hr' || role === 'super_admin') && !isOnExecutiveDashboard && (
+                  <DropdownMenuItem onClick={() => navigate('/dashboard/executive')} className="cursor-pointer sm:hidden">
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Executive Dashboard
+                  </DropdownMenuItem>
+                )}
                 
                 {/* Mobile dashboard switcher for super_admin */}
                 {role === 'super_admin' && (
