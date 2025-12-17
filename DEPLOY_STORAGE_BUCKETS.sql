@@ -167,7 +167,7 @@ USING (
   AND EXISTS (
     SELECT 1 FROM user_roles
     WHERE user_id = auth.uid()
-    AND role IN ('hr', 'hr_medewerker', 'super_admin')
+    AND role IN ('hr', 'super_admin')
   )
 );
 

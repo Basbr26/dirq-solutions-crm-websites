@@ -109,7 +109,7 @@ BEGIN
   FOR hr_user IN
     SELECT ur.user_id
     FROM public.user_roles ur
-    WHERE ur.role IN ('hr_medewerker', 'super_admin')
+    WHERE ur.role IN ('hr', 'super_admin')
   LOOP
     INSERT INTO public.notifications (
       user_id,
