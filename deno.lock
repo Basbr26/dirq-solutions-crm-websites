@@ -73,6 +73,7 @@
     "npm:tailwindcss@^3.4.17": "3.4.19_postcss@8.5.6_jiti@1.21.7",
     "npm:tesseract.js@7": "7.0.0",
     "npm:typescript-eslint@^8.38.0": "8.50.0_eslint@9.39.2_typescript@5.9.3_@typescript-eslint+parser@8.50.0__eslint@9.39.2__typescript@5.9.3",
+    "npm:typescript@5.9.3": "5.9.3",
     "npm:typescript@^5.8.3": "5.9.3",
     "npm:vaul@~0.9.9": "0.9.9_react@18.3.1_react-dom@18.3.1__react@18.3.1_@types+react@18.3.27_@types+react-dom@18.3.7__@types+react@18.3.27",
     "npm:vite@5.4.21": "5.4.21_@types+node@22.19.1",

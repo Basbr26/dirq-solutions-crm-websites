@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { UserPlus, Mail, User, Briefcase, Calendar } from 'lucide-react';
+import { UserPlus, Mail, User, Briefcase, Calendar, CheckCircle2, Copy } from 'lucide-react';
 
 const employeeSchema = z.object({
   email: z.string().email('Ongeldig emailadres'),
@@ -69,7 +69,10 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
-  const [generatedPassword, setGeneratedPassword] = useState<string | null>(null);
+  const [generatedCredentials, setGeneratedCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -92,7 +95,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
     if (open) {
       loadDepartments();
       loadManagers();
-      setGeneratedPassword(null);
+      setGeneratedCredentials(null);
       reset();
     }
   }, [open, reset]);
@@ -111,12 +114,25 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
     setManagers(data || []);
   };
 
+  const generatePassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
   const onSubmit = async (data: EmployeeFormData) => {
     setLoading(true);
     try {
-      // First create auth user via Supabase Admin API
+      const generatedPassword = generatePassword();
+
+      // First create auth user via Supabase Admin API with password
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: data.email,
+        password: generatedPassword,
         email_confirm: true,
         user_metadata: {
           voornaam: data.voornaam,
@@ -148,26 +164,21 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
           contract_type: data.contract_type || null,
           hours_per_week: data.hours_per_week || null,
           invitation_sent_at: new Date().toISOString(),
+          temporary_password: generatedPassword,
+          must_change_password: true,
         });
 
       if (profileError) throw profileError;
 
-      // Send password reset email
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/auth?mode=reset`,
+      // Toon inloggegevens
+      setGeneratedCredentials({
+        email: data.email,
+        password: generatedPassword,
       });
 
-      if (resetError) {
-        console.error('Reset email error:', resetError);
-        // Don't throw - account is created, just inform user
-      }
-
-      toast.success(
-        `Medewerker aangemaakt! ${resetError ? 'Let op: uitnodigingsmail kon niet worden verzonden.' : 'Uitnodigingsmail verzonden naar ' + data.email}`
-      );
+      toast.success(`Medewerker aangemaakt!`);
       
       onSuccess();
-      onOpenChange(false);
     } catch (error) {
       console.error('Create employee error:', error);
       toast.error('Aanmaken mislukt: ' + (error instanceof Error ? error.message : 'Onbekende fout'));
@@ -175,6 +186,87 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
       setLoading(false);
     }
   };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Gekopieerd naar klembord");
+  };
+
+  const closeCredentialsDialog = () => {
+    setGeneratedCredentials(null);
+    onOpenChange(false);
+  };
+
+  // Inloggegevens dialog
+  if (generatedCredentials) {
+    return (
+      <Dialog open={true} onOpenChange={closeCredentialsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Inloggegevens
+            </DialogTitle>
+            <DialogDescription>
+              Geef deze gegevens door aan de medewerker. Het wachtwoord moet bij eerste login worden gewijzigd.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">Email</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                    {generatedCredentials.email}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(generatedCredentials.email)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground">Tijdelijk wachtwoord</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                    {generatedCredentials.password}
+                  </code>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(generatedCredentials.password)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={() =>
+                copyToClipboard(
+                  `Email: ${generatedCredentials.email}\nWachtwoord: ${generatedCredentials.password}`
+                )
+              }
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Kopieer beide
+            </Button>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={closeCredentialsDialog}>Sluiten</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
