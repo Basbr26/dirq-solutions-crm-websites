@@ -318,7 +318,33 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSuccess }: 
 
                 <div className="space-y-2">
                   <Label htmlFor="employee_number">Personeelsnummer</Label>
-                  <Input id="employee_number" {...register('employee_number')} />
+                  <div className="flex gap-2">
+                    <Input 
+                      id="employee_number" 
+                      {...register('employee_number')} 
+                      readOnly
+                      className="bg-muted"
+                      placeholder="Automatisch gegenereerd"
+                    />
+                    {!watch('employee_number') && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={async () => {
+                          const { data, error } = await supabase.rpc('generate_employee_number');
+                          if (!error && data) {
+                            setValue('employee_number', data);
+                            toast.success('Personeelsnummer gegenereerd');
+                          }
+                        }}
+                      >
+                        Genereer
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Wordt automatisch gegenereerd bij aanmaken nieuwe medewerker
+                  </p>
                 </div>
 
                 <div className="space-y-2">
