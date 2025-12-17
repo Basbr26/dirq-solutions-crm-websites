@@ -1,7 +1,10 @@
+// deno-lint-ignore no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+// deno-lint-ignore no-explicit-any
+const supabaseUrl = (Deno as any).env.get("SUPABASE_URL")!;
+// deno-lint-ignore no-explicit-any
+const supabaseAnonKey = (Deno as any).env.get("SUPABASE_ANON_KEY")!;
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -24,7 +27,7 @@ interface Notification {
  * Runs every 5 minutes
  */
 // deno-lint-ignore no-explicit-any
-Deno.serve(async (req: any) => {
+(Deno as any).serve(async (req: any) => {
   try {
     if (req.method !== "POST") {
       return new Response("Method not allowed", { status: 405 });
@@ -162,7 +165,7 @@ async function sendEmail(notification: Notification, preferences: Record<string,
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+        "Authorization": `Bearer ${(Deno as any).env.get("RESEND_API_KEY")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -204,12 +207,12 @@ async function sendSms(notification: Notification, preferences: Record<string, u
 
     // Call backend SMS endpoint
     const response = await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-sms`,
+      `${(Deno as any).env.get("SUPABASE_URL")}/functions/v1/send-sms`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          "Authorization": `Bearer ${(Deno as any).env.get("SUPABASE_ANON_KEY")}`,
         },
         body: JSON.stringify({
           to: user.phone,
@@ -243,8 +246,8 @@ async function sendPushNotification(
       return false;
     }
 
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+    const vapidPublicKey = (Deno as any).env.get("VAPID_PUBLIC_KEY");
+    const vapidPrivateKey = (Deno as any).env.get("VAPID_PRIVATE_KEY");
 
     if (!vapidPublicKey || !vapidPrivateKey) {
       return false;

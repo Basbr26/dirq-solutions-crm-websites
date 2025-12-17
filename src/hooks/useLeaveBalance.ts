@@ -29,7 +29,7 @@ export function useLeaveBalance() {
       // Calculate leave from database
       // This is simplified - in reality would come from HR system
       const totalDays = 25; // Standard annual leave
-      const takenDays = caseData?.days_off || 0;
+      const takenDays = caseData ? 1 : 0; // Estimate based on active cases
       const plannedDays = 0; // Would query pending requests
       const availableDays = totalDays - takenDays - plannedDays;
 

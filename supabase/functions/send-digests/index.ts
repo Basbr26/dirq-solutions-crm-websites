@@ -1,8 +1,12 @@
+// deno-lint-ignore no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// deno-lint-ignore no-explicit-any
 import { getHours } from "https://esm.sh/date-fns@2.30.0";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// deno-lint-ignore no-explicit-any
+const supabaseUrl = (Deno as any).env.get("SUPABASE_URL")!;
+// deno-lint-ignore no-explicit-any
+const supabaseServiceKey = (Deno as any).env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -22,7 +26,8 @@ interface Notification {
  * Runs at 9am, 1pm, and 5pm
  */
 // deno-lint-ignore no-explicit-any
-Deno.serve(async (req: any) => {
+// deno-lint-ignore no-explicit-any
+(Deno as any).serve(async (req: any) => {
   try {
     if (req.method !== "POST") {
       return new Response("Method not allowed", { status: 405 });
@@ -147,7 +152,7 @@ async function sendDigestEmail(email: string, htmlContent: string): Promise<bool
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
+        "Authorization": `Bearer ${(Deno as any).env.get("RESEND_API_KEY")}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

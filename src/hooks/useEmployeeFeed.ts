@@ -23,24 +23,24 @@ export function useEmployeeFeed() {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('employee_feed_events')
+        .from('notifications')
         .select('*')
-        .eq('employee_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (error) throw error;
 
-      return (data || []).map(event => ({
+      return (data || []).map((event: any) => ({
         id: event.id,
-        type: event.event_type,
+        type: event.notification_type,
         title: event.title,
-        subtitle: event.subtitle || '',
-        icon: event.icon || '📝',
-        actionUrl: event.action_url,
+        subtitle: event.message || '',
+        icon: '📝',
+        actionUrl: '',
         timestamp: new Date(event.created_at),
-        priority: event.priority as 'high' | 'normal' | 'low',
-        read: event.read,
+        priority: 'normal' as const,
+        read: event.is_read,
       })) as FeedUpdate[];
     },
     enabled: !!user?.id,
@@ -49,8 +49,8 @@ export function useEmployeeFeed() {
   const markAsReadMutation = useMutation({
     mutationFn: async (feedId: string) => {
       const { error } = await supabase
-        .from('employee_feed_events')
-        .update({ read: true })
+        .from('notifications')
+        .update({ is_read: true })
         .eq('id', feedId);
 
       if (error) throw error;
