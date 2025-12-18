@@ -160,8 +160,8 @@ export function DepartmentDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Geen manager</SelectItem>
-                      {managers?.map((manager) => (
+                      <SelectItem value="none">Geen manager</SelectItem>
+                      {managers?.filter(m => m.id && m.id.trim() !== '').map((manager) => (
                         <SelectItem key={manager.id} value={manager.id}>
                           {manager.voornaam} {manager.achternaam}
                           {manager.functie && ` - ${manager.functie}`}

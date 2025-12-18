@@ -267,7 +267,7 @@ export default function EmployeesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle afdelingen</SelectItem>
-              {departments.map(dept => (
+              {departments.filter(d => d.id && d.id.trim() !== '').map(dept => (
                 <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
               ))}
             </SelectContent>

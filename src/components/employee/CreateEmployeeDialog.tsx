@@ -371,8 +371,8 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
                       <SelectValue placeholder="Selecteer afdeling" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Geen afdeling</SelectItem>
-                      {departments.map((dept) => (
+                      <SelectItem value="none">Geen afdeling</SelectItem>
+                      {departments.filter(d => d.id && d.id.trim() !== '').map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           {dept.name}
                         </SelectItem>
@@ -392,8 +392,8 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
                       <SelectValue placeholder="Selecteer leidinggevende" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Geen leidinggevende</SelectItem>
-                      {managers.map((manager) => (
+                      <SelectItem value="none">Geen leidinggevende</SelectItem>
+                      {managers.filter(m => m.id && m.id.trim() !== '').map((manager) => (
                         <SelectItem key={manager.id} value={manager.id}>
                           {manager.voornaam} {manager.achternaam}
                         </SelectItem>
@@ -423,7 +423,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
                       <SelectValue placeholder="Selecteer type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Geen</SelectItem>
+                      <SelectItem value="none">Geen</SelectItem>
                       <SelectItem value="vast">Vast</SelectItem>
                       <SelectItem value="tijdelijk">Tijdelijk</SelectItem>
                       <SelectItem value="oproep">Oproep</SelectItem>

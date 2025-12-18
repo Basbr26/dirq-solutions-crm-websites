@@ -488,7 +488,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
                 </SelectTrigger>
                 <SelectContent className="bg-popover">
                   <SelectItem value="none">Geen manager</SelectItem>
-                  {managers.map((mgr) => (
+                  {managers.filter(m => m.id && m.id.trim() !== '').map((mgr) => (
                     <SelectItem key={mgr.id} value={mgr.id}>
                       {mgr.voornaam} {mgr.achternaam}
                     </SelectItem>

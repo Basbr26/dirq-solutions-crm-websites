@@ -368,7 +368,7 @@ export default function EmployeeCreatePage() {
                     <SelectValue placeholder="Selecteer afdeling" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map((dept) => (
+                    {departments.filter(d => d.id && d.id.trim() !== '').map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name}
                       </SelectItem>
@@ -387,7 +387,7 @@ export default function EmployeeCreatePage() {
                     <SelectValue placeholder="Selecteer leidinggevende" />
                   </SelectTrigger>
                   <SelectContent>
-                    {managers.map((mgr) => (
+                    {managers.filter(m => m.id && m.id.trim() !== '').map((mgr) => (
                       <SelectItem key={mgr.id} value={mgr.id}>
                         {mgr.voornaam} {mgr.achternaam}
                       </SelectItem>

@@ -145,7 +145,7 @@ export function OfferLetterGenerator({ employeeId, contractId }: OfferLetterGene
                   <SelectValue placeholder="Selecteer medewerker" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees?.map((emp) => (
+                  {employees?.filter(e => e.id && e.id.trim() !== '').map((emp) => (
                     <SelectItem key={emp.id} value={emp.id}>
                       {emp.full_name} ({emp.email})
                     </SelectItem>
@@ -164,7 +164,7 @@ export function OfferLetterGenerator({ employeeId, contractId }: OfferLetterGene
                   <SelectValue placeholder="Selecteer contract" />
                 </SelectTrigger>
                 <SelectContent>
-                  {contracts?.map((contract) => (
+                  {contracts?.filter(c => c.id && c.id.trim() !== '').map((contract) => (
                     <SelectItem key={contract.id} value={contract.id}>
                       {contract.job_title} - {contract.contract_type} (
                       {new Date(contract.start_date).toLocaleDateString("nl-NL")})
@@ -183,8 +183,8 @@ export function OfferLetterGenerator({ employeeId, contractId }: OfferLetterGene
                 <SelectValue placeholder="Standaard template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Standaard template</SelectItem>
-                {templates?.map((template) => (
+                <SelectItem value="none">Standaard template</SelectItem>
+                {templates?.filter(t => t.id && t.id.trim() !== '').map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.template_name}
                     {template.is_default && " (Standaard)"}

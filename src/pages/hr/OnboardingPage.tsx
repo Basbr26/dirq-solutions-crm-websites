@@ -332,7 +332,7 @@ export default function OnboardingPage() {
                       <SelectValue placeholder="Selecteer medewerker" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
-                      {availableEmployees.map((emp) => (
+                      {availableEmployees.filter(e => e.id && e.id.trim() !== '').map((emp) => (
                         <SelectItem key={emp.id} value={emp.id}>
                           {emp.voornaam} {emp.achternaam} - {emp.email}
                         </SelectItem>
@@ -347,7 +347,7 @@ export default function OnboardingPage() {
                       <SelectValue placeholder="Selecteer template" />
                     </SelectTrigger>
                     <SelectContent className="bg-popover">
-                      {templates.map((template) => (
+                      {templates.filter(t => t.id && t.id.trim() !== '').map((template) => (
                         <SelectItem key={template.id} value={template.id}>
                           {template.name}
                         </SelectItem>

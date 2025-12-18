@@ -403,7 +403,7 @@ export default function EmployeeEditPage() {
                     <SelectValue placeholder="Selecteer afdeling" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map((dept) => (
+                    {departments.filter(d => d.id && d.id.trim() !== '').map((dept) => (
                       <SelectItem key={dept.id} value={dept.id}>
                         {dept.name}
                       </SelectItem>

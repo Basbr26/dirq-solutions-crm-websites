@@ -357,8 +357,8 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSuccess }: 
                       <SelectValue placeholder="Selecteer afdeling" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Geen afdeling</SelectItem>
-                      {departments.map((dept) => (
+                      <SelectItem value="none">Geen afdeling</SelectItem>
+                      {departments.filter(d => d.id && d.id.trim() !== '').map((dept) => (
                         <SelectItem key={dept.id} value={dept.id}>
                           {dept.name}
                         </SelectItem>
@@ -377,8 +377,8 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSuccess }: 
                       <SelectValue placeholder="Selecteer manager" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Geen manager</SelectItem>
-                      {managers.map((mgr) => (
+                      <SelectItem value="none">Geen manager</SelectItem>
+                      {managers.filter(m => m.id && m.id.trim() !== '').map((mgr) => (
                         <SelectItem key={mgr.id} value={mgr.id}>
                           {mgr.voornaam} {mgr.achternaam}
                         </SelectItem>
