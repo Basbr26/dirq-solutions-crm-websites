@@ -26,7 +26,7 @@ export default function CostAnalyticsDashboard() {
   });
 
   // Fetch cost summary data
-  const { data: costSummary, isLoading: costLoading } = useQuery({
+  const { data: costSummary, isLoading: costLoading, error: costError } = useQuery({
     queryKey: ["cost-summary", selectedYear, selectedDepartment],
     queryFn: async () => {
       let query = supabase
@@ -135,6 +135,43 @@ export default function CostAnalyticsDashboard() {
           </div>
           <div className="h-96 bg-muted rounded"></div>
         </div>
+      </div>
+    );
+  }
+
+  if (costError) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <TrendingDown className="h-5 w-5" />
+              Kostenanalyse niet beschikbaar
+            </CardTitle>
+            <CardDescription>
+              De kostenanalyse module vereist database migraties die nog niet zijn uitgevoerd.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm font-medium mb-2">Ontbrekende database componenten:</p>
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                <li>Tabel: <code className="bg-background px-1 rounded">employee_cost_summary</code></li>
+                <li>View: <code className="bg-background px-1 rounded">v_employee_total_compensation</code></li>
+              </ul>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium mb-1">Technische details:</p>
+              <code className="block bg-background p-2 rounded text-xs">
+                {costError instanceof Error ? costError.message : 'Unknown error'}
+              </code>
+            </div>
+            <p className="text-sm">
+              Neem contact op met de systeembeheerder om de benodigde database migraties uit te voeren.
+              Zie <code className="bg-muted px-1 rounded">supabase/migrations/20251218_company_cost_management.sql</code>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
