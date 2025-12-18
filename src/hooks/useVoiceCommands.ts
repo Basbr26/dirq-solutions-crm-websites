@@ -46,7 +46,6 @@ const COMMANDS: RecognitionCommand[] = [
 ];
 
 // Browser SpeechRecognition API types
-/* eslint-disable @typescript-eslint/no-explicit-any */
 interface SpeechRecognitionWindow extends Window {
   SpeechRecognition?: any;
   webkitSpeechRecognition?: any;

@@ -68,16 +68,24 @@ export default function CompanySettingsPage() {
     const values = Object.fromEntries(formData.entries());
     
     // Convert numeric fields
-    ['fiscal_year_start_month', 'payroll_day_of_month', 'employer_social_charges_pct', 
-     'pension_employer_contribution_pct', 'pension_employee_contribution_pct',
-     'overtime_threshold_hours_per_week', 'overtime_rate_multiplier',
-     'holiday_allowance_pct', 'holiday_allowance_payment_month',
-     'default_fulltime_hours_per_week', 'probation_period_months', 'notice_period_weeks'
-    ].forEach(field => {
-      if (values[field]) values[field] = parseFloat(values[field] as string);
+    const numericFields = [
+      'fiscal_year_start_month', 'payroll_day_of_month', 'employer_social_charges_percentage', 
+      'pension_employer_percentage', 'pension_employee_percentage',
+      'overtime_threshold_hours', 'overtime_rate',
+      'holiday_allowance_percentage', 'holiday_allowance_month',
+      'default_fulltime_hours', 'probation_period_months', 'notice_period_weeks'
+    ];
+    
+    const processedValues: any = {};
+    Object.entries(values).forEach(([key, value]) => {
+      if (numericFields.includes(key) && value) {
+        processedValues[key] = parseFloat(value as string);
+      } else {
+        processedValues[key] = value || null;
+      }
     });
     
-    saveMutation.mutate(values);
+    saveMutation.mutate(processedValues);
   };
 
   if (isLoading) {

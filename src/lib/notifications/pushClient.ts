@@ -221,7 +221,6 @@ export class PushNotificationClient {
       }
 
       const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return subscription ? (subscription.toJSON() as any) : null;
     } catch (error) {
       console.error('Error getting subscription:', error);
@@ -260,7 +259,6 @@ export class PushNotificationClient {
         return false;
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (this.serviceWorkerRegistration as any).sync.register('sync-notifications');
       console.log('Background sync registered');
       return true;
@@ -286,7 +284,6 @@ export class PushNotificationClient {
       }
 
       // Register periodic sync to check every 12 hours
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (this.serviceWorkerRegistration as any).periodicSync.register('check-notifications', {
         minInterval: 12 * 60 * 60 * 1000 // 12 hours
       });

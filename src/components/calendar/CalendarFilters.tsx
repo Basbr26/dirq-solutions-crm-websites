@@ -1,112 +1,118 @@
-import { useState } from 'react';
-import { useMutation } from '@tantml:parameter>
-<invoke name="create_file">
-<parameter name="content">import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CalendarFiltersProps {
   filters: {
     meeting: boolean;
-    task: boolean;
+    personal: boolean;
+    absence: boolean;
     leave: boolean;
-    birthday: boolean;
     training: boolean;
-    review: boolean;
-    deadline: boolean;
-    other: boolean;
+    birthday: boolean;
+    company: boolean;
+    teamLeave: boolean;
   };
   onChange: (filters: any) => void;
-  onClose: () => void;
 }
 
-const eventTypes = [
-  { key: 'meeting', label: 'Meetings', color: '#3B82F6' },
-  { key: 'task', label: 'Taken', color: '#F59E0B' },
-  { key: 'leave', label: 'Verlof', color: '#10B981' },
-  { key: 'birthday', label: 'Verjaardagen', color: '#EC4899' },
-  { key: 'training', label: 'Training', color: '#8B5CF6' },
-  { key: 'review', label: 'Reviews', color: '#6366F1' },
-  { key: 'deadline', label: 'Deadlines', color: '#EF4444' },
-  { key: 'other', label: 'Overig', color: '#6B7280' },
-];
-
-export function CalendarFilters({ filters, onChange, onClose }: CalendarFiltersProps) {
-  const toggleFilter = (key: string) => {
-    onChange({
-      ...filters,
-      [key]: !filters[key as keyof typeof filters]
-    });
+export function CalendarFilters({ filters, onChange }: CalendarFiltersProps) {
+  const handleFilterChange = (key: string, checked: boolean) => {
+    onChange({ ...filters, [key]: checked });
   };
-
-  const activeCount = Object.values(filters).filter(Boolean).length;
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">
-            Event Filters ({activeCount}/{eventTypes.length})
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+        <CardTitle className="text-base">Filters</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
-          {eventTypes.map(type => (
-            <Badge
-              key={type.key}
-              variant={filters[type.key as keyof typeof filters] ? 'default' : 'outline'}
-              className="cursor-pointer"
-              style={{
-                backgroundColor: filters[type.key as keyof typeof filters] 
-                  ? type.color 
-                  : 'transparent',
-                borderColor: type.color,
-                color: filters[type.key as keyof typeof filters] 
-                  ? 'white' 
-                  : type.color
-              }}
-              onClick={() => toggleFilter(type.key)}
-            >
-              {type.label}
-            </Badge>
-          ))}
+      <CardContent className="space-y-3">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="meeting"
+            checked={filters.meeting}
+            onCheckedChange={(checked) => handleFilterChange('meeting', checked as boolean)}
+          />
+          <Label htmlFor="meeting" className="text-sm cursor-pointer">
+            Afspraken
+          </Label>
         </div>
-        <div className="mt-4 flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const allTrue = Object.keys(filters).reduce((acc, key) => ({
-                ...acc,
-                [key]: true
-              }), {});
-              onChange(allTrue);
-            }}
-          >
-            Alles selecteren
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const allFalse = Object.keys(filters).reduce((acc, key) => ({
-                ...acc,
-                [key]: false
-              }), {});
-              onChange(allFalse);
-            }}
-          >
-            Alles deselecteren
-          </Button>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="personal"
+            checked={filters.personal}
+            onCheckedChange={(checked) => handleFilterChange('personal', checked as boolean)}
+          />
+          <Label htmlFor="personal" className="text-sm cursor-pointer">
+            Persoonlijk
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="absence"
+            checked={filters.absence}
+            onCheckedChange={(checked) => handleFilterChange('absence', checked as boolean)}
+          />
+          <Label htmlFor="absence" className="text-sm cursor-pointer">
+            Verzuim
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="leave"
+            checked={filters.leave}
+            onCheckedChange={(checked) => handleFilterChange('leave', checked as boolean)}
+          />
+          <Label htmlFor="leave" className="text-sm cursor-pointer">
+            Mijn Verlof
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="teamLeave"
+            checked={filters.teamLeave}
+            onCheckedChange={(checked) => handleFilterChange('teamLeave', checked as boolean)}
+          />
+          <Label htmlFor="teamLeave" className="text-sm cursor-pointer">
+            Team Verlof
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="training"
+            checked={filters.training}
+            onCheckedChange={(checked) => handleFilterChange('training', checked as boolean)}
+          />
+          <Label htmlFor="training" className="text-sm cursor-pointer">
+            Trainingen
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="birthday"
+            checked={filters.birthday}
+            onCheckedChange={(checked) => handleFilterChange('birthday', checked as boolean)}
+          />
+          <Label htmlFor="birthday" className="text-sm cursor-pointer">
+            Verjaardagen
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="company"
+            checked={filters.company}
+            onCheckedChange={(checked) => handleFilterChange('company', checked as boolean)}
+          />
+          <Label htmlFor="company" className="text-sm cursor-pointer">
+            Bedrijfsevents
+          </Label>
         </div>
       </CardContent>
     </Card>
