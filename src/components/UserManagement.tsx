@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Users, Search } from 'lucide-react';
+import { Pencil, Users, Search, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AppRole } from '@/hooks/useAuth';
@@ -46,10 +47,26 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
   const [editDepartment, setEditDepartment] = useState<string>('none');
   const [editManager, setEditManager] = useState<string>('none');
   const [editFunctie, setEditFunctie] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserWithRole | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<AppRole | null>(null);
 
   useEffect(() => {
     loadData();
+    loadCurrentUserRole();
   }, []);
+
+  const loadCurrentUserRole = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      setCurrentUserRole(role?.role as AppRole);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -154,6 +171,31 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
     }
   };
 
+  const openDeleteDialog = (user: UserWithRole) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      // Delete user via admin API
+      const { error } = await supabase.auth.admin.deleteUser(userToDelete.id);
+      
+      if (error) throw error;
+
+      toast.success('Gebruiker verwijderd');
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+      loadData();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Fout bij verwijderen van gebruiker. Mogelijk ontbreken de benodigde rechten.');
+    }
+  };
+
   const getRoleBadgeVariant = (role?: AppRole) => {
     switch (role) {
       case 'super_admin': return 'default';
@@ -214,13 +256,25 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                   <TableHead className="hidden lg:table-cell">Afdeling</TableHead>
                   <TableHead className="hidden lg:table-cell">Manager</TableHead>
                   <TableHead className="text-right">Acties</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      {user.voornaam} {user.achternaam}
+                </Tablediv className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditDialog(user)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        {currentUserRole === 'super_admin' && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openDeleteDialog(user)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </divornaam} {user.achternaam}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">
                       {user.email}
@@ -325,6 +379,28 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                 onChange={(e) => setEditFunctie(e.target.value)}
                 placeholder="Bijv. Software Developer"
               />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gebruiker verwijderen</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je <strong>{userToDelete?.voornaam} {userToDelete?.achternaam}</strong> wilt verwijderen?
+              <br /><br />
+              Deze actie kan niet ongedaan worden gemaakt. Alle gegevens van deze gebruiker worden permanent verwijderd.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteUser}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-4 border-t">
