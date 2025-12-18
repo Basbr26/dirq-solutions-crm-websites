@@ -62,7 +62,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       title: 'Administratie',
       items: [
         { title: 'Afdelingen', icon: Building2, href: '/settings/afdelingen', roles: ['super_admin'] },
-        { title: 'Gebruikersbeheer', icon: Shield, href: '/admin/gebruikers', roles: ['super_admin'] },
+        { title: 'Gebruikersbeheer', icon: Shield, href: '/settings/gebruikers', roles: ['super_admin'] },
       ],
     });
   }

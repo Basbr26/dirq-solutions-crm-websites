@@ -155,7 +155,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
           {/* Follow-up section */}
           {note.follow_up_required && (
             <Alert
-              variant={note.follow_up_completed ? 'default' : followUpStatus?.variant}
+              variant={note.follow_up_completed ? 'default' : (followUpStatus?.variant === 'secondary' ? 'default' : followUpStatus?.variant)}
               className={cn(
                 note.follow_up_completed && 'border-green-500 bg-green-50',
                 followUpStatus?.status === 'overdue' && 'border-destructive'

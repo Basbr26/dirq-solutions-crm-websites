@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { TagInput } from './TagInput';
 import { CATEGORIES, VISIBILITY_OPTIONS } from '@/lib/notes/helpers';
-import { HRNote, useCreateNote, useUpdateNote } from '@/hooks/useEmployeeNotes';
+import { HRNote, useCreateNote, useUpdateNote, CreateNoteInput } from '@/hooks/useEmployeeNotes';
 import { format } from 'date-fns';
 
 const noteSchema = z.object({
@@ -113,9 +113,9 @@ export function NoteDialog({ open, onOpenChange, employeeId, note }: NoteDialogP
         });
       } else {
         await createNote.mutateAsync({
-          employee_id: employeeId,
           ...data,
-        });
+          employee_id: employeeId,
+        } as CreateNoteInput);
       }
       onOpenChange(false);
     } catch (error) {

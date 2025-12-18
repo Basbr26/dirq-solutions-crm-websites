@@ -62,11 +62,28 @@ export default function EmployeesPage() {
     try {
       console.log('🔍 Loading employees list...');
       
+      // Get current user to check role
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id || '')
+        .single();
+      
+      // Build employees query with manager filter
+      let employeesQuery = supabase
+        .from('profiles')
+        .select('*, department:departments!profiles_department_id_fkey(name)');
+      
+      // Managers can only see their direct reports
+      if (profile?.role === 'manager' && user) {
+        employeesQuery = employeesQuery.eq('manager_id', user.id);
+      }
+      
+      employeesQuery = employeesQuery.order('achternaam', { ascending: true });
+      
       const [employeesResult, departmentsResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('*, department:departments!profiles_department_id_fkey(name)')
-          .order('achternaam', { ascending: true }),
+        employeesQuery,
         supabase
           .from('departments')
           .select('id, name')

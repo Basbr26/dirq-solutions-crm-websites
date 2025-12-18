@@ -79,10 +79,35 @@ export default function DashboardHR() {
 
   const loadCases = async () => {
     try {
-      const { data, error } = await supabase
+      // Get current user to check role
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authUser?.id || '')
+        .single();
+      
+      // Build query with manager filter
+      let casesQuery = supabase
         .from('sick_leave_cases')
-        .select('*, employee:profiles!sick_leave_cases_employee_id_fkey(voornaam, achternaam, email)')
-        .order('created_at', { ascending: false });
+        .select('*, employee:profiles!sick_leave_cases_employee_id_fkey(voornaam, achternaam, email, manager_id)');
+      
+      // Managers can only see cases from their team
+      if (profile?.role === 'manager' && authUser) {
+        // Filter by employees where manager_id = current user
+        const { data: teamEmployees } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('manager_id', authUser.id);
+        
+        if (teamEmployees) {
+          const employeeIds = teamEmployees.map(e => e.id);
+          casesQuery = casesQuery.in('employee_id', employeeIds);
+        }
+      }
+      
+      casesQuery = casesQuery.order('created_at', { ascending: false });
+      const { data, error } = await casesQuery;
       
       if (error) throw error;
       setCases(data || []);

@@ -31,6 +31,7 @@ import DocumentProcessing from "./pages/DocumentProcessing";
 import WorkflowBuilder from "./pages/WorkflowBuilder";
 import WorkflowExecutions from "./pages/WorkflowExecutions";
 import DepartmentsPage from "./pages/DepartmentsPage";
+import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
 import { HRChatbot } from "./components/ai/HRChatbot";
 
 const queryClient = new QueryClient();
@@ -103,7 +104,7 @@ const App = () => (
               <Route 
                 path="/dashboard/executive" 
                 element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                  <ProtectedRoute allowedRoles={['super_admin']}>
                     <DashboardExecutive />
                   </ProtectedRoute>
                 } 
@@ -267,6 +268,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['super_admin']}>
                     <DepartmentsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings/gebruikers" 
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <GebruikersbeheerPage />
                   </ProtectedRoute>
                 } 
               />

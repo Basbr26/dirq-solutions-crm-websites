@@ -3,10 +3,10 @@
  * Visual workflow automation builder
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { ReactFlowProvider, Node, Edge, useReactFlow, addEdge, Connection } from '@xyflow/react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Play, Download, Upload, Layout } from 'lucide-react';
+import { ArrowLeft, Save, Play, Download, Upload, Layout, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,8 @@ import { NodeConfigurator } from '@/components/workflow/NodeConfigurator';
 import { WorkflowNodeData, WorkflowDefinition } from '@/types/workflow';
 import { supabase } from '@/integrations/supabase/client';
 import { safeFrom, safeRpc } from '@/lib/supabaseTypeHelpers';
+import { WorkflowEngine } from '@/lib/workflows/engine';
+import { WorkflowExecution } from '@/lib/workflows/types';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +47,9 @@ function WorkflowBuilderContent() {
   const [workflowId, setWorkflowId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; description: string; definition: WorkflowDefinition; category: string }>>([]);
+  const [showExecutions, setShowExecutions] = useState(false);
+  const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
+  const [isExecuting, setIsExecuting] = useState(false);
   const dragRef = useRef<{ type: string; label: string } | null>(null);
 
   // Load templates
@@ -221,7 +226,32 @@ function WorkflowBuilderContent() {
     });
   }, [workflowName, workflowDescription, nodes, edges, workflowId, toast]);
 
-  // Test workflow
+  // Load executions
+  const loadExecutions = useCallback(async () => {
+    if (!workflowId) return;
+
+    const { data, error } = await safeFrom(supabase, 'workflow_executions')
+      .select('*')
+      .eq('workflow_id', workflowId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error('Error loading executions:', error);
+      return;
+    }
+
+    setExecutions(data || []);
+  }, [workflowId]);
+
+  // Auto-load executions when workflowId changes
+  useEffect(() => {
+    if (workflowId && showExecutions) {
+      loadExecutions();
+    }
+  }, [workflowId, showExecutions, loadExecutions]);
+
+  // Test workflow using new engine
   const handleTest = useCallback(async () => {
     if (!workflowId) {
       toast({
@@ -232,26 +262,96 @@ function WorkflowBuilderContent() {
       return;
     }
 
-    const { data, error } = await safeRpc(supabase, 'start_workflow', {
-      p_workflow_id: workflowId,
-      p_trigger_data: {},
-      p_test_mode: true,
-    });
+    setIsExecuting(true);
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      // Execute workflow with test data
+      const result = await WorkflowEngine.executeWorkflow(workflowId, {
+        trigger_data: {
+          event: 'manual_test',
+          triggered_at: new Date().toISOString(),
+        },
+        user_id: user?.id,
+        metadata: {
+          test: true,
+          triggered_by: 'workflow_builder',
+        },
+      });
+
+      // Reload executions to show new execution
+      await loadExecutions();
+
+      toast({
+        title: result.success ? 'Workflow started successfully' : 'Workflow execution failed',
+        description: result.success 
+          ? `Execution ID: ${result.execution_id}` 
+          : result.error || 'Unknown error',
+        variant: result.success ? 'default' : 'destructive',
+      });
+
+      // Auto-show executions panel
+      if (result.success) {
+        setShowExecutions(true);
+      }
+    } catch (error) {
+      console.error('Workflow test error:', error);
+      toast({
+        title: 'Error testing workflow',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExecuting(false);
+    }
+  }, [workflowId, toast, loadExecutions]);
+
+  // Resume waiting workflow
+  const handleResumeExecution = useCallback(async (executionId: string) => {
+    try {
+      await WorkflowEngine.resumeWorkflow(executionId);
+      
+      toast({
+        title: 'Workflow resumed',
+        description: 'The workflow execution has been resumed',
+      });
+
+      await loadExecutions();
+    } catch (error) {
+      toast({
+        title: 'Resume failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    }
+  }, [toast, loadExecutions]);
+
+  // View execution details
+  const handleViewExecution = useCallback(async (executionId: string) => {
+    const { data: logs, error } = await safeFrom(supabase, 'workflow_logs')
+      .select('*')
+      .eq('execution_id', executionId)
+      .order('created_at');
 
     if (error) {
       toast({
-        title: 'Test failed',
+        title: 'Error loading logs',
         description: error.message,
         variant: 'destructive',
       });
       return;
     }
 
+    // Show logs in console for now (could create a modal later)
+    console.log('Execution logs:', logs);
+    
     toast({
-      title: 'Test started',
-      description: `Execution ID: ${data}`,
+      title: 'Logs loaded',
+      description: `Found ${logs?.length || 0} log entries (check console)`,
     });
-  }, [workflowId, toast]);
+  }, [toast]);
 
   // Export workflow
   const handleExport = useCallback(() => {
@@ -352,9 +452,27 @@ function WorkflowBuilderContent() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button variant="outline" size="sm" onClick={handleTest}>
+          {workflowId && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => {
+                setShowExecutions(true);
+                loadExecutions();
+              }}
+            >
+              <History className="h-4 w-4 mr-2" />
+              Executions
+            </Button>
+          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleTest}
+            disabled={isExecuting || !workflowId}
+          >
             <Play className="h-4 w-4 mr-2" />
-            Test
+            {isExecuting ? 'Running...' : 'Test'}
           </Button>
           <Button size="sm" onClick={handleSave}>
             <Save className="h-4 w-4 mr-2" />
@@ -441,6 +559,94 @@ function WorkflowBuilderContent() {
           onSave={handleSaveNode}
         />
       )}
+
+      {/* Execution History Dialog */}
+      <Dialog open={showExecutions} onOpenChange={setShowExecutions}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Workflow Executions</DialogTitle>
+            <DialogDescription>
+              View execution history and status
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {executions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No executions yet. Click "Test" to run this workflow.
+              </div>
+            ) : (
+              executions.map((execution) => (
+                <div
+                  key={execution.id}
+                  className="p-4 border rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                          execution.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : execution.status === 'failed'
+                            ? 'bg-red-100 text-red-800'
+                            : execution.status === 'running'
+                            ? 'bg-blue-100 text-blue-800'
+                            : execution.status === 'waiting'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {execution.status}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(execution.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {execution.status === 'waiting' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleResumeExecution(execution.id)}
+                        >
+                          Resume
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleViewExecution(execution.id)}
+                      >
+                        View Logs
+                      </Button>
+                    </div>
+                  </div>
+
+                  {execution.current_node_id && (
+                    <div className="text-sm text-muted-foreground">
+                      Current node: {execution.current_node_id}
+                    </div>
+                  )}
+
+                  {execution.error && (
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-800">
+                      {execution.error}
+                    </div>
+                  )}
+
+                  {execution.started_at && (
+                    <div className="mt-2 text-xs text-muted-foreground">
+                      Started: {new Date(execution.started_at).toLocaleString()}
+                      {execution.completed_at &&
+                        ` • Completed: ${new Date(execution.completed_at).toLocaleString()}`}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Templates Dialog */}
       <Dialog open={showTemplates} onOpenChange={setShowTemplates}>

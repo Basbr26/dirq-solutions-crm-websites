@@ -55,15 +55,34 @@ export default function LeavePage() {
     if (!user) return;
 
     try {
-      // Load all leave requests (filtered by RLS)
-      const { data: allRequests, error: requestsError } = await supabase
+      // Build query with role-based filtering
+      let requestsQuery = supabase
         .from('leave_requests')
         .select(`
           *,
-          employee:profiles!leave_requests_employee_id_fkey(voornaam, achternaam),
+          employee:profiles!leave_requests_employee_id_fkey(voornaam, achternaam, manager_id),
           approver:profiles!leave_requests_approved_by_fkey(voornaam, achternaam)
-        `)
-        .order('created_at', { ascending: false });
+        `);
+      
+      // Managers can only see leave requests from their team
+      if (role === 'manager') {
+        const { data: teamEmployees } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('manager_id', user.id);
+        
+        if (teamEmployees) {
+          const employeeIds = teamEmployees.map(e => e.id);
+          requestsQuery = requestsQuery.in('employee_id', employeeIds);
+        }
+      }
+      // Medewerkers see only their own requests (handled by RLS but explicit for clarity)
+      else if (role === 'medewerker') {
+        requestsQuery = requestsQuery.eq('employee_id', user.id);
+      }
+      
+      requestsQuery = requestsQuery.order('created_at', { ascending: false });
+      const { data: allRequests, error: requestsError } = await requestsQuery;
 
       if (requestsError) throw requestsError;
 
@@ -75,7 +94,7 @@ export default function LeavePage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, role]);
 
   const handleRequestSubmitted = () => {
     setDialogOpen(false);
