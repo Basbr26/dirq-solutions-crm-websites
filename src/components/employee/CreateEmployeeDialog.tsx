@@ -276,6 +276,9 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
             <UserPlus className="h-5 w-5" />
             Nieuwe Medewerker
           </DialogTitle>
+          <DialogDescription>
+            Vul de gegevens in voor de nieuwe medewerker. Inloggegevens worden automatisch gegenereerd.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
