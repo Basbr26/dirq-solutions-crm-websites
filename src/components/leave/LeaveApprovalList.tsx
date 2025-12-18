@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -190,6 +191,9 @@ export function LeaveApprovalList({ requests, onUpdate, getLeaveTypeLabel }: Lea
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Verlofaanvraag afwijzen</DialogTitle>
+            <DialogDescription>
+              Geef een reden op voor het afwijzen van deze verlofaanvraag
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">

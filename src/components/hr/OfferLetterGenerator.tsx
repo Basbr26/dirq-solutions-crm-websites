@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, Eye, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ReactMarkdown from "react-markdown";
 
 interface OfferLetterGeneratorProps {
@@ -252,6 +252,9 @@ export function OfferLetterGenerator({ employeeId, contractId }: OfferLetterGene
                 </Button>
               </div>
             </DialogTitle>
+            <DialogDescription>
+              Bekijk de aanbiedingsbrief voordat u deze verzendt
+            </DialogDescription>
           </DialogHeader>
           <div className="prose prose-sm dark:prose-invert max-w-none p-6 bg-white dark:bg-gray-950 rounded-lg border">
             <ReactMarkdown>{generatedContent}</ReactMarkdown>

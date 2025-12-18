@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,6 +137,9 @@ export function EmployeeDocumentUpload({ employeeId, onUploaded }: EmployeeDocum
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Document uploaden</DialogTitle>
+          <DialogDescription>
+            Upload een document voor deze medewerker
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

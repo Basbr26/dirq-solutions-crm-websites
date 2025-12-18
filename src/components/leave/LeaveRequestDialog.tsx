@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -111,6 +112,9 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
       <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle>Verlof aanvragen</DialogTitle>
+          <DialogDescription>
+            Vul de verlofaanvraag in en dien deze in
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 py-4">

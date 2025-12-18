@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar, Clock, MapPin, Trash2 } from 'lucide-react';
@@ -59,6 +59,9 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
             <span>{event.title}</span>
             {getEventTypeBadge(event.event_type)}
           </DialogTitle>
+          <DialogDescription>
+            Bekijk en beheer deze kalenderafspraak
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
