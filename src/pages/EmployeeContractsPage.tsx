@@ -240,7 +240,7 @@ export default function EmployeeContractsPage() {
                           <SelectValue placeholder="Selecteer medewerker" />
                         </SelectTrigger>
                         <SelectContent>
-                          {employees?.map((emp) => (
+                          {employees?.filter(emp => emp.id && emp.id.trim() !== '').map((emp) => (
                             <SelectItem key={emp.id} value={emp.id}>
                               {emp.full_name} ({emp.employee_number})
                             </SelectItem>
@@ -314,7 +314,7 @@ export default function EmployeeContractsPage() {
                           <SelectValue placeholder="Selecteer niveau" />
                         </SelectTrigger>
                         <SelectContent>
-                          {jobLevels?.map((level) => (
+                          {jobLevels?.filter(level => level.id && level.id.trim() !== '').map((level) => (
                             <SelectItem key={level.id} value={level.id}>
                               {level.level_name}
                             </SelectItem>
@@ -331,7 +331,7 @@ export default function EmployeeContractsPage() {
                         <SelectValue placeholder="Selecteer afdeling" />
                       </SelectTrigger>
                       <SelectContent>
-                        {departments?.map((dept) => (
+                        {departments?.filter(dept => dept.id && dept.id.trim() !== '').map((dept) => (
                           <SelectItem key={dept.id} value={dept.id}>
                             {dept.name}
                           </SelectItem>
