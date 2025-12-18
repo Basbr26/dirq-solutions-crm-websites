@@ -67,7 +67,12 @@ function RoleBasedRedirect() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+    <ThemeProvider 
+      attribute="class" 
+      defaultTheme="light" 
+      enableSystem={false}
+      disableTransitionOnChange={false}
+    >
       <TooltipProvider>
         <Toaster />
         <Sonner />
