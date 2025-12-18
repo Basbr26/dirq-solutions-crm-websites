@@ -309,7 +309,7 @@ export default function EmployeeContractsPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="job_level_id">Functieniveau</Label>
-                      <Select name="job_level_id" defaultValue={selectedContract?.job_level_id || ""}>
+                      <Select name="job_level_id" defaultValue={selectedContract?.job_level_id || undefined}>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecteer niveau" />
                         </SelectTrigger>
@@ -326,7 +326,7 @@ export default function EmployeeContractsPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="department_id">Afdeling</Label>
-                    <Select name="department_id" defaultValue={selectedContract?.department_id || ""}>
+                    <Select name="department_id" defaultValue={selectedContract?.department_id || undefined}>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecteer afdeling" />
                       </SelectTrigger>
