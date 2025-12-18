@@ -242,10 +242,76 @@ export default function OnboardingPage() {
     <AppLayout 
       title="Onboarding" 
       subtitle="Beheer het inwerkproces van nieuwe medewerkers"
+      action={
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Nieuwe Onboarding</span>
+              <span className="sm:hidden">Nieuw</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Nieuwe Onboarding Starten</DialogTitle>
+              <DialogDescription>
+                Kies een medewerker en template om het onboarding proces te starten
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="employee">Medewerker</Label>
+                <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                  <SelectTrigger id="employee">
+                    <SelectValue placeholder="Selecteer medewerker" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableEmployees.filter(emp => emp.id && emp.id.trim() !== '').map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.voornaam} {employee.achternaam}
+                        {employee.functie && ` - ${employee.functie}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="template">Template</Label>
+                <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
+                  <SelectTrigger id="template">
+                    <SelectValue placeholder="Selecteer template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.filter(t => t.id && t.id.trim() !== '').map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Annuleren
+              </Button>
+              <Button 
+                onClick={() => {
+                  createSessionMutation.mutate();
+                  setIsDialogOpen(false);
+                }}
+                disabled={!selectedEmployee || !selectedTemplate || createSessionMutation.isPending}
+              >
+                {createSessionMutation.isPending ? 'Aanmaken...' : 'Starten'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      }
     >
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -300,76 +366,16 @@ export default function OnboardingPage() {
           </Card>
         </div>
 
-        {/* Actions */}
+        {/* Secondary Action */}
         <div className="flex justify-between items-center flex-wrap gap-2">
           <h2 className="text-lg font-semibold">Onboarding Overzicht</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link to="/hr/onboarding/templates">
-                <Settings className="h-4 w-4 mr-2" />
-                Templates beheren
-              </Link>
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Nieuwe Onboarding
-                </Button>
-              </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Onboarding Starten</DialogTitle>
-                <DialogDescription>
-                  Start het inwerkproces voor een nieuwe medewerker
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Medewerker</Label>
-                  <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer medewerker" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {availableEmployees.filter(e => e.id && e.id.trim() !== '').map((emp) => (
-                        <SelectItem key={emp.id} value={emp.id}>
-                          {emp.voornaam} {emp.achternaam} - {emp.email}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Onboarding Template</Label>
-                  <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer template" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {templates.filter(t => t.id && t.id.trim() !== '').map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Annuleren
-                </Button>
-                <Button 
-                  onClick={() => createSessionMutation.mutate()}
-                  disabled={!selectedEmployee || !selectedTemplate || createSessionMutation.isPending}
-                >
-                  {createSessionMutation.isPending ? 'Bezig...' : 'Starten'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          </div>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/hr/onboarding/templates">
+              <Settings className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Templates beheren</span>
+              <span className="sm:hidden">Templates</span>
+            </Link>
+          </Button>
         </div>
 
         {/* Sessions List */}

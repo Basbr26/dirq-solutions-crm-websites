@@ -181,30 +181,31 @@ export function HRChatbot() {
 
   return (
     <>
-      {/* Floating Chat Button */}
+      {/* Floating Chat Button - Mobile Optimized */}
       {!isOpen && (
         <Button
           size="lg"
           className={cn(
-            'fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg',
+            'fixed bottom-20 md:bottom-6 right-4 md:right-6 rounded-full w-14 h-14 shadow-lg z-40',
             'hover:scale-110 transition-transform',
-            'animate-pulse'
+            'bg-gradient-to-r from-blue-500 to-blue-600',
+            'hover:from-blue-600 hover:to-blue-700'
           )}
           onClick={() => setIsOpen(true)}
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       )}
 
-      {/* Chat Panel */}
+      {/* Chat Panel - Full screen on mobile */}
       {isOpen && (
         <Card
           className={cn(
-            'fixed right-6 shadow-2xl flex flex-col',
+            'fixed shadow-2xl flex flex-col z-50',
             'transition-all duration-300 ease-in-out',
             isMinimized
-              ? 'bottom-6 w-80 h-14'
-              : 'bottom-6 w-[400px] h-[600px]'
+              ? 'bottom-6 right-6 w-80 h-14'
+              : 'inset-0 md:inset-auto md:right-6 md:bottom-6 md:w-[400px] md:h-[600px]'
           )}
         >
           {/* Header */}
