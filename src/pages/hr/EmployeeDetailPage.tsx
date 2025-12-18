@@ -32,6 +32,15 @@ import { UniversalDocumentGenerator } from '@/components/documents/UniversalDocu
 import { EmployeeDocumentUpload } from '@/components/documents/EmployeeDocumentUpload';
 import { DocumentCard } from '@/components/documents/DocumentCard';
 import { EditEmployeeDialog } from '@/components/employee/EditEmployeeDialog';
+import { NoteCard } from '@/components/notes/NoteCard';
+import { NoteDialog } from '@/components/notes/NoteDialog';
+import { useEmployeeNotes, useNoteStats, useDeleteNote, useTogglePin, useCompleteFollowUp, type HRNote } from '@/hooks/useEmployeeNotes';
+import { CATEGORIES, filterNotes, sortNotes, calculateNoteStats, getCategoryIcon } from '@/lib/notes/helpers';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Plus, Search, Pin, CheckSquare } from 'lucide-react';
 
 interface EmployeeDetail {
   id: string;
@@ -124,6 +133,21 @@ export default function EmployeeDetailPage() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+
+  // Notes state
+  const [showNoteDialog, setShowNoteDialog] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<HRNote | undefined>();
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFollowUpsOnly, setShowFollowUpsOnly] = useState(false);
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
+
+  // Notes queries and mutations
+  const { data: notes = [], isLoading: notesLoading } = useEmployeeNotes(id || '');
+  const { data: noteStats } = useNoteStats(id || '');
+  const deleteNoteMutation = useDeleteNote();
+  const togglePinMutation = useTogglePin();
+  const completeFollowUpMutation = useCompleteFollowUp();
 
   useEffect(() => {
     if (id) {
@@ -641,11 +665,180 @@ export default function EmployeeDetailPage() {
           </TabsContent>
 
           <TabsContent value="notities" className="space-y-6">
+            {/* Header with create button */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">HR Notities</h2>
+                <p className="text-muted-foreground">
+                  Privé notities over {employee?.voornaam} - Alleen zichtbaar voor HR en managers
+                </p>
+              </div>
+              <Button onClick={() => {
+                setSelectedNote(undefined);
+                setShowNoteDialog(true);
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Nieuwe notitie
+              </Button>
+            </div>
+
+            {/* Filters */}
             <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                Notities module komt binnenkort...
+              <CardContent className="pt-6 space-y-4">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-2">
+                    <Label>Categorie</Label>
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Alle categorieën</SelectItem>
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.icon} {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Zoeken</Label>
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Zoek in titel of content..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-8">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="follow-ups"
+                        checked={showFollowUpsOnly}
+                        onCheckedChange={(checked) => setShowFollowUpsOnly(checked as boolean)}
+                      />
+                      <Label htmlFor="follow-ups" className="font-normal cursor-pointer">
+                        <CheckSquare className="h-4 w-4 inline mr-1" />
+                        Alleen follow-ups
+                      </Label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-8">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="pinned"
+                        checked={showPinnedOnly}
+                        onCheckedChange={(checked) => setShowPinnedOnly(checked as boolean)}
+                      />
+                      <Label htmlFor="pinned" className="font-normal cursor-pointer">
+                        <Pin className="h-4 w-4 inline mr-1" />
+                        Alleen vastgepind
+                      </Label>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Statistics Cards */}
+            {noteStats && (
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Totaal notities</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{noteStats.total_notes || 0}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Openstaande follow-ups</CardTitle>
+                    <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{noteStats.pending_follow_ups || 0}</div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Laatste 30 dagen</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{noteStats.last_30_days || 0}</div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Notes Timeline */}
+            <div className="space-y-4">
+              {notesLoading ? (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    Notities laden...
+                  </CardContent>
+                </Card>
+              ) : (() => {
+                const filteredNotes = filterNotes(notes, {
+                  search: searchQuery,
+                  category: categoryFilter === 'all' ? undefined : categoryFilter,
+                  followUpsOnly: showFollowUpsOnly,
+                  pinnedOnly: showPinnedOnly,
+                });
+                const sortedNotes = sortNotes(filteredNotes);
+
+                if (sortedNotes.length === 0) {
+                  return (
+                    <Card>
+                      <CardContent className="py-12 text-center">
+                        <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">
+                          {notes.length === 0
+                            ? 'Nog geen notities. Klik op "Nieuwe notitie" om te beginnen.'
+                            : 'Geen notities gevonden met de huidige filters.'}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                }
+
+                return (
+                  <>
+                    {sortedNotes.map((note) => (
+                      <NoteCard
+                        key={note.id}
+                        note={note}
+                        onEdit={() => {
+                          setSelectedNote(note);
+                          setShowNoteDialog(true);
+                        }}
+                        onDelete={(id) => {
+                          deleteNoteMutation.mutate(id);
+                        }}
+                        onPin={(id) => {
+                          togglePinMutation.mutate(id);
+                        }}
+                        onFollowUpComplete={(id) => {
+                          completeFollowUpMutation.mutate(id);
+                        }}
+                      />
+                    ))}
+                  </>
+                );
+              })()}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
@@ -657,6 +850,16 @@ export default function EmployeeDetailPage() {
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
           onSuccess={loadEmployee}
+        />
+      )}
+
+      {/* Note Dialog */}
+      {id && (
+        <NoteDialog
+          employeeId={id}
+          note={selectedNote}
+          open={showNoteDialog}
+          onOpenChange={setShowNoteDialog}
         />
       )}
     </AppLayout>

@@ -19,32 +19,43 @@ BEGIN
 END $$;
 
 -- 2. Modify profiles table to use enum
+-- Simple approach: backup data, drop column, recreate with enum
 DO $$
 BEGIN
-    -- Temporarily allow NULL for migration
-    ALTER TABLE profiles ALTER COLUMN employment_status DROP NOT NULL;
-    
-    -- Check if column type needs changing
+    -- Check if column exists
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_name = 'profiles' 
-        AND column_name = 'employment_status' 
-        AND data_type = 'text'
+        AND column_name = 'employment_status'
     ) THEN
-        -- Convert existing text values to enum
-        ALTER TABLE profiles 
-        ALTER COLUMN employment_status TYPE employment_status 
-        USING (
-            CASE employment_status
-                WHEN 'actief' THEN 'in_dienst'::employment_status
-                WHEN 'inactief' THEN 'uitdienst'::employment_status
-                ELSE 'in_dienst'::employment_status
-            END
-        );
+        -- Create temp backup column if it has data
+        ALTER TABLE profiles ADD COLUMN IF NOT EXISTS employment_status_backup text;
+        UPDATE profiles SET employment_status_backup = employment_status::text WHERE employment_status IS NOT NULL;
+        
+        -- Drop old column completely
+        ALTER TABLE profiles DROP COLUMN employment_status;
     END IF;
     
-    -- Set default
-    ALTER TABLE profiles ALTER COLUMN employment_status SET DEFAULT 'in_dienst';
+    -- Add new column with enum type
+    ALTER TABLE profiles ADD COLUMN employment_status employment_status DEFAULT 'in_dienst'::employment_status;
+    
+    -- Restore data from backup if exists
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'profiles' 
+        AND column_name = 'employment_status_backup'
+    ) THEN
+        UPDATE profiles 
+        SET employment_status = CASE employment_status_backup
+            WHEN 'actief' THEN 'in_dienst'::employment_status
+            WHEN 'inactief' THEN 'uitdienst'::employment_status
+            ELSE 'in_dienst'::employment_status
+        END
+        WHERE employment_status_backup IS NOT NULL;
+        
+        -- Drop backup column
+        ALTER TABLE profiles DROP COLUMN employment_status_backup;
+    END IF;
 END $$;
 
 -- 3. Add invitation/onboarding tracking columns
@@ -155,8 +166,7 @@ COMMENT ON COLUMN profiles.end_date IS 'Employment end date (for contracts/termi
 -- 6. Create index for status queries
 CREATE INDEX IF NOT EXISTS idx_profiles_employment_status ON profiles(employment_status);
 
--- 7. Update existing employees to 'in_dienst' if currently active
+-- 7. Update existing employees to 'in_dienst' if currently NULL
 UPDATE profiles 
 SET employment_status = 'in_dienst'
-WHERE employment_status IS NULL 
-  AND role IN ('medewerker', 'hr', 'manager');
+WHERE employment_status IS NULL;
