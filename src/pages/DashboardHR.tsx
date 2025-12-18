@@ -267,20 +267,20 @@ export default function DashboardHR() {
       }
     >
       <PullToRefresh onRefresh={handleRefresh}>
-      <div className="container mx-auto px-6 py-8 space-y-6">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-8 space-y-4 md:space-y-6">
 
-        <Tabs defaultValue="overzicht" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overzicht">Overzicht</TabsTrigger>
-            <TabsTrigger value="taken">Taken</TabsTrigger>
-            <TabsTrigger value="analyse" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analyse & Rapportage
+        <Tabs defaultValue="overzicht" className="space-y-4 md:space-y-6">
+          <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
+            <TabsTrigger value="overzicht" className="text-xs sm:text-sm">Overzicht</TabsTrigger>
+            <TabsTrigger value="taken" className="text-xs sm:text-sm">Taken</TabsTrigger>
+            <TabsTrigger value="analyse" className="gap-1 sm:gap-2 text-xs sm:text-sm">
+              <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Analyse &</span> Rapport
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overzicht" className="space-y-6">
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          <TabsContent value="overzicht" className="space-y-4 md:space-y-6">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">

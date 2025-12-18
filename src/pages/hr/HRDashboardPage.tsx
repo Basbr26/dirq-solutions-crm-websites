@@ -321,9 +321,9 @@ export default function HRDashboardPage() {
       subtitle={format(new Date(), 'EEEE d MMMM yyyy', { locale: nl })}
     >
       <PullToRefresh onRefresh={loadDashboardData} className="h-[calc(100vh-4rem)] md:h-auto md:overflow-visible">
-        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-6">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-8 space-y-4 md:space-y-6">
           {/* KPI Cards */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 sm:gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
             <KPICard
               title="Medewerkers"
               value={stats.totalEmployees}
