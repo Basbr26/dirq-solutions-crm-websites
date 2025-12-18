@@ -170,16 +170,7 @@ export function AppSidebar() {
         'flex items-center h-16 border-b border-border px-4',
         collapsed ? 'justify-center' : 'justify-between'
       )}>
-        {!collapsed && (
-          <div className="flex items-center gap-3">
-            <DirqLogo size="sm" />
-            <div className="flex flex-col">
-              <span className="font-semibold text-sm">Dirq HR</span>
-              <span className="text-xs text-muted-foreground">Platform</span>
-            </div>
-          </div>
-        )}
-        {collapsed && <DirqLogo size="sm" />}
+        <DirqLogo size="sm" />
       </div>
 
       {/* Navigation */}

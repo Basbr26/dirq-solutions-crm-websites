@@ -254,14 +254,16 @@ export default function DashboardHR() {
       subtitle="Overzicht van alle verzuimcases en taken"
       actions={
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportCases}>
+          {/* Desktop export buttons */}
+          <Button variant="outline" size="sm" onClick={handleExportCases} className="hidden sm:flex">
             <Download className="h-4 w-4 mr-2" />
             Export Gevallen
           </Button>
-          <Button variant="outline" size="sm" onClick={handleExportTasks}>
+          <Button variant="outline" size="sm" onClick={handleExportTasks} className="hidden sm:flex">
             <Download className="h-4 w-4 mr-2" />
             Export Taken
           </Button>
+          {/* Mobile and Desktop plus button */}
           <ZiekmeldingWizard onSubmit={handleNewCase} />
         </div>
       }
