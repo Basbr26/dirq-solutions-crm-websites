@@ -68,7 +68,6 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
           ...(role === 'hr' || role === 'super_admin' || role === 'manager' ? [
             { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers' },
             { title: 'Onboarding', icon: UserPlus, href: '/hr/onboarding' },
-            ...(role === 'hr' || role === 'super_admin' ? [{ title: 'Contracten', icon: FileSignature, href: '/hr/contracten' }] : []),
             { title: 'Verzuim', icon: Heart, href: '/verzuim' },
           ] : []),
           { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },

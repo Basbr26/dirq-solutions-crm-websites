@@ -54,7 +54,6 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       items: [
         { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Onboarding', icon: UserPlus, href: '/hr/onboarding', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Contracten', icon: FileSignature, href: '/hr/contracten', roles: ['hr', 'super_admin'] },
         { title: 'Verzuim', icon: Heart, href: '/verzuim', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },
         { title: 'Kalender', icon: Calendar, href: '/calendar' },

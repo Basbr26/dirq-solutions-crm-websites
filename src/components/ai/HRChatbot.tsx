@@ -188,12 +188,11 @@ export function HRChatbot() {
           className={cn(
             'fixed bottom-20 md:bottom-6 right-4 md:right-6 rounded-full w-14 h-14 shadow-lg z-40',
             'hover:scale-110 transition-transform',
-            'bg-gradient-to-r from-blue-500 to-blue-600',
-            'hover:from-blue-600 hover:to-blue-700'
+            'animate-pulse'
           )}
           onClick={() => setIsOpen(true)}
         >
-          <MessageCircle className="h-6 w-6 text-white" />
+          <MessageCircle className="h-6 w-6" />
         </Button>
       )}
 

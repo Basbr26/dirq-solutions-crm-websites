@@ -260,14 +260,6 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/hr/contracten" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <EmployeeContractsPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
                 path="/hr/documenten" 
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
