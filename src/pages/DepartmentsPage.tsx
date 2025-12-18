@@ -47,10 +47,26 @@ export default function DepartmentsPage() {
   };
 
   const handleSubmit = async (data: DepartmentForm) => {
-    if (selectedDepartment) {
-      await updateDepartment.mutateAsync({ id: selectedDepartment.id, ...data });
-    } else {
-      await createDepartment.mutateAsync(data);
+    try {
+      console.log('📝 Saving department:', selectedDepartment ? 'UPDATE' : 'CREATE', data);
+      
+      if (selectedDepartment) {
+        await updateDepartment.mutateAsync({ id: selectedDepartment.id, ...data });
+      } else {
+        await createDepartment.mutateAsync(data);
+      }
+      
+      console.log('✅ Department saved successfully');
+    } catch (error: any) {
+      console.error('❌ Error saving department:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
+      // Error is already shown by react-query's onError
+      throw error;
     }
   };
 

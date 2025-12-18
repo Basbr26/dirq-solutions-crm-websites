@@ -6,6 +6,7 @@ import { PersonalFeed } from '@/components/employee/PersonalFeed';
 import { QuickActions } from '@/components/employee/QuickActions';
 import { AchievementBadges } from '@/components/employee/AchievementBadges';
 import { MyDocuments } from '@/components/employee/MyDocuments';
+import { VerlofBalanceWidget } from '@/components/employee/VerlofBalanceWidget';
 import { motion } from 'framer-motion';
 import {
   Home,
@@ -112,17 +113,20 @@ export default function EmployeePortal() {
                 </p>
               </Card>
 
+              {/* Real Verlof Balance Widget */}
+              {user && <VerlofBalanceWidget userId={user.id} />}
+
               <div className="grid grid-cols-2 gap-3">
-                <Card className="p-4 bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950 dark:to-teal-950">
-                  <p className="text-3xl mb-2">25</p>
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Verlof dagen
-                  </p>
-                </Card>
                 <Card className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
                   <p className="text-3xl mb-2">€500</p>
                   <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Training budget
+                  </p>
+                </Card>
+                <Card className="p-4 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950 dark:to-red-950">
+                  <p className="text-3xl mb-2">3</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Certificeringen
                   </p>
                 </Card>
               </div>

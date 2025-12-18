@@ -25,8 +25,10 @@ import {
   Briefcase,
   GraduationCap,
   Heart,
-  FileCheck
+  FileCheck,
+  AlertTriangle
 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -64,6 +66,7 @@ export function MyDocuments() {
   const { user } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -82,17 +85,32 @@ export function MyDocuments() {
     if (!user) return;
 
     try {
+      console.log('🔍 Fetching documents for user:', user.id);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('documents')
         .select('*')
         .eq('employee_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Documents query error:', error);
+        console.error('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      
+      console.log('✅ Documents loaded:', data?.length || 0);
       setDocuments(data || []);
-    } catch (error) {
-      console.error('Error loading documents:', error);
-      toast.error('Kon documenten niet laden');
+    } catch (error: any) {
+      console.error('❌ Exception loading documents:', error);
+      setError(error);
+      toast.error(`Kon documenten niet laden: ${error.message || 'Onbekende fout'}`);
     } finally {
       setLoading(false);
     }
@@ -246,6 +264,31 @@ export function MyDocuments() {
         ))}
       </div>
     );
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertTitle>Fout bij laden documenten</AlertTitle>
+        <AlertDescription>
+          {error.message}
+          <br />
+          <code className="text-xs mt-2 block">{(error as any).code || 'Unknown error'}</code>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="mt-3"
+            onClick={() => {
+              setLoading(true);
+              loadDocuments();
+            }}
+          >
+            Opnieuw proberen
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   }
 
   return (

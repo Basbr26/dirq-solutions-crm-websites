@@ -32,6 +32,9 @@ import WorkflowBuilder from "./pages/WorkflowBuilder";
 import WorkflowExecutions from "./pages/WorkflowExecutions";
 import DepartmentsPage from "./pages/DepartmentsPage";
 import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
+import CalendarPage from "./pages/CalendarPage";
+import PlanningPage from "./pages/PlanningPage";
+import CompanySettingsPage from "./pages/CompanySettingsPage";
 import { HRChatbot } from "./components/ai/HRChatbot";
 
 const queryClient = new QueryClient();
@@ -218,6 +221,31 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
                     <LeavePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/calendar" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                    <CalendarPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/planning" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                    <PlanningPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route 
+                path="/settings/company" 
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <CompanySettingsPage />
                   </ProtectedRoute>
                 } 
               />

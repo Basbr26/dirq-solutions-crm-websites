@@ -80,9 +80,16 @@ export function DepartmentDialog({
   }, [department, form]);
 
   const handleSubmit = async (data: DepartmentFormValues) => {
-    await onSubmit(data);
-    form.reset();
-    onOpenChange(false);
+    try {
+      console.log('📝 Submitting department data:', data);
+      await onSubmit(data);
+      form.reset();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('❌ Error submitting department:', error);
+      // Error will be handled by parent component
+      throw error;
+    }
   };
 
   return (
