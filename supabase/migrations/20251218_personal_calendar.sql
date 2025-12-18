@@ -220,16 +220,16 @@ CREATE OR REPLACE FUNCTION sync_birthdays_to_calendar(year_to_sync INTEGER)
 RETURNS INTEGER AS $$
 DECLARE
   birthday_count INTEGER := 0;
+  rows_inserted INTEGER;
   employee_record RECORD;
 BEGIN
   FOR employee_record IN
     SELECT 
       id, 
-      voornaam, 
-      achternaam, 
-      geboortedatum
+      full_name, 
+      birth_date
     FROM profiles
-    WHERE geboortedatum IS NOT NULL
+    WHERE birth_date IS NOT NULL
   LOOP
     -- Create birthday event for each employee for all other users
     INSERT INTO calendar_events (
@@ -246,18 +246,18 @@ BEGIN
     )
     SELECT
       p.id as viewer_id,
-      '🎂 Verjaardag: ' || employee_record.voornaam || ' ' || employee_record.achternaam,
+      '🎂 Verjaardag: ' || employee_record.full_name,
       'Verjaardag van collega',
       'birthday',
       make_date(
         year_to_sync, 
-        EXTRACT(MONTH FROM employee_record.geboortedatum)::integer, 
-        EXTRACT(DAY FROM employee_record.geboortedatum)::integer
+        EXTRACT(MONTH FROM employee_record.birth_date)::integer, 
+        EXTRACT(DAY FROM employee_record.birth_date)::integer
       )::timestamp,
       make_date(
         year_to_sync, 
-        EXTRACT(MONTH FROM employee_record.geboortedatum)::integer, 
-        EXTRACT(DAY FROM employee_record.geboortedatum)::integer
+        EXTRACT(MONTH FROM employee_record.birth_date)::integer, 
+        EXTRACT(DAY FROM employee_record.birth_date)::integer
       )::timestamp + interval '1 day',
       TRUE,
       '#EC4899', -- Pink for birthdays
@@ -270,11 +270,12 @@ BEGIN
         SELECT 1 FROM calendar_events ce
         WHERE ce.user_id = p.id
           AND ce.event_type = 'birthday'
-          AND ce.title LIKE '%' || employee_record.voornaam || ' ' || employee_record.achternaam || '%'
+          AND ce.title LIKE '%' || employee_record.full_name || '%'
           AND EXTRACT(YEAR FROM ce.start_time) = year_to_sync
       );
     
-    GET DIAGNOSTICS birthday_count = ROW_COUNT + birthday_count;
+    GET DIAGNOSTICS rows_inserted = ROW_COUNT;
+    birthday_count := birthday_count + rows_inserted;
   END LOOP;
   
   RETURN birthday_count;

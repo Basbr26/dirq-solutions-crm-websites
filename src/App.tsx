@@ -35,6 +35,8 @@ import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
 import CalendarPage from "./pages/CalendarPage";
 import PlanningPage from "./pages/PlanningPage";
 import CompanySettingsPage from "./pages/CompanySettingsPage";
+import CostAnalyticsDashboard from "./pages/CostAnalyticsDashboard";
+import EmployeeContractsPage from "./pages/EmployeeContractsPage";
 import { HRChatbot } from "./components/ai/HRChatbot";
 
 const queryClient = new QueryClient();
@@ -246,6 +248,22 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['super_admin']}>
                     <CompanySettingsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/kosten" 
+                element={
+                  <ProtectedRoute allowedRoles={['super_admin']}>
+                    <CostAnalyticsDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/hr/contracten" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                    <EmployeeContractsPage />
                   </ProtectedRoute>
                 } 
               />

@@ -20,6 +20,11 @@ import {
   Building2,
   Shield,
   UserPlus,
+  Workflow,
+  BarChart3,
+  FileSearch,
+  PieChart,
+  FileSignature,
 } from 'lucide-react';
 
 interface NavItem {
@@ -49,22 +54,43 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       items: [
         { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Onboarding', icon: UserPlus, href: '/hr/onboarding', roles: ['hr', 'super_admin', 'manager'] },
+        { title: 'Contracten', icon: FileSignature, href: '/hr/contracten', roles: ['hr', 'super_admin'] },
         { title: 'Verzuim', icon: Heart, href: '/verzuim', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },
+        { title: 'Kalender', icon: Calendar, href: '/calendar' },
+        { title: 'Planning', icon: Briefcase, href: '/planning', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Documenten', icon: FileText, href: '/hr/documenten', roles: ['hr', 'super_admin'] },
+      ],
+    },
+    {
+      title: 'AI & Automatisering',
+      items: [
+        { title: 'Workflow Builder', icon: Workflow, href: '/hr/workflows/builder', roles: ['hr', 'super_admin'] },
+        { title: 'Workflow Uitvoeringen', icon: PieChart, href: '/hr/workflows/executions', roles: ['hr', 'super_admin', 'manager'] },
+        { title: 'Document Verwerking', icon: FileSearch, href: '/documents/processing', roles: ['hr', 'super_admin', 'manager', 'medewerker'] },
       ],
     },
   ];
 
   // Admin-only section
   if (role === 'super_admin') {
-    baseGroups.push({
-      title: 'Administratie',
-      items: [
-        { title: 'Afdelingen', icon: Building2, href: '/settings/afdelingen', roles: ['super_admin'] },
-        { title: 'Gebruikersbeheer', icon: Shield, href: '/settings/gebruikers', roles: ['super_admin'] },
-      ],
-    });
+    baseGroups.push(
+      {
+        title: 'Rapportage',
+        items: [
+          { title: 'Executive Dashboard', icon: BarChart3, href: '/dashboard/executive', roles: ['super_admin'] },
+          { title: 'Kosten Analyse', icon: PieChart, href: '/kosten', roles: ['super_admin'] },
+        ],
+      },
+      {
+        title: 'Administratie',
+        items: [
+          { title: 'Afdelingen', icon: Building2, href: '/settings/afdelingen', roles: ['super_admin'] },
+          { title: 'Gebruikersbeheer', icon: Shield, href: '/settings/gebruikers', roles: ['super_admin'] },
+          { title: 'Bedrijfsinstellingen', icon: Settings, href: '/settings/company', roles: ['super_admin'] },
+        ],
+      }
+    );
   }
 
   // Filter items based on role
