@@ -44,7 +44,7 @@ interface Employee {
   } | null;
   contracts?: Array<{
     id: string;
-    contract_status: string | null;
+    status: string | null;
     salary_gross: number | null;
     start_date: string | null;
     end_date: string | null;
@@ -83,7 +83,7 @@ export default function EmployeesPage() {
         .select(`
           *, 
           department:departments!profiles_department_id_fkey(name),
-          contracts:employee_contracts!employee_id(id, contract_status, salary_gross, start_date, end_date)
+          contracts:employee_contracts!employee_id(id, status, salary_gross, start_date, end_date)
         `);
       
       // Managers can only see their direct reports
@@ -183,14 +183,14 @@ export default function EmployeesPage() {
 
   const getContractStatusBadge = (employee: Employee) => {
     const contracts = employee.contracts || [];
-    const activeContract = contracts.find(c => c.contract_status === 'actief');
+    const activeContract = contracts.find(c => c.status === 'active');
     
     if (!activeContract && contracts.length === 0) {
       return <Badge variant="outline" className="text-yellow-600 bg-yellow-50 dark:bg-yellow-950 border-yellow-200">Potentieel</Badge>;
     }
     
     if (!activeContract && contracts.length > 0) {
-      const draftContract = contracts.find(c => c.contract_status === 'draft');
+      const draftContract = contracts.find(c => c.status === 'draft' || c.status === 'pending_signature');
       if (draftContract) {
         return <Badge variant="outline" className="text-orange-600 bg-orange-50 dark:bg-orange-950 border-orange-200">Aanbieding</Badge>;
       }
@@ -200,7 +200,7 @@ export default function EmployeesPage() {
       return <Badge variant="default" className="bg-green-600 dark:bg-green-700">Actief Contract</Badge>;
     }
     
-    const expiredContract = contracts.find(c => c.contract_status === 'verlopen');
+    const expiredContract = contracts.find(c => c.status === 'expired' || c.status === 'terminated');
     if (expiredContract) {
       return <Badge variant="secondary">Verlopen</Badge>;
     }
