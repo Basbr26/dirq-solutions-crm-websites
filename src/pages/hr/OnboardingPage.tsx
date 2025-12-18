@@ -242,7 +242,7 @@ export default function OnboardingPage() {
     <AppLayout 
       title="Onboarding" 
       subtitle="Beheer het inwerkproces van nieuwe medewerkers"
-      action={
+      actions={
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
