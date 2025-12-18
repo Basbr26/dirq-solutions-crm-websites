@@ -34,6 +34,7 @@ import { DocumentCard } from '@/components/documents/DocumentCard';
 import { EditEmployeeDialog } from '@/components/employee/EditEmployeeDialog';
 import { NoteCard } from '@/components/notes/NoteCard';
 import { NoteDialog } from '@/components/notes/NoteDialog';
+import { GenerateDocumentFromNotesDialog } from '@/components/notes/GenerateDocumentFromNotesDialog';
 import { useEmployeeNotes, useNoteStats, useDeleteNote, useTogglePin, useCompleteFollowUp, type HRNote } from '@/hooks/useEmployeeNotes';
 import { CATEGORIES, filterNotes, sortNotes, calculateNoteStats, getCategoryIcon } from '@/lib/notes/helpers';
 import { Input } from '@/components/ui/input';
@@ -141,6 +142,7 @@ export default function EmployeeDetailPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFollowUpsOnly, setShowFollowUpsOnly] = useState(false);
   const [showPinnedOnly, setShowPinnedOnly] = useState(false);
+  const [showGenerateDocDialog, setShowGenerateDocDialog] = useState(false);
 
   // Notes queries and mutations
   const { data: notes = [], isLoading: notesLoading } = useEmployeeNotes(id || '');
@@ -673,13 +675,24 @@ export default function EmployeeDetailPage() {
                   Privé notities over {employee?.voornaam} - Alleen zichtbaar voor HR en managers
                 </p>
               </div>
-              <Button onClick={() => {
-                setSelectedNote(undefined);
-                setShowNoteDialog(true);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nieuwe notitie
-              </Button>
+              <div className="flex gap-2">
+                {notes.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowGenerateDocDialog(true)}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Genereer document
+                  </Button>
+                )}
+                <Button onClick={() => {
+                  setSelectedNote(undefined);
+                  setShowNoteDialog(true);
+                }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nieuwe notitie
+                </Button>
+              </div>
             </div>
 
             {/* Filters */}
@@ -860,6 +873,16 @@ export default function EmployeeDetailPage() {
           note={selectedNote}
           open={showNoteDialog}
           onOpenChange={setShowNoteDialog}
+        />
+      )}
+
+      {/* Generate Document from Notes Dialog */}
+      {id && (
+        <GenerateDocumentFromNotesDialog
+          employeeId={id}
+          notes={notes}
+          open={showGenerateDocDialog}
+          onOpenChange={setShowGenerateDocDialog}
         />
       )}
     </AppLayout>

@@ -18,6 +18,8 @@ export type DocumentType =
   | 'bewijs_van_indiensttreding'
   | 'referentie_brief'
   | 'contract_verlenging'
+  // HR Rapporten (gegenereerd uit notities)
+  | 'hr_rapport'
   | 'overig';
 
 export type SignatureRole = 'employee' | 'manager' | 'hr' | 'bedrijfsarts';
@@ -88,6 +90,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   bewijs_van_indiensttreding: 'Bewijs van Indiensttreding',
   referentie_brief: 'Referentiebrief',
   contract_verlenging: 'Contract Verlenging',
+  hr_rapport: 'HR Rapport (uit notities)',
   overig: 'Overig',
 };
 
@@ -108,13 +111,14 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   bewijs_van_indiensttreding: 'Officieel document voor gemeente/instanties',
   referentie_brief: 'Referentie voor voormalige medewerker',
   contract_verlenging: 'Verlenging van bestaand contract',
+  hr_rapport: 'Performance review, feedback rapport of PIP gegenereerd uit HR notities',
   overig: 'Overige documentatie',
 };
 
 // Helper to categorize document types
 export const DOCUMENT_CATEGORIES = {
   verzuim: ['probleemanalyse', 'plan_van_aanpak', 'evaluatie_3_maanden', 'evaluatie_6_maanden', 'evaluatie_1_jaar', 'herstelmelding', 'uwv_melding', 'gespreksverslag'] as DocumentType[],
-  hr: ['arbeidsovereenkomst', 'nda', 'onboarding_checklist', 'bewijs_van_indiensttreding', 'referentie_brief', 'contract_verlenging'] as DocumentType[],
+  hr: ['arbeidsovereenkomst', 'nda', 'onboarding_checklist', 'bewijs_van_indiensttreding', 'referentie_brief', 'contract_verlenging', 'hr_rapport'] as DocumentType[],
 } as const;
 
 export const SIGNATURE_ROLE_LABELS: Record<SignatureRole, string> = {
