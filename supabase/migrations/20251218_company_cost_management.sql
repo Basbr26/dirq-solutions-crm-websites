@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS company_settings (
 );
 
 -- Ensure only one record
-CREATE UNIQUE INDEX single_company_settings_idx ON company_settings ((true));
+CREATE UNIQUE INDEX IF NOT EXISTS single_company_settings_idx ON company_settings ((true));
 
 -- ============================================================
 -- 2. SALARY SCALES & JOB LEVELS
@@ -596,33 +596,33 @@ HR Manager
 -- ============================================================
 
 -- Job levels & scales
-CREATE INDEX idx_job_levels_active ON job_levels(is_active);
-CREATE INDEX idx_salary_scales_job_level ON salary_scales(job_level_id);
-CREATE INDEX idx_salary_scales_department ON salary_scales(department_id);
-CREATE INDEX idx_salary_scales_active ON salary_scales(is_active, valid_from, valid_until);
+CREATE INDEX IF NOT EXISTS idx_job_levels_active ON job_levels(is_active);
+CREATE INDEX IF NOT EXISTS idx_salary_scales_job_level ON salary_scales(job_level_id);
+CREATE INDEX IF NOT EXISTS idx_salary_scales_department ON salary_scales(department_id);
+CREATE INDEX IF NOT EXISTS idx_salary_scales_active ON salary_scales(is_active, valid_from, valid_until);
 
 -- Allowances & benefits
-CREATE INDEX idx_allowance_types_category ON allowance_types(category);
-CREATE INDEX idx_allowance_types_active ON allowance_types(is_active);
-CREATE INDEX idx_benefits_category ON benefits(category);
-CREATE INDEX idx_benefit_package_items_package ON benefit_package_items(package_id);
+CREATE INDEX IF NOT EXISTS idx_allowance_types_category ON allowance_types(category);
+CREATE INDEX IF NOT EXISTS idx_allowance_types_active ON allowance_types(is_active);
+CREATE INDEX IF NOT EXISTS idx_benefits_category ON benefits(category);
+CREATE INDEX IF NOT EXISTS idx_benefit_package_items_package ON benefit_package_items(package_id);
 
 -- Contracts
-CREATE INDEX idx_employee_contracts_employee ON employee_contracts(employee_id);
-CREATE INDEX idx_employee_contracts_status ON employee_contracts(status);
-CREATE INDEX idx_employee_contracts_dates ON employee_contracts(start_date, end_date);
-CREATE INDEX idx_employee_contracts_job_level ON employee_contracts(job_level_id);
-CREATE INDEX idx_employee_contracts_department ON employee_contracts(department_id);
+CREATE INDEX IF NOT EXISTS idx_employee_contracts_employee ON employee_contracts(employee_id);
+CREATE INDEX IF NOT EXISTS idx_employee_contracts_status ON employee_contracts(status);
+CREATE INDEX IF NOT EXISTS idx_employee_contracts_dates ON employee_contracts(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_employee_contracts_job_level ON employee_contracts(job_level_id);
+CREATE INDEX IF NOT EXISTS idx_employee_contracts_department ON employee_contracts(department_id);
 
 -- Contract allowances & benefits
-CREATE INDEX idx_contract_allowances_contract ON employee_contract_allowances(contract_id);
-CREATE INDEX idx_employee_benefits_employee ON employee_benefits(employee_id);
-CREATE INDEX idx_employee_benefits_status ON employee_benefits(status);
+CREATE INDEX IF NOT EXISTS idx_contract_allowances_contract ON employee_contract_allowances(contract_id);
+CREATE INDEX IF NOT EXISTS idx_employee_benefits_employee ON employee_benefits(employee_id);
+CREATE INDEX IF NOT EXISTS idx_employee_benefits_status ON employee_benefits(status);
 
 -- Cost tracking
-CREATE INDEX idx_cost_summary_employee ON employee_cost_summary(employee_id);
-CREATE INDEX idx_cost_summary_period ON employee_cost_summary(year, month);
-CREATE INDEX idx_cost_summary_contract ON employee_cost_summary(contract_id);
+CREATE INDEX IF NOT EXISTS idx_cost_summary_employee ON employee_cost_summary(employee_id);
+CREATE INDEX IF NOT EXISTS idx_cost_summary_period ON employee_cost_summary(year, month);
+CREATE INDEX IF NOT EXISTS idx_cost_summary_contract ON employee_cost_summary(contract_id);
 
 -- ============================================================
 -- 9. ROW LEVEL SECURITY
