@@ -85,7 +85,7 @@ export default function HRDashboardPage() {
       ] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, voornaam, achternaam, date_of_birth, end_date, foto_url, employment_status')
+          .select('id, voornaam, achternaam, geboortedatum, eind_datum, foto_url, employment_status')
           .eq('employment_status', 'actief'),
         supabase
           .from('sick_leave_cases')
@@ -107,9 +107,9 @@ export default function HRDashboardPage() {
 
       // Calculate upcoming birthdays (next 30 days)
       const upcomingBirthdays = employees
-        .filter((emp) => emp.date_of_birth)
+        .filter((emp) => emp.geboortedatum)
         .map((emp) => {
-          const birthDate = parseISO(emp.date_of_birth!);
+          const birthDate = parseISO(emp.geboortedatum!);
           const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
           let nextBirthday = thisYearBirthday;
           
@@ -133,9 +133,9 @@ export default function HRDashboardPage() {
 
       // Calculate expiring contracts (next 90 days)
       const expiringContracts = employees
-        .filter((emp) => emp.end_date)
+        .filter((emp) => emp.eind_datum)
         .map((emp) => {
-          const endDate = parseISO(emp.end_date!);
+          const endDate = parseISO(emp.eind_datum!);
           const daysUntil = differenceInDays(endDate, today);
           
           return {
