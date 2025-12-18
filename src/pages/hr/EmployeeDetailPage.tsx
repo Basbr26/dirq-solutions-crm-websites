@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import {
   ArrowLeft,
   Edit,
@@ -581,17 +582,126 @@ export default function EmployeeDetailPage() {
           <TabsContent value="contract" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Contractgegevens</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <InfoRow label="Personeelsnummer" value={employee.employee_number || '-'} />
-                  <InfoRow label="Contracttype" value={getContractLabel(employee.contract_type)} />
-                  <InfoRow label="Uren per week" value={employee.hours_per_week ? `${employee.hours_per_week} uur` : '-'} />
-                  <InfoRow label="In dienst sinds" value={formatDate(employee.start_date)} />
-                  <InfoRow label="Uit dienst per" value={formatDate(employee.end_date)} />
-                  <InfoRow label="Status" value={employee.employment_status || '-'} />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Briefcase className="h-5 w-5 text-primary" />
+                      Arbeidscontract
+                    </CardTitle>
+                    <CardDescription>Contract en functie details</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/hr/contracten')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Beheer Contracten</span>
+                    <span className="sm:hidden">Beheer</span>
+                  </Button>
                 </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Contract Status Banner */}
+                <div className={cn(
+                  "p-4 rounded-lg border-2",
+                  employee.employment_status === 'actief' ? 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800' :
+                  employee.employment_status === 'met_verlof' ? 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800' :
+                  'bg-gray-50 dark:bg-gray-950 border-gray-200 dark:border-gray-800'
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "p-2 rounded-full",
+                        employee.employment_status === 'actief' ? 'bg-green-100 dark:bg-green-900' :
+                        employee.employment_status === 'met_verlof' ? 'bg-blue-100 dark:bg-blue-900' :
+                        'bg-gray-100 dark:bg-gray-900'
+                      )}>
+                        <Briefcase className={cn(
+                          "h-5 w-5",
+                          employee.employment_status === 'actief' ? 'text-green-600 dark:text-green-400' :
+                          employee.employment_status === 'met_verlof' ? 'text-blue-600 dark:text-blue-400' :
+                          'text-gray-600 dark:text-gray-400'
+                        )} />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-lg">
+                          {getContractLabel(employee.contract_type)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {employee.hours_per_week ? `${employee.hours_per_week} uur per week` : 'Uren niet gespecificeerd'}
+                        </p>
+                      </div>
+                    </div>
+                    {getStatusBadge(employee.employment_status)}
+                  </div>
+                </div>
+
+                {/* Contract Details Grid */}
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Personeelsnummer</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-lg font-semibold">{employee.employee_number || '-'}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Contracttype</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-lg font-semibold">{getContractLabel(employee.contract_type)}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">In dienst sinds</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-lg font-semibold">{formatDate(employee.start_date)}</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Uit dienst per</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-lg font-semibold">
+                        {employee.end_date ? formatDate(employee.end_date) : (
+                          <span className="text-green-600 dark:text-green-400">Onbepaalde tijd</span>
+                        )}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Banking Info */}
+                {employee.bank_account && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" />
+                        Bankgegevens
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="font-mono text-sm">{employee.bank_account}</p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Contract Notes */}
+                {employee.notes && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm">Opmerkingen</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">{employee.notes}</p>
+                    </CardContent>
+                  </Card>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

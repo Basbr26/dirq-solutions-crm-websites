@@ -42,6 +42,13 @@ interface Employee {
   department?: {
     name: string;
   } | null;
+  contracts?: Array<{
+    id: string;
+    contract_status: string | null;
+    salary_gross: number | null;
+    start_date: string | null;
+    end_date: string | null;
+  }>;
 }
 
 export default function EmployeesPage() {
@@ -70,10 +77,14 @@ export default function EmployeesPage() {
         .eq('id', user?.id || '')
         .single();
       
-      // Build employees query with manager filter
+      // Build employees query with manager filter and contract info
       let employeesQuery = supabase
         .from('profiles')
-        .select('*, department:departments!profiles_department_id_fkey(name)');
+        .select(`
+          *, 
+          department:departments!profiles_department_id_fkey(name),
+          contracts:employee_contracts!employee_id(id, contract_status, salary_gross, start_date, end_date)
+        `);
       
       // Managers can only see their direct reports
       if (profile?.role === 'manager' && user) {
@@ -168,6 +179,33 @@ export default function EmployeesPage() {
       case 'stage': return 'Stage';
       default: return '-';
     }
+  };
+
+  const getContractStatusBadge = (employee: Employee) => {
+    const contracts = employee.contracts || [];
+    const activeContract = contracts.find(c => c.contract_status === 'actief');
+    
+    if (!activeContract && contracts.length === 0) {
+      return <Badge variant="outline" className="text-yellow-600 bg-yellow-50 dark:bg-yellow-950 border-yellow-200">Potentieel</Badge>;
+    }
+    
+    if (!activeContract && contracts.length > 0) {
+      const draftContract = contracts.find(c => c.contract_status === 'draft');
+      if (draftContract) {
+        return <Badge variant="outline" className="text-orange-600 bg-orange-50 dark:bg-orange-950 border-orange-200">Aanbieding</Badge>;
+      }
+    }
+    
+    if (activeContract) {
+      return <Badge variant="default" className="bg-green-600 dark:bg-green-700">Actief Contract</Badge>;
+    }
+    
+    const expiredContract = contracts.find(c => c.contract_status === 'verlopen');
+    if (expiredContract) {
+      return <Badge variant="secondary">Verlopen</Badge>;
+    }
+    
+    return null;
   };
 
   return (
@@ -286,6 +324,7 @@ export default function EmployeesPage() {
                     <TableHead>Afdeling</TableHead>
                     <TableHead>Contract</TableHead>
                     <TableHead>Uren</TableHead>
+                    <TableHead>Contract Status</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -293,14 +332,14 @@ export default function EmployeesPage() {
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <TableRow key={i}>
-                        <TableCell colSpan={6}>
+                        <TableCell colSpan={7}>
                           <div className="h-12 bg-muted animate-pulse rounded" />
                         </TableCell>
                       </TableRow>
                     ))
                   ) : filteredEmployees.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         {searchQuery || statusFilter !== 'all' || departmentFilter !== 'all'
                           ? 'Geen medewerkers gevonden met deze filters'
                           : 'Nog geen medewerkers'}
@@ -331,6 +370,7 @@ export default function EmployeesPage() {
                         <TableCell>{employee.department?.name || '-'}</TableCell>
                         <TableCell>{getContractLabel(employee.contract_type)}</TableCell>
                         <TableCell>{employee.hours_per_week ? `${employee.hours_per_week}u` : '-'}</TableCell>
+                        <TableCell>{getContractStatusBadge(employee)}</TableCell>
                         <TableCell>{getStatusBadge(employee.employment_status)}</TableCell>
                       </TableRow>
                     ))
@@ -388,7 +428,7 @@ export default function EmployeesPage() {
                         {getStatusBadge(employee.employment_status)}
                       </div>
                       
-                      <div className="mt-2 space-y-1">
+                      <div className="mt-2 space-y-1.5">
                         {employee.functie && (
                           <p className="text-sm text-muted-foreground">
                             <span className="font-medium">Functie:</span> {employee.functie}
@@ -399,13 +439,16 @@ export default function EmployeesPage() {
                             <span className="font-medium">Afdeling:</span> {employee.department.name}
                           </p>
                         )}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                          {employee.contract_type && (
-                            <span>{getContractLabel(employee.contract_type)}</span>
-                          )}
-                          {employee.hours_per_week && (
-                            <span>{employee.hours_per_week}u/week</span>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            {employee.contract_type && (
+                              <span>{getContractLabel(employee.contract_type)}</span>
+                            )}
+                            {employee.hours_per_week && (
+                              <span>{employee.hours_per_week}u/week</span>
+                            )}
+                          </div>
+                          {getContractStatusBadge(employee)}
                         </div>
                       </div>
                     </div>
