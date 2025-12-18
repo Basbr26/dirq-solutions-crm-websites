@@ -45,7 +45,7 @@ interface Employee {
   contracts?: Array<{
     id: string;
     status: string | null;
-    salary_gross: number | null;
+    base_salary_monthly: number | null;
     start_date: string | null;
     end_date: string | null;
   }>;
@@ -83,7 +83,7 @@ export default function EmployeesPage() {
         .select(`
           *, 
           department:departments!profiles_department_id_fkey(name),
-          contracts:employee_contracts!employee_id(id, status, salary_gross, start_date, end_date)
+          contracts:employee_contracts!employee_id(id, status, base_salary_monthly, start_date, end_date)
         `);
       
       // Managers can only see their direct reports
