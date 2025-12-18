@@ -191,21 +191,22 @@ export default function LeavePage() {
         </div>
 
         <Tabs defaultValue={isManager && stats.pending > 0 ? 'goedkeuren' : 'overzicht'} className="space-y-6">
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="w-full justify-start tabs-list-scrollable">
             {isManager && (
-              <TabsTrigger value="goedkeuren" className="gap-2">
+              <TabsTrigger value="goedkeuren" className="gap-2 flex-shrink-0">
                 <CheckCircle className="h-4 w-4" />
-                Goedkeuren
+                <span className="hidden sm:inline">Goedkeuren</span>
+                <span className="sm:hidden">Pending</span>
                 {stats.pending > 0 && (
                   <Badge variant="secondary" className="ml-1">{stats.pending}</Badge>
                 )}
               </TabsTrigger>
             )}
-            <TabsTrigger value="overzicht" className="gap-2">
+            <TabsTrigger value="overzicht" className="gap-2 flex-shrink-0">
               <List className="h-4 w-4" />
               Overzicht
             </TabsTrigger>
-            <TabsTrigger value="kalender" className="gap-2">
+            <TabsTrigger value="kalender" className="gap-2 flex-shrink-0">
               <Calendar className="h-4 w-4" />
               Kalender
             </TabsTrigger>

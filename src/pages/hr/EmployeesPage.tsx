@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Search, Plus, Filter, Users, UserCheck, UserMinus, Clock } from 'lucide-react';
+import { Search, Plus, Filter, Users, UserCheck, UserMinus, Clock, ChevronRight } from 'lucide-react';
 import { CreateEmployeeDialog } from '@/components/employee/CreateEmployeeDialog';
 
 interface Employee {
@@ -274,8 +274,8 @@ export default function EmployeesPage() {
           </Select>
         </div>
 
-        {/* Employee Table */}
-        <Card>
+        {/* Desktop: Employee Table */}
+        <Card className="hidden md:block">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
@@ -340,6 +340,83 @@ export default function EmployeesPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Mobile: Employee Cards */}
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="p-4">
+                  <div className="h-16 bg-muted animate-pulse rounded" />
+                </CardContent>
+              </Card>
+            ))
+          ) : filteredEmployees.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                {searchQuery || statusFilter !== 'all' || departmentFilter !== 'all'
+                  ? 'Geen medewerkers gevonden met deze filters'
+                  : 'Nog geen medewerkers'}
+              </CardContent>
+            </Card>
+          ) : (
+            filteredEmployees.map((employee) => (
+              <Card 
+                key={employee.id}
+                className="cursor-pointer hover:bg-muted/50 active:bg-muted"
+                onClick={() => navigate(`/hr/medewerkers/${employee.id}`)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-12 w-12 flex-shrink-0">
+                      <AvatarImage src={employee.foto_url || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                        {employee.voornaam?.[0]}{employee.achternaam?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-base">
+                            {employee.voornaam} {employee.achternaam}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {employee.email}
+                          </p>
+                        </div>
+                        {getStatusBadge(employee.employment_status)}
+                      </div>
+                      
+                      <div className="mt-2 space-y-1">
+                        {employee.functie && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Functie:</span> {employee.functie}
+                          </p>
+                        )}
+                        {employee.department && (
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium">Afdeling:</span> {employee.department.name}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          {employee.contract_type && (
+                            <span>{getContractLabel(employee.contract_type)}</span>
+                          )}
+                          {employee.hours_per_week && (
+                            <span>{employee.hours_per_week}u/week</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       </div>
 
       <CreateEmployeeDialog

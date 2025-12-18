@@ -368,30 +368,33 @@ export default function EmployeeDetailPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="gegevens" className="space-y-6">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="gegevens" className="gap-2">
+          <TabsList className="w-full justify-start tabs-list-scrollable">
+            <TabsTrigger value="gegevens" className="gap-2 flex-shrink-0">
               <User className="h-4 w-4" />
-              Gegevens
+              <span className="hidden sm:inline">Gegevens</span>
+              <span className="sm:hidden">Info</span>
             </TabsTrigger>
-            <TabsTrigger value="contract" className="gap-2">
+            <TabsTrigger value="contract" className="gap-2 flex-shrink-0">
               <Briefcase className="h-4 w-4" />
               Contract
             </TabsTrigger>
-            <TabsTrigger value="verzuim" className="gap-2">
+            <TabsTrigger value="verzuim" className="gap-2 flex-shrink-0">
               <Heart className="h-4 w-4" />
               Verzuim
             </TabsTrigger>
-            <TabsTrigger value="verlof" className="gap-2">
+            <TabsTrigger value="verlof" className="gap-2 flex-shrink-0">
               <Calendar className="h-4 w-4" />
               Verlof
             </TabsTrigger>
-            <TabsTrigger value="documenten" className="gap-2">
+            <TabsTrigger value="documenten" className="gap-2 flex-shrink-0">
               <FileText className="h-4 w-4" />
-              Documenten
+              <span className="hidden sm:inline">Documenten</span>
+              <span className="sm:hidden">Docs</span>
             </TabsTrigger>
-            <TabsTrigger value="notities" className="gap-2">
+            <TabsTrigger value="notities" className="gap-2 flex-shrink-0">
               <MessageSquare className="h-4 w-4" />
-              Notities
+              <span className="hidden sm:inline">Notities</span>
+              <span className="sm:hidden">Notes</span>
             </TabsTrigger>
           </TabsList>
 

@@ -270,11 +270,11 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+      <DialogContent className="max-w-full sm:max-w-[700px] max-h-screen sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="flex items-center gap-2 text-xl">
             <UserPlus className="h-5 w-5" />
-            Nieuwe Medewerker Aanmaken
+            Nieuwe Medewerker
           </DialogTitle>
         </DialogHeader>
 
