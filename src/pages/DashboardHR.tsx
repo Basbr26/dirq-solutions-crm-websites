@@ -282,58 +282,72 @@ export default function DashboardHR() {
           </TabsList>
 
           <TabsContent value="overzicht" className="space-y-4 md:space-y-6">
-            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <Users className="h-6 w-6 text-primary" />
+            {/* Bento Box Grid - Mobile: 2 cols, Desktop: 4 cols with varied spans */}
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 auto-rows-fr">
+              {/* Total - spans 1 col on mobile, 1 on desktop */}
+              <Card className="lg:col-span-1">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
+                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Totaal</p>
-                      <p className="text-2xl font-bold">{stats.total}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-red-500/10">
-                      <TrendingUp className="h-6 w-6 text-red-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Actief</p>
-                      <p className="text-2xl font-bold">{stats.actief}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Totaal</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-orange-500/10">
-                      <Clock className="h-6 w-6 text-orange-500" />
+              {/* Active - spans 1 col on mobile, 2 on desktop for emphasis */}
+              <Card className="lg:col-span-2 bg-gradient-to-br from-red-500/5 to-red-500/10 border-red-200 dark:border-red-900/30">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <div className="p-2 sm:p-3 rounded-lg bg-red-500/10 flex-shrink-0">
+                        <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-red-500" />
+                      </div>
+                      <div>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Actief</p>
+                        <p className="text-xl sm:text-3xl font-bold text-red-600 dark:text-red-500">{stats.actief}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Herstel Gemeld</p>
-                      <p className="text-2xl font-bold">{stats.herstel_gemeld}</p>
+                    <div className="hidden lg:flex flex-col items-end text-sm text-muted-foreground">
+                      <span>Vereist aandacht</span>
+                      <span className="text-xs">Direct actie nodig</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-green-500/10">
-                      <Users className="h-6 w-6 text-green-500" />
+              {/* Recovery - spans 1 col */}
+              <Card className="lg:col-span-1">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-orange-500/10 flex-shrink-0">
+                      <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Gesloten</p>
-                      <p className="text-2xl font-bold">{stats.gesloten}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Herstel</p>
+                      <p className="text-xl sm:text-2xl font-bold">{stats.herstel_gemeld}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Closed - spans 2 cols on mobile for balance, 1 on desktop */}
+              <Card className="col-span-2 lg:col-span-1 bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-200 dark:border-green-900/30">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="p-2 sm:p-3 rounded-lg bg-green-500/10 flex-shrink-0">
+                      <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground">Gesloten dit kwartaal</p>
+                      <div className="flex items-baseline gap-2">
+                        <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-500">{stats.gesloten}</p>
+                        <span className="text-xs text-muted-foreground hidden sm:inline">successen</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

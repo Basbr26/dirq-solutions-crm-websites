@@ -24,7 +24,10 @@ export function AppLayout({ children, title, subtitle, actions, hideQuickAction 
         <AppHeader title={title} subtitle={subtitle} actions={actions} />
         
         <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-          {children}
+          {/* Desktop: Max-width container with padding. Mobile: Full width */}
+          <div className="w-full lg:max-w-[1400px] lg:mx-auto px-4 md:px-8">
+            {children}
+          </div>
         </main>
       </div>
       

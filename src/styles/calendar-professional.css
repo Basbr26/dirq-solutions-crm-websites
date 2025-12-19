@@ -1,0 +1,184 @@
+/* Professional Calendar Styling - Outlook/Google Calendar inspired */
+
+.calendar-professional .rbc-calendar {
+  font-family: inherit;
+}
+
+/* Month view grid */
+.calendar-professional .rbc-month-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.calendar-professional .rbc-header {
+  padding: 1rem 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+  background-color: hsl(var(--muted) / 0.3);
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+.calendar-professional .rbc-month-row {
+  border-top: 1px solid hsl(var(--border));
+  min-height: 100px;
+}
+
+.calendar-professional .rbc-day-bg {
+  border-left: 1px solid hsl(var(--border));
+  transition: background-color 0.2s ease;
+}
+
+.calendar-professional .rbc-day-bg:hover {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+.calendar-professional .rbc-off-range-bg {
+  background-color: hsl(var(--muted) / 0.1);
+}
+
+.calendar-professional .rbc-today {
+  background-color: hsl(var(--primary) / 0.05);
+  position: relative;
+}
+
+.calendar-professional .rbc-today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: hsl(var(--primary));
+}
+
+/* Date numbers */
+.calendar-professional .rbc-date-cell {
+  padding: 0.5rem;
+  text-align: right;
+}
+
+.calendar-professional .rbc-date-cell > a {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: hsl(var(--foreground));
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease;
+}
+
+.calendar-professional .rbc-date-cell > a:hover {
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+}
+
+.calendar-professional .rbc-off-range .rbc-date-cell > a {
+  color: hsl(var(--muted-foreground));
+}
+
+.calendar-professional .rbc-today .rbc-date-cell > a {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+}
+
+/* Events */
+.calendar-professional .rbc-event {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: none;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-professional .rbc-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-professional .rbc-event-label {
+  display: none;
+}
+
+.calendar-professional .rbc-event-content {
+  font-weight: 500;
+}
+
+/* Show more link */
+.calendar-professional .rbc-show-more {
+  background-color: transparent;
+  color: hsl(var(--primary));
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem;
+  margin: 0.25rem 0.5rem;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.calendar-professional .rbc-show-more:hover {
+  background-color: hsl(var(--primary) / 0.1);
+  border-radius: 0.25rem;
+}
+
+/* Week/Day views */
+.calendar-professional .rbc-time-view {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.calendar-professional .rbc-time-header {
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+.calendar-professional .rbc-time-content {
+  border-top: 1px solid hsl(var(--border));
+}
+
+.calendar-professional .rbc-time-slot {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.calendar-professional .rbc-current-time-indicator {
+  background-color: hsl(var(--destructive));
+  height: 2px;
+}
+
+/* Popup/Overlay */
+.calendar-professional .rbc-overlay {
+  background-color: hsl(var(--popover));
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 0.5rem;
+}
+
+.calendar-professional .rbc-overlay-header {
+  border-bottom: 1px solid hsl(var(--border));
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .calendar-professional .rbc-header {
+    font-size: 0.75rem;
+    padding: 0.75rem 0.25rem;
+  }
+
+  .calendar-professional .rbc-month-row {
+    min-height: 80px;
+  }
+
+  .calendar-professional .rbc-event {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.375rem;
+  }
+}

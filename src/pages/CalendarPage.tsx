@@ -4,6 +4,7 @@ import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, addMonths, subMonths, isSameDay } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import '@/styles/calendar-professional.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -17,6 +18,7 @@ import { CalendarFilters } from '@/components/calendar/CalendarFilters';
 import { HorizontalDatePicker } from '@/components/calendar/HorizontalDatePicker';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { SidePanel } from '@/components/ui/side-panel';
 
 const locales = { nl };
 const localizer = dateFnsLocalizer({
@@ -221,9 +223,9 @@ export default function CalendarPage() {
           />
         )}
         
-        {/* Desktop: react-big-calendar */}
+        {/* Desktop: react-big-calendar with enhanced styling */}
         {isDesktop ? (
-          <Card className="p-4">
+          <Card className="p-4 lg:p-6">
             {isLoading ? (
               <div className="flex items-center justify-center h-[600px]">
                 <div className="animate-pulse text-muted-foreground">
@@ -231,50 +233,22 @@ export default function CalendarPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ height: '700px' }}>
-                <Calendar
-                  localizer={localizer}
-                  events={calendarEvents}
-                  startAccessor="start"
-                  endAccessor="end"
-                  view={view}
-                  onView={(newView) => setView(newView)}
-                  date={date}
-                  onNavigate={(newDate) => setDate(newDate)}
-                  eventPropGetter={eventStyleGetter}
-                  onSelectEvent={(event) => setSelectedEvent(event.resource)}
-                  selectable
-                  popup
-                  toolbar={false}
-                  messages={{
-                    next: 'Volgende',
-                    previous: 'Vorige',
-                    today: 'Vandaag',
-                    month: 'Maand',
-                    week: 'Week',
-                    day: 'Dag',
-                    agenda: 'Agenda',
-                    date: 'Datum',
-                    time: 'Tijd',
-                    event: 'Event',
-                    noEventsInRange: 'Geen events in deze periode',
-                    showMore: (total) => `+${total} meer`
-                  }}
-                />
-                
-                {/* Custom Toolbar */}
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="space-y-4">
+                {/* Custom Toolbar - Above calendar */}
+                <div className="flex items-center justify-between pb-4 border-b">
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleNavigate('PREV')}
+                      className="h-9 w-9"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => handleNavigate('TODAY')}
+                      className="h-9"
                     >
                       Vandaag
                     </Button>
@@ -282,12 +256,13 @@ export default function CalendarPage() {
                       variant="outline"
                       size="icon"
                       onClick={() => handleNavigate('NEXT')}
+                      className="h-9 w-9"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
                   
-                  <div className="text-lg font-semibold">
+                  <div className="text-lg lg:text-xl font-semibold">
                     {format(date, 'MMMM yyyy', { locale: nl })}
                   </div>
                   
@@ -314,6 +289,39 @@ export default function CalendarPage() {
                       Dag
                     </Button>
                   </div>
+                </div>
+
+                {/* Calendar Grid */}
+                <div style={{ height: '700px' }} className="calendar-professional">
+                  <Calendar
+                    localizer={localizer}
+                    events={calendarEvents}
+                    startAccessor="start"
+                    endAccessor="end"
+                    view={view}
+                    onView={(newView) => setView(newView)}
+                    date={date}
+                    onNavigate={(newDate) => setDate(newDate)}
+                    eventPropGetter={eventStyleGetter}
+                    onSelectEvent={(event) => setSelectedEvent(event.resource)}
+                    selectable
+                    popup
+                    toolbar={false}
+                    messages={{
+                      next: 'Volgende',
+                      previous: 'Vorige',
+                      today: 'Vandaag',
+                      month: 'Maand',
+                      week: 'Week',
+                      day: 'Dag',
+                      agenda: 'Agenda',
+                      date: 'Datum',
+                      time: 'Tijd',
+                      event: 'Event',
+                      noEventsInRange: 'Geen events in deze periode',
+                      showMore: (total) => `+${total} meer`
+                    }}
+                  />
                 </div>
               </div>
             )}
@@ -391,14 +399,60 @@ export default function CalendarPage() {
         </div>
       )}
       
-      {/* Dialogs */}
-      {selectedEvent && (
+      {/* Event Detail - Side Panel on Desktop, Dialog on Mobile */}
+      {selectedEvent && isDesktop ? (
+        <SidePanel
+          open={!!selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+          title="Event Details"
+          width="lg"
+        >
+          <EventDetailContent event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        </SidePanel>
+      ) : selectedEvent ? (
         <EventDetailDialog
           event={selectedEvent}
           open={!!selectedEvent}
           onOpenChange={(open) => !open && setSelectedEvent(null)}
         />
-      )}
+      ) : null}
     </AppLayout>
+  );
+}
+
+// Helper component for Event Detail Content (reusable in both SidePanel and Dialog)
+function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
+        {event.description && (
+          <p className="text-muted-foreground">{event.description}</p>
+        )}
+      </div>
+      
+      <div className="space-y-2 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">Tijd:</span>
+          <span>{format(new Date(event.start_time), 'PPP HH:mm', { locale: nl })} - {format(new Date(event.end_time), 'HH:mm', { locale: nl })}</span>
+        </div>
+        
+        {event.location && (
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Locatie:</span>
+            <span>{event.location}</span>
+          </div>
+        )}
+        
+        {event.meeting_url && (
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Meeting URL:</span>
+            <a href={event.meeting_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              Deelnemen
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

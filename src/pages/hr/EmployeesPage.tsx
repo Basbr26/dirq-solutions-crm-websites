@@ -315,20 +315,20 @@ export default function EmployeesPage() {
           </Select>
         </div>
 
-        {/* Desktop: Employee Table */}
+        {/* Desktop: Employee Table with Sticky Header */}
         <Card className="hidden md:block">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[calc(100vh-400px)] relative">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-card z-10 shadow-sm">
                   <TableRow>
-                    <TableHead className="w-[300px]">Medewerker</TableHead>
-                    <TableHead>Functie</TableHead>
-                    <TableHead>Afdeling</TableHead>
-                    <TableHead>Contract</TableHead>
-                    <TableHead>Uren</TableHead>
-                    <TableHead>Contract Status</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[300px] font-semibold">Medewerker</TableHead>
+                    <TableHead className="font-semibold">Functie</TableHead>
+                    <TableHead className="font-semibold">Afdeling</TableHead>
+                    <TableHead className="font-semibold">Contract</TableHead>
+                    <TableHead className="font-semibold">Uren</TableHead>
+                    <TableHead className="font-semibold">Contract Status</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -352,27 +352,31 @@ export default function EmployeesPage() {
                     filteredEmployees.map((employee) => (
                       <TableRow 
                         key={employee.id} 
-                        className="cursor-pointer hover:bg-muted/50"
+                        className="cursor-pointer hover:bg-muted/50 transition-colors group"
                         onClick={() => navigate(`/hr/medewerkers/${employee.id}`)}
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
+                            <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
                               <AvatarImage src={employee.foto_url || undefined} />
                               <AvatarFallback className="bg-primary/10 text-primary font-medium">
                                 {employee.voornaam?.[0]}{employee.achternaam?.[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <p className="font-medium">{employee.voornaam} {employee.achternaam}</p>
+                              <p className="font-medium group-hover:text-primary transition-colors">{employee.voornaam} {employee.achternaam}</p>
                               <p className="text-sm text-muted-foreground">{employee.email}</p>
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>{employee.functie || '-'}</TableCell>
-                        <TableCell>{employee.department?.name || '-'}</TableCell>
+                        <TableCell className="font-medium text-muted-foreground">{employee.functie || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-normal">
+                            {employee.department?.name || '-'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{getContractLabel(employee.contract_type)}</TableCell>
-                        <TableCell>{employee.hours_per_week ? `${employee.hours_per_week}u` : '-'}</TableCell>
+                        <TableCell className="font-mono text-sm">{employee.hours_per_week ? `${employee.hours_per_week}u` : '-'}</TableCell>
                         <TableCell>{getContractStatusBadge(employee)}</TableCell>
                         <TableCell>{getStatusBadge(employee.employment_status)}</TableCell>
                       </TableRow>
