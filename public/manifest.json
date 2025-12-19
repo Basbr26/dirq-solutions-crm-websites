@@ -1,0 +1,25 @@
+{
+  "name": "Dirq HR Platform",
+  "short_name": "Dirq HR",
+  "description": "Complete HR platform voor Nederlandse MKB bedrijven",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#06BDC7",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "screenshots": []
+}
