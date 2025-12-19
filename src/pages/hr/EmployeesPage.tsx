@@ -494,14 +494,5 @@ function EmployeeCardMobile({ employee, onClick }: { employee: any; onClick: () 
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-      <CreateEmployeeDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onSuccess={loadData}
-      />
-    </AppLayout>
   );
 }
