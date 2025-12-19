@@ -2,10 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AnimatePresence, motion } from "framer-motion";
 import Auth from "./pages/Auth";
 import DashboardHR from "./pages/DashboardHR";
 import DashboardManager from "./pages/DashboardManager";
@@ -42,6 +43,387 @@ import ManagerMobilePage from "./pages/manager/ManagerMobilePage";
 import AIChatPage from "./pages/AIChatPage";
 
 const queryClient = new QueryClient();
+
+// Page transition variants
+const pageVariants = {
+  initial: {
+    opacity: 0,
+    x: 100,
+  },
+  enter: {
+    opacity: 1,
+    x: 0,
+  },
+  exit: {
+    opacity: 0,
+    x: -100,
+  },
+};
+
+const pageTransition = {
+  type: "spring",
+  stiffness: 380,
+  damping: 30,
+};
+
+// Wrapper component for animated routes
+function AnimatedRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      initial="initial"
+      animate="enter"
+      exit="exit"
+      variants={pageVariants}
+      transition={pageTransition}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Routes wrapper with AnimatePresence
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<AnimatedRoute><RoleBasedRedirect /></AnimatedRoute>} />
+        <Route path="/auth" element={<AnimatedRoute><Auth /></AnimatedRoute>} />
+        
+        <Route 
+          path="/dashboard/super-admin" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <DashboardSuperAdmin />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/dashboard/hr" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <DashboardHR />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/dashboard/executive" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <DashboardExecutive />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/documents/processing" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                <DocumentProcessing />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/dashboard/manager" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['manager']}>
+                <DashboardManager />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
+          path="/manager-mobile" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerMobile />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
+          path="/manager/approvals" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerMobilePage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
+          path="/ai-chat" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                <AIChatPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/dashboard/medewerker" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['medewerker']}>
+                <DashboardMedewerker />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
+          path="/employee" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['medewerker']}>
+                <EmployeePortal />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
+          path="/case/:id" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute>
+                <CaseDetail />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        {/* HR Module Routes */}
+        <Route 
+          path="/hr/dashboard" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <HRDashboardPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/verzuim" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <DashboardHR />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/medewerkers" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <EmployeesPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/medewerkers/nieuw" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <EmployeeCreatePage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/medewerkers/:id" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <EmployeeDetailPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/medewerkers/:id/bewerken" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <EmployeeEditPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/verlof" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                <LeavePage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/calendar" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                <CalendarPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/planning" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <PlanningPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route 
+          path="/settings/company" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <CompanySettingsPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/kosten" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <CostAnalyticsDashboard />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/documenten" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <DocumentsPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/onboarding" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <OnboardingPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/onboarding/templates" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <OnboardingTemplatesPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/onboarding/:id" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <OnboardingDetailPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/welkom" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['medewerker']}>
+                <WelcomePage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        {/* Settings Routes */}
+        <Route 
+          path="/settings/afdelingen" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <DepartmentsPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/settings/gebruikers" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin']}>
+                <GebruikersbeheerPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        {/* Workflow Automation Routes */}
+        <Route 
+          path="/hr/workflows/builder" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <WorkflowBuilder />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/hr/workflows/executions" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+                <WorkflowExecutions />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
+        <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 function RoleBasedRedirect() {
   const { user, role, loading } = useAuth();
@@ -86,278 +468,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthProvider>
-            <Routes>
-              <Route path="/" element={<RoleBasedRedirect />} />
-              <Route path="/auth" element={<Auth />} />
-              
-              <Route 
-                path="/dashboard/super-admin" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin']}>
-                    <DashboardSuperAdmin />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/dashboard/hr" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <DashboardHR />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/dashboard/executive" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin']}>
-                    <DashboardExecutive />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/documents/processing" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
-                    <DocumentProcessing />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/dashboard/manager" 
-                element={
-                  <ProtectedRoute allowedRoles={['manager']}>
-                    <DashboardManager />
-                  </ProtectedRoute>
-                } 
-              />
-
-              <Route 
-                path="/manager-mobile" 
-                element={
-                  <ProtectedRoute allowedRoles={['manager']}>
-                    <ManagerMobile />
-                  </ProtectedRoute>
-                } 
-              />
-
-              <Route 
-                path="/manager/approvals" 
-                element={
-                  <ProtectedRoute allowedRoles={['manager']}>
-                    <ManagerMobilePage />
-                  </ProtectedRoute>
-                } 
-              />
-
-              <Route 
-                path="/ai-chat" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
-                    <AIChatPage />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/dashboard/medewerker" 
-                element={
-                  <ProtectedRoute allowedRoles={['medewerker']}>
-                    <DashboardMedewerker />
-                  </ProtectedRoute>
-                } 
-              />
-
-              <Route 
-                path="/employee" 
-                element={
-                  <ProtectedRoute allowedRoles={['medewerker']}>
-                    <EmployeePortal />
-                  </ProtectedRoute>
-                } 
-              />
-
-              <Route 
-                path="/case/:id" 
-                element={
-                  <ProtectedRoute>
-                    <CaseDetail />
-                  </ProtectedRoute>
-                } 
-              />
-
-              {/* HR Module Routes */}
-              <Route 
-                path="/hr/dashboard" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <HRDashboardPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/verzuim" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <DashboardHR />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/medewerkers" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <EmployeesPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/medewerkers/nieuw" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <EmployeeCreatePage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/medewerkers/:id" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <EmployeeDetailPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/medewerkers/:id/bewerken" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <EmployeeEditPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/verlof" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
-                    <LeavePage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/calendar" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
-                    <CalendarPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/planning" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <PlanningPage />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route 
-                path="/settings/company" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin']}>
-                    <CompanySettingsPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/kosten" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin']}>
-                    <CostAnalyticsDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/documenten" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <DocumentsPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/onboarding" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <OnboardingPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/onboarding/templates" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <OnboardingTemplatesPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/onboarding/:id" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <OnboardingDetailPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/welkom" 
-                element={
-                  <ProtectedRoute allowedRoles={['medewerker']}>
-                    <WelcomePage />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Settings Routes */}
-              <Route 
-                path="/settings/afdelingen" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin']}>
-                    <DepartmentsPage />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings/gebruikers" 
-                element={
-                  <ProtectedRoute allowedRoles={['super_admin']}>
-                    <GebruikersbeheerPage />
-                  </ProtectedRoute>
-                } 
-              />
-
-              {/* Workflow Automation Routes */}
-              <Route 
-                path="/hr/workflows/builder" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                    <WorkflowBuilder />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/hr/workflows/executions" 
-                element={
-                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                    <WorkflowExecutions />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AnimatedRoutes />
             
             {/* AI HR Chatbot - available on all authenticated pages */}
             <HRChatbot />
