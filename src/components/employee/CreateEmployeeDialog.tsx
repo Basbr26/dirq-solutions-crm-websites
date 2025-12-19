@@ -34,6 +34,7 @@ const employeeSchema = z.object({
   voornaam: z.string().min(1, 'Voornaam is verplicht'),
   achternaam: z.string().min(1, 'Achternaam is verplicht'),
   employment_status: z.enum([
+    'sollicitant',
     'aanbieding_verstuurd',
     'aanbieding_geaccepteerd', 
     'in_dienst',
@@ -72,6 +73,7 @@ interface CreateEmployeeDialogProps {
 }
 
 const EMPLOYMENT_STATUSES = [
+  { value: 'sollicitant', label: 'Sollicitant', color: 'bg-purple-100 text-purple-800' },
   { value: 'aanbieding_verstuurd', label: 'Aanbieding Verstuurd', color: 'bg-blue-100 text-blue-800' },
   { value: 'aanbieding_geaccepteerd', label: 'Aanbieding Geaccepteerd', color: 'bg-green-100 text-green-800' },
   { value: 'proeftijd', label: 'Proeftijd', color: 'bg-yellow-100 text-yellow-800' },

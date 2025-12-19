@@ -243,6 +243,8 @@ export default function EmployeeDetailPage() {
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
+      case 'sollicitant':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300">Sollicitant</Badge>;
       case 'actief':
         return <Badge className="bg-success text-success-foreground">Actief</Badge>;
       case 'met_verlof':

@@ -441,6 +441,7 @@ export default function EmployeeCreatePage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="sollicitant">Sollicitant</SelectItem>
                     <SelectItem value="actief">Actief</SelectItem>
                     <SelectItem value="met_verlof">Met verlof</SelectItem>
                     <SelectItem value="inactief">Inactief</SelectItem>

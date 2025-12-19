@@ -198,6 +198,8 @@ export default function EmployeesPage() {
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
+      case 'sollicitant':
+        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300">Sollicitant</Badge>;
       case 'actief':
         return <Badge variant="default" className="bg-success text-success-foreground">Actief</Badge>;
       case 'met_verlof':
@@ -296,6 +298,7 @@ export default function EmployeesPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle statussen</SelectItem>
+              <SelectItem value="sollicitant">Sollicitant</SelectItem>
               <SelectItem value="actief">Actief</SelectItem>
               <SelectItem value="met_verlof">Met verlof</SelectItem>
               <SelectItem value="inactief">Inactief</SelectItem>

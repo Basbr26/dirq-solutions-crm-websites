@@ -397,6 +397,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSuccess }: 
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="sollicitant">Sollicitant</SelectItem>
                       <SelectItem value="active">Actief</SelectItem>
                       <SelectItem value="inactive">Inactief</SelectItem>
                       <SelectItem value="on_leave">Met verlof</SelectItem>
