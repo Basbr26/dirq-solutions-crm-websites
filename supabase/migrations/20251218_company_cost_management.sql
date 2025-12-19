@@ -630,107 +630,132 @@ CREATE INDEX IF NOT EXISTS idx_cost_summary_contract ON employee_cost_summary(co
 
 -- Company settings
 ALTER TABLE company_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views company settings" ON company_settings;
 CREATE POLICY "HR views company settings" ON company_settings FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "Super admin manages settings" ON company_settings;
 CREATE POLICY "Super admin manages settings" ON company_settings FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role = 'super_admin')
 );
 
 -- Job levels & salary scales
 ALTER TABLE job_levels ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views job levels" ON job_levels;
 CREATE POLICY "HR views job levels" ON job_levels FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin', 'manager'))
 );
+DROP POLICY IF EXISTS "HR manages job levels" ON job_levels;
 CREATE POLICY "HR manages job levels" ON job_levels FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 ALTER TABLE salary_scales ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views salary scales" ON salary_scales;
 CREATE POLICY "HR views salary scales" ON salary_scales FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages salary scales" ON salary_scales;
 CREATE POLICY "HR manages salary scales" ON salary_scales FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 -- Allowances & benefits
 ALTER TABLE allowance_types ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views allowances" ON allowance_types;
 CREATE POLICY "HR views allowances" ON allowance_types FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages allowances" ON allowance_types;
 CREATE POLICY "HR manages allowances" ON allowance_types FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 ALTER TABLE benefits ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views benefits" ON benefits;
 CREATE POLICY "HR views benefits" ON benefits FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages benefits" ON benefits;
 CREATE POLICY "HR manages benefits" ON benefits FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 ALTER TABLE benefit_packages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views benefit packages" ON benefit_packages;
 CREATE POLICY "HR views benefit packages" ON benefit_packages FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages benefit packages" ON benefit_packages;
 CREATE POLICY "HR manages benefit packages" ON benefit_packages FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 ALTER TABLE benefit_package_items ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views package items" ON benefit_package_items;
 CREATE POLICY "HR views package items" ON benefit_package_items FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages package items" ON benefit_package_items;
 CREATE POLICY "HR manages package items" ON benefit_package_items FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 -- Employee contracts
 ALTER TABLE employee_contracts ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Employees view own contract" ON employee_contracts;
 CREATE POLICY "Employees view own contract" ON employee_contracts FOR SELECT USING (
   employee_id = auth.uid() OR
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages contracts" ON employee_contracts;
 CREATE POLICY "HR manages contracts" ON employee_contracts FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 ALTER TABLE employee_contract_allowances ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Employees view own allowances" ON employee_contract_allowances;
 CREATE POLICY "Employees view own allowances" ON employee_contract_allowances FOR SELECT USING (
   contract_id IN (SELECT id FROM employee_contracts WHERE employee_id = auth.uid()) OR
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages contract allowances" ON employee_contract_allowances;
 CREATE POLICY "HR manages contract allowances" ON employee_contract_allowances FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 ALTER TABLE employee_benefits ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Employees view own benefits" ON employee_benefits;
 CREATE POLICY "Employees view own benefits" ON employee_benefits FOR SELECT USING (
   employee_id = auth.uid() OR
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages employee benefits" ON employee_benefits;
 CREATE POLICY "HR manages employee benefits" ON employee_benefits FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 -- Cost tracking
 ALTER TABLE employee_cost_summary ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Employees view own cost summary" ON employee_cost_summary;
 CREATE POLICY "Employees view own cost summary" ON employee_cost_summary FOR SELECT USING (
   employee_id = auth.uid() OR
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "System creates cost summaries" ON employee_cost_summary;
 CREATE POLICY "System creates cost summaries" ON employee_cost_summary FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "HR updates cost summaries" ON employee_cost_summary;
 CREATE POLICY "HR updates cost summaries" ON employee_cost_summary FOR UPDATE USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
 
 -- Offer templates
 ALTER TABLE offer_letter_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "HR views templates" ON offer_letter_templates;
 CREATE POLICY "HR views templates" ON offer_letter_templates FOR SELECT USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
+DROP POLICY IF EXISTS "HR manages templates" ON offer_letter_templates;
 CREATE POLICY "HR manages templates" ON offer_letter_templates FOR ALL USING (
   auth.uid() IN (SELECT id FROM profiles WHERE role IN ('hr', 'super_admin'))
 );
@@ -739,15 +764,25 @@ CREATE POLICY "HR manages templates" ON offer_letter_templates FOR ALL USING (
 -- 10. TRIGGERS
 -- ============================================================
 
+DROP TRIGGER IF EXISTS update_company_settings_updated_at ON company_settings;
 CREATE TRIGGER update_company_settings_updated_at BEFORE UPDATE ON company_settings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_job_levels_updated_at ON job_levels;
 CREATE TRIGGER update_job_levels_updated_at BEFORE UPDATE ON job_levels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_salary_scales_updated_at ON salary_scales;
 CREATE TRIGGER update_salary_scales_updated_at BEFORE UPDATE ON salary_scales FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_allowance_types_updated_at ON allowance_types;
 CREATE TRIGGER update_allowance_types_updated_at BEFORE UPDATE ON allowance_types FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_benefits_updated_at ON benefits;
 CREATE TRIGGER update_benefits_updated_at BEFORE UPDATE ON benefits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_benefit_packages_updated_at ON benefit_packages;
 CREATE TRIGGER update_benefit_packages_updated_at BEFORE UPDATE ON benefit_packages FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_employee_contracts_updated_at ON employee_contracts;
 CREATE TRIGGER update_employee_contracts_updated_at BEFORE UPDATE ON employee_contracts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_employee_benefits_updated_at ON employee_benefits;
 CREATE TRIGGER update_employee_benefits_updated_at BEFORE UPDATE ON employee_benefits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_employee_cost_summary_updated_at ON employee_cost_summary;
 CREATE TRIGGER update_employee_cost_summary_updated_at BEFORE UPDATE ON employee_cost_summary FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_offer_letter_templates_updated_at ON offer_letter_templates;
 CREATE TRIGGER update_offer_letter_templates_updated_at BEFORE UPDATE ON offer_letter_templates FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================
