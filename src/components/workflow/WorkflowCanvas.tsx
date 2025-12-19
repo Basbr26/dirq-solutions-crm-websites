@@ -3,7 +3,7 @@
  * Visual workflow builder using React Flow
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow,
   Background,
@@ -47,6 +47,18 @@ export function WorkflowCanvas({
 }: WorkflowCanvasProps) {
   const [nodes, setNodes, onNodesChangeInternal] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChangeInternal] = useEdgesState(initialEdges);
+
+  // Update nodes when initialNodes prop changes
+  useEffect(() => {
+    console.log('WorkflowCanvas - initialNodes changed:', initialNodes);
+    setNodes(initialNodes);
+  }, [initialNodes, setNodes]);
+
+  // Update edges when initialEdges prop changes
+  useEffect(() => {
+    console.log('WorkflowCanvas - initialEdges changed:', initialEdges);
+    setEdges(initialEdges);
+  }, [initialEdges, setEdges]);
 
   // Define custom node types
   const nodeTypes: NodeTypes = useMemo(
