@@ -464,53 +464,38 @@ function EmployeeCardMobile({ employee, onClick }: { employee: any; onClick: () 
               </div>
               {getStatusBadge(employee.employment_status)}
             </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-base">
-                            {employee.voornaam} {employee.achternaam}
-                          </p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {employee.email}
-                          </p>
-                        </div>
-                        {getStatusBadge(employee.employment_status)}
-                      </div>
-                      
-                      <div className="mt-2 space-y-1.5">
-                        {employee.functie && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Functie:</span> {employee.functie}
-                          </p>
-                        )}
-                        {employee.department && (
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium">Afdeling:</span> {employee.department.name}
-                          </p>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            {employee.contract_type && (
-                              <span>{getContractLabel(employee.contract_type)}</span>
-                            )}
-                            {employee.hours_per_week && (
-                              <span>{employee.hours_per_week}u/week</span>
-                            )}
-                          </div>
-                          {getContractStatusBadge(employee)}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+            
+            <div className="mt-2 space-y-1.5">
+              {employee.functie && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium">Functie:</span> {employee.functie}
+                </p>
+              )}
+              {employee.department && (
+                <p className="text-sm text-muted-foreground">
+                  <span className="font-medium">Afdeling:</span> {employee.department.name}
+                </p>
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  {employee.contract_type && (
+                    <span>{getContractLabel(employee.contract_type)}</span>
+                  )}
+                  {employee.hours_per_week && (
+                    <span>{employee.hours_per_week}u/week</span>
+                  )}
+                </div>
+                {getContractStatusBadge(employee)}
+              </div>
+            </div>
+          </div>
+          
+          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-1" />
         </div>
-      </div>
+      </CardContent>
+    </Card>
+  )
+}
 
       <CreateEmployeeDialog
         open={createDialogOpen}
