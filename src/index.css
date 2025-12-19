@@ -368,3 +368,43 @@
 .tabs-list-scrollable::-webkit-scrollbar {
   display: none;
 }
+
+/* Safe Area Support for iOS (notch, home indicator) */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+}
+
+/* Shimmer effect for skeleton screens */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.1) 20%,
+    hsl(var(--muted)) 40%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Hide scrollbars but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

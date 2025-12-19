@@ -64,6 +64,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
         .select('role')
         .eq('user_id', user.id)
         .single();
+      console.log('Current user role:', role?.role);
       setCurrentUserRole(role?.role as AppRole);
     }
   };
@@ -289,16 +290,14 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        {currentUserRole === 'super_admin' && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openDeleteDialog(user)}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openDeleteDialog(user)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

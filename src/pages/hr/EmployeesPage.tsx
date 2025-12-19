@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StatusAvatar } from '@/components/ui/status-avatar';
+import { useEmployeeStatus } from '@/hooks/useEmployeeStatus';
 import {
   Table,
   TableBody,
@@ -401,19 +403,67 @@ export default function EmployeesPage() {
             </Card>
           ) : (
             filteredEmployees.map((employee) => (
-              <Card 
+              <EmployeeCardMobile 
                 key={employee.id}
-                className="cursor-pointer hover:bg-muted/50 active:bg-muted"
+                employee={employee}
                 onClick={() => navigate(`/hr/medewerkers/${employee.id}`)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <Avatar className="h-12 w-12 flex-shrink-0">
-                      <AvatarImage src={employee.foto_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                        {employee.voornaam?.[0]}{employee.achternaam?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      <CreateEmployeeDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={loadData}
+      />
+    </AppLayout>
+  );
+}
+
+// Employee Card Component with Status Indicators
+function EmployeeCardMobile({ employee, onClick }: { employee: any; onClick: () => void }) {
+  const { data: status } = useEmployeeStatus(employee.id)
+  
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      actief: { label: 'Actief', className: 'bg-success/10 text-success border-success/20' },
+      ziek: { label: 'Ziek', className: 'bg-destructive/10 text-destructive border-destructive/20' },
+      met_verlof: { label: 'Verlof', className: 'bg-warning/10 text-warning border-warning/20' },
+      uit_dienst: { label: 'Uit dienst', className: 'bg-muted text-muted-foreground' },
+    }
+    const variant = variants[status as keyof typeof variants] || variants.actief
+    return <Badge className={variant.className}>{variant.label}</Badge>
+  }
+  
+  return (
+    <Card 
+      className="cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
+      onClick={onClick}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <StatusAvatar
+            src={employee.foto_url}
+            fallback={`${employee.voornaam?.[0]}${employee.achternaam?.[0]}`}
+            status={status}
+            size="md"
+            showBadge
+          />
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-base">
+                  {employee.voornaam} {employee.achternaam}
+                </p>
+                <p className="text-sm text-muted-foreground truncate">
+                  {employee.email}
+                </p>
+              </div>
+              {getStatusBadge(employee.employment_status)}
+            </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
