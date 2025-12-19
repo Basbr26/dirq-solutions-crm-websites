@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, addMonths, subMonths } from 'date-fns';
+import { format, parse, startOfWeek, getDay, addMonths, subMonths, isSameDay } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Download, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -13,7 +14,9 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { CalendarFilters } from '@/components/calendar/CalendarFilters';
+import { HorizontalDatePicker } from '@/components/calendar/HorizontalDatePicker';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const locales = { nl };
 const localizer = dateFnsLocalizer({
@@ -52,19 +55,19 @@ export default function CalendarPage() {
   const { user } = useAuth();
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [filters, setFilters] = useState({
     meeting: true,
-    task: true,
+    personal: true,
+    absence: true,
     leave: true,
-    birthday: true,
     training: true,
-    review: true,
-    deadline: true,
-    other: true
+    birthday: true,
+    company: true,
+    teamLeave: true,
   });
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   
   const queryClient = useQueryClient();
   
@@ -172,6 +175,14 @@ export default function CalendarPage() {
     }
   };
 
+  // Get events for selected day (mobile)
+  const selectedDayEvents = calendarEvents.filter(event => 
+    isSameDay(event.start, date)
+  );
+
+  // Get marked dates for HorizontalDatePicker (dates with events)
+  const markedDates = calendarEvents.map(event => event.start);
+
   return (
     <AppLayout
       title="Persoonlijke Agenda"
@@ -187,18 +198,17 @@ export default function CalendarPage() {
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporteer
-          </Button>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nieuw Event
-          </Button>
+          {isDesktop && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exporteer
+            </Button>
+          )}
+          <CreateEventDialog />
         </div>
       }
     >
@@ -208,132 +218,180 @@ export default function CalendarPage() {
           <CalendarFilters
             filters={filters}
             onChange={setFilters}
-            onClose={() => setShowFilters(false)}
           />
         )}
         
-        {/* Calendar */}
-        <Card className="p-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-[600px]">
-              <div className="animate-pulse text-muted-foreground">
-                Calendar laden...
-              </div>
-            </div>
-          ) : (
-            <div style={{ height: '700px' }}>
-              <Calendar
-                localizer={localizer}
-                events={calendarEvents}
-                startAccessor="start"
-                endAccessor="end"
-                view={view}
-                onView={(newView) => setView(newView)}
-                date={date}
-                onNavigate={(newDate) => setDate(newDate)}
-                eventPropGetter={eventStyleGetter}
-                onSelectEvent={(event) => setSelectedEvent(event.resource)}
-                onSelectSlot={({ start }) => {
-                  setShowCreateDialog(true);
-                }}
-                selectable
-                popup
-                toolbar={false}
-                messages={{
-                  next: 'Volgende',
-                  previous: 'Vorige',
-                  today: 'Vandaag',
-                  month: 'Maand',
-                  week: 'Week',
-                  day: 'Dag',
-                  agenda: 'Agenda',
-                  date: 'Datum',
-                  time: 'Tijd',
-                  event: 'Event',
-                  noEventsInRange: 'Geen events in deze periode',
-                  showMore: (total) => `+${total} meer`
-                }}
-              />
-              
-              {/* Custom Toolbar */}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleNavigate('PREV')}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleNavigate('TODAY')}
-                  >
-                    Vandaag
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleNavigate('NEXT')}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="text-lg font-semibold">
-                  {format(date, 'MMMM yyyy', { locale: nl })}
-                </div>
-                
-                <div className="flex gap-1">
-                  <Button
-                    variant={view === 'month' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setView('month')}
-                  >
-                    Maand
-                  </Button>
-                  <Button
-                    variant={view === 'week' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setView('week')}
-                  >
-                    Week
-                  </Button>
-                  <Button
-                    variant={view === 'day' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setView('day')}
-                  >
-                    Dag
-                  </Button>
+        {/* Desktop: react-big-calendar */}
+        {isDesktop ? (
+          <Card className="p-4">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-[600px]">
+                <div className="animate-pulse text-muted-foreground">
+                  Calendar laden...
                 </div>
               </div>
-            </div>
-          )}
-        </Card>
+            ) : (
+              <div style={{ height: '700px' }}>
+                <Calendar
+                  localizer={localizer}
+                  events={calendarEvents}
+                  startAccessor="start"
+                  endAccessor="end"
+                  view={view}
+                  onView={(newView) => setView(newView)}
+                  date={date}
+                  onNavigate={(newDate) => setDate(newDate)}
+                  eventPropGetter={eventStyleGetter}
+                  onSelectEvent={(event) => setSelectedEvent(event.resource)}
+                  selectable
+                  popup
+                  toolbar={false}
+                  messages={{
+                    next: 'Volgende',
+                    previous: 'Vorige',
+                    today: 'Vandaag',
+                    month: 'Maand',
+                    week: 'Week',
+                    day: 'Dag',
+                    agenda: 'Agenda',
+                    date: 'Datum',
+                    time: 'Tijd',
+                    event: 'Event',
+                    noEventsInRange: 'Geen events in deze periode',
+                    showMore: (total) => `+${total} meer`
+                  }}
+                />
+                
+                {/* Custom Toolbar */}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleNavigate('PREV')}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleNavigate('TODAY')}
+                    >
+                      Vandaag
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleNavigate('NEXT')}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="text-lg font-semibold">
+                    {format(date, 'MMMM yyyy', { locale: nl })}
+                  </div>
+                  
+                  <div className="flex gap-1">
+                    <Button
+                      variant={view === 'month' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setView('month')}
+                    >
+                      Maand
+                    </Button>
+                    <Button
+                      variant={view === 'week' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setView('week')}
+                    >
+                      Week
+                    </Button>
+                    <Button
+                      variant={view === 'day' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setView('day')}
+                    >
+                      Dag
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </Card>
+        ) : (
+          /* Mobile: HorizontalDatePicker + Day Events */
+          <div className="space-y-4">
+            <Card className="p-4">
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-pulse text-muted-foreground">
+                    Calendar laden...
+                  </div>
+                </div>
+              ) : (
+                <HorizontalDatePicker
+                  selectedDate={date}
+                  onDateSelect={setDate}
+                  markedDates={markedDates}
+                />
+              )}
+            </Card>
+            
+            {/* Day Events */}
+            <Card className="p-4">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-lg">
+                  {format(date, 'EEEE d MMMM', { locale: nl })}
+                </h3>
+                
+                {selectedDayEvents.length === 0 ? (
+                  <p className="text-muted-foreground text-sm py-8 text-center">
+                    Geen events op deze dag
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedDayEvents.map((event) => (
+                      <button
+                        key={event.id}
+                        onClick={() => setSelectedEvent(event.resource)}
+                        className={cn(
+                          "w-full text-left p-3 rounded-lg border-l-4 bg-muted/50 hover:bg-muted transition-colors",
+                        )}
+                        style={{ borderLeftColor: event.resource.color }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium truncate">{event.title}</h4>
+                            {event.resource.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-1">
+                                {event.resource.description}
+                              </p>
+                            )}
+                          </div>
+                          {!event.allDay && (
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
       </div>
       
       {/* Dialogs */}
-      <CreateEventDialog
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-          setShowCreateDialog(false);
-          toast.success('Event aangemaakt');
-        }}
-      />
+      <CreateEventDialog />
       
       {selectedEvent && (
         <EventDetailDialog
           event={selectedEvent}
           open={!!selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-          onDeleted={() => {
-            queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-            setSelectedEvent(null);
-            toast.success('Event verwijderd');
-          }}
+          onOpenChange={(open) => !open && setSelectedEvent(null)}
         />
       )}
     </AppLayout>

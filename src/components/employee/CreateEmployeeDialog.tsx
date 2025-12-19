@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { UserPlus, Mail, User, Briefcase, Calendar, CheckCircle2, Copy } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+// Inline useMediaQuery hook to avoid module resolution issues
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    setMatches(media.matches);
+    const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
+    media.addEventListener('change', listener);
+    return () => media.removeEventListener('change', listener);
+  }, [query]);
+
+  return matches;
+}
 
 const employeeSchema = z.object({
   email: z.string().email('Ongeldig emailadres'),
@@ -73,6 +90,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
     email: string;
     password: string;
   } | null>(null);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const { register, handleSubmit, formState: { errors }, setValue, watch, reset } = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
@@ -199,269 +217,324 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
 
   // Inloggegevens dialog
   if (generatedCredentials) {
-    return (
-      <Dialog open={true} onOpenChange={closeCredentialsDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-500" />
-              Inloggegevens
-            </DialogTitle>
-            <DialogDescription>
-              Geef deze gegevens door aan de medewerker. Het wachtwoord moet bij eerste login worden gewijzigd.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
-              <div>
-                <Label className="text-xs text-muted-foreground">Email</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
-                    {generatedCredentials.email}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(generatedCredentials.email)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-xs text-muted-foreground">Tijdelijk wachtwoord</Label>
-                <div className="flex items-center gap-2 mt-1">
-                  <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
-                    {generatedCredentials.password}
-                  </code>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(generatedCredentials.password)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
+    const CredentialsContent = (
+      <>
+        <div className="space-y-4 p-4">
+          <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+            <div>
+              <Label className="text-xs text-muted-foreground">Email</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                  {generatedCredentials.email}
+                </code>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copyToClipboard(generatedCredentials.email)}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
-            <Button
-              className="w-full"
-              onClick={() =>
-                copyToClipboard(
-                  `Email: ${generatedCredentials.email}\nWachtwoord: ${generatedCredentials.password}`
-                )
-              }
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Kopieer beide
-            </Button>
+            <div>
+              <Label className="text-xs text-muted-foreground">Tijdelijk wachtwoord</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <code className="flex-1 text-sm font-mono bg-background px-3 py-2 rounded border">
+                  {generatedCredentials.password}
+                </code>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copyToClipboard(generatedCredentials.password)}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <DialogFooter>
+          <Button
+            className="w-full"
+            onClick={() =>
+              copyToClipboard(
+                `Email: ${generatedCredentials.email}\nWachtwoord: ${generatedCredentials.password}`
+              )
+            }
+          >
+            <Copy className="mr-2 h-4 w-4" />
+            Kopieer beide
+          </Button>
+        </div>
+      </>
+    );
+
+    if (isDesktop) {
+      return (
+        <Dialog open={true} onOpenChange={closeCredentialsDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                Inloggegevens
+              </DialogTitle>
+              <DialogDescription>
+                Geef deze gegevens door aan de medewerker. Het wachtwoord moet bij eerste login worden gewijzigd.
+              </DialogDescription>
+            </DialogHeader>
+            {CredentialsContent}
+            <DialogFooter>
+              <Button onClick={closeCredentialsDialog}>Sluiten</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      );
+    }
+
+    return (
+      <Drawer open={true} onOpenChange={closeCredentialsDialog}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle className="flex items-center gap-2 justify-center">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              Inloggegevens
+            </DrawerTitle>
+            <DrawerDescription className="text-center">
+              Geef deze gegevens door aan de medewerker. Het wachtwoord moet bij eerste login worden gewijzigd.
+            </DrawerDescription>
+          </DrawerHeader>
+          {CredentialsContent}
+          <DrawerFooter className="sticky bottom-0 bg-background border-t backdrop-blur-sm">
             <Button onClick={closeCredentialsDialog}>Sluiten</Button>
-          </DialogFooter>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  const FormContent = (
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
+      <Tabs defaultValue="basic" className="w-full flex-1 overflow-hidden flex flex-col">
+        <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+          <TabsTrigger value="basic">
+            <User className="h-4 w-4 mr-2" />
+            Basis
+          </TabsTrigger>
+          <TabsTrigger value="work">
+            <Briefcase className="h-4 w-4 mr-2" />
+            Werk
+          </TabsTrigger>
+          <TabsTrigger value="contract">
+            <Calendar className="h-4 w-4 mr-2" />
+            Contract
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Basic Info Tab */}
+        <TabsContent value="basic" className="space-y-4 mt-4 overflow-y-auto px-1 flex-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="voornaam">Voornaam *</Label>
+              <Input id="voornaam" {...register('voornaam')} disabled={loading} />
+              {errors.voornaam && (
+                <p className="text-sm text-destructive">{errors.voornaam.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="achternaam">Achternaam *</Label>
+              <Input id="achternaam" {...register('achternaam')} disabled={loading} />
+              {errors.achternaam && (
+                <p className="text-sm text-destructive">{errors.achternaam.message}</p>
+              )}
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="email">Email *</Label>
+              <Input id="email" type="email" inputMode="email" {...register('email')} disabled={loading} />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Account wordt automatisch aangemaakt. Medewerker ontvangt een uitnodigingsmail.
+              </p>
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="employment_status">Status *</Label>
+              <Select
+                value={watch('employment_status')}
+                onValueChange={(value) => setValue('employment_status', value as EmployeeFormData['employment_status'])}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EMPLOYMENT_STATUSES.map((status) => (
+                    <SelectItem key={status.value} value={status.value}>
+                      {status.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="date_of_birth">Geboortedatum</Label>
+              <Input id="date_of_birth" type="date" {...register('date_of_birth')} disabled={loading} />
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Work Info Tab */}
+        <TabsContent value="work" className="space-y-4 mt-4 overflow-y-auto px-1 flex-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="functie">Functie</Label>
+              <Input id="functie" {...register('functie')} disabled={loading} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="department_id">Afdeling</Label>
+              <Select
+                value={watch('department_id') || ''}
+                onValueChange={(value) => setValue('department_id', value)}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer afdeling" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Geen afdeling</SelectItem>
+                  {departments.filter(d => d.id && d.id.trim() !== '').map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manager_id">Leidinggevende</Label>
+              <Select
+                value={watch('manager_id') || ''}
+                onValueChange={(value) => setValue('manager_id', value)}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer leidinggevende" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Geen leidinggevende</SelectItem>
+                  {managers.filter(m => m.id && m.id.trim() !== '').map((manager) => (
+                    <SelectItem key={manager.id} value={manager.id}>
+                      {manager.voornaam} {manager.achternaam}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Contract Tab */}
+        <TabsContent value="contract" className="space-y-4 mt-4 overflow-y-auto px-1 flex-1">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start_date">Startdatum</Label>
+              <Input id="start_date" type="date" {...register('start_date')} disabled={loading} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contract_type">Contract Type</Label>
+              <Select
+                value={watch('contract_type') || ''}
+                onValueChange={(value) => setValue('contract_type', value)}
+                disabled={loading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Geen</SelectItem>
+                  <SelectItem value="vast">Vast</SelectItem>
+                  <SelectItem value="tijdelijk">Tijdelijk</SelectItem>
+                  <SelectItem value="oproep">Oproep</SelectItem>
+                  <SelectItem value="stage">Stage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="hours_per_week">Uren per week</Label>
+              <Input
+                id="hours_per_week"
+                type="number"
+                inputMode="numeric"
+                step="0.1"
+                min="0"
+                max="60"
+                {...register('hours_per_week', { valueAsNumber: true })}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <div className={cn(
+        "flex justify-end gap-2 pt-4 border-t flex-shrink-0",
+        !isDesktop && "sticky bottom-0 bg-background backdrop-blur-sm p-4 -mx-4"
+      )}>
+        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          Annuleren
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Aanmaken...' : 'Medewerker Aanmaken'}
+        </Button>
+      </div>
+    </form>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-full sm:max-w-[700px] max-h-screen sm:max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="pb-4 flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <UserPlus className="h-5 w-5" />
+              Nieuwe Medewerker
+            </DialogTitle>
+            <DialogDescription>
+              Vul de gegevens in voor de nieuwe medewerker. Inloggegevens worden automatisch gegenereerd.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {FormContent}
+          </div>
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full sm:max-w-[700px] max-h-screen sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="flex items-center gap-2 text-xl">
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[95vh] flex flex-col">
+        <DrawerHeader className="flex-shrink-0">
+          <DrawerTitle className="flex items-center gap-2 justify-center text-xl">
             <UserPlus className="h-5 w-5" />
             Nieuwe Medewerker
-          </DialogTitle>
-          <DialogDescription>
+          </DrawerTitle>
+          <DrawerDescription className="text-center">
             Vul de gegevens in voor de nieuwe medewerker. Inloggegevens worden automatisch gegenereerd.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="basic">
-                <User className="h-4 w-4 mr-2" />
-                Basis
-              </TabsTrigger>
-              <TabsTrigger value="work">
-                <Briefcase className="h-4 w-4 mr-2" />
-                Werk
-              </TabsTrigger>
-              <TabsTrigger value="contract">
-                <Calendar className="h-4 w-4 mr-2" />
-                Contract
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Basic Info Tab */}
-            <TabsContent value="basic" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="voornaam">Voornaam *</Label>
-                  <Input id="voornaam" {...register('voornaam')} disabled={loading} />
-                  {errors.voornaam && (
-                    <p className="text-sm text-destructive">{errors.voornaam.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="achternaam">Achternaam *</Label>
-                  <Input id="achternaam" {...register('achternaam')} disabled={loading} />
-                  {errors.achternaam && (
-                    <p className="text-sm text-destructive">{errors.achternaam.message}</p>
-                  )}
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" inputMode="email" {...register('email')} disabled={loading} />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    Account wordt automatisch aangemaakt. Medewerker ontvangt een uitnodigingsmail.
-                  </p>
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="employment_status">Status *</Label>
-                  <Select
-                    value={watch('employment_status')}
-                    onValueChange={(value) => setValue('employment_status', value as EmployeeFormData['employment_status'])}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EMPLOYMENT_STATUSES.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          {status.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="date_of_birth">Geboortedatum</Label>
-                  <Input id="date_of_birth" type="date" {...register('date_of_birth')} disabled={loading} />
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Work Info Tab */}
-            <TabsContent value="work" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="functie">Functie</Label>
-                  <Input id="functie" {...register('functie')} disabled={loading} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="department_id">Afdeling</Label>
-                  <Select
-                    value={watch('department_id') || ''}
-                    onValueChange={(value) => setValue('department_id', value)}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer afdeling" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Geen afdeling</SelectItem>
-                      {departments.filter(d => d.id && d.id.trim() !== '').map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="manager_id">Leidinggevende</Label>
-                  <Select
-                    value={watch('manager_id') || ''}
-                    onValueChange={(value) => setValue('manager_id', value)}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer leidinggevende" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Geen leidinggevende</SelectItem>
-                      {managers.filter(m => m.id && m.id.trim() !== '').map((manager) => (
-                        <SelectItem key={manager.id} value={manager.id}>
-                          {manager.voornaam} {manager.achternaam}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Contract Tab */}
-            <TabsContent value="contract" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">Startdatum</Label>
-                  <Input id="start_date" type="date" {...register('start_date')} disabled={loading} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="contract_type">Contract Type</Label>
-                  <Select
-                    value={watch('contract_type') || ''}
-                    onValueChange={(value) => setValue('contract_type', value)}
-                    disabled={loading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecteer type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Geen</SelectItem>
-                      <SelectItem value="vast">Vast</SelectItem>
-                      <SelectItem value="tijdelijk">Tijdelijk</SelectItem>
-                      <SelectItem value="oproep">Oproep</SelectItem>
-                      <SelectItem value="stage">Stage</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="hours_per_week">Uren per week</Label>
-                  <Input
-                    id="hours_per_week"
-                    type="number"
-                    inputMode="numeric"
-                    step="0.1"
-                    min="0"
-                    max="60"
-                    {...register('hours_per_week', { valueAsNumber: true })}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              Annuleren
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Aanmaken...' : 'Medewerker Aanmaken'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="flex-1 overflow-hidden px-4">
+          {FormContent}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 }

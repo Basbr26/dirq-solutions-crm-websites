@@ -14,6 +14,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+} from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface LeaveRequestDialogProps {
   open: boolean;
@@ -53,6 +62,7 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [reason, setReason] = useState('');
+  const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const calculateDays = () => {
     if (!startDate || !endDate) return 0;
@@ -107,120 +117,146 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
 
   const days = calculateDays();
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Verlof aanvragen</DialogTitle>
-          <DialogDescription>
-            Vul de verlofaanvraag in en dien deze in
-          </DialogDescription>
-        </DialogHeader>
+  const FormContent = (
+    <>
+      <div className="space-y-4 p-4 overflow-y-auto flex-1">
+        <div className="space-y-2">
+          <Label>Type verlof *</Label>
+          <Select value={leaveType} onValueChange={setLeaveType}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {leaveTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <div className="flex-1 overflow-y-auto space-y-4 py-4">
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Type verlof *</Label>
-            <Select value={leaveType} onValueChange={setLeaveType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {leaveTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Startdatum *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full justify-start text-left font-normal',
+                    !startDate && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, 'd MMM yyyy', { locale: nl }) : 'Selecteer'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={setStartDate}
+                  initialFocus
+                  disabled={(date) => date < new Date()}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Startdatum *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !startDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, 'd MMM yyyy', { locale: nl }) : 'Selecteer'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={setStartDate}
-                    initialFocus
-                    disabled={(date) => date < new Date()}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Einddatum *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'w-full justify-start text-left font-normal',
-                      !endDate && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, 'd MMM yyyy', { locale: nl }) : 'Selecteer'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={setEndDate}
-                    initialFocus
-                    disabled={(date) => date < (startDate || new Date())}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-
-          {startDate && endDate && (
-            <div className="p-3 bg-muted rounded-lg text-center">
-              <span className="text-2xl font-bold text-primary">{days}</span>
-              <span className="text-muted-foreground ml-2">
-                {days === 1 ? 'werkdag' : 'werkdagen'}
-              </span>
-            </div>
-          )}
-
           <div className="space-y-2">
-            <Label>Reden (optioneel)</Label>
-            <Textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Eventuele toelichting..."
-              rows={3}
-            />
+            <Label>Einddatum *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-full justify-start text-left font-normal',
+                    !endDate && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, 'd MMM yyyy', { locale: nl }) : 'Selecteer'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={setEndDate}
+                  initialFocus
+                  disabled={(date) => date < (startDate || new Date())}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
-        <DialogFooter className="flex-shrink-0 flex-col-reverse sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            Annuleren
-          </Button>
+        {startDate && endDate && (
+          <div className="p-3 bg-muted rounded-lg text-center">
+            <span className="text-2xl font-bold text-primary">{days}</span>
+            <span className="text-muted-foreground ml-2">
+              {days === 1 ? 'werkdag' : 'werkdagen'}
+            </span>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label>Reden (optioneel)</Label>
+          <Textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Eventuele toelichting..."
+            rows={3}
+          />
+        </div>
+      </div>
+    </>
+  );
+
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle>Verlof aanvragen</DialogTitle>
+            <DialogDescription>
+              Vul de verlofaanvraag in en dien deze in
+            </DialogDescription>
+          </DialogHeader>
+          {FormContent}
+          <DialogFooter className="flex-shrink-0 flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+              Annuleren
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading || !startDate || !endDate}>
+              {loading ? 'Bezig...' : 'Aanvraag indienen'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent className="max-h-[95vh] flex flex-col">
+        <DrawerHeader className="flex-shrink-0">
+          <DrawerTitle className="text-center">Verlof aanvragen</DrawerTitle>
+          <DrawerDescription className="text-center">
+            Vul de verlofaanvraag in en dien deze in
+          </DrawerDescription>
+        </DrawerHeader>
+        {FormContent}
+        <DrawerFooter className="flex-shrink-0 sticky bottom-0 bg-background border-t backdrop-blur-sm">
           <Button onClick={handleSubmit} disabled={loading || !startDate || !endDate}>
             {loading ? 'Bezig...' : 'Aanvraag indienen'}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Annuleren
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
