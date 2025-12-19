@@ -260,3 +260,5 @@ export function LeaveRequestDialog({ open, onOpenChange, onSuccess }: LeaveReque
         </DrawerFooter>
       </DrawerContent>
     </Drawer>
+  );
+}
