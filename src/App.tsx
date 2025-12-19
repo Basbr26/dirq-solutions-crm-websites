@@ -30,6 +30,7 @@ import OnboardingTemplatesPage from "./pages/hr/OnboardingTemplatesPage";
 import WelcomePage from "./pages/employee/WelcomePage";
 import DocumentProcessing from "./pages/DocumentProcessing";
 import WorkflowBuilder from "./pages/WorkflowBuilder";
+import WorkflowTemplatesPage from "./pages/WorkflowTemplatesPage";
 import WorkflowExecutions from "./pages/WorkflowExecutions";
 import DepartmentsPage from "./pages/DepartmentsPage";
 import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
@@ -398,6 +399,16 @@ function AnimatedRoutes() {
         />
 
         {/* Workflow Automation Routes */}
+        <Route 
+          path="/hr/workflows/templates" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+                <WorkflowTemplatesPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
         <Route 
           path="/hr/workflows/builder" 
           element={

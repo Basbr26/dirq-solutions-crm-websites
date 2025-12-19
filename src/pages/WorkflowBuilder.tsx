@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { ReactFlowProvider, Node, Edge, useReactFlow, addEdge, Connection } from '@xyflow/react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Save, Play, Download, Upload, Layout, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ function WorkflowBuilderContent() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const reactFlowInstance = useReactFlow();
+  const [searchParams] = useSearchParams();
   
   const [nodes, setNodes] = useState<Node<WorkflowNodeData>[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
@@ -52,6 +53,29 @@ function WorkflowBuilderContent() {
   const [executions, setExecutions] = useState<WorkflowExecution[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
   const dragRef = useRef<{ type: string; label: string } | null>(null);
+
+  // Load template from URL parameter
+  useEffect(() => {
+    const templateId = searchParams.get('template');
+    if (templateId) {
+      // Import the template data
+      import('@/data/workflowTemplates').then((module) => {
+        const template = module.getTemplateById(templateId);
+        if (template) {
+          const definition = template.definition as WorkflowDefinition;
+          setNodes(definition.nodes);
+          setEdges(definition.edges);
+          setWorkflowName(template.name);
+          setWorkflowDescription(template.description);
+
+          toast({
+            title: 'Template loaded',
+            description: `Loaded template: ${template.name}`,
+          });
+        }
+      });
+    }
+  }, [searchParams, toast]);
 
   // Load templates
   const loadTemplates = useCallback(async () => {

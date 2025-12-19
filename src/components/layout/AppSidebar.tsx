@@ -64,6 +64,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
     {
       title: 'AI & Automatisering',
       items: [
+        { title: 'Workflow Templates', icon: FileSignature, href: '/hr/workflows/templates', roles: ['hr', 'super_admin'] },
         { title: 'Workflow Builder', icon: Workflow, href: '/hr/workflows/builder', roles: ['hr', 'super_admin'] },
         { title: 'Workflow Uitvoeringen', icon: PieChart, href: '/hr/workflows/executions', roles: ['hr', 'super_admin', 'manager'] },
         { title: 'Document Verwerking', icon: FileSearch, href: '/documents/processing', roles: ['hr', 'super_admin', 'manager', 'medewerker'] },
