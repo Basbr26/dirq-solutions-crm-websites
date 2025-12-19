@@ -38,6 +38,8 @@ import CompanySettingsPage from "./pages/CompanySettingsPage";
 import CostAnalyticsDashboard from "./pages/CostAnalyticsDashboard";
 import EmployeeContractsPage from "./pages/EmployeeContractsPage";
 import { HRChatbot } from "./components/ai/HRChatbot";
+import ManagerMobilePage from "./pages/manager/ManagerMobilePage";
+import AIChatPage from "./pages/AIChatPage";
 
 const queryClient = new QueryClient();
 
@@ -138,6 +140,24 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={['manager']}>
                     <ManagerMobile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/manager/approvals" 
+                element={
+                  <ProtectedRoute allowedRoles={['manager']}>
+                    <ManagerMobilePage />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route 
+                path="/ai-chat" 
+                element={
+                  <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+                    <AIChatPage />
                   </ProtectedRoute>
                 } 
               />

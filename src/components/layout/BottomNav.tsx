@@ -33,7 +33,7 @@ export const BottomNav = ({ onActionClick }: BottomNavProps) => {
     
     if (role === 'manager') {
       return [
-        { icon: Home, label: 'Dashboard', href: '/manager/dashboard' },
+        { icon: Home, label: 'Dashboard', href: '/dashboard/manager' },
         { icon: Users, label: 'Team', href: '/manager/team' },
         { icon: Plus, label: '', href: '#', action: true },
         { icon: Calendar, label: 'Planning', href: '/manager/planning' },
