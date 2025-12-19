@@ -384,9 +384,14 @@ export default function CalendarPage() {
         )}
       </div>
       
-      {/* Dialogs */}
-      <CreateEventDialog />
+      {/* Floating Action Button - Mobile only */}
+      {!isDesktop && (
+        <div className="fixed bottom-20 left-4 z-40">
+          <CreateEventDialog />
+        </div>
+      )}
       
+      {/* Dialogs */}
       {selectedEvent && (
         <EventDetailDialog
           event={selectedEvent}
