@@ -57,22 +57,44 @@ function WorkflowBuilderContent() {
   // Load template from URL parameter
   useEffect(() => {
     const templateId = searchParams.get('template');
+    console.log('WorkflowBuilder - Template ID from URL:', templateId);
+    
     if (templateId) {
       // Import the template data
       import('@/data/workflowTemplates').then((module) => {
+        console.log('WorkflowBuilder - Module loaded:', module);
         const template = module.getTemplateById(templateId);
+        console.log('WorkflowBuilder - Template found:', template);
+        
         if (template) {
           const definition = template.definition as WorkflowDefinition;
+          console.log('WorkflowBuilder - Setting nodes:', definition.nodes);
+          console.log('WorkflowBuilder - Setting edges:', definition.edges);
+          
           setNodes(definition.nodes);
           setEdges(definition.edges);
           setWorkflowName(template.name);
           setWorkflowDescription(template.description);
 
           toast({
-            title: 'Template loaded',
-            description: `Loaded template: ${template.name}`,
+            title: 'Template geladen',
+            description: `Template geladen: ${template.name}`,
+          });
+        } else {
+          console.error('WorkflowBuilder - Template niet gevonden met ID:', templateId);
+          toast({
+            title: 'Template niet gevonden',
+            description: `Geen template gevonden met ID: ${templateId}`,
+            variant: 'destructive',
           });
         }
+      }).catch((error) => {
+        console.error('WorkflowBuilder - Error loading template:', error);
+        toast({
+          title: 'Fout bij laden template',
+          description: error.message,
+          variant: 'destructive',
+        });
       });
     }
   }, [searchParams, toast]);
