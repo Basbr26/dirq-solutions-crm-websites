@@ -53,6 +53,45 @@ interface Employee {
   }>;
 }
 
+// Helper functions (moved outside to be accessible by EmployeeCardMobile)
+const getContractLabel = (type: string | null) => {
+  switch (type) {
+    case 'fulltime': return 'Voltijd';
+    case 'parttime': return 'Deeltijd';
+    case 'tijdelijk': return 'Tijdelijk';
+    case 'oproep': return 'Oproep';
+    case 'stage': return 'Stage';
+    default: return '-';
+  }
+};
+
+const getContractStatusBadge = (employee: Employee) => {
+  const contracts = employee.contracts || [];
+  const activeContract = contracts.find(c => c.status === 'active');
+  
+  if (!activeContract && contracts.length === 0) {
+    return <Badge variant="outline" className="text-yellow-600 bg-yellow-50 dark:bg-yellow-950 border-yellow-200">Potentieel</Badge>;
+  }
+  
+  if (!activeContract && contracts.length > 0) {
+    const draftContract = contracts.find(c => c.status === 'draft' || c.status === 'pending_signature');
+    if (draftContract) {
+      return <Badge variant="outline" className="text-orange-600 bg-orange-50 dark:bg-orange-950 border-orange-200">Aanbieding</Badge>;
+    }
+  }
+  
+  if (activeContract) {
+    return <Badge variant="default" className="bg-green-600 dark:bg-green-700">Actief Contract</Badge>;
+  }
+  
+  const expiredContract = contracts.find(c => c.status === 'expired' || c.status === 'terminated');
+  if (expiredContract) {
+    return <Badge variant="secondary">Verlopen</Badge>;
+  }
+  
+  return null;
+};
+
 export default function EmployeesPage() {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -170,44 +209,6 @@ export default function EmployeesPage() {
       default:
         return <Badge variant="outline">Onbekend</Badge>;
     }
-  };
-
-  const getContractLabel = (type: string | null) => {
-    switch (type) {
-      case 'fulltime': return 'Voltijd';
-      case 'parttime': return 'Deeltijd';
-      case 'tijdelijk': return 'Tijdelijk';
-      case 'oproep': return 'Oproep';
-      case 'stage': return 'Stage';
-      default: return '-';
-    }
-  };
-
-  const getContractStatusBadge = (employee: Employee) => {
-    const contracts = employee.contracts || [];
-    const activeContract = contracts.find(c => c.status === 'active');
-    
-    if (!activeContract && contracts.length === 0) {
-      return <Badge variant="outline" className="text-yellow-600 bg-yellow-50 dark:bg-yellow-950 border-yellow-200">Potentieel</Badge>;
-    }
-    
-    if (!activeContract && contracts.length > 0) {
-      const draftContract = contracts.find(c => c.status === 'draft' || c.status === 'pending_signature');
-      if (draftContract) {
-        return <Badge variant="outline" className="text-orange-600 bg-orange-50 dark:bg-orange-950 border-orange-200">Aanbieding</Badge>;
-      }
-    }
-    
-    if (activeContract) {
-      return <Badge variant="default" className="bg-green-600 dark:bg-green-700">Actief Contract</Badge>;
-    }
-    
-    const expiredContract = contracts.find(c => c.status === 'expired' || c.status === 'terminated');
-    if (expiredContract) {
-      return <Badge variant="secondary">Verlopen</Badge>;
-    }
-    
-    return null;
   };
 
   return (
