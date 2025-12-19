@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { PredictiveAnalytics } from '@/components/executive/PredictiveAnalytics';
 import { SmartAlerts, type SmartAlert } from '@/components/executive/SmartAlerts';
 import { 
@@ -353,9 +354,11 @@ export default function DashboardExecutive() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader title="Executive Dashboard" />
-        <main className="container mx-auto px-4 py-8">
+      <AppLayout
+        title="Executive Dashboard"
+        subtitle="Strategisch HR-overzicht met predictive analytics"
+      >
+        <div className="p-4 md:p-6">
           <div className="animate-pulse space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -363,35 +366,29 @@ export default function DashboardExecutive() {
               ))}
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader title="Executive Dashboard" />
-
-      <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header Actions */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Executive Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              Real-time inzichten en voorspellende analytics
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              Laatste 30 dagen
-            </Button>
-            <Button className="gap-2" onClick={handleExportReport}>
-              <Download className="h-4 w-4" />
-              Export Rapport
-            </Button>
-          </div>
+    <AppLayout
+      title="Executive Dashboard"
+      subtitle="Real-time inzichten en voorspellende analytics"
+      actions={
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Laatste 30 dagen
+          </Button>
+          <Button className="gap-2" onClick={handleExportReport}>
+            <Download className="h-4 w-4" />
+            Export Rapport
+          </Button>
         </div>
+      }
+    >
+      <div className="p-4 md:p-6 space-y-8">
 
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -562,7 +559,7 @@ export default function DashboardExecutive() {
             </Button>
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

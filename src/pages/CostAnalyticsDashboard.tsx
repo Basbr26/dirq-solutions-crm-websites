@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { TrendingUp, Users, DollarSign, PieChart, Calendar, TrendingDown } from "lucide-react";
 import { BarChart, Bar, LineChart, Line, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 export default function CostAnalyticsDashboard() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -125,8 +126,12 @@ export default function CostAnalyticsDashboard() {
 
   if (costLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="animate-pulse space-y-4">
+      <AppLayout
+        title="Cost Analytics"
+        subtitle="Loonkosten analyse en forecasting"
+      >
+        <div className="p-4 md:p-6">
+          <div className="animate-pulse space-y-4">
           <div className="h-8 bg-muted rounded w-1/3"></div>
           <div className="grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
@@ -135,13 +140,18 @@ export default function CostAnalyticsDashboard() {
           </div>
           <div className="h-96 bg-muted rounded"></div>
         </div>
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   if (costError) {
     return (
-      <div className="container mx-auto p-6">
+      <AppLayout
+        title="Cost Analytics"
+        subtitle="Loonkosten analyse en forecasting"
+      >
+        <div className="p-4 md:p-6">
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive flex items-center gap-2">
@@ -172,23 +182,16 @@ export default function CostAnalyticsDashboard() {
             </p>
           </CardContent>
         </Card>
-      </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <TrendingUp className="h-8 w-8" />
-            Cost Analytics
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Loonkosten analyse en forecasting
-          </p>
-        </div>
-
+    <AppLayout
+      title="Cost Analytics"
+      subtitle="Loonkosten analyse en forecasting"
+      actions={
         <div className="flex gap-4">
           <div className="space-y-1">
             <Label className="text-xs">Jaar</Label>
@@ -218,7 +221,9 @@ export default function CostAnalyticsDashboard() {
             </Select>
           </div>
         </div>
-      </div>
+      }
+    >
+      <div className="p-4 md:p-6 space-y-6">
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -437,6 +442,7 @@ export default function CostAnalyticsDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

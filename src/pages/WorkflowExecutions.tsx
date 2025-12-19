@@ -9,6 +9,7 @@ import { ArrowLeft, RefreshCw, CheckCircle2, XCircle, Clock, Play } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AppLayout } from '@/components/layout/AppLayout';
 import {
   Table,
   TableBody,
@@ -186,31 +187,17 @@ export default function WorkflowExecutions() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b p-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Workflow Executions</h1>
-              <p className="text-sm text-muted-foreground">
-                Monitor workflow execution status and logs
-              </p>
-            </div>
-          </div>
-
-          <Button size="sm" onClick={loadExecutions} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto p-6">
+    <AppLayout
+      title="Workflow Executions"
+      subtitle="Monitor workflow execution status and logs"
+      actions={
+        <Button size="sm" onClick={loadExecutions} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      }
+    >
+      <div className="p-4 md:p-6">
         <Card>
           <Table>
             <TableHeader>
@@ -398,6 +385,6 @@ export default function WorkflowExecutions() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </AppLayout>
   );
 }

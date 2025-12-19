@@ -10,12 +10,17 @@ import { SmartDocumentUpload } from '@/components/documents/SmartDocumentUpload'
 import { DocumentSearch } from '@/components/documents/DocumentSearch';
 import { DocumentList } from '@/components/DocumentList';
 import { FileText, Upload, Search } from 'lucide-react';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 export default function DocumentProcessing() {
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <AppLayout
+      title="AI Document Processing"
+      subtitle="Upload documenten voor automatische analyse, categorisatie en data extractie"
+    >
+      <div className="p-4 md:p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">AI Document Processing</h1>
         <p className="text-muted-foreground">
@@ -90,6 +95,7 @@ export default function DocumentProcessing() {
           </p>
         </Card>
       </div>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

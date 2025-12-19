@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { safeFrom, safeRpc } from '@/lib/supabaseTypeHelpers';
 import { WorkflowEngine } from '@/lib/workflows/engine';
 import { WorkflowExecution } from '@/lib/workflows/types';
+import { AppLayout } from '@/components/layout/AppLayout';
 import {
   Dialog,
   DialogContent,
