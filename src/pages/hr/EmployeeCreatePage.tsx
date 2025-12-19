@@ -305,6 +305,7 @@ export default function EmployeeCreatePage() {
                 <Input
                   id="email"
                   type="email"
+                  inputMode="email"
                   value={formData.email}
                   onChange={(e) => updateField('email', e.target.value)}
                   className={cn(errors.email && 'border-destructive')}
@@ -316,6 +317,8 @@ export default function EmployeeCreatePage() {
                 <Label htmlFor="telefoon">Telefoonnummer</Label>
                 <Input
                   id="telefoon"
+                  type="tel"
+                  inputMode="tel"
                   value={formData.telefoon}
                   onChange={(e) => updateField('telefoon', e.target.value)}
                 />
@@ -420,6 +423,7 @@ export default function EmployeeCreatePage() {
                 <Input
                   id="hours_per_week"
                   type="number"
+                  inputMode="numeric"
                   min={0}
                   max={60}
                   value={formData.hours_per_week || ''}

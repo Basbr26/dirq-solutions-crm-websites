@@ -319,7 +319,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
 
                 <div className="col-span-2 space-y-2">
                   <Label htmlFor="email">Email *</Label>
-                  <Input id="email" type="email" {...register('email')} disabled={loading} />
+                  <Input id="email" type="email" inputMode="email" {...register('email')} disabled={loading} />
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email.message}</p>
                   )}
@@ -440,6 +440,7 @@ export function CreateEmployeeDialog({ open, onOpenChange, onSuccess }: CreateEm
                   <Input
                     id="hours_per_week"
                     type="number"
+                    inputMode="numeric"
                     step="0.1"
                     min="0"
                     max="60"

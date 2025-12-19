@@ -176,6 +176,7 @@ export default function CalendarPage() {
     <AppLayout
       title="Persoonlijke Agenda"
       subtitle="Beheer je meetings, taken en verlof in één overzicht"
+      hideQuickAction={true}
       actions={
         <div className="flex gap-2">
           <Button

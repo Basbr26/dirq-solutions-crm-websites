@@ -10,9 +10,10 @@ interface AppLayoutProps {
   title?: string;
   subtitle?: string;
   actions?: ReactNode;
+  hideQuickAction?: boolean; // Hide the quick action button on specific pages
 }
 
-export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps) {
+export function AppLayout({ children, title, subtitle, actions, hideQuickAction = false }: AppLayoutProps) {
   const [showQuickActions, setShowQuickActions] = useState(false)
   
   return (
@@ -31,13 +32,17 @@ export function AppLayout({ children, title, subtitle, actions }: AppLayoutProps
       <MobileBottomNav />
       
       {/* New bottom nav with quick actions */}
-      <BottomNav onActionClick={() => setShowQuickActions(true)} />
+      {!hideQuickAction && (
+        <BottomNav onActionClick={() => setShowQuickActions(true)} />
+      )}
       
       {/* Quick actions sheet */}
-      <QuickActionSheet
-        open={showQuickActions}
-        onClose={() => setShowQuickActions(false)}
-      />
+      {!hideQuickAction && (
+        <QuickActionSheet
+          open={showQuickActions}
+          onClose={() => setShowQuickActions(false)}
+        />
+      )}
     </div>
   );
 }

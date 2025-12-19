@@ -351,6 +351,8 @@ export default function EmployeeEditPage() {
                 <Label htmlFor="telefoon">Telefoonnummer</Label>
                 <Input
                   id="telefoon"
+                  type="tel"
+                  inputMode="tel"
                   value={formData.telefoon}
                   onChange={(e) => updateField('telefoon', e.target.value)}
                 />
@@ -516,6 +518,7 @@ export default function EmployeeEditPage() {
                 <Label htmlFor="postal_code">Postcode</Label>
                 <Input
                   id="postal_code"
+                  inputMode="text"
                   value={formData.postal_code}
                   onChange={(e) => updateField('postal_code', e.target.value)}
                 />
@@ -555,6 +558,8 @@ export default function EmployeeEditPage() {
                 <Label htmlFor="emergency_contact_phone">Telefoonnummer</Label>
                 <Input
                   id="emergency_contact_phone"
+                  type="tel"
+                  inputMode="tel"
                   value={formData.emergency_contact_phone}
                   onChange={(e) => updateField('emergency_contact_phone', e.target.value)}
                 />
