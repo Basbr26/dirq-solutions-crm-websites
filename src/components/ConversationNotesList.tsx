@@ -100,6 +100,7 @@ export function ConversationNotesList({ caseId, refreshTrigger }: ConversationNo
 
   useEffect(() => {
     loadNotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId, refreshTrigger]);
 
   const handleDelete = async (noteId: string) => {

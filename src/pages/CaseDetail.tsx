@@ -265,7 +265,6 @@ export default function CaseDetail() {
       // Timeline: helper geeft raw Supabase rows + joined profile.
       const rawTimeline = await getCaseTimeline(id);
       setTimeline(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((rawTimeline || []) as any[]).map((e) => {
               let creator;
               if (

@@ -186,7 +186,8 @@ export function SmartDocumentUpload({
         });
       }
     },
-    [user, employeeId, category, onUploadComplete, toast]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, employeeId, onUploadComplete, toast]
   );
 
   /**
