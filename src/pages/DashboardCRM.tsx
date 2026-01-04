@@ -129,25 +129,11 @@ export default function DashboardCRM() {
         }))
     : [];
 
-  // Monthly revenue trend (mock data - replace with real data)
-  const revenueData = [
-    { month: 'Aug', revenue: 45000, target: 50000 },
-    { month: 'Sep', revenue: 52000, target: 50000 },
-    { month: 'Okt', revenue: 48000, target: 50000 },
-    { month: 'Nov', revenue: 61000, target: 55000 },
-    { month: 'Dec', revenue: 58000, target: 55000 },
-    { month: 'Jan', revenue: 67000, target: 60000 },
-  ];
+  // Revenue data - placeholder for future implementation
+  const revenueData: Array<{ month: string; revenue: number; target: number }> = [];
 
-  // Quote acceptance rate over time (mock data)
-  const quoteAcceptanceData = [
-    { month: 'Aug', rate: 42 },
-    { month: 'Sep', rate: 45 },
-    { month: 'Okt', rate: 48 },
-    { month: 'Nov', rate: 52 },
-    { month: 'Dec', rate: 50 },
-    { month: 'Jan', rate: 55 },
-  ];
+  // Quote acceptance data - placeholder for future implementation
+  const quoteAcceptanceData: Array<{ month: string; rate: number }> = [];
 
   const quoteAcceptanceRate = quoteStats 
     ? Math.round((quoteStats.accepted / quoteStats.total) * 100) || 0
@@ -203,31 +189,40 @@ export default function DashboardCRM() {
               <CardDescription>Afgelopen 6 maanden</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="revenue" 
-                    stroke="#10b981" 
-                    name="Omzet"
-                    strokeWidth={2}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="target" 
-                    stroke="#6366f1" 
-                    strokeDasharray="5 5"
-                    name="Doel"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {revenueData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#10b981" 
+                      name="Omzet"
+                      strokeWidth={2}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="target" 
+                      stroke="#6366f1" 
+                      strokeDasharray="5 5"
+                      name="Doel"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Omzetdata wordt binnenkort beschikbaar</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -238,30 +233,39 @@ export default function DashboardCRM() {
               <CardDescription>Verdeling projectwaarde</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pipelineDistribution}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label={(entry) => `${entry.count}`}
-                  >
-                    {pipelineDistribution.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={STAGE_COLORS[entry.name.replace(/ /g, '_')] || '#94a3b8'} 
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value: number) => formatCurrency(value)}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              {pipelineDistribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pipelineDistribution}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label={(entry) => `${entry.count}`}
+                    >
+                      {pipelineDistribution.map((entry, index) => (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={STAGE_COLORS[entry.name.replace(/ /g, '_')] || '#94a3b8'} 
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <FolderKanban className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Geen pipelinedata beschikbaar</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -275,15 +279,24 @@ export default function DashboardCRM() {
               <CardDescription>Trend over tijd</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={quoteAcceptanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value: number) => `${value}%`} />
-                  <Bar dataKey="rate" fill="#10b981" name="Acceptatie %" />
-                </BarChart>
-              </ResponsiveContainer>
+              {quoteAcceptanceData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={quoteAcceptanceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip formatter={(value: number) => `${value}%`} />
+                    <Bar dataKey="rate" fill="#10b981" name="Acceptatie %" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                  <div className="text-center">
+                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Acceptatiedata wordt verzameld</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
