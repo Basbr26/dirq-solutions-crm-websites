@@ -1,7 +1,7 @@
 {
-  "name": "Dirq HR Platform",
-  "short_name": "Dirq HR",
-  "description": "Complete HR platform voor Nederlandse MKB bedrijven",
+  "name": "Dirq CRM - Website Sales",
+  "short_name": "Dirq CRM",
+  "description": "Professioneel CRM systeem voor website ontwikkeling en verkoop",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

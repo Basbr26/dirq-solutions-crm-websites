@@ -1,0 +1,115 @@
+/**
+ * Quotes Module Types
+ * For managing sales quotes and proposals
+ */
+
+export interface Quote {
+  id: string;
+  company_id: string;
+  contact_id?: string;
+  project_id?: string;
+  quote_number: string;
+  title: string;
+  description?: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total_amount: number;
+  currency: string;
+  status: QuoteStatus;
+  valid_until?: string;
+  sent_at?: string;
+  viewed_at?: string;
+  accepted_at?: string;
+  rejected_at?: string;
+  payment_terms?: string;
+  delivery_time?: string;
+  created_by: string;
+  notes?: string;
+  client_notes?: string;
+  created_at: string;
+  updated_at: string;
+  
+  // Relations (from joins)
+  companies?: {
+    id: string;
+    name: string;
+  };
+  contacts?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email?: string;
+  };
+  profiles?: {
+    id: string;
+    full_name: string;
+  };
+}
+
+export interface QuoteItem {
+  id: string;
+  quote_id: string;
+  item_order: number;
+  title: string;
+  description?: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  category?: string;
+  created_at: string;
+}
+
+export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
+
+export interface CreateQuoteInput {
+  company_id: string;
+  contact_id?: string;
+  project_id?: string;
+  title: string;
+  description?: string;
+  tax_rate?: number;
+  valid_until?: string;
+  payment_terms?: string;
+  delivery_time?: string;
+  notes?: string;
+  items: CreateQuoteItemInput[];
+}
+
+export interface CreateQuoteItemInput {
+  title: string;
+  description?: string;
+  quantity: number;
+  unit_price: number;
+  category?: string;
+  item_order?: number;
+}
+
+export interface UpdateQuoteInput {
+  title?: string;
+  description?: string;
+  tax_rate?: number;
+  valid_until?: string;
+  payment_terms?: string;
+  delivery_time?: string;
+  notes?: string;
+  client_notes?: string;
+  status?: QuoteStatus;
+}
+
+export interface QuoteFilters {
+  status?: QuoteStatus;
+  company_id?: string;
+  created_by?: string;
+  search?: string;
+}
+
+export interface QuoteStats {
+  total: number;
+  draft: number;
+  sent: number;
+  accepted: number;
+  rejected: number;
+  total_value: number;
+  avg_value: number;
+}

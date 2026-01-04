@@ -7,11 +7,11 @@ import { cn } from '@/lib/utils'
 import { AppLayout } from '@/components/layout/AppLayout'
 
 const PROMPT_CHIPS = [
-  "Hoeveel verlof heb ik nog?",
-  "Meld mij ziek",
-  "Wie is mijn manager?",
-  "Wanneer loopt mijn contract af?",
-  "Verlof aanvragen",
+  "Laat mijn sales pipeline zien",
+  "Wat zijn mijn actieve deals?",
+  "Welke offertes zijn verstuurd?",
+  "Toon bedrijven in mijn portfolio",
+  "Welke contacten moet ik bellen?",
 ]
 
 interface Message {
@@ -58,7 +58,7 @@ export default function AIChatPage() {
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="font-semibold">HR Assistent</h1>
+              <h1 className="font-semibold">CRM Assistent</h1>
               <p className="text-xs text-muted-foreground">Powered by Claude AI</p>
             </div>
           </div>

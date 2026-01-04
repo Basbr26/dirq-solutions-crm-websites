@@ -9,22 +9,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import {
   LayoutDashboard,
   Users,
-  Briefcase,
-  Calendar,
+  Building2,
+  FolderKanban,
   FileText,
-  Settings,
+  MessageSquare,
+  TrendingUp,
   ChevronLeft,
   ChevronRight,
-  Heart,
-  UserCircle,
-  Building2,
+  Settings,
   Shield,
-  UserPlus,
-  Workflow,
-  BarChart3,
-  FileSearch,
-  PieChart,
-  FileSignature,
+  Layers,
 } from 'lucide-react';
 
 interface NavItem {
@@ -45,52 +39,37 @@ const getNavGroups = (role: string | null): NavGroup[] => {
     {
       title: 'Overzicht',
       items: [
-        { title: 'Dashboard', icon: LayoutDashboard, href: role === 'super_admin' || role === 'hr' ? '/hr/dashboard' : role === 'manager' ? '/dashboard/manager' : '/dashboard/medewerker' },
-        { title: 'Employee Portal', icon: UserCircle, href: '/employee', roles: ['medewerker'] },
+        { 
+          title: 'Dashboard', 
+          icon: LayoutDashboard, 
+          href: role === 'super_admin' ? '/dashboard/super-admin' 
+               : role === 'ADMIN' ? '/dashboard/executive'
+               : '/dashboard/crm'
+        },
       ],
     },
     {
-      title: 'HR Beheer',
+      title: 'CRM',
       items: [
-        { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Onboarding', icon: UserPlus, href: '/hr/onboarding', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Verzuim', icon: Heart, href: '/verzuim', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },
-        { title: 'Kalender', icon: Calendar, href: '/calendar' },
-        { title: 'Planning', icon: Briefcase, href: '/planning', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Documenten', icon: FileText, href: '/hr/documenten', roles: ['hr', 'super_admin'] },
-      ],
-    },
-    {
-      title: 'AI & Automatisering',
-      items: [
-        { title: 'Workflow Templates', icon: FileSignature, href: '/hr/workflows/templates', roles: ['hr', 'super_admin'] },
-        { title: 'Workflow Builder', icon: Workflow, href: '/hr/workflows/builder', roles: ['hr', 'super_admin'] },
-        { title: 'Workflow Uitvoeringen', icon: PieChart, href: '/hr/workflows/executions', roles: ['hr', 'super_admin', 'manager'] },
-        { title: 'Document Verwerking', icon: FileSearch, href: '/documents/processing', roles: ['hr', 'super_admin', 'manager', 'medewerker'] },
+        { title: 'Bedrijven', icon: Building2, href: '/companies', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
+        { title: 'Contacten', icon: Users, href: '/contacts', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
+        { title: 'Projecten', icon: FolderKanban, href: '/projects', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: 'Pipeline', icon: TrendingUp, href: '/pipeline', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: 'Offertes', icon: FileText, href: '/quotes', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: 'Activiteiten', icon: MessageSquare, href: '/interactions', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
       ],
     },
   ];
 
   // Admin-only section
-  if (role === 'super_admin') {
-    baseGroups.push(
-      {
-        title: 'Rapportage',
-        items: [
-          { title: 'Executive Dashboard', icon: BarChart3, href: '/dashboard/executive', roles: ['super_admin'] },
-          { title: 'Kosten Analyse', icon: PieChart, href: '/kosten', roles: ['super_admin'] },
-        ],
-      },
-      {
-        title: 'Administratie',
-        items: [
-          { title: 'Afdelingen', icon: Building2, href: '/settings/afdelingen', roles: ['super_admin'] },
-          { title: 'Gebruikersbeheer', icon: Shield, href: '/settings/gebruikers', roles: ['super_admin'] },
-          { title: 'Bedrijfsinstellingen', icon: Settings, href: '/settings/company', roles: ['super_admin'] },
-        ],
-      }
-    );
+  if (role === 'ADMIN' || role === 'super_admin') {
+    baseGroups.push({
+      title: 'Administratie',
+      items: [
+        { title: 'Instellingen', icon: Settings, href: '/settings', roles: ['ADMIN', 'super_admin'] },
+        { title: 'Gebruikersbeheer', icon: Shield, href: '/admin/gebruikers', roles: ['ADMIN', 'super_admin'] },
+      ],
+    });
   }
 
   // Filter items based on role
@@ -170,7 +149,16 @@ export function AppSidebar() {
         'flex items-center h-16 border-b border-border px-4',
         collapsed ? 'justify-center' : 'justify-between'
       )}>
-        <DirqLogo size="sm" />
+        {!collapsed && (
+          <div className="flex items-center gap-3">
+            <DirqLogo size="sm" />
+            <div className="flex flex-col">
+              <span className="font-semibold text-sm">Dirq CRM</span>
+              <span className="text-xs text-muted-foreground">Website Sales</span>
+            </div>
+          </div>
+        )}
+        {collapsed && <DirqLogo size="sm" />}
       </div>
 
       {/* Navigation */}

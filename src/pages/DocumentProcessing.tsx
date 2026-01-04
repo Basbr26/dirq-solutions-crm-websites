@@ -17,14 +17,14 @@ export default function DocumentProcessing() {
 
   return (
     <AppLayout
-      title="AI Document Processing"
-      subtitle="Upload documenten voor automatische analyse, categorisatie en data extractie"
+      title="Document Beheer"
+      subtitle="Upload offertes, contracten en projectdocumenten voor automatische analyse"
     >
       <div className="p-4 md:p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">AI Document Processing</h1>
+        <h1 className="text-3xl font-bold mb-2">Document Beheer</h1>
         <p className="text-muted-foreground">
-          Upload documenten voor automatische analyse, categorisatie en data extractie
+          Upload offertes, contracten en projectdocumenten voor automatische analyse en categorisatie
         </p>
       </div>
 

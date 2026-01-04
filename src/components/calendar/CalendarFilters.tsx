@@ -5,13 +5,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 interface CalendarFiltersProps {
   filters: {
     meeting: boolean;
-    personal: boolean;
-    absence: boolean;
-    leave: boolean;
+    call: boolean;
+    demo: boolean;
+    followup: boolean;
+    deadline: boolean;
     training: boolean;
-    birthday: boolean;
     company: boolean;
-    teamLeave: boolean;
+    personal: boolean;
   };
   onChange: (filters: any) => void;
 }
@@ -34,51 +34,51 @@ export function CalendarFilters({ filters, onChange }: CalendarFiltersProps) {
             onCheckedChange={(checked) => handleFilterChange('meeting', checked as boolean)}
           />
           <Label htmlFor="meeting" className="text-sm cursor-pointer">
-            Afspraken
+            Sales Meetings
           </Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <Checkbox
-            id="personal"
-            checked={filters.personal}
-            onCheckedChange={(checked) => handleFilterChange('personal', checked as boolean)}
+            id="call"
+            checked={filters.call}
+            onCheckedChange={(checked) => handleFilterChange('call', checked as boolean)}
           />
-          <Label htmlFor="personal" className="text-sm cursor-pointer">
-            Persoonlijk
+          <Label htmlFor="call" className="text-sm cursor-pointer">
+            Sales Calls
           </Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <Checkbox
-            id="absence"
-            checked={filters.absence}
-            onCheckedChange={(checked) => handleFilterChange('absence', checked as boolean)}
+            id="demo"
+            checked={filters.demo}
+            onCheckedChange={(checked) => handleFilterChange('demo', checked as boolean)}
           />
-          <Label htmlFor="absence" className="text-sm cursor-pointer">
-            Verzuim
+          <Label htmlFor="demo" className="text-sm cursor-pointer">
+            Product Demos
           </Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <Checkbox
-            id="leave"
-            checked={filters.leave}
-            onCheckedChange={(checked) => handleFilterChange('leave', checked as boolean)}
+            id="followup"
+            checked={filters.followup}
+            onCheckedChange={(checked) => handleFilterChange('followup', checked as boolean)}
           />
-          <Label htmlFor="leave" className="text-sm cursor-pointer">
-            Mijn Verlof
+          <Label htmlFor="followup" className="text-sm cursor-pointer">
+            Follow-ups
           </Label>
         </div>
 
         <div className="flex items-center space-x-2">
           <Checkbox
-            id="teamLeave"
-            checked={filters.teamLeave}
-            onCheckedChange={(checked) => handleFilterChange('teamLeave', checked as boolean)}
+            id="deadline"
+            checked={filters.deadline}
+            onCheckedChange={(checked) => handleFilterChange('deadline', checked as boolean)}
           />
-          <Label htmlFor="teamLeave" className="text-sm cursor-pointer">
-            Team Verlof
+          <Label htmlFor="deadline" className="text-sm cursor-pointer">
+            Project Deadlines
           </Label>
         </div>
 
@@ -95,23 +95,23 @@ export function CalendarFilters({ filters, onChange }: CalendarFiltersProps) {
 
         <div className="flex items-center space-x-2">
           <Checkbox
-            id="birthday"
-            checked={filters.birthday}
-            onCheckedChange={(checked) => handleFilterChange('birthday', checked as boolean)}
-          />
-          <Label htmlFor="birthday" className="text-sm cursor-pointer">
-            Verjaardagen
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
             id="company"
             checked={filters.company}
             onCheckedChange={(checked) => handleFilterChange('company', checked as boolean)}
           />
           <Label htmlFor="company" className="text-sm cursor-pointer">
             Bedrijfsevents
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="personal"
+            checked={filters.personal}
+            onCheckedChange={(checked) => handleFilterChange('personal', checked as boolean)}
+          />
+          <Label htmlFor="personal" className="text-sm cursor-pointer">
+            Persoonlijk
           </Label>
         </div>
       </CardContent>

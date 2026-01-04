@@ -1,0 +1,510 @@
+/**
+ * QuoteForm Component
+ * Reusable form for creating/editing quotes
+ */
+
+import { useEffect } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Quote, CreateQuoteInput } from '@/types/quotes';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useCompanies } from '@/features/companies/hooks/useCompanies';
+import { useContacts } from '@/features/contacts/hooks/useContacts';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+
+const quoteItemSchema = z.object({
+  title: z.string().min(1, 'Titel is verplicht'),
+  description: z.string().optional(),
+  quantity: z.number().min(1, 'Minimaal 1').default(1),
+  unit_price: z.number().min(0, 'Prijs moet positief zijn').default(0),
+  category: z.string().optional(),
+});
+
+const quoteFormSchema = z.object({
+  company_id: z.string().uuid('Selecteer een bedrijf'),
+  contact_id: z.string().uuid('Selecteer een contactpersoon').optional().or(z.literal('')),
+  title: z.string().min(1, 'Titel is verplicht'),
+  description: z.string().optional(),
+  tax_rate: z.number().min(0).max(100).default(21),
+  valid_until: z.string().optional(),
+  payment_terms: z.string().optional(),
+  delivery_time: z.string().optional(),
+  notes: z.string().optional(),
+  items: z.array(quoteItemSchema).min(1, 'Minimaal 1 regel item'),
+});
+
+type QuoteFormData = z.infer<typeof quoteFormSchema>;
+
+interface QuoteFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  quote?: Quote;
+  onSubmit: (data: CreateQuoteInput) => void;
+  isLoading?: boolean;
+}
+
+export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: QuoteFormProps) {
+  const { data: companiesData } = useCompanies();
+  
+  const form = useForm<QuoteFormData>({
+    resolver: zodResolver(quoteFormSchema),
+    defaultValues: {
+      company_id: '',
+      contact_id: '',
+      title: '',
+      description: '',
+      tax_rate: 21,
+      valid_until: '',
+      payment_terms: '30 dagen',
+      delivery_time: '4-6 weken',
+      notes: '',
+      items: [
+        {
+          title: '',
+          description: '',
+          quantity: 1,
+          unit_price: 0,
+          category: '',
+        },
+      ],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'items',
+  });
+
+  const selectedCompanyId = form.watch('company_id');
+  
+  const { data: contactsData } = useContacts({
+    companyId: selectedCompanyId || undefined,
+  });
+
+  // Calculate totals
+  const items = form.watch('items');
+  const taxRate = form.watch('tax_rate') || 21;
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+  const taxAmount = (subtotal * taxRate) / 100;
+  const total = subtotal + taxAmount;
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
+
+  const handleSubmit = (data: QuoteFormData) => {
+    const submitData: CreateQuoteInput = {
+      title: data.title || '',
+      company_id: data.company_id || '',
+      contact_id: data.contact_id || undefined,
+      valid_until: data.valid_until || undefined,
+      notes: data.notes,
+      payment_terms: data.payment_terms,
+      delivery_time: data.delivery_time,
+      items: data.items.map((item, index) => ({
+        title: item.title || '',
+        description: item.description || '',
+        category: item.category || 'website_development',
+        quantity: item.quantity || 1,
+        unit_price: item.unit_price || 0,
+        item_order: index,
+      })),
+    };
+    onSubmit(submitData);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{quote ? 'Offerte Bewerken' : 'Nieuwe Offerte'}</DialogTitle>
+          <DialogDescription>
+            Vul de gegevens in voor de offerte
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Basic Info */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Algemene Informatie</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="company_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bedrijf *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer bedrijf" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {companiesData?.companies.map((company) => (
+                            <SelectItem key={company.id} value={company.id}>
+                              {company.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="contact_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contactpersoon</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={!selectedCompanyId}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer contactpersoon" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {contactsData?.contacts.map((contact) => (
+                            <SelectItem key={contact.id} value={contact.id}>
+                              {contact.first_name} {contact.last_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Titel *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Website ontwikkeling" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Beschrijving</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Korte beschrijving van het project"
+                        rows={3}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="valid_until"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Geldig tot</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="payment_terms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Betalingsvoorwaarden</FormLabel>
+                      <FormControl>
+                        <Input placeholder="30 dagen" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="delivery_time"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Levertijd</FormLabel>
+                      <FormControl>
+                        <Input placeholder="4-6 weken" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Line Items */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Regel Items</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => append({ title: '', description: '', quantity: 1, unit_price: 0, category: '' })}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Item Toevoegen
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <Card key={field.id} className="p-4">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium">Item {index + 1}</h4>
+                      {fields.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.title`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Titel *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Website design" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.category`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Categorie</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Design, Development, etc." {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.description`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Beschrijving</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Gedetailleerde beschrijving"
+                              rows={2}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.quantity`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Aantal *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="1"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.unit_price`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Prijs per stuk *</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="0"
+                                step="0.01"
+                                {...field}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex flex-col justify-end">
+                        <FormLabel>Totaal</FormLabel>
+                        <div className="h-10 flex items-center font-semibold">
+                          €{((items[index]?.quantity || 0) * (items[index]?.unit_price || 0)).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* Financial Summary */}
+            <Card className="p-4 bg-muted/50">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span>Subtotaal:</span>
+                  <span className="font-semibold">€{subtotal.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span>BTW:</span>
+                    <FormField
+                      control={form.control}
+                      name="tax_rate"
+                      render={({ field }) => (
+                        <FormItem className="flex-row items-center gap-2">
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              className="w-20"
+                              {...field}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <span>%</span>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <span className="font-semibold">€{taxAmount.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
+                  <span>Totaal:</span>
+                  <span>€{total.toFixed(2)}</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Interne Notities</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Interne opmerkingen (niet zichtbaar voor klant)"
+                      rows={3}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Deze notities zijn alleen intern zichtbaar
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                Annuleren
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {quote ? 'Opslaan' : 'Aanmaken'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

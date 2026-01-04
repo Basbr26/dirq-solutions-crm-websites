@@ -6,42 +6,41 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnimatePresence, motion } from "framer-motion";
+import { lazy, Suspense } from "react";
+import { LoadingScreen } from "@/components/LoadingScreen";
 import Auth from "./pages/Auth";
-import DashboardHR from "./pages/DashboardHR";
-import DashboardManager from "./pages/DashboardManager";
-import DashboardMedewerker from "./pages/DashboardMedewerker";
+
+// Lazy load CRM modules
+const CompaniesPage = lazy(() => import("./features/companies/CompaniesPage"));
+const CompanyDetailPage = lazy(() => import("./features/companies/CompanyDetailPage"));
+const ContactsPage = lazy(() => import("./features/contacts/ContactsPage"));
+const ContactDetailPage = lazy(() => import("./features/contacts/ContactDetailPage"));
+const QuotesPage = lazy(() => import("./features/quotes/QuotesPage"));
+const QuoteDetailPage = lazy(() => import("./features/quotes/QuoteDetailPage"));
+const PipelinePage = lazy(() => import("./features/projects/PipelinePage"));
+const ProjectDetailPage = lazy(() => import("./features/projects/ProjectDetailPage"));
+
+// Dashboards
 import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
 import DashboardExecutive from "./pages/DashboardExecutive";
-import CaseDetail from "./pages/CaseDetail";
-import NotFound from "./pages/NotFound";
-import EmployeePortal from "./pages/EmployeePortal";
-import ManagerMobile from "./pages/ManagerMobile";
-import EmployeesPage from "./pages/hr/EmployeesPage";
-import EmployeeDetailPage from "./pages/hr/EmployeeDetailPage";
-import EmployeeCreatePage from "./pages/hr/EmployeeCreatePage";
-import EmployeeEditPage from "./pages/hr/EmployeeEditPage";
-import LeavePage from "./pages/hr/LeavePage";
-import HRDashboardPage from "./pages/hr/HRDashboardPage";
-import DocumentsPage from "./pages/hr/DocumentsPage";
-import OnboardingPage from "./pages/hr/OnboardingPage";
-import OnboardingDetailPage from "./pages/hr/OnboardingDetailPage";
-import OnboardingTemplatesPage from "./pages/hr/OnboardingTemplatesPage";
-import WelcomePage from "./pages/employee/WelcomePage";
+import DashboardCRM from "./pages/DashboardCRM";
+
+// Keep for CRM repurposing
 import DocumentProcessing from "./pages/DocumentProcessing";
 import WorkflowBuilder from "./pages/WorkflowBuilder";
 import WorkflowTemplatesPage from "./pages/WorkflowTemplatesPage";
 import WorkflowExecutions from "./pages/WorkflowExecutions";
-import DepartmentsPage from "./pages/DepartmentsPage";
-import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
 import CalendarPage from "./pages/CalendarPage";
-import PlanningPage from "./pages/PlanningPage";
-import CompanySettingsPage from "./pages/CompanySettingsPage";
 import CostAnalyticsDashboard from "./pages/CostAnalyticsDashboard";
-import EmployeeContractsPage from "./pages/EmployeeContractsPage";
-import { HRChatbot } from "./components/ai/HRChatbot";
-import ManagerMobilePage from "./pages/manager/ManagerMobilePage";
+import CompanySettingsPage from "./pages/CompanySettingsPage";
+import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
 import AIChatPage from "./pages/AIChatPage";
+
+// Utility pages
+import CaseDetail from "./pages/CaseDetail";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -104,22 +103,22 @@ function AnimatedRoutes() {
         />
         
         <Route 
-          path="/dashboard/hr" 
+          path="/dashboard/executive" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                <DashboardHR />
+              <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
+                <DashboardExecutive />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
         
         <Route 
-          path="/dashboard/executive" 
+          path="/dashboard/crm" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <DashboardExecutive />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER']}>
+                <DashboardCRM />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -129,41 +128,8 @@ function AnimatedRoutes() {
           path="/documents/processing" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
                 <DocumentProcessing />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/dashboard/manager" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['manager']}>
-                <DashboardManager />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-
-        <Route 
-          path="/manager-mobile" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['manager']}>
-                <ManagerMobile />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-
-        <Route 
-          path="/manager/approvals" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['manager']}>
-                <ManagerMobilePage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -173,133 +139,125 @@ function AnimatedRoutes() {
           path="/ai-chat" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
                 <AIChatPage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
-        
+
+        {/* CRM MODULE ROUTES */}
         <Route 
-          path="/dashboard/medewerker" 
+          path="/companies" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['medewerker']}>
-                <DashboardMedewerker />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <CompaniesPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
 
         <Route 
-          path="/employee" 
+          path="/companies/:id" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['medewerker']}>
-                <EmployeePortal />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <CompanyDetailPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
 
         <Route 
-          path="/case/:id" 
+          path="/contacts" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute>
-                <CaseDetail />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ContactsPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
 
-        {/* HR Module Routes */}
         <Route 
-          path="/hr/dashboard" 
+          path="/contacts/:id" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                <HRDashboardPage />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ContactDetailPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
+
         <Route 
-          path="/verzuim" 
+          path="/quotes" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                <DashboardHR />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <QuotesPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
+
         <Route 
-          path="/hr/medewerkers" 
+          path="/quotes/:id" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                <EmployeesPage />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <QuoteDetailPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
+
         <Route 
-          path="/hr/medewerkers/nieuw" 
+          path="/pipeline" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                <EmployeeCreatePage />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <PipelinePage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
+
         <Route 
-          path="/hr/medewerkers/:id" 
+          path="/projects/:id" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                <EmployeeDetailPage />
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ProjectDetailPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
-        <Route 
-          path="/hr/medewerkers/:id/bewerken" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                <EmployeeEditPage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        <Route 
-          path="/hr/verlof" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
-                <LeavePage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
+
+        {/* Repurposable Features */}
         <Route 
           path="/calendar" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager', 'medewerker']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
                 <CalendarPage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        <Route 
-          path="/planning" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                <PlanningPage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -309,121 +267,71 @@ function AnimatedRoutes() {
           path="/settings/company" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['super_admin']}>
+              <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
                 <CompanySettingsPage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
         <Route 
-          path="/kosten" 
+          path="/analytics/costs" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['super_admin']}>
+              <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
                 <CostAnalyticsDashboard />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
-        <Route 
-          path="/hr/documenten" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                <DocumentsPage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        <Route 
-          path="/hr/onboarding" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                <OnboardingPage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        <Route 
-          path="/hr/onboarding/templates" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
-                <OnboardingTemplatesPage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        <Route 
-          path="/hr/onboarding/:id" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
-                <OnboardingDetailPage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
-        <Route 
-          path="/welkom" 
-          element={
-            <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['medewerker']}>
-                <WelcomePage />
-              </ProtectedRoute>
-            </AnimatedRoute>
-          } 
-        />
         
-        {/* Settings Routes */}
+        {/* Settings & Admin Routes */}
         <Route 
-          path="/settings/afdelingen" 
+          path="/settings/gebruikers"
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['super_admin']}>
-                <DepartmentsPage />
+              <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
+                <GebruikersbeheerPage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
         <Route 
-          path="/settings/gebruikers" 
+          path="/admin/gebruikers"
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['super_admin']}>
+              <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
                 <GebruikersbeheerPage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
 
-        {/* Workflow Automation Routes */}
+        {/* Workflow Automation - Can be repurposed for Sales Workflows */}
         <Route 
-          path="/hr/workflows/templates" 
+          path="/workflows/templates" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'super_admin']}>
                 <WorkflowTemplatesPage />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
         <Route 
-          path="/hr/workflows/builder" 
+          path="/workflows/builder" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'super_admin']}>
                 <WorkflowBuilder />
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
         <Route 
-          path="/hr/workflows/executions" 
+          path="/workflows/executions" 
           element={
             <AnimatedRoute>
-              <ProtectedRoute allowedRoles={['hr', 'super_admin', 'manager']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
                 <WorkflowExecutions />
               </ProtectedRoute>
             </AnimatedRoute>
@@ -453,41 +361,47 @@ function RoleBasedRedirect() {
 
   // Redirect based on role
   switch (role) {
-    case 'super_admin':
-      return <Navigate to="/hr/dashboard" replace />;
-    case 'hr':
-      return <Navigate to="/hr/dashboard" replace />;
-    case 'manager':
-      return <Navigate to="/dashboard/manager" replace />;
-    case 'medewerker':
-      return <Navigate to="/employee" replace />;
+    case 'super_admin': // Legacy support
+      return <Navigate to="/dashboard/super-admin" replace />;
+    case 'ADMIN':
+      return <Navigate to="/dashboard/executive" replace />;
+    case 'SALES':
+    case 'MANAGER':
+      return <Navigate to="/dashboard/crm" replace />;
+    case 'SUPPORT':
+    case 'hr': // Legacy support
+    case 'manager': // Legacy support
+    case 'medewerker': // Legacy support
+      return <Navigate to="/companies" replace />;
     default:
-      return <Navigate to="/auth" replace />;
+      return <Navigate to="/dashboard/crm" replace />;
   }
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider 
-      attribute="class" 
-      defaultTheme="light" 
-      enableSystem={false}
-      disableTransitionOnChange={false}
-    >
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AuthProvider>
-            <AnimatedRoutes />
-            
-            {/* AI HR Chatbot - available on all authenticated pages */}
-            <HRChatbot />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider 
+        attribute="class" 
+        defaultTheme="light" 
+        enableSystem={false}
+        disableTransitionOnChange={false}
+      >
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AuthProvider>
+              <AnimatedRoutes />
+              
+              {/* AI CRM Chatbot - available on all authenticated pages */}
+              <HRChatbot />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

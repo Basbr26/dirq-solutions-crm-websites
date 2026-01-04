@@ -61,13 +61,13 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [filters, setFilters] = useState({
     meeting: true,
-    personal: true,
-    absence: true,
-    leave: true,
+    call: true,
+    demo: true,
+    followup: true,
+    deadline: true,
     training: true,
-    birthday: true,
     company: true,
-    teamLeave: true,
+    personal: true,
   });
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
@@ -120,7 +120,7 @@ export default function CalendarPage() {
     }
     
     // Simple ICS generation
-    let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Dirq HR//Calendar//EN\n';
+    let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Dirq CRM//Calendar//EN\n';
     
     events.forEach(event => {
       icsContent += 'BEGIN:VEVENT\n';
@@ -187,8 +187,8 @@ export default function CalendarPage() {
 
   return (
     <AppLayout
-      title="Persoonlijke Agenda"
-      subtitle="Beheer je meetings, taken en verlof in één overzicht"
+      title="Activiteiten Agenda"
+      subtitle="Beheer je sales meetings, demos en follow-ups in één overzicht"
       hideQuickAction={true}
       actions={
         <div className="flex gap-2">

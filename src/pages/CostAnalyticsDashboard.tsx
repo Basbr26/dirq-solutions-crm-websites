@@ -11,116 +11,39 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 export default function CostAnalyticsDashboard() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Fetch departments
-  const { data: departments } = useQuery({
-    queryKey: ["departments"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("departments")
-        .select("id, name")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch cost summary data
-  const { data: costSummary, isLoading: costLoading, error: costError } = useQuery({
-    queryKey: ["cost-summary", selectedYear, selectedDepartment],
-    queryFn: async () => {
-      let query = supabase
-        .from("employee_cost_summary")
-        .select(`
-          *,
-          employee:profiles!employee_id(
-            full_name,
-            department_id,
-            departments(name)
-          )
-        `)
-        .eq("year", selectedYear);
-
-      if (selectedDepartment !== "all") {
-        query = query.eq("employee.department_id", selectedDepartment);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch employee total compensation
-  const { data: employeeCompensation } = useQuery({
-    queryKey: ["employee-compensation", selectedDepartment],
-    queryFn: async () => {
-      let query = supabase
-        .from("v_employee_total_compensation")
-        .select("*");
-
-      if (selectedDepartment !== "all") {
-        query = query.eq("department_id", selectedDepartment);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Placeholder: This would fetch project profitability data
+  // For now, showing basic structure with dummy data
+  const projects = [
+    { id: 1, name: "Website Redesign", revenue: 25000, costs: 18000, margin: 7000 },
+    { id: 2, name: "E-commerce Platform", revenue: 45000, costs: 32000, margin: 13000 },
+    { id: 3, name: "Marketing Site", revenue: 15000, costs: 11000, margin: 4000 },
+  ];
 
   // Calculate aggregated metrics
-  const totalEmployees = new Set(costSummary?.map(c => c.employee_id)).size || 0;
-  const totalCostYTD = costSummary?.reduce((sum, c) => sum + (c.total_employer_cost || 0), 0) || 0;
-  const avgCostPerEmployee = totalEmployees > 0 ? totalCostYTD / totalEmployees : 0;
-  const totalGrossSalary = costSummary?.reduce((sum, c) => sum + (c.total_gross_salary || 0), 0) || 0;
+  const totalProjects = projects.length;
+  const totalRevenue = projects.reduce((sum, p) => sum + p.revenue, 0);
+  const totalCosts = projects.reduce((sum, p) => sum + p.costs, 0);
+  const totalProfit = totalRevenue - totalCosts;
+  const avgMargin = totalProjects > 0 ? (totalProfit / totalRevenue) * 100 : 0;
 
-  // Monthly cost trend
-  const monthlyTrend = Array.from({ length: 12 }, (_, i) => {
-    const month = i + 1;
-    const monthData = costSummary?.filter(c => c.month === month) || [];
-    return {
-      month: new Date(selectedYear, i).toLocaleDateString("nl-NL", { month: "short" }),
-      cost: monthData.reduce((sum, c) => sum + (c.total_employer_cost || 0), 0),
-      gross: monthData.reduce((sum, c) => sum + (c.total_gross_salary || 0), 0),
-      employees: new Set(monthData.map(c => c.employee_id)).size,
-    };
-  });
+  // Monthly revenue trend (placeholder)
+  const monthlyTrend = Array.from({ length: 12 }, (_, i) => ({
+    month: new Date(selectedYear, i).toLocaleDateString("nl-NL", { month: "short" }),
+    revenue: Math.floor(Math.random() * 50000) + 20000,
+    costs: Math.floor(Math.random() * 35000) + 15000,
+    profit: 0, // calculated below
+  })).map(m => ({ ...m, profit: m.revenue - m.costs }));
 
-  // Cost breakdown by category
-  const avgMonthRecord = costSummary?.[0];
-  const costBreakdown = avgMonthRecord ? [
-    { name: "Bruto salaris", value: avgMonthRecord.base_salary_gross || 0, color: "#3b82f6" },
-    { name: "Toeslagen", value: avgMonthRecord.allowances_total || 0, color: "#8b5cf6" },
-    { name: "Overuren", value: avgMonthRecord.overtime_total || 0, color: "#f59e0b" },
-    { name: "Werkgeverslasten", value: avgMonthRecord.social_charges || 0, color: "#ef4444" },
-    { name: "Pensioen", value: avgMonthRecord.pension_employer_contribution || 0, color: "#10b981" },
-    { name: "Benefits", value: avgMonthRecord.benefits_employer_cost || 0, color: "#06b6d4" },
-  ].filter(item => item.value > 0) : [];
-
-  // Department comparison
-  const departmentCosts = departments?.map(dept => {
-    const deptData = costSummary?.filter(c => c.employee?.department_id === dept.id) || [];
-    return {
-      name: dept.name,
-      totalCost: deptData.reduce((sum, c) => sum + (c.total_employer_cost || 0), 0),
-      employees: new Set(deptData.map(c => c.employee_id)).size,
-      avgCostPerEmployee: deptData.length > 0 
-        ? deptData.reduce((sum, c) => sum + (c.total_employer_cost || 0), 0) / new Set(deptData.map(c => c.employee_id)).size 
-        : 0,
-    };
-  }).filter(d => d.employees > 0) || [];
-
-  // Top 10 highest cost employees
-  const topEmployees = employeeCompensation
-    ?.sort((a, b) => (b.estimated_total_cost_monthly || 0) - (a.estimated_total_cost_monthly || 0))
-    .slice(0, 10)
-    .map(e => ({
-      name: e.full_name,
-      monthlyCost: e.estimated_total_cost_monthly || 0,
-      annualSalary: e.base_salary_annual || 0,
-    })) || [];
+  // Project breakdown
+  const projectBreakdown = projects.map(p => ({
+    name: p.name,
+    revenue: p.revenue,
+    costs: p.costs,
+    margin: p.margin,
+    marginPercent: ((p.margin / p.revenue) * 100).toFixed(1),
+  }));
 
   const COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981", "#06b6d4", "#ec4899", "#6366f1"];
 
@@ -189,8 +112,8 @@ export default function CostAnalyticsDashboard() {
 
   return (
     <AppLayout
-      title="Cost Analytics"
-      subtitle="Loonkosten analyse en forecasting"
+      title="Project Analytics"
+      subtitle="Omzet, winstgevendheid en project performance"
       actions={
         <div className="flex gap-4">
           <div className="space-y-1">
@@ -207,16 +130,16 @@ export default function CostAnalyticsDashboard() {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Afdeling</Label>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+            <Label className="text-xs">Categorie</Label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle afdelingen</SelectItem>
-                {departments?.filter(d => d.id && d.id.trim() !== '').map(dept => (
-                  <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
-                ))}
+                <SelectItem value="all">Alle projecten</SelectItem>
+                <SelectItem value="website">Websites</SelectItem>
+                <SelectItem value="ecommerce">E-commerce</SelectItem>
+                <SelectItem value="app">Apps</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -230,13 +153,13 @@ export default function CostAnalyticsDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              Medewerkers
+              <PieChart className="h-4 w-4 text-blue-500" />
+              Actieve Projecten
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalEmployees}</div>
-            <p className="text-xs text-muted-foreground mt-1">Actieve contracten</p>
+            <div className="text-2xl font-bold">{totalProjects}</div>
+            <p className="text-xs text-muted-foreground mt-1">In uitvoering</p>
           </CardContent>
         </Card>
 
@@ -244,13 +167,13 @@ export default function CostAnalyticsDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-green-500" />
-              Totale Kosten YTD
+              Totale Omzet
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€ {(totalCostYTD / 1000).toFixed(0)}K</div>
+            <div className="text-2xl font-bold">€ {(totalRevenue / 1000).toFixed(0)}K</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Jaar tot nu toe
+              Dit jaar
             </p>
           </CardContent>
         </Card>
@@ -259,26 +182,26 @@ export default function CostAnalyticsDashboard() {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-orange-500" />
-              Gem. Kosten/Medewerker
+              Winst
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€ {(avgCostPerEmployee / 1000).toFixed(1)}K</div>
-            <p className="text-xs text-muted-foreground mt-1">Per jaar</p>
+            <div className="text-2xl font-bold">€ {(totalProfit / 1000).toFixed(1)}K</div>
+            <p className="text-xs text-muted-foreground mt-1">Netto resultaat</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingDown className="h-4 w-4 text-purple-500" />
-              Bruto Salaris
+              <TrendingUp className="h-4 w-4 text-purple-500" />
+              Gem. Winstmarge
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">€ {(totalGrossSalary / 1000).toFixed(0)}K</div>
+            <div className="text-2xl font-bold">{avgMargin.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground mt-1">
-              {((totalGrossSalary / totalCostYTD) * 100).toFixed(0)}% van totale kosten
+              Over alle projecten
             </p>
           </CardContent>
         </Card>
@@ -296,47 +219,74 @@ export default function CostAnalyticsDashboard() {
         <TabsContent value="trends" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Maandelijkse Kostenoverzicht {selectedYear}</CardTitle>
-              <CardDescription>Ontwikkeling loonkosten en aantal medewerkers</CardDescription>
+              <CardTitle>Maandelijkse Omzet & Winst {selectedYear}</CardTitle>
+              <CardDescription>Ontwikkeling omzet en winstgevendheid</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={monthlyTrend}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
+                  <YAxis />
                   <Tooltip 
-                    formatter={(value: number, name: string) => {
-                      if (name === "Totale kosten" || name === "Bruto salaris") {
-                        return `€${(value / 1000).toFixed(1)}K`;
-                      }
-                      return value;
-                    }}
+                    formatter={(value: number) => `€${(value / 1000).toFixed(1)}K`}
                   />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="cost" name="Totale kosten" stroke="#ef4444" strokeWidth={2} />
-                  <Line yAxisId="left" type="monotone" dataKey="gross" name="Bruto salaris" stroke="#3b82f6" strokeWidth={2} />
-                  <Line yAxisId="right" type="monotone" dataKey="employees" name="Medewerkers" stroke="#10b981" strokeWidth={2} />
+                  <Line type="monotone" dataKey="revenue" name="Omzet" stroke="#3b82f6" strokeWidth={2} />
+                  <Line type="monotone" dataKey="costs" name="Kosten" stroke="#ef4444" strokeWidth={2} />
+                  <Line type="monotone" dataKey="profit" name="Winst" stroke="#10b981" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Cost Breakdown Tab */}
+        {/* Project Breakdown Tab */}
         <TabsContent value="breakdown" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Winstgevendheid</CardTitle>
+              <CardDescription>Vergelijking per project</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {projectBreakdown.map((project, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{project.name}</span>
+                      <span className="text-sm text-muted-foreground">{project.marginPercent}% marge</span>
+                    </div>
+                    <div className="flex gap-4 text-sm">
+                      <span className="text-green-600">Omzet: €{(project.revenue / 1000).toFixed(1)}K</span>
+                      <span className="text-orange-600">Kosten: €{(project.costs / 1000).toFixed(1)}K</span>
+                      <span className="text-blue-600">Winst: €{(project.margin / 1000).toFixed(1)}K</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500" 
+                        style={{ width: `${project.marginPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Charts Tab */}
+        <TabsContent value="charts" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Kostenopbouw</CardTitle>
-                <CardDescription>Gemiddelde maandelijkse kosten per categorie</CardDescription>
+                <CardTitle>Project Breakdown</CardTitle>
+                <CardDescription>Omzet per project</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <RechartsPie>
                     <Pie
-                      data={costBreakdown}
+                      data={projectBreakdown.map(p => ({ name: p.name, value: p.revenue }))}
                       cx="50%"
                       cy="50%"
                       labelLine={false}

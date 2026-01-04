@@ -1,0 +1,433 @@
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Company, CompanyFormData } from '@/types/crm';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
+
+const companyFormSchema = z.object({
+  name: z.string().min(2, 'Naam moet minimaal 2 karakters bevatten'),
+  industry_id: z.string().optional(),
+  website: z.string().url('Voer een geldige URL in').or(z.literal('')).optional(),
+  phone: z.string().optional(),
+  email: z.string().email('Voer een geldig e-mailadres in').or(z.literal('')).optional(),
+  address: z.object({
+    street: z.string().optional(),
+    city: z.string().optional(),
+    postal_code: z.string().optional(),
+    country: z.string().optional(),
+  }).optional(),
+  company_size: z.enum(['1-10', '11-50', '51-200', '201-500', '501+']).optional(),
+  annual_revenue: z.number().optional(),
+  status: z.enum(['prospect', 'active', 'inactive', 'churned']),
+  priority: z.enum(['low', 'medium', 'high']),
+  notes: z.string().optional(),
+});
+
+interface CompanyFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  company?: Company;
+  onSubmit: (data: CompanyFormData) => void;
+  isLoading?: boolean;
+}
+
+export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
+  const { data: industries } = useQuery({
+    queryKey: ['industries'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('industries')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const form = useForm<CompanyFormData>({
+    resolver: zodResolver(companyFormSchema),
+    defaultValues: {
+      name: '',
+      industry_id: undefined,
+      website: '',
+      phone: '',
+      email: '',
+      address: {
+        street: '',
+        city: '',
+        postal_code: '',
+        country: 'Nederland',
+      },
+      company_size: undefined,
+      status: 'prospect',
+      priority: 'medium',
+      notes: '',
+    },
+  });
+
+  // Reset form when company changes or dialog opens/closes
+  useEffect(() => {
+    if (company) {
+      form.reset({
+        name: company.name,
+        industry_id: company.industry_id || undefined,
+        website: company.website || '',
+        phone: company.phone || '',
+        email: company.email || '',
+        address: company.address || {
+          street: '',
+          city: '',
+          postal_code: '',
+          country: 'Nederland',
+        },
+        company_size: company.company_size,
+        annual_revenue: company.annual_revenue || undefined,
+        status: company.status,
+        priority: company.priority,
+        notes: company.notes || '',
+      });
+    } else {
+      form.reset({
+        name: '',
+        industry_id: undefined,
+        website: '',
+        phone: '',
+        email: '',
+        address: {
+          street: '',
+          city: '',
+          postal_code: '',
+          country: 'Nederland',
+        },
+        company_size: undefined,
+        status: 'prospect',
+        priority: 'medium',
+        notes: '',
+      });
+    }
+  }, [company, open, form]);
+
+  const handleSubmit = (data: CompanyFormData) => {
+    onSubmit(data);
+    if (!company) {
+      form.reset();
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
+          <DialogDescription>
+            {company
+              ? 'Wijzig de gegevens van het bedrijf'
+              : 'Voeg een nieuw bedrijf toe aan je CRM'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Basisinformatie</h3>
+              
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bedrijfsnaam *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Acme Corporation" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="industry_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Branche</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer branche" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {industries?.map((industry) => (
+                            <SelectItem key={industry.id} value={industry.id}>
+                              {industry.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="company_size"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bedrijfsgrootte</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer grootte" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1-10">1-10 werknemers</SelectItem>
+                          <SelectItem value="11-50">11-50 werknemers</SelectItem>
+                          <SelectItem value="51-200">51-200 werknemers</SelectItem>
+                          <SelectItem value="201-500">201-500 werknemers</SelectItem>
+                          <SelectItem value="501+">501+ werknemers</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="prospect">Prospect</SelectItem>
+                          <SelectItem value="active">Actief</SelectItem>
+                          <SelectItem value="inactive">Inactief</SelectItem>
+                          <SelectItem value="churned">Verloren</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="priority"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prioriteit *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="low">Laag</SelectItem>
+                          <SelectItem value="medium">Normaal</SelectItem>
+                          <SelectItem value="high">Hoog</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Contactgegevens</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>E-mail</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="info@company.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefoon</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+31 20 123 4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Website</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://www.company.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Address */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Adres</h3>
+              
+              <FormField
+                control={form.control}
+                name="address.street"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Straat + Huisnummer</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Keizersgracht 123" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="address.postal_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Postcode</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1015 CW" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address.city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stad</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Amsterdam" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address.country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Land</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nederland" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notities</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Aanvullende informatie over dit bedrijf..."
+                      className="resize-none"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                Annuleren
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {company ? 'Opslaan' : 'Aanmaken'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}

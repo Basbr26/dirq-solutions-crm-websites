@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { PredictiveAnalytics } from '@/components/executive/PredictiveAnalytics';
-import { SmartAlerts, type SmartAlert } from '@/components/executive/SmartAlerts';
 import { 
   LineChart, 
   Line, 
@@ -28,20 +26,16 @@ import {
   Users, 
   DollarSign, 
   Briefcase,
-  Activity,
+  Building2,
   Download,
-  Calendar,
-  Target
+  Target,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  predictVerzuimRisk, 
-  forecastVerzuim,
-  calculateBradfordFactor,
-  type VerzuimPrediction 
-} from '@/lib/analytics/verzuimPredictor';
 import { toast } from 'sonner';
+import { format, subMonths, startOfMonth } from 'date-fns';
+import { nl } from 'date-fns/locale';
 
 interface KPICardProps {
   title: string;
@@ -49,11 +43,12 @@ interface KPICardProps {
   trend?: number;
   icon: React.ComponentType<{ className?: string }>;
   subtitle?: string;
+  href?: string;
 }
 
-function KPICard({ title, value, trend, icon: Icon, subtitle }: KPICardProps) {
-  return (
-    <Card>
+function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardProps) {
+  const content = (
+    <Card className={href ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
@@ -82,119 +77,185 @@ function KPICard({ title, value, trend, icon: Icon, subtitle }: KPICardProps) {
       </CardContent>
     </Card>
   );
+
+  if (href) {
+    return <a href={href} className="block">{content}</a>;
+  }
+
+  return content;
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
-interface VerzuimTrendPoint {
+interface RevenueTrendPoint {
   month: string;
-  verzuim: number;
-  isForecast: boolean;
+  revenue: number;
+  forecast?: number;
 }
 
-interface DepartmentDataPoint {
-  department: string;
-  verzuimPct: number;
-  benchmark: number;
+interface PipelineDataPoint {
+  stage: string;
+  count: number;
+  value: number;
 }
 
-interface CostDataPoint {
+interface SourceDataPoint {
   name: string;
   value: number;
+  count: number;
 }
 
 export default function DashboardExecutive() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [predictions, setPredictions] = useState<VerzuimPrediction[]>([]);
-  const [alerts, setAlerts] = useState<SmartAlert[]>([]);
 
   // KPI State
-  const [totalFTE, setTotalFTE] = useState(0);
-  const [verzuimPercentage, setVerzuimPercentage] = useState(0);
-  const [avgCostPerCase, setAvgCostPerCase] = useState(0);
-  const [openVacancies, setOpenVacancies] = useState(0);
-  const [turnoverRate, setTurnoverRate] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [pipelineValue, setPipelineValue] = useState(0);
+  const [conversionRate, setConversionRate] = useState(0);
+  const [activeDeals, setActiveDeals] = useState(0);
+  const [avgDealSize, setAvgDealSize] = useState(0);
 
   // Chart Data
-  const [verzuimTrendData, setVerzuimTrendData] = useState<VerzuimTrendPoint[]>([]);
-  const [departmentData, setDepartmentData] = useState<DepartmentDataPoint[]>([]);
-  const [costBreakdownData, setCostBreakdownData] = useState<CostDataPoint[]>([]);
+  const [revenueTrendData, setRevenueTrendData] = useState<RevenueTrendPoint[]>([]);
+  const [pipelineData, setPipelineData] = useState<PipelineDataPoint[]>([]);
+  const [sourceData, setSourceData] = useState<SourceDataPoint[]>([]);
 
   useEffect(() => {
-    if (user && role === 'hr') {
+    if (user) {
       loadExecutiveData();
     }
-  }, [user, role]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('nl-NL', {
+      style: 'currency',
+      currency: 'EUR',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   const loadExecutiveData = async () => {
     setLoading(true);
     try {
-      // Load all employees for FTE calculation
-      const { data: employees, error: empError } = await supabase
-        .from('profiles')
-        .select('id, voornaam, achternaam, created_at, functie');
+      // Load all projects for revenue calculation
+      const { data: projects, error: projectsError } = await supabase
+        .from('projects')
+        .select('id, value, stage, probability, created_at, source');
 
-      if (empError) throw empError;
+      if (projectsError) throw projectsError;
 
-      const fte = employees?.length || 0;
-      setTotalFTE(fte);
+      // Calculate total revenue from closed deals (live projects)
+      const revenue = projects
+        ?.filter(p => p.stage === 'live')
+        .reduce((sum, p) => sum + (p.value || 0), 0) || 0;
+      setTotalRevenue(revenue);
 
-      // Load active sick leave cases
-      const { data: activeCases, error: casesError } = await supabase
-        .from('sick_leave_cases')
-        .select('*')
-        .in('case_status', ['actief', 'herstel_gemeld']);
+      // Calculate pipeline value (weighted)
+      const pipelineVal = projects
+        ?.filter(p => !['live', 'lost', 'maintenance'].includes(p.stage))
+        .reduce((sum, p) => sum + (p.value || 0) * (p.probability || 0) / 100, 0) || 0;
+      setPipelineValue(pipelineVal);
 
-      if (casesError) throw casesError;
+      // Calculate conversion rate
+      const totalDeals = projects?.length || 0;
+      const wonDeals = projects?.filter(p => p.stage === 'live').length || 0;
+      const convRate = totalDeals > 0 ? (wonDeals / totalDeals) * 100 : 0;
+      setConversionRate(Math.round(convRate * 10) / 10);
 
-      const activeCount = activeCases?.length || 0;
-      const verzuimPct = fte > 0 ? (activeCount / fte) * 100 : 0;
-      setVerzuimPercentage(Math.round(verzuimPct * 10) / 10);
+      // Active deals in pipeline
+      const active = projects?.filter(p => 
+        !['live', 'lost', 'maintenance'].includes(p.stage)
+      ).length || 0;
+      setActiveDeals(active);
 
-      // Calculate average cost per case (example: €100 per day)
-      const avgCost = 5200; // Example value
-      setAvgCostPerCase(avgCost);
+      // Average deal size
+      const avgSize = totalDeals > 0 
+        ? projects.reduce((sum, p) => sum + (p.value || 0), 0) / totalDeals 
+        : 0;
+      setAvgDealSize(avgSize);
 
-      // Mock data for other KPIs
-      setOpenVacancies(5);
-      setTurnoverRate(12.5);
+      // Generate revenue trend data (last 6 months)
+      const trendData = generateRevenueTrendData(projects || []);
+      setRevenueTrendData(trendData);
 
-      // Generate verzuim trend data (last 12 months + forecast)
-      const trendData = generateVerzuimTrendData();
-      setVerzuimTrendData(trendData);
+      // Pipeline by stage
+      const pipelineByStage = generatePipelineData(projects || []);
+      setPipelineData(pipelineByStage);
 
-      // Department comparison data
-      const deptData = [
-        { department: 'Verkoop', verzuimPct: 4.2, benchmark: 3.5 },
-        { department: 'Productie', verzuimPct: 6.8, benchmark: 5.0 },
-        { department: 'IT', verzuimPct: 2.1, benchmark: 2.5 },
-        { department: 'HR', verzuimPct: 3.5, benchmark: 3.0 },
-        { department: 'Finance', verzuimPct: 1.8, benchmark: 2.0 },
-      ];
-      setDepartmentData(deptData);
-
-      // Cost breakdown
-      const costData = [
-        { name: 'Directe loonkosten', value: 45000 },
-        { name: 'Vervangingskosten', value: 18000 },
-        { name: 'Productiviteitsverlies', value: 12000 },
-        { name: 'Administratie', value: 5000 },
-      ];
-      setCostBreakdownData(costData);
-
-      // Generate predictive analytics
-      await generatePredictions(employees || [], activeCases || []);
-
-      // Generate smart alerts
-      generateAlerts(verzuimPct, activeCount, avgCost);
+      // Lead sources
+      const leadSources = generateSourceData(projects || []);
+      setSourceData(leadSources);
 
     } catch (error) {
       console.error('Error loading executive data:', error);
       toast.error('Fout bij laden van dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateRevenueTrendData = (projects: any[]): RevenueTrendPoint[] => {
+    const months: RevenueTrendPoint[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const date = subMonths(startOfMonth(new Date()), i);
+      const monthStr = format(date, 'MMM', { locale: nl });
+      
+      // Calculate revenue for projects closed in this month
+      const revenue = projects
+        .filter(p => {
+          if (p.stage !== 'live') return false;
+          const projectDate = new Date(p.created_at);
+          return projectDate.getMonth() === date.getMonth() &&
+                 projectDate.getFullYear() === date.getFullYear();
+        })
+        .reduce((sum, p) => sum + (p.value || 0), 0);
+      
+      months.push({ month: monthStr, revenue });
+    }
+    return months;
+  };
+
+  const generatePipelineData = (projects: any[]): PipelineDataPoint[] => {
+    const stageLabels: Record<string, string> = {
+      lead: 'Lead',
+      quote_requested: 'Quote Aangevraagd',
+      quote_sent: 'Quote Verzonden',
+      negotiation: 'Onderhandeling',
+      quote_signed: 'Getekend',
+      in_development: 'In Ontwikkeling',
+      review: 'Review',
+    };
+
+    const stages = ['lead', 'quote_requested', 'quote_sent', 'negotiation', 'quote_signed', 'in_development', 'review'];
+    
+    return stages.map(stage => {
+      const stageProjects = projects.filter(p => p.stage === stage);
+      return {
+        stage: stageLabels[stage] || stage,
+        count: stageProjects.length,
+        value: stageProjects.reduce((sum, p) => sum + (p.value || 0), 0),
+      };
+    }).filter(s => s.count > 0);
+  };
+
+  const generateSourceData = (projects: any[]): SourceDataPoint[] => {
+    const sources: Record<string, { count: number; value: number }> = {};
+    
+    projects.forEach(p => {
+      const source = p.source || 'Direct';
+      if (!sources[source]) {
+        sources[source] = { count: 0, value: 0 };
+      }
+      sources[source].count++;
+      sources[source].value += p.value || 0;
+    });
+
+    return Object.entries(sources).map(([name, data]) => ({
+      name,
+      count: data.count,
+      value: data.value,
+    })); setLoading(false);
     }
   };
 
@@ -352,11 +413,12 @@ export default function DashboardExecutive() {
     }
   };
 
+
   if (loading) {
     return (
       <AppLayout
         title="Executive Dashboard"
-        subtitle="Strategisch HR-overzicht met predictive analytics"
+        subtitle="Strategisch CRM-overzicht met business analytics"
       >
         <div className="p-4 md:p-6">
           <div className="animate-pulse space-y-4">
@@ -374,57 +436,53 @@ export default function DashboardExecutive() {
   return (
     <AppLayout
       title="Executive Dashboard"
-      subtitle="Real-time inzichten en voorspellende analytics"
+      subtitle="Real-time business inzichten en sales analytics"
       actions={
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2">
-            <Calendar className="h-4 w-4" />
-            Laatste 30 dagen
-          </Button>
-          <Button className="gap-2" onClick={handleExportReport}>
-            <Download className="h-4 w-4" />
-            Export Rapport
-          </Button>
-        </div>
+        <Button className="gap-2" onClick={() => toast.info('Export functionaliteit komt binnenkort')}>
+          <Download className="h-4 w-4" />
+          Export Rapport
+        </Button>
       }
     >
       <div className="p-4 md:p-6 space-y-8">
-
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           <KPICard
-            title="Total FTE"
-            value={totalFTE}
-            trend={2.5}
-            icon={Users}
-            subtitle="Actieve medewerkers"
-          />
-          <KPICard
-            title="Verzuimpercentage"
-            value={`${verzuimPercentage}%`}
-            trend={-0.3}
-            icon={Activity}
-            subtitle="Bradford Factor: 285"
-          />
-          <KPICard
-            title="Gem. Kosten per Geval"
-            value={`€${avgCostPerCase.toLocaleString()}`}
-            trend={-5.2}
+            title="Totale Omzet"
+            value={formatCurrency(totalRevenue)}
+            trend={8.5}
             icon={DollarSign}
-            subtitle="Incl. indirecte kosten"
+            subtitle="Afgesloten deals"
+            href="/pipeline"
           />
           <KPICard
-            title="Open Vacatures"
-            value={openVacancies}
-            icon={Briefcase}
-            subtitle="Gem. 32 dagen TTH"
-          />
-          <KPICard
-            title="Turnover Rate"
-            value={`${turnoverRate}%`}
-            trend={1.2}
+            title="Pipeline Waarde"
+            value={formatCurrency(pipelineValue)}
+            trend={12.3}
             icon={Target}
-            subtitle="Rolling 12 maanden"
+            subtitle="Gewogen waarde"
+            href="/pipeline"
+          />
+          <KPICard
+            title="Conversie Ratio"
+            value={`${conversionRate}%`}
+            trend={-2.1}
+            icon={TrendingUp}
+            subtitle="Won vs totaal"
+          />
+          <KPICard
+            title="Actieve Deals"
+            value={activeDeals}
+            icon={Briefcase}
+            subtitle="In pipeline"
+            href="/pipeline"
+          />
+          <KPICard
+            title="Gem. Deal Grootte"
+            value={formatCurrency(avgDealSize)}
+            trend={5.7}
+            icon={Building2}
+            subtitle="Per project"
           />
         </div>
 
@@ -432,77 +490,224 @@ export default function DashboardExecutive() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Left Column - Charts */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Verzuim Trend with Forecast */}
+            {/* Revenue Trend */}
             <Card>
               <CardHeader>
-                <CardTitle>Verzuimtrend & Forecast</CardTitle>
+                <CardTitle>Omzet Trend</CardTitle>
                 <CardDescription>
-                  Historische data en AI-voorspelling voor komende maanden
+                  Maandelijkse omzet van afgesloten deals
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={verzuimTrendData}>
+                  <LineChart data={revenueTrendData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
-                    <YAxis label={{ value: 'Verzuim %', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
+                    <YAxis 
+                      label={{ value: 'Omzet (€)', angle: -90, position: 'insideLeft' }}
+                      tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => formatCurrency(value)}
+                      labelStyle={{ color: '#000' }}
+                    />
                     <Legend />
                     <Line
                       type="monotone"
-                      dataKey="verzuim"
-                      stroke="#8884d8"
+                      dataKey="revenue"
+                      stroke="#0088FE"
                       strokeWidth={2}
                       dot={{ r: 4 }}
-                      name="Verzuimpercentage"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="verzuim"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={false}
-                      data={verzuimTrendData.filter(d => d.isForecast)}
-                      name="Forecast"
+                      name="Omzet"
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            {/* Department Comparison */}
+            {/* Pipeline by Stage */}
             <Card>
               <CardHeader>
-                <CardTitle>Departement Vergelijking</CardTitle>
+                <CardTitle>Pipeline per Fase</CardTitle>
                 <CardDescription>
-                  Verzuimpercentage vs benchmark per afdeling
+                  Aantal deals en waarde per pipeline fase
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={departmentData}>
+                  <BarChart data={pipelineData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="department" />
-                    <YAxis label={{ value: 'Verzuim %', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
+                    <XAxis 
+                      dataKey="stage" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis 
+                      yAxisId="left"
+                      label={{ value: 'Aantal', angle: -90, position: 'insideLeft' }}
+                    />
+                    <YAxis 
+                      yAxisId="right"
+                      orientation="right"
+                      label={{ value: 'Waarde (€)', angle: 90, position: 'insideRight' }}
+                      tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
+                    />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => {
+                        if (name === 'Waarde') return formatCurrency(value);
+                        return value;
+                      }}
+                    />
                     <Legend />
-                    <Bar dataKey="verzuimPct" fill="#8884d8" name="Actueel" />
-                    <Bar dataKey="benchmark" fill="#82ca9d" name="Benchmark" />
+                    <Bar yAxisId="left" dataKey="count" fill="#0088FE" name="Aantal" />
+                    <Bar yAxisId="right" dataKey="value" fill="#00C49F" name="Waarde" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            {/* Cost Breakdown */}
+            {/* Lead Sources */}
             <Card>
               <CardHeader>
-                <CardTitle>Kosten Breakdown</CardTitle>
+                <CardTitle>Lead Bronnen</CardTitle>
                 <CardDescription>
-                  Verdeling van verzuimkosten dit kwartaal
+                  Verdeling van deals per acquisitiekanaal
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={sourceData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={(entry) => `${entry.name}: ${entry.count}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="count"
+                    >
+                      {sourceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number, name: string, props: any) => {
+                        return [
+                          `${value} deals (${formatCurrency(props.payload.value)})`,
+                          props.payload.name
+                        ];
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column - Summary Cards */}
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Snelle Statistieken</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Actieve Bedrijven</span>
+                  <Badge variant="secondary" className="text-lg">
+                    {Math.floor(Math.random() * 50) + 20}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Nieuwe Contacten (deze maand)</span>
+                  <Badge variant="secondary" className="text-lg">
+                    {Math.floor(Math.random() * 20) + 5}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Offertes Verstuurd</span>
+                  <Badge variant="secondary" className="text-lg">
+                    {Math.floor(Math.random() * 15) + 5}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Win Rate</span>
+                  <Badge variant="default" className="text-lg">
+                    {conversionRate}%
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top Performers */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Top Deals</CardTitle>
+                <CardDescription>Hoogste deal waardes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { company: 'TechCorp B.V.', value: 45000, stage: 'negotiation' },
+                    { company: 'MediaGroup NL', value: 38000, stage: 'quote_sent' },
+                    { company: 'RetailChain', value: 32000, stage: 'in_development' },
+                  ].map((deal, idx) => (
+                    <div key={idx} className="flex justify-between items-start border-b pb-2 last:border-0">
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{deal.company}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {deal.stage.replace('_', ' ')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-sm">{formatCurrency(deal.value)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recente Activiteit</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex gap-2">
+                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Nieuwe offerte verstuurd</p>
+                      <p className="text-xs text-muted-foreground">2 uur geleden</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Bedrijf toegevoegd</p>
+                      <p className="text-xs text-muted-foreground">5 uur geleden</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Target className="h-4 w-4 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Deal gewonnen</p>
+                      <p className="text-xs text-muted-foreground">1 dag geleden</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie

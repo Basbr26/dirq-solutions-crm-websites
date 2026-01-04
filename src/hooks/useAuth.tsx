@@ -2,7 +2,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
-export type AppRole = 'hr' | 'manager' | 'medewerker' | 'super_admin';
+// CRM Roles: ADMIN (full access), SALES (sales team), MANAGER (sales managers), SUPPORT (support team)
+export type AppRole = 'ADMIN' | 'SALES' | 'MANAGER' | 'SUPPORT';
 
 export interface Profile {
   id: string;

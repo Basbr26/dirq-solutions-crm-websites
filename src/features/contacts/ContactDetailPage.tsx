@@ -1,0 +1,445 @@
+import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { useContact } from "./hooks/useContacts";
+import {
+  useUpdateContact,
+  useDeleteContact,
+} from "./hooks/useContactMutations";
+import { ContactForm } from "./components/ContactForm";
+import {
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  Building2,
+  Calendar,
+  Edit,
+  Trash2,
+  ArrowLeft,
+  MessageSquare,
+  FileText,
+  Linkedin,
+  Star,
+  Crown,
+  Smartphone,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { format } from "date-fns";
+import { nl } from "date-fns/locale";
+import { useAuth } from "@/hooks/useAuth";
+
+export default function ContactDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { role } = useAuth();
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const { data: contact, isLoading } = useContact(id!);
+  const updateContact = useUpdateContact();
+  const deleteContact = useDeleteContact();
+
+  const canEdit = role === "ADMIN" || role === "SALES" || role === "MANAGER";
+  const canDelete = role === "ADMIN" || role === "SALES";
+
+  const handleUpdate = (formData: any) => {
+    if (!contact) return;
+
+    // Handle "none" value from company dropdown
+    const updateData = {
+      ...formData,
+      company_id:
+        formData.company_id === "none" ? null : formData.company_id,
+    };
+
+    updateContact.mutate(
+      { id: contact.id, data: updateData },
+      {
+        onSuccess: () => {
+          setEditDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!contact) return;
+    deleteContact.mutate(contact.id, {
+      onSuccess: () => {
+        navigate("/contacts");
+      },
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (!contact) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">
+              Contact niet gevonden
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const initials = `${contact.first_name[0]}${contact.last_name[0]}`.toUpperCase();
+  const fullName = `${contact.first_name} ${contact.last_name}`;
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/contacts")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
+            </Avatar>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold">{fullName}</h1>
+                {contact.is_primary && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-blue-500/10 text-blue-500 border-blue-500/20"
+                  >
+                    <Star className="h-3 w-3 mr-1" />
+                    Primair
+                  </Badge>
+                )}
+                {contact.is_decision_maker && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-purple-500/10 text-purple-500 border-purple-500/20"
+                  >
+                    <Crown className="h-3 w-3 mr-1" />
+                    Beslisser
+                  </Badge>
+                )}
+              </div>
+              {contact.position && (
+                <p className="text-muted-foreground">{contact.position}</p>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {canEdit && (
+            <Button onClick={() => setEditDialogOpen(true)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Bewerken
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Verwijderen
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Content */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overzicht</TabsTrigger>
+          <TabsTrigger value="interactions">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Interacties
+          </TabsTrigger>
+          <TabsTrigger value="documents">
+            <FileText className="mr-2 h-4 w-4" />
+            Documenten
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Contact Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Contactgegevens
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {contact.email && (
+                  <div className="flex items-start gap-3">
+                    <Mail className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">E-mail</p>
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {contact.email}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {contact.phone && (
+                  <div className="flex items-start gap-3">
+                    <Phone className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Telefoon</p>
+                      <a
+                        href={`tel:${contact.phone}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {contact.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {contact.mobile && (
+                  <div className="flex items-start gap-3">
+                    <Smartphone className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Mobiel</p>
+                      <a
+                        href={`tel:${contact.mobile}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {contact.mobile}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {contact.linkedin_url && (
+                  <div className="flex items-start gap-3">
+                    <Linkedin className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">LinkedIn</p>
+                      <a
+                        href={contact.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm font-medium hover:underline text-blue-600"
+                      >
+                        Bekijk profiel
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Professional Details Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5" />
+                  Professionele Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {contact.company && (
+                  <div className="flex items-start gap-3">
+                    <Building2 className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Bedrijf</p>
+                      <Link
+                        to={`/companies/${contact.company.id}`}
+                        className="text-sm font-medium hover:underline"
+                      >
+                        {contact.company.name}
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {contact.position && (
+                  <div className="flex items-start gap-3">
+                    <Briefcase className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Functie</p>
+                      <p className="text-sm font-medium">{contact.position}</p>
+                    </div>
+                  </div>
+                )}
+
+                {contact.department && (
+                  <div className="flex items-start gap-3">
+                    <Building2 className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Afdeling</p>
+                      <p className="text-sm font-medium">{contact.department}</p>
+                    </div>
+                  </div>
+                )}
+
+                {contact.last_contact_date && (
+                  <div className="flex items-start gap-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Laatste contact
+                      </p>
+                      <p className="text-sm font-medium">
+                        {format(
+                          new Date(contact.last_contact_date),
+                          "d MMMM yyyy",
+                          { locale: nl }
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Notes Card */}
+          {contact.notes && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Notities</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-wrap">{contact.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Metadata */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Metadata</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Aangemaakt op:</span>
+                <span>
+                  {format(new Date(contact.created_at), "d MMMM yyyy HH:mm", {
+                    locale: nl,
+                  })}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Laatst bijgewerkt:</span>
+                <span>
+                  {format(new Date(contact.updated_at), "d MMMM yyyy HH:mm", {
+                    locale: nl,
+                  })}
+                </span>
+              </div>
+              {contact.owner && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Eigenaar:</span>
+                  <span>{contact.owner.full_name || "Onbekend"}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="interactions" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">
+                Interacties worden binnenkort beschikbaar
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-center text-muted-foreground">
+                Documenten worden binnenkort beschikbaar
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Contact Bewerken</DialogTitle>
+            <DialogDescription>
+              Wijzig de gegevens van dit contact
+            </DialogDescription>
+          </DialogHeader>
+          <ContactForm
+            contact={contact}
+            onSubmit={handleUpdate}
+            onCancel={() => setEditDialogOpen(false)}
+            isSubmitting={updateContact.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Weet u het zeker?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dit contact wordt permanent verwijderd. Deze actie kan niet
+              ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

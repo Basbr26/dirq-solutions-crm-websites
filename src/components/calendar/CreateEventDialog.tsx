@@ -80,9 +80,13 @@ export function CreateEventDialog() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="meeting">Afspraak</SelectItem>
-                <SelectItem value="personal">Persoonlijk</SelectItem>
+                <SelectItem value="meeting">Sales Meeting</SelectItem>
+                <SelectItem value="call">Sales Call</SelectItem>
+                <SelectItem value="demo">Product Demo</SelectItem>
+                <SelectItem value="followup">Follow-up</SelectItem>
+                <SelectItem value="deadline">Project Deadline</SelectItem>
                 <SelectItem value="training">Training</SelectItem>
+                <SelectItem value="personal">Persoonlijk</SelectItem>
               </SelectContent>
             </Select>
           </div>

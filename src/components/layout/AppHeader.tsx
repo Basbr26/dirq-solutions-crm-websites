@@ -19,19 +19,13 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Users,
-  Briefcase,
-  Calendar,
-  FileText,
-  Heart,
-  UserCircle,
   Building2,
+  FolderKanban,
+  FileText,
+  MessageSquare,
+  TrendingUp,
+  Settings,
   Shield,
-  UserPlus,
-  Workflow,
-  BarChart3,
-  FileSearch,
-  PieChart,
-  FileSignature,
 } from 'lucide-react';
 
 interface AppHeaderProps {
@@ -47,7 +41,11 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
   const navigate = useNavigate();
 
   const getRoleLabel = () => {
-    if (role === 'super_admin') return 'Super Admin';
+    if (role === 'ADMIN' || role === 'super_admin') return 'Administrator';
+    if (role === 'SALES') return 'Sales';
+    if (role === 'MANAGER') return 'Manager';
+    if (role === 'SUPPORT') return 'Support';
+    // Legacy roles
     if (role === 'hr') return 'HR Medewerker';
     if (role === 'manager') return 'Manager';
     return 'Medewerker';
@@ -58,58 +56,36 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
       {
         title: 'Overzicht',
         items: [
-          { title: 'Dashboard', icon: LayoutDashboard, href: role === 'super_admin' || role === 'hr' ? '/hr/dashboard' : role === 'manager' ? '/dashboard/manager' : '/dashboard/medewerker' },
-          ...(role === 'medewerker' ? [{ title: 'Employee Portal', icon: UserCircle, href: '/employee' }] : []),
+          { 
+            title: 'Dashboard', 
+            icon: LayoutDashboard, 
+            href: role === 'ADMIN' || role === 'super_admin' ? '/dashboard/super-admin' : '/companies'
+          },
         ],
       },
       {
-        title: 'HR Beheer',
+        title: 'CRM',
         items: [
-          ...(role === 'hr' || role === 'super_admin' || role === 'manager' ? [
-            { title: 'Medewerkers', icon: Users, href: '/hr/medewerkers' },
-            { title: 'Onboarding', icon: UserPlus, href: '/hr/onboarding' },
-            { title: 'Verzuim', icon: Heart, href: '/verzuim' },
+          { title: 'Bedrijven', icon: Building2, href: '/companies' },
+          { title: 'Contacten', icon: Users, href: '/contacts' },
+          ...(role === 'ADMIN' || role === 'SALES' || role === 'MANAGER' || role === 'super_admin' ? [
+            { title: 'Projecten', icon: FolderKanban, href: '/projects' },
+            { title: 'Pipeline', icon: TrendingUp, href: '/pipeline' },
+            { title: 'Offertes', icon: FileText, href: '/quotes' },
           ] : []),
-          { title: 'Verlof', icon: Calendar, href: '/hr/verlof' },
-          { title: 'Kalender', icon: Calendar, href: '/calendar' },
-          ...(role === 'hr' || role === 'super_admin' || role === 'manager' ? [
-            { title: 'Planning', icon: Briefcase, href: '/planning' },
-          ] : []),
-          ...(role === 'hr' || role === 'super_admin' ? [
-            { title: 'Documenten', icon: FileText, href: '/hr/documenten' },
-          ] : []),
-        ],
-      },
-      {
-        title: 'AI & Automatisering',
-        items: [
-          ...(role === 'hr' || role === 'super_admin' ? [
-            { title: 'Workflow Builder', icon: Workflow, href: '/hr/workflows/builder' },
-            { title: 'Workflow Uitvoeringen', icon: PieChart, href: '/hr/workflows/executions' },
-          ] : []),
-          { title: 'Document Verwerking', icon: FileSearch, href: '/documents/processing' },
+          { title: 'Activiteiten', icon: MessageSquare, href: '/interactions' },
         ],
       },
     ];
 
-    if (role === 'super_admin') {
-      baseGroups.push(
-        {
-          title: 'Rapportage',
-          items: [
-            { title: 'Executive Dashboard', icon: BarChart3, href: '/dashboard/executive' },
-            { title: 'Kosten Analyse', icon: PieChart, href: '/kosten' },
-          ],
-        },
-        {
-          title: 'Administratie',
-          items: [
-            { title: 'Afdelingen', icon: Building2, href: '/settings/afdelingen' },
-            { title: 'Gebruikersbeheer', icon: Shield, href: '/settings/gebruikers' },
-            { title: 'Bedrijfsinstellingen', icon: FileText, href: '/settings/company' },
-          ],
-        }
-      );
+    if (role === 'ADMIN' || role === 'super_admin') {
+      baseGroups.push({
+        title: 'Administratie',
+        items: [
+          { title: 'Instellingen', icon: Settings, href: '/settings' },
+          { title: 'Gebruikersbeheer', icon: Shield, href: '/admin/gebruikers' },
+        ],
+      });
     }
 
     return baseGroups.map(group => ({
