@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useCompanies, useCompanyStats } from '@/features/companies/hooks/useCompanies';
+import { AuthProvider } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { ReactNode } from 'react';
 
@@ -14,7 +15,9 @@ const createWrapper = () => {
   });
 
   return ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>{children}</AuthProvider>
+    </QueryClientProvider>
   );
 };
 

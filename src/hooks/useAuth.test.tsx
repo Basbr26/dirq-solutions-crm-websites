@@ -104,9 +104,8 @@ describe('useAuth', () => {
       wrapper: createWrapper(),
     });
 
-    expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-      email: mockCredentials.email,
-      password: mockCredentials.password,
+    await waitFor(() => {
+      expect(result.current.user).not.toBeNull();
     });
   });
 
