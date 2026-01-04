@@ -14,7 +14,23 @@ afterEach(() => {
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     auth: {
-      getSession: vi.fn(),
+      getSession: vi.fn().mockResolvedValue({
+        data: {
+          session: {
+            user: {
+              id: 'user-123',
+              email: 'test@example.com',
+              user_metadata: { role: 'ADMIN' },
+              app_metadata: {},
+              aud: 'authenticated',
+              created_at: new Date().toISOString(),
+            },
+            access_token: 'mock-token',
+            refresh_token: 'mock-refresh-token',
+          },
+        },
+        error: null,
+      }),
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
       onAuthStateChange: vi.fn(() => ({
@@ -32,6 +48,7 @@ vi.mock('@/integrations/supabase/client', () => ({
               id: 'user-123',
               voornaam: 'Test',
               achternaam: 'User',
+              full_name: 'Test User',
               email: 'test@example.com',
               role: 'ADMIN',
             },
