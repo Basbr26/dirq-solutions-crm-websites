@@ -8,8 +8,21 @@
 -- =============================================
 -- 0. DROP EXISTING OBJECTS (if re-running)
 -- =============================================
-DROP TRIGGER IF EXISTS update_quote_items_updated_at ON quote_items;
-DROP TRIGGER IF EXISTS update_quotes_updated_at ON quotes;
+DO $$ 
+BEGIN
+  -- Drop triggers only if tables exist
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'quote_items') THEN
+    DROP TRIGGER IF EXISTS update_quote_items_updated_at ON quote_items;
+    DROP TRIGGER IF EXISTS update_quote_totals_trigger ON quote_items;
+  END IF;
+  
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'quotes') THEN
+    DROP TRIGGER IF EXISTS update_quotes_updated_at ON quotes;
+    DROP TRIGGER IF EXISTS quotes_audit_trigger ON quotes;
+  END IF;
+END $$;
+
+-- Drop tables (will cascade drop triggers)
 DROP TABLE IF EXISTS quote_items CASCADE;
 DROP TABLE IF EXISTS quotes CASCADE;
 
@@ -18,7 +31,9 @@ DROP TABLE IF EXISTS quotes CASCADE;
 -- =============================================
 DO $$ 
 BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'leads') THEN
+  -- Only rename if 'leads' exists AND 'projects' does not exist
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'leads') 
+     AND NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'projects') THEN
     ALTER TABLE leads RENAME TO projects;
   END IF;
 END $$;
@@ -46,28 +61,36 @@ END $$;
 DO $$
 BEGIN
   IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'projects') THEN
-    ALTER TABLE projects ADD CONSTRAINT projects_project_type_check CHECK (project_type IN (
-      'landing_page',
-      'corporate_website', 
-      'ecommerce',
-      'web_app',
-      'blog',
-      'portfolio',
-      'custom'
-    ));
+    -- Only add project_type constraint if column exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'projects' AND column_name = 'project_type') THEN
+      ALTER TABLE projects ADD CONSTRAINT projects_project_type_check CHECK (project_type IN (
+        'landing_page',
+        'corporate_website', 
+        'ecommerce',
+        'web_app',
+        'blog',
+        'portfolio',
+        'custom'
+      ));
+    END IF;
     
-    ALTER TABLE projects ADD CONSTRAINT projects_stage_check CHECK (stage IN (
-  'lead',              -- Initial interest
-  'quote_requested',   -- Client asked for quote
-  'quote_sent',        -- Quote/proposal sent
-  'negotiation',       -- Discussing terms
-  'quote_signed',      -- Contract signed, ready to start
-  'in_development',    -- Website being built
-  'review',            -- Client reviewing/testing
-  'live',              -- Website is live
-  'maintenance',       -- Ongoing maintenance
-  'lost'               -- Deal lost
-));
+    -- Only add stage constraint if column exists
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'projects' AND column_name = 'stage') THEN
+      ALTER TABLE projects ADD CONSTRAINT projects_stage_check CHECK (stage IN (
+        'lead',              -- Initial interest
+        'quote_requested',   -- Client asked for quote
+        'quote_sent',        -- Quote/proposal sent
+        'negotiation',       -- Discussing terms
+        'quote_signed',      -- Contract signed, ready to start
+        'in_development',    -- Website being built
+        'review',            -- Client reviewing/testing
+        'live',              -- Website is live
+        'maintenance',       -- Ongoing maintenance
+        'lost'               -- Deal lost
+      ));
+    END IF;
+  END IF;
+END $$;
 
 -- Rename indexes
 DROP INDEX IF EXISTS idx_leads_company_id;

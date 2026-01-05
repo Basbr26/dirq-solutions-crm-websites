@@ -210,7 +210,7 @@ CREATE POLICY "Leads insert policy"
 
 -- UPDATE:
 -- - ADMIN & MANAGER: Update all leads (can reassign)
--- - SALES: Update only their own leads (cannot change owner_id)
+-- - SALES: Update only their own leads
 CREATE POLICY "Leads update policy"
   ON leads FOR UPDATE
   TO authenticated
@@ -219,11 +219,8 @@ CREATE POLICY "Leads update policy"
     OR owner_id = auth.uid()
   )
   WITH CHECK (
-    CASE 
-      WHEN is_admin_or_manager() THEN true
-      WHEN owner_id = auth.uid() AND NEW.owner_id = auth.uid() THEN true
-      ELSE false
-    END
+    is_admin_or_manager()
+    OR owner_id = auth.uid()
   );
 
 -- DELETE:

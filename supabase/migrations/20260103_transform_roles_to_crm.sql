@@ -54,15 +54,23 @@ END
 WHERE role IN ('super_admin', 'hr', 'manager', 'medewerker');
 
 -- Transform roles in user_roles table if it exists
-UPDATE user_roles
-SET role = CASE 
-  WHEN role = 'super_admin' THEN 'ADMIN'
-  WHEN role = 'hr' THEN 'SALES'
-  WHEN role = 'manager' THEN 'MANAGER'
-  WHEN role = 'medewerker' THEN 'SUPPORT'
-  ELSE 'SUPPORT'
-END
-WHERE role IN ('super_admin', 'hr', 'manager', 'medewerker');
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_name = 'user_roles'
+  ) THEN
+    UPDATE user_roles
+    SET role = CASE 
+      WHEN role = 'super_admin' THEN 'ADMIN'
+      WHEN role = 'hr' THEN 'SALES'
+      WHEN role = 'manager' THEN 'MANAGER'
+      WHEN role = 'medewerker' THEN 'SUPPORT'
+      ELSE 'SUPPORT'
+    END
+    WHERE role IN ('super_admin', 'hr', 'manager', 'medewerker');
+  END IF;
+END $$;
 
 -- =============================================
 -- 3. UPDATE HELPER FUNCTIONS
