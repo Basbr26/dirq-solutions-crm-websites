@@ -200,5 +200,5 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
     </>
   );
 }
- 
+
  
