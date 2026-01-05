@@ -42,17 +42,46 @@ describe('useCompanies', () => {
       },
     ];
 
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockResolvedValue({
-        data: mockCompanies,
-        error: null,
-      }),
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      // Handle companies query
+      if (table === 'companies') {
+        const chainableMock = {
+          select: vi.fn().mockReturnThis(),
+          order: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          or: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
+          range: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockReturnThis(),
+          single: vi.fn(),
+        };
+        // The final method that actually resolves the query
+        // After all the chaining, order() is the last call before awaiting
+        chainableMock.order = vi.fn().mockResolvedValue({
+          data: mockCompanies,
+          error: null,
+          count: mockCompanies.length,
+        });
+        return chainableMock;
+      }
+      // Handle auth-related queries (profiles, user_roles)
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: { id: 'user-123', role: 'ADMIN' },
+          error: null,
+        }),
+      };
     });
 
     vi.mocked(supabase.from).mockImplementation(mockFrom as any);
+    
+    // Mock auth.getUser for SALES role check
+    vi.mocked(supabase.auth.getUser).mockResolvedValue({
+      data: { user: { id: 'user-123' } as any },
+      error: null,
+    });
 
     const { result } = renderHook(() => useCompanies(), {
       wrapper: createWrapper(),
@@ -62,19 +91,35 @@ describe('useCompanies', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual(mockCompanies);
+    expect(result.current.data?.companies).toEqual(mockCompanies);
+    expect(result.current.data?.count).toBe(mockCompanies.length);
   });
 
   it('should handle fetch errors', async () => {
     const mockError = new Error('Database error');
 
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockResolvedValue({
-        data: null,
-        error: mockError,
-      }),
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      // Handle companies query with error
+      if (table === 'companies') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          order: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockResolvedValue({
+            data: null,
+            error: mockError,
+          }),
+          single: vi.fn(),
+        };
+      }
+      // Handle auth-related queries (profiles, user_roles)
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: { id: 'user-123', role: 'ADMIN' },
+          error: null,
+        }),
+      };
     });
 
     vi.mocked(supabase.from).mockImplementation(mockFrom as any);
@@ -91,14 +136,29 @@ describe('useCompanies', () => {
   });
 
   it('should apply filters correctly', async () => {
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      ilike: vi.fn().mockResolvedValue({
-        data: [],
-        error: null,
-      }),
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      // Handle companies query
+      if (table === 'companies') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          order: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockResolvedValue({
+            data: [],
+            error: null,
+          }),
+          single: vi.fn(),
+        };
+      }
+      // Handle auth-related queries (profiles, user_roles)
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: { id: 'user-123', role: 'ADMIN' },
+          error: null,
+        }),
+      };
     });
 
     vi.mocked(supabase.from).mockImplementation(mockFrom as any);
@@ -128,11 +188,26 @@ describe('useCompanyStats', () => {
       { status: 'prospect', industry_id: 'ind-2', owner_id: 'user-2' },
     ];
 
-    const mockFrom = vi.fn().mockReturnValue({
-      select: vi.fn().mockResolvedValue({
-        data: mockCompanies,
-        error: null,
-      }),
+    const mockFrom = vi.fn().mockImplementation((table: string) => {
+      // Handle companies query
+      if (table === 'companies') {
+        return {
+          select: vi.fn().mockResolvedValue({
+            data: mockCompanies,
+            error: null,
+          }),
+          single: vi.fn(),
+        };
+      }
+      // Handle auth-related queries (profiles, user_roles)
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
+          data: { id: 'user-123', role: 'ADMIN' },
+          error: null,
+        }),
+      };
     });
 
     vi.mocked(supabase.from).mockImplementation(mockFrom as any);

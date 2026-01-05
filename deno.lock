@@ -90,6 +90,7 @@
     "npm:vaul@~0.9.9": "0.9.9_react@18.3.1_react-dom@18.3.1__react@18.3.1_@types+react@18.3.27_@types+react-dom@18.3.7__@types+react@18.3.27",
     "npm:vite@5.4.21": "5.4.21_@types+node@22.19.1",
     "npm:vite@^5.4.19": "5.4.21_@types+node@22.19.1",
+    "npm:vitest@4.0.16": "4.0.16_@types+node@22.19.1_@vitest+ui@4.0.16__vitest@4.0.16__@types+node@22.19.1__jsdom@27.4.0_jsdom@27.4.0_vite@7.3.0__@types+node@22.19.1__picomatch@4.0.3",
     "npm:vitest@^4.0.16": "4.0.16_@types+node@22.19.1_@vitest+ui@4.0.16__vitest@4.0.16__@types+node@22.19.1__jsdom@27.4.0_jsdom@27.4.0_vite@7.3.0__@types+node@22.19.1__picomatch@4.0.3",
     "npm:zod@^3.25.76": "3.25.76"
   },
