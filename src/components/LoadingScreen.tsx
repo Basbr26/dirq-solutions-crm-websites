@@ -141,4 +141,5 @@ const LoadingScreen = ({ onComplete, duration = 3000 }: LoadingScreenProps) => {
   );
 };
 
+export { LoadingScreen };
 export default LoadingScreen;
