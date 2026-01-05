@@ -255,8 +255,7 @@ export default function DashboardExecutive() {
       name,
       count: data.count,
       value: data.value,
-    })); setLoading(false);
-    }
+    }));
   };
 
   const generateVerzuimTrendData = () => {
