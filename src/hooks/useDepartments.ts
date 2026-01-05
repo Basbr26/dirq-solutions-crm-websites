@@ -171,7 +171,7 @@ export function useDepartments() {
   });
 
   return {
-    departments: departmentsQuery.data || [],
+    data: departmentsQuery.data || [],
     isLoading: departmentsQuery.isLoading,
     error: departmentsQuery.error,
     createDepartment,
