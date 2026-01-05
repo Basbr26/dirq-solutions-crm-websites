@@ -2,7 +2,6 @@ import { ReactNode, useState } from 'react';
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
-import { BottomNav } from './BottomNav';
 import { QuickActionSheet } from './QuickActionSheet';
 
 interface AppLayoutProps {
@@ -31,13 +30,8 @@ export function AppLayout({ children, title, subtitle, actions, hideQuickAction 
         </main>
       </div>
       
-      {/* Old mobile bottom nav (can be removed after testing) */}
+      {/* Mobile bottom nav */}
       <MobileBottomNav />
-      
-      {/* New bottom nav with quick actions */}
-      {!hideQuickAction && (
-        <BottomNav onActionClick={() => setShowQuickActions(true)} />
-      )}
       
       {/* Quick actions sheet */}
       {!hideQuickAction && (
