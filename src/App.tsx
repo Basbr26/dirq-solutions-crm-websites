@@ -393,9 +393,6 @@ const App = () => (
           <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
               <AnimatedRoutes />
-              
-              {/* AI CRM Chatbot - available on all authenticated pages */}
-              <HRChatbot />
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
