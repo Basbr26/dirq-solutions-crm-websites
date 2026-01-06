@@ -19,6 +19,7 @@ import {
   Settings,
   Shield,
   Layers,
+  Calendar,
 } from 'lucide-react';
 
 interface NavItem {
@@ -57,6 +58,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
         { title: 'Pipeline', icon: TrendingUp, href: '/pipeline', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
         { title: 'Offertes', icon: FileText, href: '/quotes', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
         { title: 'Activiteiten', icon: MessageSquare, href: '/interactions', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
+        { title: 'Agenda', icon: Calendar, href: '/calendar', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
       ],
     },
   ];
