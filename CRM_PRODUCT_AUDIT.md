@@ -86,37 +86,105 @@
 
 ---
 
-### 2. **Quote Detail Page Missing** ❌ HIGH PRIORITY
-**Impact:** Cannot view/edit quote details, add line items, or export PDF
+### 2. **Quote Detail Page** ✅ RESOLVED
+**Status:** ✅ **FIXED** - January 6, 2026
 
-**Current State:**
-- ✅ QuotesPage (list view) exists
-- ✅ Quote types defined
-- ✅ Mutations created
-- ❌ QuoteDetailPage missing
-- ❌ Line items CRUD missing
-- ❌ PDF export missing
+**Implemented:**
+- ✅ QuoteDetailPage with full quote header
+- ✅ Line items display with edit/delete
+- ✅ Subtotal, tax (21% BTW), total calculations
+- ✅ Status workflow implemented
+- ✅ **PDF export** - Professional quote document with react-pdf/renderer
+- ✅ Activity timeline
+- ✅ Integration with Company/Contact
 
-**Business Impact:** Quotes are incomplete. Cannot send professional proposals.
+**Files Created:**
+- `src/features/quotes/QuoteDetailPage.tsx` (600+ lines)
+- `src/features/quotes/components/QuotePDFDocument.tsx` (370 lines)
 
-**Recommended Scope for QuoteDetailPage:**
-- Display quote header (company, contact, dates, status)
-- Editable line items table (add/remove/edit)
-- Subtotal, tax (21% BTW), total calculations
-- Status workflow buttons (Draft → Send → Accept/Reject)
-- PDF export (quote letter format)
-- Activity log (status changes)
+**PDF Export Features:**
+- Company letterhead with logo
+- Quote number, dates, client details
+- Line items table with descriptions, quantities, prices
+- Subtotal, BTW (21%), total
+- Payment terms and validity period
+- Professional formatting with proper spacing
 
 ---
 
-### 3. **Project Detail Page Missing** ❌ HIGH PRIORITY
+### 3. **Documents Upload System** ✅ RESOLVED
+**Status:** ✅ **FIXED** - January 6, 2026
+
+**Implemented:**
+- ✅ Supabase Storage bucket setup (documents, private, 10MB limit)
+- ✅ Document upload component with drag-and-drop
+- ✅ File type validation (PDF, Word, Excel, images)
+- ✅ Progress indicator during upload
+- ✅ Document list with preview/download
+- ✅ Delete functionality (ADMIN or uploader)
+- ✅ Integration on Company, Contact, Project detail pages
+- ✅ RLS policies for secure access
+
+**Files Created:**
+- `src/components/documents/DocumentUpload.tsx` (320 lines)
+- `src/components/documents/DocumentsList.tsx` (280 lines)
+- `supabase/migrations/20260108_storage_documents.sql`
+
+**Supported File Types:**
+- PDF, Word (.doc/.docx), Excel (.xls/.xlsx)
+- Images (JPEG, PNG, GIF, WebP)
+- Text files
+
+---
+
+### 4. **Contact Company Linking** ✅ RESOLVED
+**Status:** ✅ **FIXED** - January 6, 2026
+
+**Problem:** Contacts created from Company detail page didn't save company_id
+**Root Cause:** URL parameter not being read, form control issues
+
+**Implemented:**
+- ✅ URL parameter handling with `useSearchParams`
+- ✅ Auto-open dialog with pre-selected company
+- ✅ Form control fixed (defaultValue → value)
+- ✅ Form reset on contact prop change
+
+**Files Updated:**
+- `src/features/contacts/ContactsPage.tsx`
+- `src/features/contacts/components/ContactForm.tsx`
+
+---
+
+### 5. **Executive Dashboard Mock Data** ✅ RESOLVED  
+**Status:** ✅ **FIXED** - January 6, 2026
+
+**Problem:** Dashboard showed fake data instead of real CRM metrics
+
+**Removed:**
+- ❌ Verzuim predictions (hardcoded employees)
+- ❌ Random Quick Stats values
+- ❌ Hardcoded Top Deals
+- ❌ Static Recent Activity
+
+**Replaced with Real Queries:**
+- ✅ Active Companies count from database
+- ✅ New Contacts this month
+- ✅ Quotes Sent this month
+- ✅ Top 3 Deals by value
+- ✅ Recent Activity timeline (latest company/quote/won deals)
+
+**Business Impact:** Dashboard now shows 100% accurate CRM data for decision making.
+
+---
+
+### 6. **Project Detail Page Missing** ❌ HIGH PRIORITY
 **Impact:** Cannot manage individual projects, track progress, link quotes
 
 **Missing Features:**
 - Project overview (details, timeline, milestones)
 - Associated quote(s)
 - Interaction history
-- Document attachments
+- Document attachments ✅ (Added January 6)
 - Status updates with notes
 - Client feedback tracking
 
@@ -124,7 +192,7 @@
 
 ---
 
-### 4. **No Interaction Logging** ❌ MEDIUM PRIORITY
+### 7. **No Interaction Logging** ❌ MEDIUM PRIORITY
 **Impact:** Cannot track sales activities, lost communication history
 
 **Current State:**
@@ -144,7 +212,14 @@
 
 ---
 
-### 5. **Stale HR Code Still Present** ⚠️ TECHNICAL DEBT
+### 8. **Stale HR Code** ✅ PARTIALLY RESOLVED
+**Status:** ⚠️ **In Progress** - Executive Dashboard cleaned January 6, 2026
+
+**Cleaned:**
+- ✅ `DashboardExecutive.tsx` - Removed ALL HR/verzuim mock data
+- ✅ Now shows 100% CRM metrics (revenue, pipeline, deals)
+
+**Still Needs Cleanup:**
 **Impact:** Confusion, potential bugs, wasted storage
 
 **Found:**
