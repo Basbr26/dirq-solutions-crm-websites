@@ -15,9 +15,9 @@ export function useProjects(filters?: ProjectFilters) {
         .from('projects')
         .select(`
           *,
-          companies!company_id (id, name),
-          contacts!contact_id (id, first_name, last_name),
-          profiles!owner_id (id, full_name)
+          companies!projects_company_id_fkey (id, name),
+          contacts!projects_contact_id_fkey (id, first_name, last_name),
+          profiles!projects_owner_id_fkey (id, full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -52,9 +52,9 @@ export function useProject(id: string) {
         .from('projects')
         .select(`
           *,
-          companies!company_id (id, name, email, phone, website),
-          contacts!contact_id (id, first_name, last_name, email, phone, position),
-          profiles!owner_id (id, full_name, email)
+          companies!projects_company_id_fkey (id, name, email, phone, website),
+          contacts!projects_contact_id_fkey (id, first_name, last_name, email, phone, position),
+          profiles!projects_owner_id_fkey (id, full_name, email)
         `)
         .eq('id', id)
         .single();
@@ -112,8 +112,8 @@ export function useProjectsByStage() {
         .from('projects')
         .select(`
           *,
-          companies!company_id (id, name),
-          contacts!contact_id (id, first_name, last_name)
+          companies!projects_company_id_fkey (id, name),
+          contacts!projects_contact_id_fkey (id, first_name, last_name)
         `)
         .neq('stage', 'lost')
         .order('created_at', { ascending: false });
