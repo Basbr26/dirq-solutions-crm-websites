@@ -67,6 +67,7 @@ export default function CompanyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { role } = useAuth();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -163,20 +164,22 @@ export default function CompanyDetailPage() {
       title={company.name}
       subtitle={company.industry?.name || 'Bedrijf'}
       actions={
-        <div className="flex gap-2">
-          {canEdit && (
-            <Button onClick={() => setEditDialogOpen(true)} variant="outline">
-              <Edit className="h-4 w-4 mr-2" />
-              Bewerken
-            </Button>
-          )}
-          {canDelete && (
-            <Button onClick={() => setDeleteDialogOpen(true)} variant="destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Verwijderen
-            </Button>
-          )}
-        </div>
+        !isMobile ? (
+          <div className="flex gap-2">
+            {canEdit && (
+              <Button onClick={() => setEditDialogOpen(true)} variant="outline">
+                <Edit className="h-4 w-4 mr-2" />
+                Bewerken
+              </Button>
+            )}
+            {canDelete && (
+              <Button onClick={() => setDeleteDialogOpen(true)} variant="destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Verwijderen
+              </Button>
+            )}
+          </div>
+        ) : undefined
       }
     >
       <div className="space-y-6">
@@ -211,14 +214,35 @@ export default function CompanyDetailPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overzicht</TabsTrigger>
-          <TabsTrigger value="contacts">Contacten</TabsTrigger>
-          <TabsTrigger value="leads">Leads</TabsTrigger>
-          <TabsTrigger value="interactions">Activiteiten</TabsTrigger>
-          <TabsTrigger value="documents">Documenten</TabsTrigger>
-          <TabsTrigger value="notes">Notities</TabsTrigger>
-        </TabsList>
+        <div className={cn(
+          "overflow-x-auto",
+          isMobile && "pb-2 -mx-4 px-4"
+        )}>
+          <TabsList className={cn(
+            isMobile 
+              ? "inline-flex w-auto min-w-full" 
+              : "grid w-full grid-cols-6"
+          )}>
+            <TabsTrigger value="overview" className={isMobile ? "flex-shrink-0" : ""}>
+              Overzicht
+            </TabsTrigger>
+            <TabsTrigger value="contacts" className={isMobile ? "flex-shrink-0" : ""}>
+              Contacten
+            </TabsTrigger>
+            <TabsTrigger value="leads" className={isMobile ? "flex-shrink-0" : ""}>
+              Leads
+            </TabsTrigger>
+            <TabsTrigger value="interactions" className={isMobile ? "flex-shrink-0" : ""}>
+              Activiteiten
+            </TabsTrigger>
+            <TabsTrigger value="documents" className={isMobile ? "flex-shrink-0" : ""}>
+              Documenten
+            </TabsTrigger>
+            <TabsTrigger value="notes" className={isMobile ? "flex-shrink-0" : ""}>
+              Notities
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
@@ -606,6 +630,39 @@ export default function CompanyDetailPage() {
         onOpenChange={setUploadDialogOpen}
         companyId={id}
       />
+
+      {/* Mobile Sticky Action Bar */}
+      {isMobile && (canEdit || canDelete) && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border md:hidden supports-[backdrop-filter]:bg-background/60"
+          style={{
+            paddingBottom: 'calc(4rem + env(safe-area-inset-bottom, 0px))', // Account for bottom nav
+          }}
+        >
+          <div className="flex gap-2 p-4">
+            {canEdit && (
+              <Button 
+                onClick={() => setEditDialogOpen(true)} 
+                variant="outline"
+                className="flex-1"
+                size="lg"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Bewerken
+              </Button>
+            )}
+            {canDelete && (
+              <Button 
+                onClick={() => setDeleteDialogOpen(true)} 
+                variant="destructive"
+                size="lg"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
