@@ -25,6 +25,7 @@ import { projectStageConfig, type ProjectStage, type ProjectType } from '@/types
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const projectTypeLabels: Record<ProjectType, string> = {
   landing_page: 'Landing Page',
@@ -352,5 +353,6 @@ export default function ProjectsPage() {
         isLoading={createProject.isPending}
       />
     </div>
+    </AppLayout>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 export default function InteractionsPage() {
   const [page, setPage] = useState(1);
@@ -37,20 +38,17 @@ export default function InteractionsPage() {
   const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Activiteiten</h1>
-          <p className="text-muted-foreground">
-            Overzicht van alle interacties en taken
-          </p>
-        </div>
+    <AppLayout
+      title="Activiteiten"
+      subtitle="Overzicht van alle interacties en taken"
+      actions={
         <Button size="lg">
           <Plus className="h-4 w-4 mr-2" />
           Nieuwe Activiteit
         </Button>
-      </div>
+      }
+    >
+    <div className="space-y-6">
 
       {/* Stats Cards */}
       {stats && (
@@ -265,5 +263,6 @@ export default function InteractionsPage() {
         </div>
       )}
     </div>
+    </AppLayout>
   );
 }

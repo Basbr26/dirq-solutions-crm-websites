@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCompanies } from "@/features/companies/hooks/useCompanies";
+import { AppLayout } from "@/components/layout/AppLayout";
 import {
   UserPlus,
   Search,
@@ -85,20 +86,17 @@ export function ContactsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Contacten</h1>
-          <p className="text-muted-foreground">
-            Beheer uw contactpersonen en relaties
-          </p>
-        </div>
+    <AppLayout
+      title="Contacten"
+      subtitle="Beheer uw contactpersonen en relaties"
+      actions={
         <Button onClick={() => setShowCreateDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Nieuw Contact
         </Button>
-      </div>
+      }
+    >
+    <div className="space-y-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -360,6 +358,7 @@ export function ContactsPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </AppLayout>
   );
 }
 

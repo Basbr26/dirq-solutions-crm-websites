@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Building2, TrendingUp, Users, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 export default function CompaniesPage() {
   const { role } = useAuth();
@@ -282,5 +283,6 @@ export default function CompaniesPage() {
         isLoading={createCompany.isPending}
       />
     </div>
+    </AppLayout>
   );
 }
