@@ -33,7 +33,6 @@ type RawTimelineEvent = {
 import { useToast } from '@/hooks/use-toast';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { DocumentList } from '@/components/DocumentList';
-import { WetPoortwachterInfo } from '@/components/WetPoortwachterInfo';
 import { toast as sonnerToast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -577,8 +576,6 @@ export default function CaseDetail() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4 px-4 sm:px-6">
-                  <WetPoortwachterInfo />
-                  
                   {tasks.length === 0 ? (
                     <div className="py-8 text-center text-muted-foreground">
                       Geen taken beschikbaar
