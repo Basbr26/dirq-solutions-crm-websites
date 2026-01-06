@@ -100,11 +100,11 @@ export function NotificationItem({
         <div className="flex-1 min-w-0 space-y-2">
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <h4 className="font-medium text-sm leading-tight">
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-sm leading-snug break-words">
                 {notification.title}
               </h4>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed break-words">
                 {notification.message}
               </p>
             </div>
