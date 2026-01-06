@@ -3,20 +3,25 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 // CRM Roles: ADMIN (full access), SALES (sales team), MANAGER (sales managers), SUPPORT (support team)
-export type AppRole = 'ADMIN' | 'SALES' | 'MANAGER' | 'SUPPORT';
+export type AppRole = 'ADMIN' | 'SALES' | 'MANAGER' | 'SUPPORT' | 'super_admin';
 
 export interface Profile {
   id: string;
-  voornaam: string;
-  achternaam: string;
   email: string;
+  full_name?: string | null;
+  role?: string | null;
+  phone?: string | null;
+  avatar_url?: string | null;
+  department_id?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  // Legacy fields (optional)
+  voornaam?: string;
+  achternaam?: string;
   telefoon?: string | null;
   functie?: string | null;
   manager_id?: string | null;
   foto_url?: string | null;
-  department_id?: string | null;
-  created_at: string | null;
-  updated_at: string | null;
   must_change_password?: boolean;
 }
 
@@ -107,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfileAndRole = async (userId: string) => {
     try {
-      // Fetch profile
+      // Fetch profile (role is stored directly in profiles table)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -115,35 +120,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profileError) {
+        console.error('Error fetching profile/role:', profileError);
         // If profile fetch fails due to auth error, sign out
-        if (profileError.message?.includes('JWT') || profileError.message?.includes('token')) {
-          console.error('Auth error loading profile, signing out:', profileError);
+        if (profileError.message?.includes('JWT') || profileError.message?.includes('token') || profileError.code === '42P17') {
+          console.error('Auth error or RLS recursion detected, signing out:', profileError);
           await signOut();
           return;
         }
-        throw profileError;
+        // Don't throw - just log and continue with null profile/role
+        setProfile(null);
+        setRole(null);
+        setLoading(false);
+        return;
       }
+
       setProfile(profileData);
 
-      // Fetch role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
+      // Extract role from profile (no separate user_roles table)
+      // Map old HR roles to new CRM roles
+      const roleMap: Record<string, AppRole> = {
+        'super_admin': 'ADMIN',
+        'hr': 'SALES',
+        'manager': 'MANAGER',
+        'employee': 'SUPPORT',
+        'medewerker': 'SUPPORT',
+        // Direct CRM roles
+        'ADMIN': 'ADMIN',
+        'SALES': 'SALES',
+        'MANAGER': 'MANAGER',
+        'SUPPORT': 'SUPPORT',
+      };
 
-      if (roleError) {
-        // If role fetch fails due to auth error, sign out
-        if (roleError.message?.includes('JWT') || roleError.message?.includes('token')) {
-          console.error('Auth error loading role, signing out:', roleError);
-          await signOut();
-          return;
-        }
-        throw roleError;
-      }
-      setRole(roleData.role as AppRole);
+      const mappedRole = roleMap[profileData?.role] || 'SUPPORT';
+      setRole(mappedRole as AppRole);
     } catch (error) {
       console.error('Error fetching profile/role:', error);
+      setProfile(null);
+      setRole(null);
     } finally {
       setLoading(false);
     }
