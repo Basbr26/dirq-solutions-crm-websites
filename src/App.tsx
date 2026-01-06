@@ -50,22 +50,21 @@ const queryClient = new QueryClient();
 const pageVariants = {
   initial: {
     opacity: 0,
-    x: 100,
+    y: 10,
   },
   enter: {
     opacity: 1,
-    x: 0,
+    y: 0,
   },
   exit: {
     opacity: 0,
-    x: -100,
+    y: -10,
   },
 };
 
 const pageTransition = {
-  type: "spring",
-  stiffness: 380,
-  damping: 30,
+  duration: 0.2,
+  ease: [0.4, 0, 0.2, 1], // cubic-bezier for smooth easing
 };
 
 // Wrapper component for animated routes
