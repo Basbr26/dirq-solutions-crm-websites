@@ -246,7 +246,7 @@ export default function DashboardExecutive() {
           stage,
           company:companies(name)
         `)
-        .not('stage', 'in', '(lost,maintenance)')
+        .not('stage', 'in', '("lost","maintenance")')
         .order('value', { ascending: false })
         .limit(3);
       setTopDeals(topDealsData || []);
