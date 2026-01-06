@@ -121,6 +121,13 @@ export default function DashboardExecutive() {
   const [activeDeals, setActiveDeals] = useState(0);
   const [avgDealSize, setAvgDealSize] = useState(0);
 
+  // Trend percentages (month-over-month)
+  const [revenueTrend, setRevenueTrend] = useState<number | undefined>(undefined);
+  const [pipelineTrend, setPipelineTrend] = useState<number | undefined>(undefined);
+  const [conversionTrend, setConversionTrend] = useState<number | undefined>(undefined);
+  const [dealsTrend, setDealsTrend] = useState<number | undefined>(undefined);
+  const [avgDealTrend, setAvgDealTrend] = useState<number | undefined>(undefined);
+
   // Additional CRM Stats
   const [activeCompanies, setActiveCompanies] = useState(0);
   const [newContacts, setNewContacts] = useState(0);
@@ -200,9 +207,21 @@ export default function DashboardExecutive() {
     }).format(amount);
   };
 
+  const calculatePercentageChange = (current: number, previous: number): number | undefined => {
+    if (previous === 0) return current > 0 ? 100 : undefined;
+    const change = ((current - previous) / previous) * 100;
+    return Math.round(change * 10) / 10; // Round to 1 decimal
+  };
+
   const loadExecutiveData = async () => {
     setLoading(true);
     try {
+      // Date ranges for current and previous month
+      const now = new Date();
+      const firstDayThisMonth = startOfMonth(now);
+      const firstDayLastMonth = startOfMonth(subMonths(now, 1));
+      const firstDayTwoMonthsAgo = startOfMonth(subMonths(now, 2));
+
       // Load all projects for revenue calculation
       const { data: projects, error: projectsError } = await supabase
         .from('projects')
@@ -210,11 +229,25 @@ export default function DashboardExecutive() {
 
       if (projectsError) throw projectsError;
 
+      // Separate current and previous month projects
+      const currentMonthProjects = projects?.filter(p => 
+        new Date(p.created_at) >= firstDayThisMonth
+      ) || [];
+      const previousMonthProjects = projects?.filter(p => 
+        new Date(p.created_at) >= firstDayLastMonth && new Date(p.created_at) < firstDayThisMonth
+      ) || [];
+
       // Calculate total revenue from closed deals (live projects)
       const revenue = projects
         ?.filter(p => p.stage === 'live')
         .reduce((sum, p) => sum + (p.value || 0), 0) || 0;
       setTotalRevenue(revenue);
+
+      // Previous month revenue
+      const prevRevenue = projects
+        ?.filter(p => p.stage === 'live' && new Date(p.created_at) < firstDayThisMonth)
+        .reduce((sum, p) => sum + (p.value || 0), 0) || 0;
+      setRevenueTrend(calculatePercentageChange(revenue, prevRevenue));
 
       // Calculate pipeline value (weighted)
       const pipelineVal = projects
@@ -222,11 +255,23 @@ export default function DashboardExecutive() {
         .reduce((sum, p) => sum + (p.value || 0) * (p.probability || 0) / 100, 0) || 0;
       setPipelineValue(pipelineVal);
 
+      // Calculate previous pipeline value (for deals created before this month)
+      const prevPipelineVal = projects
+        ?.filter(p => !['live', 'lost', 'maintenance'].includes(p.stage) && new Date(p.created_at) < firstDayThisMonth)
+        .reduce((sum, p) => sum + (p.value || 0) * (p.probability || 0) / 100, 0) || 0;
+      setPipelineTrend(calculatePercentageChange(pipelineVal, prevPipelineVal));
+
       // Calculate conversion rate
       const totalDeals = projects?.length || 0;
       const wonDeals = projects?.filter(p => p.stage === 'live').length || 0;
       const convRate = totalDeals > 0 ? (wonDeals / totalDeals) * 100 : 0;
       setConversionRate(Math.round(convRate * 10) / 10);
+
+      // Previous month conversion rate
+      const prevTotalDeals = projects?.filter(p => new Date(p.created_at) < firstDayThisMonth).length || 0;
+      const prevWonDeals = projects?.filter(p => p.stage === 'live' && new Date(p.created_at) < firstDayThisMonth).length || 0;
+      const prevConvRate = prevTotalDeals > 0 ? (prevWonDeals / prevTotalDeals) * 100 : 0;
+      setConversionTrend(calculatePercentageChange(convRate, prevConvRate));
 
       // Active deals in pipeline
       const active = projects?.filter(p => 
@@ -234,11 +279,23 @@ export default function DashboardExecutive() {
       ).length || 0;
       setActiveDeals(active);
 
+      // Previous month active deals
+      const prevActive = projects?.filter(p => 
+        !['live', 'lost', 'maintenance'].includes(p.stage) && new Date(p.created_at) < firstDayThisMonth
+      ).length || 0;
+      setDealsTrend(calculatePercentageChange(active, prevActive));
+
       // Average deal size
       const avgSize = totalDeals > 0 
         ? projects.reduce((sum, p) => sum + (p.value || 0), 0) / totalDeals 
         : 0;
       setAvgDealSize(avgSize);
+
+      // Previous month average deal size
+      const prevAvgSize = prevTotalDeals > 0
+        ? projects.filter(p => new Date(p.created_at) < firstDayThisMonth).reduce((sum, p) => sum + (p.value || 0), 0) / prevTotalDeals
+        : 0;
+      setAvgDealTrend(calculatePercentageChange(avgSize, prevAvgSize));
 
       // Generate revenue trend data (last 6 months)
       const trendData = generateRevenueTrendData(projects || []);
@@ -470,7 +527,7 @@ export default function DashboardExecutive() {
           <KPICard
             title="Totale Omzet"
             value={formatCurrency(totalRevenue)}
-            trend={8.5}
+            trend={revenueTrend}
             icon={DollarSign}
             subtitle="Afgesloten deals"
             href="/pipeline"
@@ -478,7 +535,7 @@ export default function DashboardExecutive() {
           <KPICard
             title="Pipeline Waarde"
             value={formatCurrency(pipelineValue)}
-            trend={12.3}
+            trend={pipelineTrend}
             icon={Target}
             subtitle="Gewogen waarde"
             href="/pipeline"
@@ -486,7 +543,7 @@ export default function DashboardExecutive() {
           <KPICard
             title="Conversie Ratio"
             value={`${conversionRate}%`}
-            trend={-2.1}
+            trend={conversionTrend}
             icon={TrendingUp}
             subtitle="Won vs totaal"
             href="/pipeline"
@@ -494,7 +551,7 @@ export default function DashboardExecutive() {
           <KPICard
             title="Actieve Deals"
             value={activeDeals}
-            trend={4.2}
+            trend={dealsTrend}
             icon={Briefcase}
             subtitle="In pipeline"
             href="/pipeline"
@@ -502,7 +559,7 @@ export default function DashboardExecutive() {
           <KPICard
             title="Gem. Deal Grootte"
             value={formatCurrency(avgDealSize)}
-            trend={5.7}
+            trend={avgDealTrend}
             icon={Building2}
             subtitle="Per project"
             href="/pipeline"
