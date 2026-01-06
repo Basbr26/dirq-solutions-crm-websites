@@ -20,8 +20,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 export default function InteractionsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [taskStatusFilter, setTaskStatusFilter] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
+  const [taskStatusFilter, setTaskStatusFilter] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
 
   const pageSize = 20;
@@ -155,7 +155,7 @@ export default function InteractionsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Type</label>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <Select value={typeFilter || ''} onValueChange={(value) => setTypeFilter(value || undefined)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Alle types" />
                   </SelectTrigger>
@@ -173,7 +173,7 @@ export default function InteractionsPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Taak Status</label>
-                <Select value={taskStatusFilter} onValueChange={setTaskStatusFilter}>
+                <Select value={taskStatusFilter || ''} onValueChange={(value) => setTaskStatusFilter(value || undefined)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Alle statussen" />
                   </SelectTrigger>
