@@ -5,13 +5,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
 
 @layer base {
-  /* Smooth theme transitions */
+  /* Smooth theme transitions - alleen backgrounds en borders om flikkeren te voorkomen */
   *,
   *::before,
   *::after {
-    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-property: background-color, border-color, box-shadow;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
+  }
+
+  /* Snellere transition voor tekst en iconen */
+  *:not(svg):not(path):not(circle):not(rect):not(line) {
+    transition-property: background-color, border-color, box-shadow, color;
+    transition-duration: 150ms;
+  }
+
+  /* Instant kleurwisseling voor SVG iconen */
+  svg, svg * {
+    transition: none;
   }
 
   /* Exclude animations from theme transitions */
