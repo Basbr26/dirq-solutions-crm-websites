@@ -10,6 +10,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnimatePresence, motion } from "framer-motion";
 import { lazy, Suspense } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import { SuspenseFallback } from "@/components/SuspenseFallback";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -157,7 +158,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <CompaniesPage />
                 </Suspense>
               </ProtectedRoute>
@@ -170,7 +171,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <CompanyDetailPage />
                 </Suspense>
               </ProtectedRoute>
@@ -183,7 +184,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <ContactsPage />
                 </Suspense>
               </ProtectedRoute>
@@ -196,7 +197,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <ContactDetailPage />
                 </Suspense>
               </ProtectedRoute>
@@ -209,7 +210,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <QuotesPage />
                 </Suspense>
               </ProtectedRoute>
@@ -222,7 +223,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <QuoteDetailPage />
                 </Suspense>
               </ProtectedRoute>
@@ -235,7 +236,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <PipelinePage />
                 </Suspense>
               </ProtectedRoute>
@@ -248,7 +249,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <ProjectsPage />
                 </Suspense>
               </ProtectedRoute>
@@ -261,7 +262,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <ProjectDetailPage />
                 </Suspense>
               </ProtectedRoute>
@@ -274,7 +275,7 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <Suspense fallback={<LoadingScreen />}>
+                <Suspense fallback={<SuspenseFallback />}>
                   <InteractionsPage />
                 </Suspense>
               </ProtectedRoute>
