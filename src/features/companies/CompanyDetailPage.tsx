@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { cn } from '@/lib/utils';
 import { useCompany } from './hooks/useCompanies';
 import { useUpdateCompany, useDeleteCompany } from './hooks/useCompanyMutations';
 import { CompanyForm } from './components/CompanyForm';
