@@ -24,6 +24,9 @@ const PipelinePage = lazy(() => import("./features/projects/PipelinePage"));
 const ProjectDetailPage = lazy(() => import("./features/projects/ProjectDetailPage"));
 const InteractionsPage = lazy(() => import("./features/interactions/InteractionsPage"));
 
+// Settings
+import { SettingsPage } from "./pages/SettingsPage";
+
 // Dashboards
 import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
 import DashboardExecutive from "./pages/DashboardExecutive";
@@ -312,6 +315,16 @@ function AnimatedRoutes() {
         />
         
         {/* Settings & Admin Routes */}
+        <Route 
+          path="/settings"
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
         <Route 
           path="/settings/gebruikers"
           element={

@@ -19,10 +19,14 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  notification_type: string;
-  is_read: boolean;
-  case_id: string | null;
-  task_id: string | null;
+  type: string;
+  priority: string;
+  status: string;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  deep_link: string | null;
+  is_digest: boolean;
+  read_at: string | null;
   created_at: string;
 }
 
@@ -32,7 +36,7 @@ export function NotificationBell() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const unreadCount = notifications.filter((n) => n.read_at === null).length;
 
   useEffect(() => {
     if (!user) return;
@@ -84,13 +88,16 @@ export function NotificationBell() {
   const markAsRead = async (notificationId: string) => {
     const { error } = await supabase
       .from("notifications")
-      .update({ is_read: true })
+      .update({ 
+        read_at: new Date().toISOString(),
+        status: 'read'
+      })
       .eq("id", notificationId);
 
     if (!error) {
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n
+          n.id === notificationId ? { ...n, read_at: new Date().toISOString(), status: 'read' } : n
         )
       );
     }
@@ -99,14 +106,15 @@ export function NotificationBell() {
   const markAllAsRead = async () => {
     if (!user) return;
 
+    const now = new Date().toISOString();
     const { error } = await supabase
       .from("notifications")
-      .update({ is_read: true })
+      .update({ read_at: now, status: 'read' })
       .eq("user_id", user.id)
-      .eq("is_read", false);
+      .is('read_at', null);
 
     if (!error) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: now, status: 'read' })));
     }
   };
 
@@ -123,20 +131,49 @@ export function NotificationBell() {
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    if (notification.case_id) {
-      navigate(`/case/${notification.case_id}`);
+    
+    // Use deep_link if available
+    if (notification.deep_link) {
+      navigate(notification.deep_link);
       setIsOpen(false);
+      return;
+    }
+
+    // Fallback: navigate based on entity type
+    if (notification.related_entity_type && notification.related_entity_id) {
+      const routes: Record<string, string> = {
+        company: `/companies/${notification.related_entity_id}`,
+        contact: `/contacts/${notification.related_entity_id}`,
+        lead: `/pipeline?lead=${notification.related_entity_id}`,
+        project: `/projects/${notification.related_entity_id}`,
+        quote: `/quotes/${notification.related_entity_id}`,
+        task: `/interactions?task=${notification.related_entity_id}`,
+      };
+
+      const route = routes[notification.related_entity_type];
+      if (route) {
+        navigate(route);
+        setIsOpen(false);
+      }
     }
   };
 
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: string, isDigest: boolean) => {
+    if (isDigest) return '📊';
+    
     switch (type) {
-      case "deadline_warning":
+      case "deadline":
         return "⚠️";
-      case "task_reminder":
-        return "📋";
-      case "case_update":
-        return "📁";
+      case "approval":
+        return "✅";
+      case "update":
+        return "📝";
+      case "reminder":
+        return "⏰";
+      case "escalation":
+        return "🚨";
+      case "digest":
+        return "📊";
       default:
         return "🔔";
     }
@@ -183,20 +220,28 @@ export function NotificationBell() {
                 <div
                   key={notification.id}
                   className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
-                    !notification.is_read ? "bg-primary/5" : ""
+                    notification.read_at === null ? "bg-primary/5" : ""
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-lg">
-                      {getNotificationIcon(notification.notification_type)}
+                      {getNotificationIcon(notification.type, notification.is_digest)}
                     </span>
                     <div
                       className="flex-1 min-w-0"
                       onClick={() => handleNotificationClick(notification)}
                     >
-                      <p className="font-medium text-sm truncate">
-                        {notification.title}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm truncate">
+                          {notification.title}
+                        </p>
+                        {notification.priority === 'high' && (
+                          <Badge variant="outline" className="text-xs">Belangrijk</Badge>
+                        )}
+                        {notification.priority === 'urgent' && (
+                          <Badge variant="destructive" className="text-xs">Urgent</Badge>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground line-clamp-2">
                         {notification.message}
                       </p>
@@ -208,7 +253,7 @@ export function NotificationBell() {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      {!notification.is_read && (
+                      {notification.read_at === null && (
                         <Button
                           variant="ghost"
                           size="icon"
