@@ -255,13 +255,13 @@ export default function DashboardExecutive() {
       const recentActivities = [];
       
       // Latest company
-      const { data: latestCompany } = await supabase
+      const { data: latestCompanyData } = await supabase
         .from('companies')
         .select('name, created_at')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
       
+      const latestCompany = latestCompanyData?.[0];
       if (latestCompany) {
         recentActivities.push({
           type: 'company',
@@ -271,13 +271,13 @@ export default function DashboardExecutive() {
       }
 
       // Latest quote
-      const { data: latestQuote } = await supabase
+      const { data: latestQuoteData } = await supabase
         .from('quotes')
         .select('id, created_at, company:companies(name)')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
       
+      const latestQuote = latestQuoteData?.[0];
       if (latestQuote) {
         recentActivities.push({
           type: 'quote',
@@ -287,14 +287,14 @@ export default function DashboardExecutive() {
       }
 
       // Latest won project
-      const { data: latestWon } = await supabase
+      const { data: latestWonData } = await supabase
         .from('projects')
         .select('title, created_at, company:companies(name)')
         .eq('stage', 'live')
         .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
       
+      const latestWon = latestWonData?.[0];
       if (latestWon) {
         recentActivities.push({
           type: 'won',
