@@ -91,12 +91,20 @@ export function useDeleteContact() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('contacts')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (error) throw error;
+      
+      // Check if anything was actually deleted
+      if (!data || data.length === 0) {
+        throw new Error('Contact kon niet worden verwijderd. Mogelijk heb je geen toestemming.');
+      }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
