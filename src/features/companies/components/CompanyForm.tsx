@@ -291,7 +291,12 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     <FormItem>
                       <FormLabel>E-mail</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="info@company.com" {...field} />
+                        <Input 
+                          placeholder="info@company.com" 
+                          inputMode="email"
+                          type="email"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -305,7 +310,12 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     <FormItem>
                       <FormLabel>Telefoon</FormLabel>
                       <FormControl>
-                        <Input placeholder="+31 20 123 4567" {...field} />
+                        <Input 
+                          placeholder="+31 20 123 4567" 
+                          inputMode="tel"
+                          type="tel"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -320,7 +330,12 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   <FormItem>
                     <FormLabel>Website</FormLabel>
                     <FormControl>
-                      <Input placeholder="https://www.company.com" {...field} />
+                      <Input 
+                        placeholder="https://www.company.com" 
+                        inputMode="url"
+                        type="url"
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -354,7 +369,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     <FormItem>
                       <FormLabel>Postcode</FormLabel>
                       <FormControl>
-                        <Input placeholder="1015 CW" {...field} />
+                        <Input 
+                          placeholder="1015 CW" 
+                          inputMode="text"
+                          {...field} 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

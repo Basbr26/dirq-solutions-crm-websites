@@ -141,6 +141,7 @@ export function ContactForm({
                 <FormControl>
                   <Input
                     type="email"
+                    inputMode="email"
                     placeholder="jan.jansen@bedrijf.nl"
                     {...field}
                   />
@@ -157,7 +158,12 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Telefoon</FormLabel>
                 <FormControl>
-                  <Input placeholder="+31 20 123 4567" {...field} />
+                  <Input 
+                    placeholder="+31 20 123 4567" 
+                    inputMode="tel"
+                    type="tel"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -173,7 +179,12 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Mobiel</FormLabel>
                 <FormControl>
-                  <Input placeholder="+31 6 12 34 56 78" {...field} />
+                  <Input 
+                    placeholder="+31 6 12 34 56 78" 
+                    inputMode="tel"
+                    type="tel"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -189,6 +200,8 @@ export function ContactForm({
                 <FormControl>
                   <Input
                     placeholder="https://linkedin.com/in/janjansen"
+                    inputMode="url"
+                    type="url"
                     {...field}
                   />
                 </FormControl>
