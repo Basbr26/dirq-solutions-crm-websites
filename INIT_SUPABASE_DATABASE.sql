@@ -62,6 +62,12 @@ BEGIN
   END IF;
 END $$;
 
+-- Helper function to check user role (SECURITY DEFINER to bypass RLS)
+CREATE OR REPLACE FUNCTION public.user_role()
+RETURNS TEXT AS $$
+  SELECT role FROM public.profiles WHERE id = auth.uid() LIMIT 1;
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
 -- Enable RLS on profiles
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
@@ -70,23 +76,25 @@ DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
 DROP POLICY IF EXISTS "Admins can update all profiles" ON profiles;
+DROP POLICY IF EXISTS "Service role can insert profiles" ON profiles;
 
--- Create RLS policies (FIXED - no infinite recursion)
+-- Create RLS policies (using SECURITY DEFINER function - no recursion)
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
--- Use direct role check from auth.uid() lookup to avoid recursion
+-- Admins can view all profiles (using security definer function)
 CREATE POLICY "Admins can view all profiles" ON profiles
   FOR SELECT USING (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'hr', 'MANAGER')
+    public.user_role() IN ('super_admin', 'ADMIN', 'hr', 'MANAGER')
   );
 
+-- Admins can update all profiles
 CREATE POLICY "Admins can update all profiles" ON profiles
   FOR UPDATE USING (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN')
+    public.user_role() IN ('super_admin', 'ADMIN')
   );
 
 -- INSERT policy for auto-creation
@@ -132,6 +140,9 @@ CREATE TRIGGER on_auth_user_created
 -- ============================================================
 
 -- Drop existing tables (clean slate)
+DROP TABLE IF EXISTS quote_line_items CASCADE;
+DROP TABLE IF EXISTS quotes CASCADE;
+DROP TABLE IF EXISTS projects CASCADE;
 DROP TABLE IF EXISTS interactions CASCADE;
 DROP TABLE IF EXISTS leads CASCADE;
 DROP TABLE IF EXISTS contacts CASCADE;
@@ -304,170 +315,11 @@ CREATE TABLE IF NOT EXISTS projects (
   value DECIMAL(15,2) NOT NULL DEFAULT 0,
   probability INTEGER DEFAULT 0 CHECK (probability BETWEEN 0 AND 100),
   expected_close_date DATE,
-  owtep 5: RLS Policies for New Tables
--- ============================================================
-
--- PROJECTS RLS
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view projects" ON projects
-  FOR SELECT USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
-CREATE POLICY "Users can create projects" ON projects
-  FOR INSERT WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
-  );
-
-CREATE POLICY "Users can update own projects" ON projects
-  FOR UPDATE USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
--- QUOTES RLS
-ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view quotes" ON quotes
-  FOR SELECT USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
-CREATE POLICY "Users can create quotes" ON quotes
-  FOR INSERT WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
-  );
-
-CREATE POLICY "Users can update own quotes" ON quotes
-  FOR UPDATE USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
--- QUOTE LINE ITEMS RLS
-ALTER TABLE quote_line_items ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view line items" ON quote_line_items
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM quotes
-      WHERE quotes.id = quote_line_items.quote_id
-      AND (quotes.owner_id = auth.uid() OR 
-           (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER'))
-    )
-  );
-
-CREATE POLICY "Users can manage line items" ON quote_line_items
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM quotes
-      WHERE quotes.id = quote_line_items.quote_id
-      AND (quotes.owner_id = auth.uid() OR 
-           (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER'))
-    )
-  );
-
--- INTERACTIONS RLS
-ALTER TABLE interactions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view interactions" ON interactions
-  FOR SELECT USING (
-    user_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
-CREATE POLICY "Users can create interactions" ON interactions
-  FOR INSERT WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER', 'SUPPORT')
-  );
-
-CREATE POLICY "Users can update own interactions" ON interactions
-  FOR UPDATE USING (
-    user_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
--- COMPANIES RLS
-ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view companies" ON companies
-  FOR SELECT USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER', 'SUPPORT')
-  );
-
-CREATE POLICY "Users can create companies" ON companies
-  FOR INSERT WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
-  );
-
-CREATE POLICY "Users can update companies" ON companies
-  FOR UPDATE USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
--- CONTACTS RLS
-ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view contacts" ON contacts
-  FOR SELECT USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER', 'SUPPORT')
-  );
-
-CREATE POLICY "Users can create contacts" ON contacts
-  FOR INSERT WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
-  );
-
-CREATE POLICY "Users can update contacts" ON contacts
-  FOR UPDATE USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
--- LEADS RLS
-ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view leads" ON leads
-  FOR SELECT USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
-CREATE POLICY "Users can create leads" ON leads
-  FOR INSERT WITH CHECK (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
-  );
-
-CREATE POLICY "Users can update own leads" ON leads
-  FOR UPDATE USING (
-    owner_id = auth.uid() OR
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
-  );
-
--- INDUSTRIES (public read)
-ALTER TABLE industries ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can view industries" ON industries
-  FOR SELECT USING (true);
-
-CREATE POLICY "Admins can manage industries" ON industries
-  FOR ALL USING (
-    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN')
-  );
-
--- ============================================================
--- SUCCESS! Database initialized.
--- Next steps:
--- 1. Run this ENTIRE script in Supabase SQL Editor
--- 2. Create your first user via Supabase Authentication
--- 3. Update user role: UPDATE profiles SET role = 'super_admin' WHERE email = 'your@email.com';
--- 4. Refresh your CRM applicationEFAULT NOW(),
+  owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
+  notes TEXT,
+  tags TEXT[] DEFAULT '{}',
+  custom_fields JSONB DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -546,9 +398,169 @@ INSERT INTO industries (name, description, icon, color) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- ============================================================
+-- Step 5: RLS Policies for New Tables
+-- ============================================================
+
+-- PROJECTS RLS
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view projects" ON projects
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create projects" ON projects
+  FOR INSERT WITH CHECK (
+    public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update own projects" ON projects
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- QUOTES RLS
+ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view quotes" ON quotes
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create quotes" ON quotes
+  FOR INSERT WITH CHECK (
+    public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update own quotes" ON quotes
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- QUOTE LINE ITEMS RLS
+ALTER TABLE quote_line_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view line items" ON quote_line_items
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM quotes
+      WHERE quotes.id = quote_line_items.quote_id
+      AND (quotes.owner_id = auth.uid() OR 
+           public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER'))
+    )
+  );
+
+CREATE POLICY "Users can manage line items" ON quote_line_items
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM quotes
+      WHERE quotes.id = quote_line_items.quote_id
+      AND (quotes.owner_id = auth.uid() OR 
+           public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER'))
+    )
+  );
+
+-- INTERACTIONS RLS
+ALTER TABLE interactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view interactions" ON interactions
+  FOR SELECT USING (
+    user_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create interactions" ON interactions
+  FOR INSERT WITH CHECK (
+    public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER', 'SUPPORT')
+  );
+
+CREATE POLICY "Users can update own interactions" ON interactions
+  FOR UPDATE USING (
+    user_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- COMPANIES RLS
+ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view companies" ON companies
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER', 'SUPPORT')
+  );
+
+CREATE POLICY "Users can create companies" ON companies
+  FOR INSERT WITH CHECK (
+    public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update companies" ON companies
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- CONTACTS RLS
+ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view contacts" ON contacts
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER', 'SUPPORT')
+  );
+
+CREATE POLICY "Users can create contacts" ON contacts
+  FOR INSERT WITH CHECK (
+    public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update contacts" ON contacts
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- LEADS RLS
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view leads" ON leads
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create leads" ON leads
+  FOR INSERT WITH CHECK (
+    public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update own leads" ON leads
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- INDUSTRIES (public read)
+ALTER TABLE industries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view industries" ON industries
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins can manage industries" ON industries
+  FOR ALL USING (
+    public.user_role() IN ('super_admin', 'ADMIN')
+  );
+
+-- ============================================================
 -- SUCCESS! Database initialized.
 -- Next steps:
--- 1. Create your first user via Supabase Auth
--- 2. Set their role to 'super_admin' in profiles table
--- 3. Start using the CRM!
+-- 1. Run this ENTIRE script in Supabase SQL Editor
+-- 2. Create your first user via Supabase Authentication
+-- 3. Update user role: UPDATE profiles SET role = 'super_admin' WHERE email = 'your@email.com';
+-- 4. Refresh your CRM application
 -- ============================================================
+

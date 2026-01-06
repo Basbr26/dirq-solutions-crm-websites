@@ -139,7 +139,7 @@ export default function Auth() {
             <div className="space-y-1">
               <h1 className="text-xl font-semibold tracking-tight">Welkom terug</h1>
               <CardDescription className="text-sm">
-                Log in op het HR Management Systeem
+                Log in op het CRM Systeem
               </CardDescription>
             </div>
           </CardHeader>
