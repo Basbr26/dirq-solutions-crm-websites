@@ -104,7 +104,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
 
   return (
     <>
-    <header className="sticky top-0 z-40 bg-card border-b border-border">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center justify-between h-16 px-4 md:px-6 gap-4">
         {/* Mobile Menu Button & Logo */}
         <div className="flex items-center gap-2 md:hidden">
