@@ -67,15 +67,10 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projecten</h1>
-          <p className="text-muted-foreground">
-            Overzicht van alle website ontwikkel projecten
-          </p>
-        </div>
+    <AppLayout
+      title="Projecten"
+      subtitle="Overzicht van alle website ontwikkel projecten"
+      actions={
         <div className="flex gap-2">
           <Button 
             variant="outline" 
@@ -92,7 +87,9 @@ export default function ProjectsPage() {
             </Button>
           )}
         </div>
-      </div>
+      }
+    >
+    <div className="space-y-6">
 
       {/* Stats Cards */}
       {stats && (

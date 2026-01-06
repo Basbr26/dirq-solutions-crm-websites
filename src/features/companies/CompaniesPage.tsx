@@ -42,20 +42,17 @@ export default function CompaniesPage() {
   const canCreateCompany = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bedrijven</h1>
-          <p className="text-muted-foreground">
-            Beheer en volg al je zakelijke relaties
-          </p>
-        </div>
+    <AppLayout
+      title="Bedrijven"
+      subtitle="Beheer en volg al je zakelijke relaties"
+      actions={
         <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nieuw Bedrijf
         </Button>
-      </div>
+      }
+    >
+    <div className="space-y-6">
 
       {/* Stats Cards */}
       {stats && (
