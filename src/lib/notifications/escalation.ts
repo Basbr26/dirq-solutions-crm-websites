@@ -366,11 +366,11 @@ export class EscalationEngine {
       case 'task':
         return `/tasks/${entity['id']}`;
       case 'approval':
-        return `/hr/verlof`;
+        return `/approvals`;
       case 'case':
         return `/case/${entity['id']}`;
-      case 'employee':
-        return `/hr/medewerkers/${entity['id']}`;
+      case 'contact':
+        return `/contacts/${entity['id']}`;
       default:
         return '/';
     }

@@ -45,10 +45,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
     if (role === 'SALES') return 'Sales';
     if (role === 'MANAGER') return 'Manager';
     if (role === 'SUPPORT') return 'Support';
-    // Legacy roles
-    if (role === 'hr') return 'HR Medewerker';
-    if (role === 'manager') return 'Manager';
-    return 'Medewerker';
+    return 'Gebruiker';
   };
 
   const getNavGroups = () => {

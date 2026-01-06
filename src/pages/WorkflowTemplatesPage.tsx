@@ -53,7 +53,7 @@ export default function WorkflowTemplatesPage() {
 
   const handleUseTemplate = (templateId: string) => {
     // Navigeer naar workflow builder met template ID
-    navigate(`/hr/workflows/builder?template=${templateId}`);
+    navigate(`/workflows/builder?template=${templateId}`);
     toast.success('Template geladen in workflow builder');
   };
 
@@ -69,7 +69,7 @@ export default function WorkflowTemplatesPage() {
       title="Workflow Templates"
       subtitle="Kies een template om snel workflows te maken"
       actions={
-        <Button onClick={() => navigate('/hr/workflows/builder')} className="gap-2">
+        <Button onClick={() => navigate('/workflows/builder')} className="gap-2">
           <Workflow className="h-4 w-4" />
           <span className="hidden sm:inline">Lege workflow maken</span>
         </Button>

@@ -12,8 +12,8 @@ export const CATEGORIES = [
 
 export const VISIBILITY_OPTIONS = [
   { value: 'private', label: '🔒 Privé (alleen ik)', description: 'Alleen jij kunt deze notitie zien' },
-  { value: 'hr_only', label: '👥 HR Team', description: 'Zichtbaar voor alle HR medewerkers' },
-  { value: 'manager_shared', label: '👔 Gedeeld met manager', description: 'Zichtbaar voor managers en HR' },
+  { value: 'team', label: '👥 Team', description: 'Zichtbaar voor je team' },
+  { value: 'manager_shared', label: '👔 Gedeeld met manager', description: 'Zichtbaar voor managers en admins' },
 ] as const;
 
 export function getCategoryVariant(category: string) {

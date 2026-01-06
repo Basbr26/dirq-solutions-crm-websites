@@ -26,13 +26,13 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
 
   const getRoleLabel = () => {
     if (role === 'super_admin') return 'Super Admin';
-    if (role === 'hr') return 'HR Medewerker';
-    if (role === 'manager') return 'Manager';
-    return 'Medewerker';
+    if (role === 'ADMIN') return 'Admin';
+    if (role === 'SALES') return 'Sales';
+    if (role === 'MANAGER') return 'Manager';
+    if (role === 'SUPPORT') return 'Support';
+    return 'Gebruiker';
   };
 
-  const isOnSuperAdminDashboard = location.pathname === '/dashboard/super-admin';
-  const isOnHRDashboard = location.pathname === '/dashboard/hr';
   const isOnExecutiveDashboard = location.pathname === '/dashboard/executive';
 
   return (
@@ -52,8 +52,8 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
           <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
             {children}
             
-            {/* Executive Dashboard button for HR/Super Admin */}
-            {(role === 'hr' || role === 'super_admin') && !isOnExecutiveDashboard && (
+            {/* Executive Dashboard button for Admin/Super Admin */}
+            {(role === 'ADMIN' || role === 'super_admin') && !isOnExecutiveDashboard && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -63,33 +63,6 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
                 <BarChart3 className="h-4 w-4" />
                 Executive
               </Button>
-            )}
-            
-            {/* Dashboard switcher for super_admin */}
-            {role === 'super_admin' && (
-              <div className="hidden sm:flex">
-                {isOnSuperAdminDashboard ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => navigate('/dashboard/hr')}
-                    className="gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    HR Dashboard
-                  </Button>
-                ) : isOnHRDashboard ? (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => navigate('/dashboard/super-admin')}
-                    className="gap-2"
-                  >
-                    <Shield className="h-4 w-4" />
-                    Admin Dashboard
-                  </Button>
-                ) : null}
-              </div>
             )}
             
             <ThemeToggle />
@@ -114,31 +87,12 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 
-                {/* Executive Dashboard for HR/Super Admin */}
-                {(role === 'hr' || role === 'super_admin') && !isOnExecutiveDashboard && (
+                {/* Executive Dashboard for Admin/Super Admin (mobile) */}
+                {(role === 'ADMIN' || role === 'super_admin') && !isOnExecutiveDashboard && (
                   <DropdownMenuItem onClick={() => navigate('/dashboard/executive')} className="cursor-pointer sm:hidden">
                     <BarChart3 className="mr-2 h-4 w-4" />
                     Executive Dashboard
                   </DropdownMenuItem>
-                )}
-                
-                {/* Mobile dashboard switcher for super_admin */}
-                {role === 'super_admin' && (
-                  <>
-                    {isOnSuperAdminDashboard && (
-                      <DropdownMenuItem onClick={() => navigate('/dashboard/hr')} className="cursor-pointer sm:hidden">
-                        <Users className="mr-2 h-4 w-4" />
-                        HR Dashboard
-                      </DropdownMenuItem>
-                    )}
-                    {isOnHRDashboard && (
-                      <DropdownMenuItem onClick={() => navigate('/dashboard/super-admin')} className="cursor-pointer sm:hidden">
-                        <Shield className="mr-2 h-4 w-4" />
-                        Admin Dashboard
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator className="sm:hidden" />
-                  </>
                 )}
                 
                 <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">

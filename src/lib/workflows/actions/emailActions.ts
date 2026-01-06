@@ -110,22 +110,22 @@ async function getEmailTemplate(templateId: string): Promise<EmailTemplate | nul
     
     contract_expiring: {
       id: 'contract_expiring',
-      subject: 'Contract verloopt binnenkort - {{employee.voornaam}} {{employee.achternaam}}',
+      subject: 'Contract verloopt binnenkort - {{contact.voornaam}} {{contact.achternaam}}',
       html: `
         <html>
           <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #F59E0B;">⚠️ Contract Verloop Notificatie</h2>
-            <p>Het contract van <strong>{{employee.voornaam}} {{employee.achternaam}}</strong> loopt af op:</p>
-            <p style="font-size: 18px; font-weight: bold; color: #EF4444;">{{employee.end_date}}</p>
-            <p>Gelieve tijdig actie te ondernemen voor verlenging of afwikkeling.</p>
-            <a href="{{portal_url}}/hr/medewerkers/{{employee.id}}" 
+            <p>Het contract van klant <strong>{{contact.voornaam}} {{contact.achternaam}}</strong> loopt af op:</p>
+            <p style="font-size: 18px; font-weight: bold; color: #EF4444;">{{contract.end_date}}</p>
+            <p>Gelieve tijdig contact op te nemen voor verlenging.</p>
+            <a href="{{portal_url}}/contacts/{{contact.id}}" 
                style="display: inline-block; padding: 12px 24px; background: #06BDC7; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-              Bekijk Medewerker
+              Bekijk Klant
             </a>
           </body>
         </html>
       `,
-      text: 'Het contract van {{employee.voornaam}} {{employee.achternaam}} loopt af op {{employee.end_date}}.',
+      text: 'Het contract van {{contact.voornaam}} {{contact.achternaam}} loopt af op {{contract.end_date}}.',
     },
 
     task_assigned: {
@@ -154,21 +154,21 @@ async function getEmailTemplate(templateId: string): Promise<EmailTemplate | nul
 
     onboarding_reminder: {
       id: 'onboarding_reminder',
-      subject: 'Onboarding taak herinnering voor {{employee.voornaam}}',
+      subject: 'Onboarding taak herinnering voor {{contact.voornaam}}',
       html: `
         <html>
           <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #06BDC7;">👋 Onboarding Herinnering</h2>
-            <p>Vergeet niet om de onboarding taken voor <strong>{{employee.voornaam}} {{employee.achternaam}}</strong> af te ronden.</p>
+            <p>Vergeet niet om de onboarding taken voor klant <strong>{{contact.voornaam}} {{contact.achternaam}}</strong> af te ronden.</p>
             <p>Nog <strong>{{tasks_remaining}}</strong> taken open.</p>
-            <a href="{{portal_url}}/hr/onboarding/{{session_id}}" 
+            <a href="{{portal_url}}/projects/{{project_id}}" 
                style="display: inline-block; padding: 12px 24px; background: #06BDC7; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0;">
-              Bekijk Onboarding
+              Bekijk Project
             </a>
           </body>
         </html>
       `,
-      text: 'Onboarding herinnering voor {{employee.voornaam}} {{employee.achternaam}}.',
+      text: 'Onboarding herinnering voor klant {{contact.voornaam}} {{contact.achternaam}}.',
     },
   };
 

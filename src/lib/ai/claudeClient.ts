@@ -62,13 +62,14 @@ function checkRateLimit(userId: string): boolean {
  */
 function buildSystemPrompt(context: UserContext, knowledgeContext: string): string {
   const roleDescriptions = {
-    medewerker: 'een medewerker die vragen heeft over verlof, verzuim, ontwikkeling, en arbeidsvoorwaarden',
-    manager: 'een manager die verantwoordelijk is voor een team en vragen heeft over teammanagement, verzuimbegeleiding, en HR-beleid',
-    hr: 'een HR medewerker die toegang heeft tot alle personeelsinformatie en beleidsdocumenten',
+    SUPPORT: 'een support medewerker die helpt met klantvragen en technische ondersteuning',
+    SALES: 'een sales medewerker verantwoordelijk voor leads, offertes en klantcontact',
+    MANAGER: 'een manager die verantwoordelijk is voor een team en projecten',
+    ADMIN: 'een admin met toegang tot alle bedrijfsinformatie en instellingen',
     super_admin: 'een super admin met volledige toegang tot het systeem',
   };
 
-  return `Je bent een behulpzame AI HR Assistant voor Dirq Solutions. Je helpt medewerkers en managers met vragen over HR-beleid, procedures, en arbeidsvoorwaarden.
+  return `Je bent een behulpzame AI CRM Assistant voor Dirq Solutions. Je helpt medewerkers met vragen over klanten, projecten, offertes en CRM-processen.
 
 **Gebruiker Context:**
 - Naam: ${context.userName}

@@ -38,11 +38,7 @@ export default function Auth() {
         onPasswordChanged={() => {
           setShowChangePassword(false);
           setShowAnimation(true);
-          let path = '/';
-          if (role === 'super_admin' || role === 'hr') path = '/hr/dashboard';
-          else if (role === 'manager') path = '/dashboard/manager';
-          else if (role === 'medewerker') path = '/dashboard/medewerker';
-          setRedirectPath(path);
+          setRedirectPath('/');
         }}
       />
     );
@@ -50,11 +46,7 @@ export default function Auth() {
 
   // Redirect if already logged in
   if (user && !showAnimation && !authLoading && !loading) {
-    // Redirect naar juiste dashboard per rol
-    if (role === 'super_admin' || role === 'hr') navigate('/hr/dashboard');
-    else if (role === 'manager') navigate('/dashboard/manager');
-    else if (role === 'medewerker') navigate('/dashboard/medewerker');
-    else navigate('/');
+    navigate('/');
     return null;
   }
 
@@ -84,12 +76,7 @@ export default function Auth() {
         });
       } else {
         setShowAnimation(true);
-        // Redirect pad bepalen op basis van rol
-        let path = '/';
-        if (role === 'super_admin' || role === 'hr') path = '/hr/dashboard';
-        else if (role === 'manager') path = '/dashboard/manager';
-        else if (role === 'medewerker') path = '/dashboard/medewerker';
-        setRedirectPath(path);
+        setRedirectPath('/');
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
