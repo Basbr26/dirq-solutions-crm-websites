@@ -54,22 +54,19 @@ const queryClient = new QueryClient();
 // Page transition variants
 const pageVariants = {
   initial: {
-    opacity: 0,
-    y: 10,
+    opacity: 1,
   },
   enter: {
     opacity: 1,
-    y: 0,
   },
   exit: {
-    opacity: 0,
-    y: -10,
+    opacity: 1,
   },
 };
 
 const pageTransition = {
-  duration: 0.2,
-  ease: [0.4, 0, 0.2, 1], // cubic-bezier for smooth easing
+  duration: 0,
+  ease: [0.4, 0, 0.2, 1],
 };
 
 // Wrapper component for animated routes
