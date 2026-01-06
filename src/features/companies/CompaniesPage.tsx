@@ -61,7 +61,7 @@ export default function CompaniesPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Totaal</CardTitle>
@@ -69,7 +69,7 @@ export default function CompaniesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">bedrijven in systeem</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">bedrijven in systeem</p>
             </CardContent>
           </Card>
 
@@ -80,7 +80,7 @@ export default function CompaniesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">{stats.active}</div>
-              <p className="text-xs text-muted-foreground">actieve klanten</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">actieve klanten</p>
             </CardContent>
           </Card>
 
@@ -91,7 +91,7 @@ export default function CompaniesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-500">{stats.prospects}</div>
-              <p className="text-xs text-muted-foreground">potentiële klanten</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">potentiële klanten</p>
             </CardContent>
           </Card>
 
@@ -102,7 +102,7 @@ export default function CompaniesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-500">{stats.inactive}</div>
-              <p className="text-xs text-muted-foreground">niet-actieve bedrijven</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">niet-actieve bedrijven</p>
             </CardContent>
           </Card>
         </div>
@@ -205,7 +205,7 @@ export default function CompaniesPage() {
 
       {/* Companies Grid */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -221,7 +221,7 @@ export default function CompaniesPage() {
         </div>
       ) : data && data.companies.length > 0 ? (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {data.companies.map((company) => (
               <CompanyCard key={company.id} company={company} />
             ))}

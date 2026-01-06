@@ -5,12 +5,20 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, TrendingUp, DollarSign, MoreVertical } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useProjectsByStage, usePipelineStats } from './hooks/useProjects';
 import { useCreateProject } from './hooks/useProjectMutations';
 import { ProjectForm } from './components/ProjectForm';
@@ -33,6 +41,7 @@ const activeStages: ProjectStage[] = [
 ];
 
 export default function PipelinePage() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const { data: projectsByStage, isLoading } = useProjectsByStage();
   const { data: stats } = usePipelineStats();
   const queryClient = useQueryClient();
@@ -103,6 +112,44 @@ export default function PipelinePage() {
     }
   }, [draggedProject, queryClient]);
 
+  // For mobile: move project to stage using dropdown
+  const handleMoveToStage = useCallback(async (project: Project, newStage: ProjectStage) => {
+    if (project.stage === newStage) return;
+
+    const probabilityMap: Record<ProjectStage, number> = {
+      lead: 10,
+      quote_requested: 20,
+      quote_sent: 40,
+      negotiation: 60,
+      quote_signed: 90,
+      in_development: 95,
+      review: 98,
+      live: 100,
+      maintenance: 100,
+      lost: 0,
+    };
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          stage: newStage,
+          probability: probabilityMap[newStage],
+        })
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
+
+      toast.success(`Verplaatst naar ${projectStageConfig[newStage].label}`);
+    } catch (error) {
+      console.error('Failed to move project:', error);
+      toast.error('Fout bij verplaatsen project');
+    }
+  }, [queryClient]);
+
   return (
     <AppLayout
       title="Sales Pipeline"
@@ -144,11 +191,25 @@ export default function PipelinePage() {
         )}
 
         {/* Kanban Board */}
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div 
+          className="flex gap-4 overflow-x-auto pb-4"
+          style={{
+            scrollSnapType: isMobile ? 'x mandatory' : 'none',
+            scrollPadding: '0 16px',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {isLoading ? (
             <div className="flex gap-4">
               {activeStages.map(stage => (
-                <div key={stage} className="w-80 flex-shrink-0">
+                <div 
+                  key={stage} 
+                  className="flex-shrink-0"
+                  style={{
+                    width: isMobile ? '85vw' : '320px',
+                    scrollSnapAlign: isMobile ? 'center' : 'none',
+                  }}
+                >
                   <Card className="p-4 animate-pulse">
                     <div className="h-6 bg-muted rounded w-1/2 mb-4" />
                     <div className="space-y-2">
@@ -169,7 +230,11 @@ export default function PipelinePage() {
               return (
                 <div
                   key={stage}
-                  className="w-80 flex-shrink-0"
+                  className="flex-shrink-0"
+                  style={{
+                    width: isMobile ? '85vw' : '320px',
+                    scrollSnapAlign: isMobile ? 'center' : 'none',
+                  }}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(stage)}
                 >
@@ -198,32 +263,72 @@ export default function PipelinePage() {
                           </div>
                         ) : (
                           projects.map(project => (
-                            <Link
-                              key={project.id}
-                              to={`/projects/${project.id}`}
-                              draggable
-                              onDragStart={() => handleDragStart(project)}
-                              className="block"
-                            >
-                              <Card className="p-3 hover:shadow-md transition-shadow cursor-move">
-                                <h4 className="font-medium mb-1 line-clamp-2">
-                                  {project.title}
-                                </h4>
-                                <div className="text-sm text-muted-foreground mb-2">
-                                  {project.companies?.name}
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <span className="font-semibold text-green-600">
-                                    {formatCurrency(project.value || 0)}
-                                  </span>
-                                  {project.expected_close_date && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {format(new Date(project.expected_close_date), 'dd MMM', { locale: nl })}
+                            <div key={project.id} className="relative group">
+                              <Link
+                                to={`/projects/${project.id}`}
+                                draggable={!isMobile}
+                                onDragStart={() => handleDragStart(project)}
+                                className="block"
+                              >
+                                <Card className={`p-3 transition-shadow ${isMobile ? 'active:scale-[0.98]' : 'hover:shadow-md cursor-move'}`}>
+                                  <div className="flex items-start justify-between gap-2 mb-1">
+                                    <h4 className="font-medium line-clamp-2 flex-1">
+                                      {project.title}
+                                    </h4>
+                                    {/* Mobile: Show move menu button */}
+                                    {isMobile && (
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger 
+                                          asChild 
+                                          onClick={(e) => e.preventDefault()}
+                                        >
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-8 w-8 p-0 flex-shrink-0"
+                                          >
+                                            <MoreVertical className="h-4 w-4" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-48">
+                                          <DropdownMenuLabel>Verplaats naar</DropdownMenuLabel>
+                                          {activeStages
+                                            .filter(s => s !== project.stage)
+                                            .map(targetStage => {
+                                              const config = projectStageConfig[targetStage];
+                                              return (
+                                                <DropdownMenuItem
+                                                  key={targetStage}
+                                                  onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleMoveToStage(project, targetStage);
+                                                  }}
+                                                >
+                                                  <span className="mr-2">{config.icon}</span>
+                                                  {config.label}
+                                                </DropdownMenuItem>
+                                              );
+                                            })}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    )}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground mb-2 truncate">
+                                    {project.companies?.name}
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-green-600 text-sm">
+                                      {formatCurrency(project.value || 0)}
                                     </span>
-                                  )}
-                                </div>
-                              </Card>
-                            </Link>
+                                    {project.expected_close_date && (
+                                      <span className="text-xs text-muted-foreground">
+                                        {format(new Date(project.expected_close_date), 'dd MMM', { locale: nl })}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Card>
+                              </Link>
+                            </div>
                           ))
                         )}
                       </div>

@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { SwipeableCard } from '@/components/ui/swipeable-card';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +37,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { Link, useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface ContactCardProps {
   contact: Contact;
@@ -42,6 +46,7 @@ interface ContactCardProps {
 export function ContactCard({ contact }: ContactCardProps) {
   const { role } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
@@ -52,17 +57,25 @@ export function ContactCard({ contact }: ContactCardProps) {
   
   const initials = `${contact.first_name[0]}${contact.last_name[0]}`.toUpperCase();
   const fullName = `${contact.first_name} ${contact.last_name}`;
+  const phoneNumber = contact.phone || contact.mobile;
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleEdit = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setEditDialogOpen(true);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDelete = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     setDeleteDialogOpen(true);
+  };
+
+  const handleCall = () => {
+    if (phoneNumber) {
+      window.location.href = `tel:${phoneNumber}`;
+      toast.success('Opening dialer...');
+    }
   };
 
   const confirmDelete = () => {
@@ -73,11 +86,12 @@ export function ContactCard({ contact }: ContactCardProps) {
     });
   };
 
-  return (
-    <>
-      <Link to={`/contacts/${contact.id}`}>
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer relative">
-          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+  const cardContent = (
+    <Card className={cn(
+      "transition-shadow cursor-pointer relative",
+      !isMobile && "hover:shadow-lg"
+    )}>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
             <div className="flex items-start space-x-3 flex-1 min-w-0">
               <Avatar className="h-12 w-12 flex-shrink-0">
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -87,13 +101,14 @@ export function ContactCard({ contact }: ContactCardProps) {
               <div className="flex-1 space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-lg leading-none truncate">{fullName}</h3>
+                  {/* Show badges on mobile only if primary or decision maker */}
                   {contact.is_primary && (
-                    <Badge variant="default" className="bg-blue-500">
+                    <Badge variant="default" className="bg-blue-500 text-[10px] sm:text-xs">
                       <Star className="h-3 w-3 mr-1" />
-                      Primair
+                      {!isMobile && 'Primair'}
                     </Badge>
                   )}
-                  {contact.is_decision_maker && (
+                  {contact.is_decision_maker && !isMobile && (
                     <Badge variant="secondary" className="bg-purple-500/10 text-purple-500">
                       <Crown className="h-3 w-3 mr-1" />
                       Beslisser
@@ -101,11 +116,12 @@ export function ContactCard({ contact }: ContactCardProps) {
                   )}
                 </div>
                 {contact.position && (
-                  <p className="text-sm text-muted-foreground">{contact.position}</p>
+                  <p className="text-sm text-muted-foreground truncate">{contact.position}</p>
                 )}
               </div>
             </div>
-            {(canEdit || canDelete) && (
+            {/* Hide dropdown menu on mobile in favor of swipe actions */}
+            {!isMobile && (canEdit || canDelete) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 flex-shrink-0">
@@ -171,7 +187,7 @@ export function ContactCard({ contact }: ContactCardProps) {
                 </a>
               </div>
             )}
-            {contact.linkedin_url && (
+            {!isMobile && contact.linkedin_url && (
               <div className="flex items-center text-muted-foreground">
                 <Linkedin className="h-4 w-4 mr-2 flex-shrink-0" />
                 <a
@@ -187,8 +203,8 @@ export function ContactCard({ contact }: ContactCardProps) {
             )}
           </div>
 
-          {/* Department */}
-          {contact.department && (
+          {/* Department - hide on mobile */}
+          {!isMobile && contact.department && (
             <div className="flex items-center text-sm text-muted-foreground">
               <Briefcase className="h-4 w-4 mr-2 flex-shrink-0" />
               <span>{contact.department}</span>
@@ -205,11 +221,16 @@ export function ContactCard({ contact }: ContactCardProps) {
               )}
             </div>
             {contact.last_contact_date && (
-              <div className="flex items-center text-xs text-muted-foreground">
+              <div className="flex items-center text-xs text-muted-foreground flex-shrink-0">
                 <Clock className="h-3 w-3 mr-1" />
-                <span>
+                <span className="hidden sm:inline">
                   {formatDistanceToNow(new Date(contact.last_contact_date), {
                     addSuffix: true,
+                    locale: nl
+                  })}
+                </span>
+                <span className="sm:hidden">
+                  {formatDistanceToNow(new Date(contact.last_contact_date), {
                     locale: nl
                   })}
                 </span>
@@ -217,8 +238,8 @@ export function ContactCard({ contact }: ContactCardProps) {
             )}
           </div>
 
-          {/* Tags */}
-          {contact.tags && contact.tags.length > 0 && (
+          {/* Tags - hide on mobile */}
+          {!isMobile && contact.tags && contact.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 pt-2">
               {contact.tags.slice(0, 3).map((tag, idx) => (
                 <Badge key={idx} variant="secondary" className="text-xs">
@@ -233,11 +254,34 @@ export function ContactCard({ contact }: ContactCardProps) {
             </div>
           )}
         </CardContent>
-      </Card>
-    </Link>
+    </Card>
+  );
 
-    {/* Edit Dialog */}
-    <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+  // On mobile with swipe actions
+  if (isMobile && canEdit && phoneNumber) {
+    return (
+      <>
+        <Link to={`/contacts/${contact.id}`}>
+          <SwipeableCard
+            onSwipeRight={handleCall}
+            onSwipeLeft={() => handleEdit()}
+            rightAction={{
+              label: 'Bel direct',
+              icon: <Phone className="h-6 w-6" />,
+              color: 'bg-green-500 text-white'
+            }}
+            leftAction={{
+              label: 'Bewerken',
+              icon: <Edit className="h-6 w-6" />,
+              color: 'bg-blue-500 text-white'
+            }}
+          >
+            {cardContent}
+          </SwipeableCard>
+        </Link>
+
+        {/* Edit Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Contact Bewerken</DialogTitle>
@@ -281,6 +325,62 @@ export function ContactCard({ contact }: ContactCardProps) {
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  </>
+      </>
+    );
+  }
+
+  // Desktop version without swipe
+  return (
+    <>
+      <Link to={`/contacts/${contact.id}`}>
+        {cardContent}
+      </Link>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Contact Bewerken</DialogTitle>
+            <DialogDescription>
+              Wijzig de gegevens van het contact
+            </DialogDescription>
+          </DialogHeader>
+          <ContactForm
+            contact={contact}
+            onSubmit={(data) => {
+              updateContact.mutate(
+                { id: contact.id, data },
+                {
+                  onSuccess: () => setEditDialogOpen(false),
+                }
+              );
+            }}
+            onCancel={() => setEditDialogOpen(false)}
+            isSubmitting={updateContact.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contact verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je "{fullName}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
