@@ -188,16 +188,16 @@ export function useManagers() {
       
       // Get users with manager, hr or super_admin roles
       const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('role', ['manager', 'hr', 'super_admin']);
+        .from('profiles')
+        .select('id, role')
+        .in('role', ['MANAGER', 'ADMIN', 'super_admin']);
 
       if (roleError) {
         console.error('❌ Error fetching roles:', roleError);
         throw roleError;
       }
 
-      const managerIds = roleData?.map((r) => r.user_id) || [];
+      const managerIds = roleData?.map((r) => r.id) || [];
 
       if (managerIds.length === 0) {
         console.log('⚠️ No managers found');

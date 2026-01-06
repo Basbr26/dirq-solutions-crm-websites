@@ -78,11 +78,11 @@ export async function executeSendBulkNotification(
 
     if (resolved.role) {
       const { data } = await supabase
-        .from('user_roles')
-        .select('user_id')
+        .from('profiles')
+        .select('id')
         .eq('role', resolved.role);
       
-      recipientIds = data?.map(r => r.user_id) || [];
+      recipientIds = data?.map(r => r.id) || [];
     } else if (resolved.department_id) {
       const { data } = await supabase
         .from('profiles')

@@ -269,11 +269,11 @@ export class EscalationEngine {
       return [step.user_id];
     }
 
-    // Find users by role from user_roles table
-    type ValidRole = 'hr' | 'manager' | 'medewerker' | 'super_admin';
+    // Find users by role from profiles table
+    type ValidRole = 'hr' | 'manager' | 'employee' | 'super_admin';
     const { data: roleData, error } = await supabase
-      .from('user_roles')
-      .select('user_id')
+      .from('profiles')
+      .select('id')
       .eq('role', step.role as ValidRole);
 
     if (error) {
@@ -293,7 +293,7 @@ export class EscalationEngine {
     }
 
     // Otherwise return all users with the role
-    return (roleData || []).map((u) => u.user_id);
+    return (roleData || []).map((u) => u.id);
   }
 
   /**

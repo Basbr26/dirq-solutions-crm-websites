@@ -58,15 +58,15 @@ export default function DashboardSuperAdmin() {
 
       // Get managers count
       const { count: managerCount } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('role', 'manager');
+        .eq('role', 'MANAGER');
 
       // Get employees count
       const { count: employeeCount } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('role', 'medewerker');
+        .eq('role', 'SUPPORT');
 
       setStats({
         totalUsers: userCount || 0,

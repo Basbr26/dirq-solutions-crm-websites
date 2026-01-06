@@ -78,24 +78,12 @@ DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
 DROP POLICY IF EXISTS "Admins can update all profiles" ON profiles;
 DROP POLICY IF EXISTS "Service role can insert profiles" ON profiles;
 
--- Create RLS policies (using SECURITY DEFINER function - no recursion)
+-- Create RLS policies (simple - no function calls to avoid recursion on profiles table)
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
-
--- Admins can view all profiles (using security definer function)
-CREATE POLICY "Admins can view all profiles" ON profiles
-  FOR SELECT USING (
-    public.user_role() IN ('super_admin', 'ADMIN', 'hr', 'MANAGER')
-  );
-
--- Admins can update all profiles
-CREATE POLICY "Admins can update all profiles" ON profiles
-  FOR UPDATE USING (
-    public.user_role() IN ('super_admin', 'ADMIN')
-  );
 
 -- INSERT policy for auto-creation
 CREATE POLICY "Service role can insert profiles" ON profiles

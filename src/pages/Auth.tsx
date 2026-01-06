@@ -83,22 +83,6 @@ export default function Auth() {
             : error.message,
         });
       } else {
-        // Check if password change is required via profile
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (currentUser) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('must_change_password')
-            .eq('id', currentUser.id)
-            .maybeSingle();
-          
-          if (!profileError && profileData?.must_change_password) {
-            setShowChangePassword(true);
-            setLoading(false);
-            return;
-          }
-        }
-        
         setShowAnimation(true);
         // Redirect pad bepalen op basis van rol
         let path = '/';
