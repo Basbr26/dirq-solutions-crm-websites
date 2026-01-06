@@ -43,8 +43,8 @@ export default function ProjectsPage() {
   const navigate = useNavigate();
   const { role } = useAuth();
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState<ProjectStage | ''>('');
-  const [typeFilter, setTypeFilter] = useState<ProjectType | ''>('');
+  const [stageFilter, setStageFilter] = useState<ProjectStage | undefined>(undefined);
+  const [typeFilter, setTypeFilter] = useState<ProjectType | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
@@ -190,8 +190,8 @@ export default function ProjectsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Fase</label>
                 <Select 
-                  value={stageFilter} 
-                  onValueChange={(value) => setStageFilter(value as ProjectStage | '')}
+                  value={stageFilter || ''} 
+                  onValueChange={(value) => setStageFilter(value || undefined)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Alle fases" />
@@ -210,8 +210,8 @@ export default function ProjectsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">Project Type</label>
                 <Select 
-                  value={typeFilter} 
-                  onValueChange={(value) => setTypeFilter(value as ProjectType | '')}
+                  value={typeFilter || ''} 
+                  onValueChange={(value) => setTypeFilter(value || undefined)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Alle types" />
