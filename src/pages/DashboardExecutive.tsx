@@ -356,7 +356,6 @@ export default function DashboardExecutive() {
           title,
           value,
           stage,
-          company_id,
           companies(name)
         `)
         .not('stage', 'in', '("lost","maintenance")')
@@ -386,7 +385,7 @@ export default function DashboardExecutive() {
       // Latest quote
       const { data: latestQuoteData } = await supabase
         .from('quotes')
-        .select('id, created_at, company_id, companies(name)')
+        .select('id, created_at, companies(name)')
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -402,7 +401,7 @@ export default function DashboardExecutive() {
       // Latest won project
       const { data: latestWonData } = await supabase
         .from('projects')
-        .select('title, created_at, company_id, companies(name)')
+        .select('title, created_at, companies(name)')
         .eq('stage', 'live')
         .order('created_at', { ascending: false })
         .limit(1);
