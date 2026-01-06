@@ -299,7 +299,8 @@ export default function DashboardExecutive() {
           title,
           value,
           stage,
-          company:companies(name)
+          company_id,
+          companies!projects_company_id_fkey(name)
         `)
         .not('stage', 'in', '("lost","maintenance")')
         .order('value', { ascending: false })
@@ -328,7 +329,7 @@ export default function DashboardExecutive() {
       // Latest quote
       const { data: latestQuoteData } = await supabase
         .from('quotes')
-        .select('id, created_at, company:companies(name)')
+        .select('id, created_at, company_id, companies!quotes_company_id_fkey(name)')
         .order('created_at', { ascending: false })
         .limit(1);
       
@@ -336,7 +337,7 @@ export default function DashboardExecutive() {
       if (latestQuote) {
         recentActivities.push({
           type: 'quote',
-          text: `Offerte verstuurd naar ${latestQuote.company?.name || 'onbekend'}`,
+          text: `Offerte verstuurd naar ${latestQuote.companies?.name || 'onbekend'}`,
           timestamp: latestQuote.created_at,
         });
       }
@@ -344,7 +345,7 @@ export default function DashboardExecutive() {
       // Latest won project
       const { data: latestWonData } = await supabase
         .from('projects')
-        .select('title, created_at, company:companies(name)')
+        .select('title, created_at, company_id, companies!projects_company_id_fkey(name)')
         .eq('stage', 'live')
         .order('created_at', { ascending: false })
         .limit(1);
@@ -353,7 +354,7 @@ export default function DashboardExecutive() {
       if (latestWon) {
         recentActivities.push({
           type: 'won',
-          text: `Deal gewonnen: ${latestWon.company?.name || latestWon.title}`,
+          text: `Deal gewonnen: ${latestWon.companies?.name || latestWon.title}`,
           timestamp: latestWon.created_at,
         });
       }
@@ -676,7 +677,7 @@ export default function DashboardExecutive() {
                     {topDeals.map((deal) => (
                       <div key={deal.id} className="flex justify-between items-start border-b pb-2 last:border-0">
                         <div className="flex-1">
-                          <p className="font-medium text-sm">{deal.company?.name || deal.title}</p>
+                          <p className="font-medium text-sm">{deal.companies?.name || deal.title}</p>
                           <p className="text-xs text-muted-foreground">
                             {deal.stage.replace('_', ' ')}
                           </p>
