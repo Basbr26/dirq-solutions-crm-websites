@@ -72,15 +72,11 @@ CREATE POLICY "Industries manageable by admins"
 -- =============================================
 
 -- SELECT: 
--- - ADMIN & MANAGER: See all companies
--- - SALES & SUPPORT: See only their own companies
+-- - All authenticated users can see all companies
 CREATE POLICY "Companies select policy"
   ON companies FOR SELECT
   TO authenticated
-  USING (
-    is_admin_or_manager() 
-    OR owner_id = auth.uid()
-  );
+  USING (true);
 
 -- INSERT:
 -- - ADMIN, SALES, MANAGER can create companies

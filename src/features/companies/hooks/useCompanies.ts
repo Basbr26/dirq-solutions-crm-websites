@@ -20,14 +20,7 @@ export function useCompanies(filters?: CompanyFilters) {
           owner:profiles!companies_owner_id_fkey(id, voornaam, achternaam, email)
         `, { count: 'exact' });
 
-      // RBAC: SALES users only see their own companies
-      if (role === 'SALES') {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          query = query.eq('owner_id', user.id);
-        }
-      }
-      // ADMIN and MANAGER see all companies
+      // All authenticated users can see all companies
 
       // Apply filters
       if (filters?.search) {
