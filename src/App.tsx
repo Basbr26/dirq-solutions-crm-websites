@@ -27,28 +27,28 @@ const PipelinePage = lazy(() => import("./features/projects/PipelinePage"));
 const ProjectDetailPage = lazy(() => import("./features/projects/ProjectDetailPage"));
 const InteractionsPage = lazy(() => import("./features/interactions/InteractionsPage"));
 
-// Settings
-import { SettingsPage } from "./pages/SettingsPage";
+// Lazy load Settings
+const SettingsPage = lazy(() => import("./pages/SettingsPage").then(m => ({ default: m.SettingsPage })));
 
-// Dashboards
-import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
-import DashboardExecutive from "./pages/DashboardExecutive";
-import DashboardCRM from "./pages/DashboardCRM";
+// Lazy load Dashboards (heavy pages with charts)
+const DashboardSuperAdmin = lazy(() => import("./pages/DashboardSuperAdmin"));
+const DashboardExecutive = lazy(() => import("./pages/DashboardExecutive"));
+const DashboardCRM = lazy(() => import("./pages/DashboardCRM"));
 
-// Keep for CRM repurposing
-import DocumentProcessing from "./pages/DocumentProcessing";
-import WorkflowBuilder from "./pages/WorkflowBuilder";
-import WorkflowTemplatesPage from "./pages/WorkflowTemplatesPage";
-import WorkflowExecutions from "./pages/WorkflowExecutions";
-import CalendarPage from "./pages/CalendarPage";
-import CostAnalyticsDashboard from "./pages/CostAnalyticsDashboard";
-import CompanySettingsPage from "./pages/CompanySettingsPage";
-import GebruikersbeheerPage from "./pages/GebruikersbeheerPage";
-import AIChatPage from "./pages/AIChatPage";
+// Lazy load CRM utility pages
+const DocumentProcessing = lazy(() => import("./pages/DocumentProcessing"));
+const WorkflowBuilder = lazy(() => import("./pages/WorkflowBuilder"));
+const WorkflowTemplatesPage = lazy(() => import("./pages/WorkflowTemplatesPage"));
+const WorkflowExecutions = lazy(() => import("./pages/WorkflowExecutions"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const CostAnalyticsDashboard = lazy(() => import("./pages/CostAnalyticsDashboard"));
+const CompanySettingsPage = lazy(() => import("./pages/CompanySettingsPage"));
+const GebruikersbeheerPage = lazy(() => import("./pages/GebruikersbeheerPage"));
+const AIChatPage = lazy(() => import("./pages/AIChatPage"));
 
-// Utility pages
-import CaseDetail from "./pages/CaseDetail";
-import NotFound from "./pages/NotFound";
+// Lazy load utility pages
+const CaseDetail = lazy(() => import("./pages/CaseDetail"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
@@ -67,7 +67,6 @@ const pageVariants = {
 
 const pageTransition = {
   duration: 0,
-  ease: [0.4, 0, 0.2, 1],
 };
 
 // Wrapper component for animated routes
@@ -102,7 +101,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin']}>
-                <DashboardSuperAdmin />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <DashboardSuperAdmin />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -113,7 +114,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
-                <DashboardExecutive />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <DashboardExecutive />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -124,7 +127,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER']}>
-                <DashboardCRM />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <DashboardCRM />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -135,7 +140,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <DocumentProcessing />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <DocumentProcessing />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -146,7 +153,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
-                <AIChatPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <AIChatPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -289,7 +298,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
-                <CalendarPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <CalendarPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -300,7 +311,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
-                <CompanySettingsPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <CompanySettingsPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -310,7 +323,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
-                <CostAnalyticsDashboard />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <CostAnalyticsDashboard />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -322,7 +337,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute>
-                <SettingsPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <SettingsPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -332,7 +349,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
-                <GebruikersbeheerPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <GebruikersbeheerPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -342,7 +361,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin', 'ADMIN']}>
-                <GebruikersbeheerPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <GebruikersbeheerPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -354,7 +375,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'super_admin']}>
-                <WorkflowTemplatesPage />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <WorkflowTemplatesPage />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -364,7 +387,9 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'super_admin']}>
-                <WorkflowBuilder />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <WorkflowBuilder />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
@@ -374,13 +399,15 @@ function AnimatedRoutes() {
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
-                <WorkflowExecutions />
+                <Suspense fallback={<SuspenseFallback />}>
+                  <WorkflowExecutions />
+                </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
           } 
         />
         
-        <Route path="*" element={<AnimatedRoute><NotFound /></AnimatedRoute>} />
+        <Route path="*" element={<AnimatedRoute><Suspense fallback={<SuspenseFallback />}><NotFound /></Suspense></AnimatedRoute>} />
       </Routes>
     </AnimatePresence>
   );
@@ -403,7 +430,7 @@ function RoleBasedRedirect() {
 
   // Redirect based on role
   switch (role) {
-    case 'super_admin': // Legacy support
+    case 'super_admin' as any: // Legacy support
       return <Navigate to="/dashboard/super-admin" replace />;
     case 'ADMIN':
       return <Navigate to="/dashboard/executive" replace />;
@@ -411,9 +438,9 @@ function RoleBasedRedirect() {
     case 'MANAGER':
       return <Navigate to="/dashboard/crm" replace />;
     case 'SUPPORT':
-    case 'hr': // Legacy support
-    case 'manager': // Legacy support
-    case 'medewerker': // Legacy support
+    case 'hr' as any: // Legacy support
+    case 'manager' as any: // Legacy support
+    case 'medewerker' as any: // Legacy support
       return <Navigate to="/companies" replace />;
     default:
       return <Navigate to="/dashboard/crm" replace />;

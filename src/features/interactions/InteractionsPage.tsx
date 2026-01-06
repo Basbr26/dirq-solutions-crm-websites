@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Plus, Search, Filter, Phone, Mail, Calendar, FileText, CheckSquare, Presentation } from 'lucide-react';
-import { useInteractions, useInteractionStats } from './hooks/useInteractions';
+import { Plus, Search, Filter, Phone, Mail, Calendar, FileText, CheckSquare, Presentation, CheckCircle2, XCircle } from 'lucide-react';
+import { useInteractions, useInteractionStats, useUpdateInteraction } from './hooks/useInteractions';
 import { InteractionCard } from './components/InteractionCard';
+import { AddInteractionDialog } from './components/AddInteractionDialog';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -23,8 +25,13 @@ export default function InteractionsPage() {
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
   const [taskStatusFilter, setTaskStatusFilter] = useState<string | undefined>(undefined);
   const [showFilters, setShowFilters] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkMode, setIsBulkMode] = useState(false);
 
   const pageSize = 20;
+  
+  const updateInteraction = useUpdateInteraction();
   
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);
@@ -35,18 +42,53 @@ export default function InteractionsPage() {
     search: debouncedSearch || undefined,
     type: typeFilter || undefined,
     taskStatus: taskStatusFilter || undefined,
+    isTask: taskStatusFilter ? true : undefined, // Only show tasks if we have a task status filter
   });
 
   const { data: stats } = useInteractionStats();
 
   const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
 
+  const handleToggleSelection = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (data && selectedIds.length < data.interactions.length) {
+      setSelectedIds(data.interactions.map(i => i.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleBulkComplete = async () => {
+    for (const id of selectedIds) {
+      await updateInteraction.mutateAsync({ id, data: { task_status: 'completed' } });
+    }
+    setSelectedIds([]);
+    setIsBulkMode(false);
+  };
+
+  const handleBulkCancel = async () => {
+    for (const id of selectedIds) {
+      await updateInteraction.mutateAsync({ id, data: { task_status: 'cancelled' } });
+    }
+    setSelectedIds([]);
+    setIsBulkMode(false);
+  };
+
+  const showBulkActions = isBulkMode && selectedIds.length > 0;
+
   return (
     <AppLayout
       title="Activiteiten"
       subtitle="Overzicht van alle interacties en taken"
       actions={
-        <Button size="lg">
+        <Button size="lg" onClick={() => setAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nieuwe Activiteit
         </Button>
@@ -132,6 +174,19 @@ export default function InteractionsPage() {
         </div>
 
         <div className="flex gap-2">
+          {taskStatusFilter && (
+            <Button
+              variant={isBulkMode ? "default" : "outline"}
+              onClick={() => {
+                setIsBulkMode(!isBulkMode);
+                setSelectedIds([]);
+              }}
+              className="gap-2"
+            >
+              <CheckSquare className="h-4 w-4" />
+              {isBulkMode ? 'Selectie annuleren' : 'Bulk acties'}
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => setShowFilters(!showFilters)}
@@ -202,6 +257,49 @@ export default function InteractionsPage() {
         </Card>
       )}
 
+      {/* Bulk Selection Header */}
+      {isBulkMode && data && data.interactions.length > 0 && (
+        <Card className="bg-muted/50">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedIds.length === data.interactions.length}
+                  onCheckedChange={handleSelectAll}
+                />
+                <span className="text-sm font-medium">
+                  {selectedIds.length > 0 
+                    ? `${selectedIds.length} geselecteerd`
+                    : 'Selecteer alles'}
+                </span>
+              </div>
+              {showBulkActions && (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleBulkComplete}
+                    className="gap-2"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    Markeer voltooid
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleBulkCancel}
+                    className="gap-2"
+                  >
+                    <XCircle className="h-4 w-4 text-gray-500" />
+                    Annuleer taken
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Interactions List */}
       {isLoading ? (
         <div className="space-y-4">
@@ -212,7 +310,18 @@ export default function InteractionsPage() {
       ) : data && data.interactions.length > 0 ? (
         <div className="space-y-4">
           {data.interactions.map((interaction) => (
-            <InteractionCard key={interaction.id} interaction={interaction} />
+            <div key={interaction.id} className="flex items-start gap-3">
+              {isBulkMode && interaction.is_task && (
+                <Checkbox
+                  checked={selectedIds.includes(interaction.id)}
+                  onCheckedChange={() => handleToggleSelection(interaction.id)}
+                  className="mt-6"
+                />
+              )}
+              <div className="flex-1">
+                <InteractionCard interaction={interaction} />
+              </div>
+            </div>
           ))}
         </div>
       ) : (
@@ -267,6 +376,11 @@ export default function InteractionsPage() {
         </div>
       )}
     </div>
+
+    <AddInteractionDialog
+      open={addDialogOpen}
+      onOpenChange={setAddDialogOpen}
+    />
     </AppLayout>
   );
 }

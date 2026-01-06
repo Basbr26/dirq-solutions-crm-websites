@@ -11,6 +11,8 @@ import { useProjects } from '@/features/projects/hooks/useProjects';
 import { ProjectCard } from '@/features/projects/components/ProjectCard';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
+import { InteractionTimeline } from '@/features/interactions/components/InteractionTimeline';
+import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -32,6 +34,7 @@ import {
   FileText,
   StickyNote,
   Upload,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -73,6 +76,8 @@ export default function CompanyDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
+  const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
   const { data: company, isLoading } = useCompany(id!);
   const updateCompany = useUpdateCompany();
@@ -511,37 +516,49 @@ export default function CompanyDetailPage() {
         <TabsContent value="interactions">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Activiteiten ({interactionsData?.interactions?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingInteractions ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))}
-                </div>
-              ) : interactionsData?.interactions && interactionsData.interactions.length > 0 ? (
-                <div className="space-y-3">
-                  {interactionsData.interactions.map((interaction) => (
-                    <InteractionItem key={interaction.id} interaction={interaction} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <h3 className="text-lg font-semibold mb-2">Geen activiteiten</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Er zijn nog geen gesprekken, emails of meetings geregistreerd voor dit bedrijf.
-                  </p>
-                  <Button disabled>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Activiteit toevoegen (binnenkort)
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Activiteiten ({interactionsData?.interactions?.length || 0})
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setAddInteractionDialogOpen(true);
+                      setInteractionDefaultType('call');
+                    }}
+                  >
+                    <Phone className="h-4 w-4 mr-2" />
+                    Gesprek
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setAddInteractionDialogOpen(true);
+                      setInteractionDefaultType('email');
+                    }}
+                  >
+                    <Mail className="h-4 w-4 mr-2" />
+                    E-mail
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setAddInteractionDialogOpen(true);
+                      setInteractionDefaultType('note');
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Activiteit
                   </Button>
                 </div>
-              )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <InteractionTimeline companyId={id!} limit={20} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -631,6 +648,14 @@ export default function CompanyDetailPage() {
         open={uploadDialogOpen}
         onOpenChange={setUploadDialogOpen}
         companyId={id}
+      />
+
+      {/* Add Interaction Dialog */}
+      <AddInteractionDialog
+        open={addInteractionDialogOpen}
+        onOpenChange={setAddInteractionDialogOpen}
+        companyId={id!}
+        defaultType={interactionDefaultType}
       />
 
       {/* Mobile Sticky Action Bar */}

@@ -226,20 +226,46 @@ export default function DashboardCRM() {
               ) : revenueData && revenueData.length > 0 ? (
                 <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={revenueData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
+                    <LineChart 
+                      data={revenueData}
+                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: 12 }}
+                        tickMargin={8}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }}
+                        tickMargin={8}
+                      />
                       <Tooltip 
                         formatter={(value: number) => formatCurrency(value)}
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          fontSize: '14px',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                        }}
+                        cursor={{ stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5 5' }}
+                        allowEscapeViewBox={{ x: true, y: true }}
+                        wrapperStyle={{ zIndex: 1000 }}
                       />
-                      <Legend />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '16px', fontSize: '14px' }}
+                        iconSize={16}
+                      />
                       <Line 
                         type="monotone" 
                         dataKey="revenue" 
                         stroke="#10b981" 
                         name="Omzet"
-                        strokeWidth={2}
+                        strokeWidth={3}
+                        dot={{ r: 5, strokeWidth: 2, fill: '#10b981' }}
+                        activeDot={{ r: 8, strokeWidth: 3, fill: '#10b981' }}
                       />
                       <Line 
                         type="monotone" 
@@ -247,6 +273,9 @@ export default function DashboardCRM() {
                         stroke="#6366f1" 
                         strokeDasharray="5 5"
                         name="Doel"
+                        strokeWidth={2}
+                        dot={{ r: 4, strokeWidth: 2, fill: '#6366f1' }}
+                        activeDot={{ r: 7, strokeWidth: 3, fill: '#6366f1' }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -280,19 +309,48 @@ export default function DashboardCRM() {
                         cx="50%"
                         cy="50%"
                         outerRadius={100}
+                        innerRadius={40}
                         label={(entry) => `${entry.count}`}
+                        labelLine={true}
+                        paddingAngle={2}
+                        activeShape={(props: any) => (
+                          <g>
+                            <Pie
+                              {...props}
+                              outerRadius={110}
+                              stroke="#fff"
+                              strokeWidth={2}
+                              fill={props.fill}
+                            />
+                          </g>
+                        )}
                       >
                         {pipelineDistribution.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
                             fill={STAGE_COLORS[entry.name.replace(/ /g, '_')] || '#94a3b8'} 
+                            className="cursor-pointer transition-all duration-200"
                           />
                         ))}
                       </Pie>
                       <Tooltip 
                         formatter={(value: number) => formatCurrency(value)}
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          fontSize: '14px',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                        }}
+                        wrapperStyle={{ zIndex: 1000 }}
                       />
-                      <Legend />
+                      <Legend 
+                        wrapperStyle={{ fontSize: '14px' }}
+                        iconSize={16}
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </Suspense>
@@ -326,12 +384,42 @@ export default function DashboardCRM() {
               ) : quoteAcceptanceData && quoteAcceptanceData.length > 0 ? (
                 <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
                   <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={quoteAcceptanceData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip formatter={(value: number) => `${value}%`} />
-                      <Bar dataKey="rate" fill="#10b981" name="Acceptatie %" />
+                    <BarChart 
+                      data={quoteAcceptanceData}
+                      margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: 12 }}
+                        tickMargin={8}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12 }}
+                        tickMargin={8}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => `${value}%`}
+                        contentStyle={{ 
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          fontSize: '14px',
+                          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                        }}
+                        cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                        allowEscapeViewBox={{ x: true, y: true }}
+                        wrapperStyle={{ zIndex: 1000 }}
+                      />
+                      <Bar 
+                        dataKey="rate" 
+                        fill="#10b981" 
+                        name="Acceptatie %"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={60}
+                        activeBar={{ fill: '#059669' }}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </Suspense>

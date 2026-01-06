@@ -165,6 +165,53 @@ export function useCreateInteraction() {
   });
 }
 
+export function useUpdateInteraction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateInteractionData> }) => {
+      const { data: interaction, error } = await supabase
+        .from('interactions')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return interaction;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['interactions'] });
+      toast.success('Interactie bijgewerkt');
+    },
+    onError: (error: Error) => {
+      toast.error(`Fout bij bijwerken: ${error.message}`);
+    },
+  });
+}
+
+export function useDeleteInteraction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('interactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['interactions'] });
+      toast.success('Interactie verwijderd');
+    },
+    onError: (error: Error) => {
+      toast.error(`Fout bij verwijderen: ${error.message}`);
+    },
+  });
+}
+
 export function useInteractionStats() {
   const { user, role } = useAuth();
 

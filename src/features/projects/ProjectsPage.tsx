@@ -191,7 +191,7 @@ export default function ProjectsPage() {
                 <label className="text-sm font-medium">Fase</label>
                 <Select 
                   value={stageFilter || ''} 
-                  onValueChange={(value) => setStageFilter(value || undefined)}
+                  onValueChange={(value) => setStageFilter(value ? value as ProjectStage : undefined)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Alle fases" />
@@ -211,7 +211,7 @@ export default function ProjectsPage() {
                 <label className="text-sm font-medium">Project Type</label>
                 <Select 
                   value={typeFilter || ''} 
-                  onValueChange={(value) => setTypeFilter(value || undefined)}
+                  onValueChange={(value) => setTypeFilter(value ? value as ProjectType : undefined)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Alle types" />
@@ -232,8 +232,8 @@ export default function ProjectsPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setStageFilter('');
-                  setTypeFilter('');
+                  setStageFilter(undefined);
+                  setTypeFilter(undefined);
                 }}
               >
                 Reset

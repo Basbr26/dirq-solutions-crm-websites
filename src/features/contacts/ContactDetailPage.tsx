@@ -10,6 +10,8 @@ import {
 import { ContactForm } from "./components/ContactForm";
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionCard } from '@/features/interactions/components/InteractionCard';
+import { InteractionTimeline } from '@/features/interactions/components/InteractionTimeline';
+import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -32,6 +34,7 @@ import {
   Crown,
   Smartphone,
   Upload,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,6 +77,8 @@ export default function ContactDetailPage() {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
+  const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const { data: contact, isLoading } = useContact(id!);
@@ -421,44 +426,50 @@ export default function ContactDetailPage() {
 
         <TabsContent value="interactions" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
                 Interacties ({interactionsData?.count || 0})
               </CardTitle>
               {canEdit && (
-                <Button size="sm">
-                  Nieuwe interactie
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      setInteractionDefaultType('call');
+                      setAddInteractionDialogOpen(true);
+                    }}
+                  >
+                    <Phone className="h-4 w-4 mr-1" />
+                    Gesprek
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      setInteractionDefaultType('email');
+                      setAddInteractionDialogOpen(true);
+                    }}
+                  >
+                    <Mail className="h-4 w-4 mr-1" />
+                    E-mail
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={() => {
+                      setInteractionDefaultType('note');
+                      setAddInteractionDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Activiteit
+                  </Button>
+                </div>
               )}
             </CardHeader>
             <CardContent>
-              {isLoadingInteractions ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <Skeleton key={i} className="h-24" />
-                  ))}
-                </div>
-              ) : interactionsData?.interactions && interactionsData.interactions.length > 0 ? (
-                <div className="space-y-4">
-                  {interactionsData.interactions.map((interaction) => (
-                    <InteractionCard key={interaction.id} interaction={interaction} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
-                  <p className="text-muted-foreground">Nog geen interacties</p>
-                  {canEdit && (
-                    <Button 
-                      variant="outline" 
-                      className="mt-4"
-                    >
-                      Eerste interactie toevoegen
-                    </Button>
-                  )}
-                </div>
-              )}
+              <InteractionTimeline contactId={id!} limit={20} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -561,6 +572,14 @@ export default function ContactDetailPage() {
           </div>
         </div>
       )}
+
+      <AddInteractionDialog
+        open={addInteractionDialogOpen}
+        onOpenChange={setAddInteractionDialogOpen}
+        contactId={id!}
+        companyId={contact?.company_id || undefined}
+        defaultType={interactionDefaultType}
+      />
       </div>
     </AppLayout>
   );

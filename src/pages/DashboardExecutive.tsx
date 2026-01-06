@@ -579,24 +579,48 @@ export default function DashboardExecutive() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={revenueTrendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
+                  <LineChart 
+                    data={revenueTrendData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fontSize: 12 }}
+                      tickMargin={8}
+                    />
                     <YAxis 
-                      label={{ value: 'Omzet (€)', angle: -90, position: 'insideLeft' }}
+                      label={{ value: 'Omzet (€)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                       tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
+                      tick={{ fontSize: 12 }}
+                      tickMargin={8}
                     />
                     <Tooltip 
                       formatter={(value: number) => formatCurrency(value)}
                       labelStyle={{ color: '#000' }}
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                      }}
+                      cursor={{ stroke: '#94a3b8', strokeWidth: 2, strokeDasharray: '5 5' }}
+                      allowEscapeViewBox={{ x: true, y: true }}
+                      wrapperStyle={{ zIndex: 1000 }}
                     />
-                    <Legend />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '16px', fontSize: '14px' }}
+                      iconSize={16}
+                    />
                     <Line
                       type="monotone"
                       dataKey="revenue"
                       stroke="#0088FE"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+                      strokeWidth={3}
+                      dot={{ r: 5, strokeWidth: 2, fill: '#0088FE' }}
+                      activeDot={{ r: 8, strokeWidth: 3, fill: '#0088FE' }}
                       name="Omzet"
                     />
                   </LineChart>
@@ -614,33 +638,72 @@ export default function DashboardExecutive() {
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={pipelineData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                  <BarChart 
+                    data={pipelineData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 80 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-50" />
                     <XAxis 
                       dataKey="stage" 
                       angle={-45}
                       textAnchor="end"
                       height={80}
+                      tick={{ fontSize: 11 }}
+                      interval={0}
                     />
                     <YAxis 
                       yAxisId="left"
-                      label={{ value: 'Aantal', angle: -90, position: 'insideLeft' }}
+                      label={{ value: 'Aantal', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+                      tick={{ fontSize: 12 }}
+                      tickMargin={8}
                     />
                     <YAxis 
                       yAxisId="right"
                       orientation="right"
-                      label={{ value: 'Waarde (€)', angle: 90, position: 'insideRight' }}
+                      label={{ value: 'Waarde (€)', angle: 90, position: 'insideRight', style: { fontSize: 12 } }}
                       tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
+                      tick={{ fontSize: 12 }}
+                      tickMargin={8}
                     />
                     <Tooltip 
                       formatter={(value: number, name: string) => {
                         if (name === 'Waarde') return formatCurrency(value);
                         return value;
                       }}
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                      }}
+                      cursor={{ fill: 'rgba(0, 136, 254, 0.1)' }}
+                      allowEscapeViewBox={{ x: true, y: true }}
+                      wrapperStyle={{ zIndex: 1000 }}
                     />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="count" fill="#0088FE" name="Aantal" />
-                    <Bar yAxisId="right" dataKey="value" fill="#00C49F" name="Waarde" />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '14px' }}
+                      iconSize={16}
+                    />
+                    <Bar 
+                      yAxisId="left" 
+                      dataKey="count" 
+                      fill="#0088FE" 
+                      name="Aantal"
+                      radius={[8, 8, 0, 0]}
+                      maxBarSize={40}
+                      activeBar={{ fill: '#0066CC' }}
+                    />
+                    <Bar 
+                      yAxisId="right" 
+                      dataKey="value" 
+                      fill="#00C49F" 
+                      name="Waarde"
+                      radius={[8, 8, 0, 0]}
+                      maxBarSize={40}
+                      activeBar={{ fill: '#00A080' }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -661,14 +724,25 @@ export default function DashboardExecutive() {
                       data={sourceData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
+                      labelLine={true}
                       label={(entry) => `${entry.name}: ${entry.count}`}
-                      outerRadius={80}
+                      outerRadius={90}
+                      innerRadius={45}
                       fill="#8884d8"
                       dataKey="count"
+                      paddingAngle={2}
+                      activeShape={{
+                        outerRadius: 100,
+                        stroke: '#fff',
+                        strokeWidth: 2
+                      }}
                     >
                       {sourceData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={COLORS[index % COLORS.length]} 
+                          className="cursor-pointer transition-all duration-200"
+                        />
                       ))}
                     </Pie>
                     <Tooltip 
@@ -678,8 +752,22 @@ export default function DashboardExecutive() {
                           props.payload.name
                         ];
                       }}
+                      contentStyle={{ 
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                      }}
+                      wrapperStyle={{ zIndex: 1000 }}
                     />
-                    <Legend />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '14px' }}
+                      iconSize={16}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
