@@ -95,20 +95,25 @@ export function useUploadAvatar() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL and ensure it has proper protocol
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
+      // Fix: Ensure URL has https:// protocol
+      const fullPublicUrl = publicUrl.startsWith('http') 
+        ? publicUrl 
+        : `https://${publicUrl.replace(/^\/+/, '')}`;
+
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: fullPublicUrl })
         .eq('id', userId);
 
       if (updateError) throw updateError;
 
-      return publicUrl;
+      return fullPublicUrl;
     },
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
