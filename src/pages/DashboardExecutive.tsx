@@ -29,7 +29,8 @@ import {
   Building2,
   Download,
   Target,
-  FileText
+  FileText,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -111,6 +112,7 @@ export default function DashboardExecutive() {
 
   // Loading state
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // KPI State
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -134,6 +136,59 @@ export default function DashboardExecutive() {
   useEffect(() => {
     if (user) {
       loadExecutiveData();
+
+      // Set up real-time subscriptions for automatic updates
+      const projectsSubscription = supabase
+        .channel('projects-changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'projects' },
+          () => {
+            console.log('Projects data changed, reloading dashboard...');
+            loadExecutiveData();
+          }
+        )
+        .subscribe();
+
+      const companiesSubscription = supabase
+        .channel('companies-changes')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'companies' },
+          () => {
+            console.log('Companies data changed, reloading dashboard...');
+            loadExecutiveData();
+          }
+        )
+        .subscribe();
+
+      const contactsSubscription = supabase
+        .channel('contacts-changes')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'contacts' },
+          () => {
+            console.log('Contacts data changed, reloading dashboard...');
+            loadExecutiveData();
+          }
+        )
+        .subscribe();
+
+      const quotesSubscription = supabase
+        .channel('quotes-changes')
+        .on('postgres_changes',
+          { event: '*', schema: 'public', table: 'quotes' },
+          () => {
+            console.log('Quotes data changed, reloading dashboard...');
+            loadExecutiveData();
+          }
+        )
+        .subscribe();
+
+      // Cleanup subscriptions on unmount
+      return () => {
+        projectsSubscription.unsubscribe();
+        companiesSubscription.unsubscribe();
+        contactsSubscription.unsubscribe();
+        quotesSubscription.unsubscribe();
+      };
     }
   }, [user]);
 
