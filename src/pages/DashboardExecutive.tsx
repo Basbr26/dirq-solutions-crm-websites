@@ -109,6 +109,9 @@ export default function DashboardExecutive() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
 
+  // Loading state
+  const [loading, setLoading] = useState(true);
+
   // KPI State
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [pipelineValue, setPipelineValue] = useState(0);
