@@ -26,36 +26,11 @@ export function useContacts(params: UseContactsParams) {
           owner:profiles!contacts_owner_id_fkey(id, full_name)
         `, { count: 'exact' });
 
-      // RBAC: SALES users only see their own contacts + contacts of their companies
-      if (role === 'SALES') {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          if (params.companyId) {
-            // When viewing a specific company, check if user owns the company
-            const { data: companyData } = await supabase
-              .from('companies')
-              .select('owner_id')
-              .eq('id', params.companyId)
-              .single();
-            
-            // If user owns the company, show all contacts for that company
-            // Otherwise, only show contacts owned by the user
-            if (companyData?.owner_id === user.id) {
-              query = query.eq('company_id', params.companyId);
-            } else {
-              query = query.eq('company_id', params.companyId).eq('owner_id', user.id);
-            }
-          } else {
-            // General contact list: show own contacts + contacts from owned companies
-            const companiesSubquery = `(select id from companies where owner_id = '${user.id}')`;
-            query = query.or(`owner_id.eq.${user.id},company_id.in.${companiesSubquery}`);
-          }
-        }
-      } else if (params.companyId) {
-        // For ADMIN/MANAGER, directly apply company filter if provided
+      // RBAC handled by RLS policies on database level
+      // Just apply the companyId filter if provided
+      if (params.companyId) {
         query = query.eq('company_id', params.companyId);
       }
-      // ADMIN and MANAGER see all contacts
 
       // Apply filters
       if (params.search) {
