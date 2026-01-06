@@ -34,6 +34,7 @@ export function useCreateProject() {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
+      queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
       toast.success('Project aangemaakt');
     },
     onError: (error: Error) => {
@@ -62,6 +63,7 @@ export function useUpdateProject(id: string) {
       queryClient.invalidateQueries({ queryKey: ['projects', id] });
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
+      queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
       toast.success('Project bijgewerkt');
     },
     onError: (error: Error) => {
@@ -107,6 +109,7 @@ export function useUpdateProjectStage(id: string) {
       queryClient.invalidateQueries({ queryKey: ['projects', id] });
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
+      queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
     },
     onError: (error: Error) => {
       toast.error(`Fout bij stage wijziging: ${error.message}`);
@@ -130,6 +133,7 @@ export function useDeleteProject() {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
+      queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
       toast.success('Project verwijderd');
     },
     onError: (error: Error) => {
