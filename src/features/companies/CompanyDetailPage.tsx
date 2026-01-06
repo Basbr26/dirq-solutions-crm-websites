@@ -3,6 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCompany } from './hooks/useCompanies';
 import { useUpdateCompany, useDeleteCompany } from './hooks/useCompanyMutations';
 import { CompanyForm } from './components/CompanyForm';
+import { useContacts } from '@/features/contacts/hooks/useContacts';
+import { ContactCard } from '@/features/contacts/components/ContactCard';
+import { useProjects } from '@/features/projects/hooks/useProjects';
+import { ProjectCard } from '@/features/projects/components/ProjectCard';
+import { useInteractions } from '@/features/interactions/hooks/useInteractions';
+import { InteractionItem } from '@/features/interactions/components/InteractionItem';
+import { CompanyFormData } from '@/types/crm';
+import { toast } from 'sonner';
 import {
   Building2,
   Mail,
@@ -17,6 +25,8 @@ import {
   TrendingUp,
   MessageSquare,
   FileText,
+  StickyNote,
+  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,16 +70,38 @@ export default function CompanyDetailPage() {
   const { data: company, isLoading } = useCompany(id!);
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
+  
+  // Fetch contacts for this company
+  const { data: contactsData, isLoading: isLoadingContacts } = useContacts({
+    companyId: id,
+  });
+  
+  // Fetch projects/leads for this company
+  const { data: projectsData, isLoading: isLoadingProjects } = useProjects({
+    company_id: id,
+  });
+
+  // Fetch interactions for this company
+  const { data: interactionsData, isLoading: isLoadingInteractions } = useInteractions({
+    companyId: id,
+    pageSize: 50,
+  });
 
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   const canDelete = role === 'ADMIN';
 
-  const handleUpdate = (data: any) => {
+  const handleUpdate = (data: CompanyFormData) => {
     if (!id) return;
     updateCompany.mutate(
       { id, data },
       {
-        onSuccess: () => setEditDialogOpen(false),
+        onSuccess: () => {
+          setEditDialogOpen(false);
+          toast.success('Bedrijf bijgewerkt');
+        },
+        onError: (error) => {
+          toast.error(`Fout bij bijwerken: ${error.message}`);
+        },
       }
     );
   };
@@ -77,7 +109,13 @@ export default function CompanyDetailPage() {
   const handleDelete = () => {
     if (!id) return;
     deleteCompany.mutate(id, {
-      onSuccess: () => navigate('/companies'),
+      onSuccess: () => {
+        toast.success('Bedrijf verwijderd');
+        navigate('/companies');
+      },
+      onError: (error) => {
+        toast.error(`Fout bij verwijderen: ${error.message}`);
+      },
     });
   };
 
@@ -146,13 +184,20 @@ export default function CompanyDetailPage() {
 
           <div className="flex gap-2">
             {canEdit && (
-              <Button onClick={() => setEditDialogOpen(true)}>
+              <Button
+                onClick={() => setEditDialogOpen(true)}
+                disabled={updateCompany.isPending || deleteCompany.isPending}
+              >
                 <Edit className="h-4 w-4 mr-2" />
                 Bewerken
               </Button>
             )}
             {canDelete && (
-              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+              <Button
+                variant="destructive"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={updateCompany.isPending || deleteCompany.isPending}
+              >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Verwijderen
               </Button>
@@ -163,12 +208,13 @@ export default function CompanyDetailPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overzicht</TabsTrigger>
           <TabsTrigger value="contacts">Contacten</TabsTrigger>
           <TabsTrigger value="leads">Leads</TabsTrigger>
           <TabsTrigger value="interactions">Activiteiten</TabsTrigger>
           <TabsTrigger value="documents">Documenten</TabsTrigger>
+          <TabsTrigger value="notes">Notities</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -329,17 +375,52 @@ export default function CompanyDetailPage() {
         {/* Contacts Tab */}
         <TabsContent value="contacts">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Contactpersonen
+                Contactpersonen ({contactsData?.count || 0})
               </CardTitle>
+              {canEdit && (
+                <Link to={`/contacts/new?company_id=${id}`}>
+                  <Button size="sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    Nieuw contact
+                  </Button>
+                </Link>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Contacten module komt binnenkort beschikbaar</p>
-              </div>
+              {isLoadingContacts ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : contactsData && contactsData.contacts.length > 0 ? (
+                <div className="space-y-3">
+                  {contactsData.contacts.map((contact) => (
+                    <Link key={contact.id} to={`/contacts/${contact.id}`}>
+                      <ContactCard contact={contact} />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">Geen contactpersonen</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Dit bedrijf heeft nog geen contactpersonen.
+                  </p>
+                  {canEdit && (
+                    <Link to={`/contacts/new?company_id=${id}`}>
+                      <Button>
+                        <Users className="h-4 w-4 mr-2" />
+                        Eerste contact toevoegen
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -347,17 +428,52 @@ export default function CompanyDetailPage() {
         {/* Leads Tab */}
         <TabsContent value="leads">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
-                Leads
+                Website Projecten ({projectsData?.length || 0})
               </CardTitle>
+              {canEdit && (
+                <Link to={`/pipeline/new?company_id=${id}`}>
+                  <Button size="sm">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Nieuw project
+                  </Button>
+                </Link>
+              )}
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Leads module komt binnenkort beschikbaar</p>
-              </div>
+              {isLoadingProjects ? (
+                <div className="space-y-3">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-40 bg-muted animate-pulse rounded-lg" />
+                  ))}
+                </div>
+              ) : projectsData && projectsData.length > 0 ? (
+                <div className="space-y-3">
+                  {projectsData.map((project) => (
+                    <Link key={project.id} to={`/pipeline/${project.id}`}>
+                      <ProjectCard project={project} />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">Geen projecten</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Dit bedrijf heeft nog geen website projecten of leads.
+                  </p>
+                  {canEdit && (
+                    <Link to={`/pipeline/new?company_id=${id}`}>
+                      <Button>
+                        <TrendingUp className="h-4 w-4 mr-2" />
+                        Eerste project aanmaken
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -368,14 +484,35 @@ export default function CompanyDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Activiteiten
+                Activiteiten ({interactionsData?.interactions?.length || 0})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Activiteiten module komt binnenkort beschikbaar</p>
-              </div>
+              {isLoadingInteractions ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              ) : interactionsData?.interactions && interactionsData.interactions.length > 0 ? (
+                <div className="space-y-3">
+                  {interactionsData.interactions.map((interaction) => (
+                    <InteractionItem key={interaction.id} interaction={interaction} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">Geen activiteiten</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Er zijn nog geen gesprekken, emails of meetings geregistreerd voor dit bedrijf.
+                  </p>
+                  <Button disabled>
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Activiteit toevoegen (binnenkort)
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -383,17 +520,49 @@ export default function CompanyDetailPage() {
         {/* Documents Tab */}
         <TabsContent value="documents">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Documenten
+                Documenten (0)
               </CardTitle>
+              <Button size="sm" disabled>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="text-center py-12 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Documenten module komt binnenkort beschikbaar</p>
+                <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium mb-2">Nog geen documenten geüpload</p>
+                <p className="text-sm">Upload contracten, offertes en andere bestanden</p>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notes Tab */}
+        <TabsContent value="notes">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <StickyNote className="h-5 w-5" />
+                Notities
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {company.notes ? (
+                <div className="prose prose-sm max-w-none">
+                  <div className="bg-muted/50 rounded-lg p-4 whitespace-pre-wrap">
+                    {company.notes}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <StickyNote className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p className="font-medium mb-2">Geen notities</p>
+                  <p className="text-sm">Klik op 'Bewerken' om notities toe te voegen</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

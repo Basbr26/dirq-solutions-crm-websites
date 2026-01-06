@@ -3,12 +3,13 @@
  * Overview of all projects with filtering and search
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, FolderKanban, TrendingUp, Euro, BarChart3 } from 'lucide-react';
 import { useProjects, usePipelineStats } from './hooks/useProjects';
 import { useCreateProject } from './hooks/useProjectMutations';
 import { ProjectForm } from './components/ProjectForm';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,6 +27,7 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { toast } from 'sonner';
 
 const projectTypeLabels: Record<ProjectType, string> = {
   landing_page: 'Landing Page',
@@ -47,9 +49,12 @@ export default function ProjectsPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const createProject = useCreateProject();
+  
+  // Debounce search to prevent excessive API calls
+  const debouncedSearch = useDebounce(search, 500);
 
   const { data: projects, isLoading } = useProjects({
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     stage: stageFilter || undefined,
     project_type: typeFilter || undefined,
   });
@@ -58,13 +63,15 @@ export default function ProjectsPage() {
 
   const canCreateProject = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = useMemo(
+    () => (amount: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(amount),
+    []
+  );
 
   return (
     <AppLayout
@@ -344,6 +351,9 @@ export default function ProjectsPage() {
           createProject.mutate(data, {
             onSuccess: () => {
               setCreateDialogOpen(false);
+            },
+            onError: (error) => {
+              toast.error('Fout bij aanmaken project: ' + error.message);
             },
           });
         }}

@@ -3,11 +3,13 @@
  * Full project detail page with management functionality
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUpdateProject, useDeleteProject } from './hooks/useProjectMutations';
+import { useInteractions } from '@/features/interactions/hooks/useInteractions';
+import { InteractionItem } from '@/features/interactions/components/InteractionItem';
 import {
   ArrowLeft,
   Edit,
@@ -110,28 +112,10 @@ export default function ProjectDetailPage() {
     enabled: !!id,
   });
 
-  // Fetch interactions/activity log
-  const { data: interactions } = useQuery({
-    queryKey: ['project-interactions', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('interactions')
-        .select(`
-          *,
-          profiles:profiles!interactions_user_id_fkey(id, voornaam, achternaam)
-        `)
-        .eq('project_id', id!)
-        .order('interaction_date', { ascending: false })
-        .limit(10);
-
-      if (error) {
-        // Table might not exist yet, return empty array
-        console.warn('Interactions table not found:', error);
-        return [];
-      }
-      return data;
-    },
-    enabled: !!id,
+  // Fetch interactions using the hook
+  const { data: interactionsData, isLoading: isLoadingInteractions } = useInteractions({
+    leadId: id, // Projects used to be called "leads" in the database
+    pageSize: 20,
   });
 
   const handleDelete = () => {
@@ -170,13 +154,15 @@ export default function ProjectDetailPage() {
     );
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = useMemo(
+    () => (amount: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(amount),
+    []
+  );
 
   if (isLoading) {
     return (
@@ -456,39 +442,26 @@ export default function ProjectDetailPage() {
             <TabsContent value="activity" className="mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Activiteiten Log</CardTitle>
+                  <CardTitle>Activiteiten ({interactionsData?.interactions?.length || 0})</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {interactions && interactions.length > 0 ? (
-                    <div className="space-y-4">
-                      {interactions.map((interaction: any) => (
-                        <div key={interaction.id} className="border-b pb-4 last:border-0">
-                          <div className="flex gap-3">
-                            <MessageSquare className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            <div className="flex-1">
-                              <div className="flex justify-between items-start mb-1">
-                                <p className="font-medium">{interaction.interaction_type}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {format(new Date(interaction.interaction_date), 'dd MMM yyyy', { locale: nl })}
-                                </p>
-                              </div>
-                              {interaction.notes && (
-                                <p className="text-sm text-muted-foreground">{interaction.notes}</p>
-                              )}
-                              {interaction.profiles && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Door: {interaction.profiles.voornaam} {interaction.profiles.achternaam}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                  {isLoadingInteractions ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+                      ))}
+                    </div>
+                  ) : interactionsData?.interactions && interactionsData.interactions.length > 0 ? (
+                    <div className="space-y-3">
+                      {interactionsData.interactions.map((interaction) => (
+                        <InteractionItem key={interaction.id} interaction={interaction} />
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>Nog geen activiteiten gelogd</p>
+                    <div className="text-center py-12 text-muted-foreground">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="font-medium mb-2">Nog geen activiteiten</p>
+                      <p className="text-sm">Activiteiten worden automatisch gelogd bij interacties met dit project</p>
                     </div>
                   )}
                 </CardContent>

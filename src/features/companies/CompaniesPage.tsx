@@ -4,7 +4,7 @@ import { useCompanies, useCompanyStats } from './hooks/useCompanies';
 import { useCreateCompany } from './hooks/useCompanyMutations';
 import { CompanyCard } from './components/CompanyCard';
 import { CompanyForm } from './components/CompanyForm';
-import { CompanyFilters as CompanyFiltersType } from '@/types/crm';
+import { CompanyFilters as CompanyFiltersType, CompanyStatus, CompanyPriority } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,7 +19,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Building2, TrendingUp, Users, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useDebounce } from '@/hooks/useDebounce';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { toast } from 'sonner';
 
 export default function CompaniesPage() {
   const { role } = useAuth();
@@ -30,10 +32,13 @@ export default function CompaniesPage() {
 
   const createCompany = useCreateCompany();
 
+  // Debounce search to prevent excessive API calls
+  const debouncedSearch = useDebounce(search, 500);
+
   // Apply search after debounce
   const activeFilters: CompanyFiltersType = {
     ...filters,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
   };
 
   const { data, isLoading, page, setPage, pageSize } = useCompanies(activeFilters);
@@ -146,7 +151,7 @@ export default function CompaniesPage() {
                 <Select
                   value={filters.status?.[0] || ''}
                   onValueChange={(value) =>
-                    setFilters({ ...filters, status: value ? [value as any] : [] })
+                    setFilters({ ...filters, status: value ? [value as CompanyStatus] : [] })
                   }
                 >
                   <SelectTrigger>
@@ -167,7 +172,7 @@ export default function CompaniesPage() {
                 <Select
                   value={filters.priority?.[0] || ''}
                   onValueChange={(value) =>
-                    setFilters({ ...filters, priority: value ? [value as any] : [] })
+                    setFilters({ ...filters, priority: value ? [value as CompanyPriority] : [] })
                   }
                 >
                   <SelectTrigger>
@@ -275,6 +280,9 @@ export default function CompaniesPage() {
         onSubmit={(data) => {
           createCompany.mutate(data, {
             onSuccess: () => setCreateDialogOpen(false),
+            onError: (error) => {
+              toast.error('Fout bij aanmaken bedrijf: ' + error.message);
+            },
           });
         }}
         isLoading={createCompany.isPending}

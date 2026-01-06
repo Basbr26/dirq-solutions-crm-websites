@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,11 +50,7 @@ export function NotificationPreferences() {
     dnd_enabled: false,
   });
 
-  useEffect(() => {
-    loadPreferences();
-  }, [user]);
-
-  const loadPreferences = async () => {
+  const loadPreferences = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -62,10 +58,10 @@ export function NotificationPreferences() {
       const prefs = await getNotificationPreferences(user.id);
       if (prefs) {
         setPreferences({
-          channels: prefs.channels as any,
+          channels: prefs.channels as { in_app: boolean; email: boolean; sms: boolean },
           enabled_types: prefs.enabled_types as string[],
           digest_enabled: prefs.digest_enabled,
-          digest_frequency: prefs.digest_frequency as any,
+          digest_frequency: prefs.digest_frequency as 'hourly' | 'daily' | 'weekly',
           ai_notifications_enabled: prefs.ai_notifications_enabled,
           ai_digest_only: prefs.ai_digest_only,
           ai_failure_notify: prefs.ai_failure_notify,
@@ -77,7 +73,11 @@ export function NotificationPreferences() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadPreferences();
+  }, [loadPreferences]);
 
   const handleSave = async () => {
     if (!user) return;

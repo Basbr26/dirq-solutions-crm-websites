@@ -96,7 +96,7 @@ export function AccountSettings() {
 
       <ChangePasswordDialog 
         open={showPasswordDialog} 
-        onOpenChange={setShowPasswordDialog} 
+        onOpenChange={setShowPasswordDialog}
       />
     </>
   );

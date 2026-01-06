@@ -3,17 +3,20 @@
  * Displays all sales quotes with filtering and stats
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, FileText, CheckCircle2, XCircle, Clock, Send } from 'lucide-react';
+import { Plus, FileText, CheckCircle2, XCircle, Clock, Send, Search } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuotes, useQuoteStats } from './hooks/useQuotes';
 import { useCreateQuote } from './hooks/useQuoteMutations';
 import { QuoteForm } from './components/QuoteForm';
+import { useDebounce } from '@/hooks/useDebounce';
+import { toast } from 'sonner';
 import type { QuoteStatus } from '@/types/quotes';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -29,21 +32,28 @@ const statusConfig: Record<QuoteStatus, { label: string; variant: 'default' | 's
 
 export default function QuotesPage() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<QuoteStatus | 'all'>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
+  // Debounce search to prevent excessive API calls
+  const debouncedSearch = useDebounce(search, 500);
+  
   const { data: stats } = useQuoteStats();
-  const { data: quotes, isLoading } = useQuotes(
-    statusFilter !== 'all' ? { status: statusFilter } : undefined
-  );
+  const { data: quotes, isLoading } = useQuotes({
+    ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
+    ...(debouncedSearch ? { search: debouncedSearch } : {}),
+  });
   const createQuote = useCreateQuote();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  };
+  const formatCurrency = useMemo(
+    () => (amount: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+      }).format(amount),
+    []
+  );
 
   return (
     <AppLayout
@@ -78,6 +88,17 @@ export default function QuotesPage() {
             </Card>
           </div>
         )}
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Zoek offertes op titel of bedrijf..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
 
         {/* Tabs Filter */}
         <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as QuoteStatus | 'all')}>
@@ -167,6 +188,9 @@ export default function QuotesPage() {
             onSuccess: (quote) => {
               setCreateDialogOpen(false);
               navigate(`/quotes/${quote.id}`);
+            },
+            onError: (error) => {
+              toast.error('Fout bij aanmaken offerte: ' + error.message);
             },
           });
         }}

@@ -3,6 +3,7 @@ import { useContacts } from "./hooks/useContacts";
 import { useContactMutations } from "./hooks/useContactMutations";
 import { ContactCard } from "./components/ContactCard";
 import { ContactForm } from "./components/ContactForm";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,6 +23,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCompanies } from "@/features/companies/hooks/useCompanies";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { toast } from "sonner";
 import {
   UserPlus,
   Search,
@@ -46,11 +48,14 @@ export function ContactsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const pageSize = 20;
+  
+  // Debounce search to prevent excessive API calls
+  const debouncedSearch = useDebounce(search, 500);
 
   const { data, isLoading, error } = useContacts({
     page,
     pageSize,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     companyId: filterCompanyId,
     isPrimary: filterIsPrimary,
     isDecisionMaker: filterIsDecisionMaker,
@@ -71,6 +76,9 @@ export function ContactsPage() {
     createContact.mutate(contactData, {
       onSuccess: () => {
         setShowCreateDialog(false);
+      },
+      onError: (error) => {
+        toast.error('Fout bij aanmaken contact: ' + error.message);
       },
     });
   };

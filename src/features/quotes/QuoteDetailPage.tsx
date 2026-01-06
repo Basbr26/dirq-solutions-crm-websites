@@ -3,7 +3,7 @@
  * Full quote detail page with line items, status management, and PDF export
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -146,12 +146,14 @@ export default function QuoteDetailPage() {
     toast.info('PDF export wordt binnenkort toegevoegd');
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  };
+  const formatCurrency = useMemo(
+    () => (amount: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+      }).format(amount),
+    []
+  );
 
   if (isLoading) {
     return (

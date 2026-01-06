@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Search, Filter, Phone, Mail, Calendar, FileText, CheckSquare, Presentation } from 'lucide-react';
 import { useInteractions, useInteractionStats } from './hooks/useInteractions';
 import { InteractionCard } from './components/InteractionCard';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -24,11 +25,14 @@ export default function InteractionsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const pageSize = 20;
+  
+  // Debounce search to prevent excessive API calls
+  const debouncedSearch = useDebounce(search, 500);
 
   const { data, isLoading } = useInteractions({
     page,
     pageSize,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     type: typeFilter || undefined,
     taskStatus: taskStatusFilter || undefined,
   });

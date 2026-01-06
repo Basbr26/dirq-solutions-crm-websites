@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUpdateProfile, useUploadAvatar, useDeleteAvatar } from '@/hooks/useProfile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { Loader2, Upload, X } from 'lucide-react';
 
 export function ProfileSettings() {
   const { profile, user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const updateProfile = useUpdateProfile();
+  const uploadAvatar = useUploadAvatar();
+  const deleteAvatar = useDeleteAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     voornaam: '',
@@ -38,39 +39,34 @@ export function ProfileSettings() {
     e.preventDefault();
     if (!user) return;
 
-    setLoading(true);
-
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+    updateProfile.mutate(
+      { 
+        userId: user.id, 
+        data: {
           voornaam: formData.voornaam,
           achternaam: formData.achternaam,
-          full_name: `${formData.voornaam} ${formData.achternaam}`,
           phone: formData.phone,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: 'Profiel bijgewerkt',
-        description: 'Je profielgegevens zijn succesvol opgeslagen.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Fout bij opslaan',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+        }
+      },
+      {
+        onSuccess: () => {
+          toast.success('Profiel bijgewerkt', {
+            description: 'Je profielgegevens zijn succesvol opgeslagen.',
+          });
+        },
+        onError: (error: Error) => {
+          toast.error('Fout bij opslaan', {
+            description: error.message,
+          });
+        },
+      }
+    );
   };
 
   const getInitials = () => {
-    return `${formData.voornaam.charAt(0)}${formData.achternaam.charAt(0)}`.toUpperCase();
+    const first = formData.voornaam?.charAt(0) || '';
+    const last = formData.achternaam?.charAt(0) || '';
+    return `${first}${last}`.toUpperCase() || '?';
   };
 
   const handleAvatarClick = () => {
@@ -81,120 +77,55 @@ export function ProfileSettings() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Ongeldig bestand',
-        description: 'Upload alleen afbeeldingen (JPG, PNG, GIF, WebP)',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Validate file size (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: 'Bestand te groot',
-        description: 'Maximale bestandsgrootte is 2MB',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      // Delete old avatar if exists
-      if (formData.avatar_url) {
-        const oldPath = formData.avatar_url.split('/avatars/')[1];
-        if (oldPath) {
-          await supabase.storage.from('avatars').remove([oldPath]);
-        }
+    uploadAvatar.mutate(
+      { 
+        userId: user.id, 
+        file,
+        oldAvatarUrl: formData.avatar_url || undefined,
+      },
+      {
+        onSuccess: (publicUrl) => {
+          setFormData({ ...formData, avatar_url: publicUrl });
+          toast.success('Avatar bijgewerkt', {
+            description: 'Je profielfoto is succesvol geüpload.',
+          });
+          // Reset file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        },
+        onError: (error: Error) => {
+          toast.error('Upload mislukt', {
+            description: error.message,
+          });
+          // Reset file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        },
       }
-
-      // Upload new avatar
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/avatar.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { 
-          upsert: true,
-          contentType: file.type 
-        });
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      // Update profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      setFormData({ ...formData, avatar_url: publicUrl });
-
-      toast({
-        title: 'Avatar bijgewerkt',
-        description: 'Je profielfoto is succesvol geüpload.',
-      });
-    } catch (error: any) {
-      console.error('Error uploading avatar:', error);
-      toast({
-        title: 'Upload mislukt',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
+    );
   };
 
   const handleRemoveAvatar = async () => {
     if (!user || !formData.avatar_url) return;
 
-    setUploading(true);
-
-    try {
-      // Delete from storage
-      const avatarPath = formData.avatar_url.split('/avatars/')[1];
-      if (avatarPath) {
-        await supabase.storage.from('avatars').remove([avatarPath]);
+    deleteAvatar.mutate(
+      { userId: user.id, avatarUrl: formData.avatar_url },
+      {
+        onSuccess: () => {
+          setFormData({ ...formData, avatar_url: '' });
+          toast.success('Avatar verwijderd', {
+            description: 'Je profielfoto is verwijderd.',
+          });
+        },
+        onError: (error: Error) => {
+          toast.error('Fout bij verwijderen', {
+            description: error.message,
+          });
+        },
       }
-
-      // Update profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({ avatar_url: null })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setFormData({ ...formData, avatar_url: '' });
-
-      toast({
-        title: 'Avatar verwijderd',
-        description: 'Je profielfoto is verwijderd.',
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Fout bij verwijderen',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setUploading(false);
-    }
+    );
   };
 
   return (
@@ -214,7 +145,7 @@ export function ProfileSettings() {
                 <AvatarImage src={formData.avatar_url} />
                 <AvatarFallback className="text-lg">{getInitials()}</AvatarFallback>
               </Avatar>
-              {formData.avatar_url && !uploading && (
+              {formData.avatar_url && !uploadAvatar.isPending && !deleteAvatar.isPending && (
                 <Button
                   type="button"
                   variant="destructive"
@@ -239,9 +170,9 @@ export function ProfileSettings() {
                 variant="outline" 
                 size="sm" 
                 onClick={handleAvatarClick}
-                disabled={uploading}
+                disabled={uploadAvatar.isPending || deleteAvatar.isPending}
               >
-                {uploading ? (
+                {uploadAvatar.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Uploaden...
@@ -310,8 +241,8 @@ export function ProfileSettings() {
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            <Button type="submit" disabled={updateProfile.isPending}>
+              {updateProfile.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Opslaan
             </Button>
           </div>

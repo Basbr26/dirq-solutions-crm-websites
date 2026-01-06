@@ -3,12 +3,13 @@
  * Sales pipeline, quotes, and business metrics
  */
 
-import { useState } from 'react';
+import { useMemo, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   TrendingUp, 
   TrendingDown,
@@ -21,25 +22,35 @@ import {
   Calendar,
   Activity
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend,
-  ResponsiveContainer 
-} from 'recharts';
 import { usePipelineStats } from '@/features/projects/hooks/useProjects';
 import { useQuoteStats } from '@/features/quotes/hooks/useQuotes';
+import { ProjectStage } from '@/types/projects';
+import { 
+  useMonthlyRevenue,
+  useQuoteAcceptanceTrend,
+  usePipelineTrend,
+  useWeightedPipelineTrend,
+  useQuoteAcceptanceRateTrend,
+  useDealsThisWeek,
+  useEntityCounts,
+} from './hooks/useDashboardStats';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+
+// Lazy load Recharts to improve initial bundle size
+const LineChart = lazy(() => import('recharts').then(m => ({ default: m.LineChart })));
+const Line = lazy(() => import('recharts').then(m => ({ default: m.Line })));
+const BarChart = lazy(() => import('recharts').then(m => ({ default: m.BarChart })));
+const Bar = lazy(() => import('recharts').then(m => ({ default: m.Bar })));
+const PieChart = lazy(() => import('recharts').then(m => ({ default: m.PieChart })));
+const Pie = lazy(() => import('recharts').then(m => ({ default: m.Pie })));
+const Cell = lazy(() => import('recharts').then(m => ({ default: m.Cell })));
+const XAxis = lazy(() => import('recharts').then(m => ({ default: m.XAxis })));
+const YAxis = lazy(() => import('recharts').then(m => ({ default: m.YAxis })));
+const CartesianGrid = lazy(() => import('recharts').then(m => ({ default: m.CartesianGrid })));
+const Tooltip = lazy(() => import('recharts').then(m => ({ default: m.Tooltip })));
+const Legend = lazy(() => import('recharts').then(m => ({ default: m.Legend })));
+const ResponsiveContainer = lazy(() => import('recharts').then(m => ({ default: m.ResponsiveContainer })));
 
 interface KPICardProps {
   title: string;
@@ -95,7 +106,7 @@ function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardPro
   return <Card>{content}</Card>;
 }
 
-const STAGE_COLORS: Record<string, string> = {
+const STAGE_COLORS: Record<ProjectStage, string> = {
   lead: '#64748b',
   quote_requested: '#3b82f6',
   quote_sent: '#8b5cf6',
@@ -104,36 +115,52 @@ const STAGE_COLORS: Record<string, string> = {
   in_development: '#06b6d4',
   review: '#6366f1',
   live: '#22c55e',
+  maintenance: '#14b8a6',
+  lost: '#ef4444',
 };
 
 export default function DashboardCRM() {
   const { data: pipelineStats } = usePipelineStats();
   const { data: quoteStats } = useQuoteStats();
+  
+  // Real-time trend data
+  const { data: pipelineTrend } = usePipelineTrend();
+  const { data: weightedTrend } = useWeightedPipelineTrend();
+  const { data: acceptanceRateTrend } = useQuoteAcceptanceRateTrend();
+  
+  // Chart data
+  const { data: revenueData, isLoading: revenueLoading } = useMonthlyRevenue();
+  const { data: quoteAcceptanceData, isLoading: acceptanceLoading } = useQuoteAcceptanceTrend();
+  
+  // Quick stats
+  const { data: dealsThisWeek } = useDealsThisWeek();
+  const { data: entityCounts } = useEntityCounts();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  // Memoize currency formatter
+  const formatCurrency = useMemo(
+    () => (amount: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(amount),
+    []
+  );
 
   // Pipeline stage distribution for pie chart
-  const pipelineDistribution = pipelineStats?.by_stage
-    ? Object.entries(pipelineStats.by_stage)
-        .filter(([_, data]) => data.count > 0)
-        .map(([stage, data]) => ({
-          name: stage.replace(/_/g, ' '),
-          value: data.value,
-          count: data.count,
-        }))
-    : [];
-
-  // Revenue data - placeholder for future implementation
-  const revenueData: Array<{ month: string; revenue: number; target: number }> = [];
-
-  // Quote acceptance data - placeholder for future implementation
-  const quoteAcceptanceData: Array<{ month: string; rate: number }> = [];
+  const pipelineDistribution = useMemo(
+    () =>
+      pipelineStats?.by_stage
+        ? Object.entries(pipelineStats.by_stage)
+            .filter(([_, data]) => data.count > 0)
+            .map(([stage, data]) => ({
+              name: stage.replace(/_/g, ' '),
+              value: data.value,
+              count: data.count,
+            }))
+        : [],
+    [pipelineStats]
+  );
 
   const quoteAcceptanceRate = quoteStats 
     ? Math.round((quoteStats.accepted / quoteStats.total) * 100) || 0
@@ -152,7 +179,7 @@ export default function DashboardCRM() {
             value={formatCurrency(pipelineStats?.total_value || 0)}
             subtitle={`${pipelineStats?.total_projects || 0} actieve projecten`}
             icon={FolderKanban}
-            trend={12}
+            trend={pipelineTrend?.percentage}
             href="/pipeline"
           />
           <KPICard
@@ -160,7 +187,7 @@ export default function DashboardCRM() {
             value={formatCurrency(pipelineStats?.weighted_value || 0)}
             subtitle="Op basis van kans"
             icon={Target}
-            trend={8}
+            trend={weightedTrend?.percentage}
             href="/pipeline"
           />
           <KPICard
@@ -175,7 +202,7 @@ export default function DashboardCRM() {
             value={`${quoteAcceptanceRate}%`}
             subtitle={`${quoteStats?.accepted || 0} geaccepteerd`}
             icon={TrendingUp}
-            trend={5}
+            trend={acceptanceRateTrend?.percentage}
             href="/quotes"
           />
         </div>
@@ -189,32 +216,41 @@ export default function DashboardCRM() {
               <CardDescription>Afgelopen 6 maanden</CardDescription>
             </CardHeader>
             <CardContent>
-              {revenueData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={revenueData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
-                    />
-                    <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#10b981" 
-                      name="Omzet"
-                      strokeWidth={2}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="target" 
-                      stroke="#6366f1" 
-                      strokeDasharray="5 5"
-                      name="Doel"
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+              {revenueLoading ? (
+                <div className="h-[300px] space-y-3">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ) : revenueData && revenueData.length > 0 ? (
+                <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={revenueData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="#10b981" 
+                        name="Omzet"
+                        strokeWidth={2}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="target" 
+                        stroke="#6366f1" 
+                        strokeDasharray="5 5"
+                        name="Doel"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Suspense>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
@@ -234,30 +270,32 @@ export default function DashboardCRM() {
             </CardHeader>
             <CardContent>
               {pipelineDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={pipelineDistribution}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label={(entry) => `${entry.count}`}
-                    >
-                      {pipelineDistribution.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={STAGE_COLORS[entry.name.replace(/ /g, '_')] || '#94a3b8'} 
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={pipelineDistribution}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        label={(entry) => `${entry.count}`}
+                      >
+                        {pipelineDistribution.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={STAGE_COLORS[entry.name.replace(/ /g, '_')] || '#94a3b8'} 
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: number) => formatCurrency(value)}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Suspense>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
@@ -279,16 +317,24 @@ export default function DashboardCRM() {
               <CardDescription>Trend over tijd</CardDescription>
             </CardHeader>
             <CardContent>
-              {quoteAcceptanceData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={quoteAcceptanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value: number) => `${value}%`} />
-                    <Bar dataKey="rate" fill="#10b981" name="Acceptatie %" />
-                  </BarChart>
-                </ResponsiveContainer>
+              {acceptanceLoading ? (
+                <div className="h-[300px] space-y-3">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-8 w-full" />
+                </div>
+              ) : quoteAcceptanceData && quoteAcceptanceData.length > 0 ? (
+                <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={quoteAcceptanceData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis />
+                      <Tooltip formatter={(value: number) => `${value}%`} />
+                      <Bar dataKey="rate" fill="#10b981" name="Acceptatie %" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Suspense>
               ) : (
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
@@ -307,21 +353,25 @@ export default function DashboardCRM() {
               <CardDescription>Overzicht van je CRM</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Building2 className="h-5 w-5 text-blue-500" />
-                  <span className="font-medium">Bedrijven</span>
+              <Link to="/companies">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="h-5 w-5 text-blue-500" />
+                    <span className="font-medium">Bedrijven</span>
+                  </div>
+                  <Badge variant="secondary">{entityCounts?.companies || 0}</Badge>
                 </div>
-                <Badge variant="secondary">Bekijk alle</Badge>
-              </div>
+              </Link>
               
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Users className="h-5 w-5 text-purple-500" />
-                  <span className="font-medium">Contacten</span>
+              <Link to="/contacts">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-5 w-5 text-purple-500" />
+                    <span className="font-medium">Contacten</span>
+                  </div>
+                  <Badge variant="secondary">{entityCounts?.contacts || 0}</Badge>
                 </div>
-                <Badge variant="secondary">Bekijk alle</Badge>
-              </div>
+              </Link>
               
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-3">
@@ -333,13 +383,17 @@ export default function DashboardCRM() {
                 </span>
               </div>
               
-              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-green-500" />
-                  <span className="font-medium">Deze maand gesloten</span>
+              <Link to="/pipeline">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-green-500" />
+                    <span className="font-medium">Deze week gesloten</span>
+                  </div>
+                  <Badge className="bg-green-500">
+                    {dealsThisWeek?.count || 0} deals
+                  </Badge>
                 </div>
-                <Badge className="bg-green-500">3 deals</Badge>
-              </div>
+              </Link>
             </CardContent>
           </Card>
         </div>

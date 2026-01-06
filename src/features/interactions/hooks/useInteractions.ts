@@ -46,6 +46,7 @@ export interface InteractionFilters {
   type?: string;
   companyId?: string;
   contactId?: string;
+  leadId?: string; // For filtering by project/lead
   isTask?: boolean;
   taskStatus?: string;
 }
@@ -104,6 +105,10 @@ export function useInteractions(filters: InteractionFilters = {}) {
 
       if (filters.contactId) {
         query = query.eq('contact_id', filters.contactId);
+      }
+
+      if (filters.leadId) {
+        query = query.eq('lead_id', filters.leadId);
       }
 
       if (filters.isTask !== undefined) {

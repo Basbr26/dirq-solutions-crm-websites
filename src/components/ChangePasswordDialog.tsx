@@ -18,10 +18,11 @@ const passwordSchema = z.object({
 
 interface ChangePasswordDialogProps {
   open: boolean;
-  onPasswordChanged: () => void;
+  onOpenChange?: (open: boolean) => void;
+  onPasswordChanged?: () => void;
 }
 
-export function ChangePasswordDialog({ open, onPasswordChanged }: ChangePasswordDialogProps) {
+export function ChangePasswordDialog({ open, onOpenChange, onPasswordChanged }: ChangePasswordDialogProps) {
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -65,7 +66,8 @@ export function ChangePasswordDialog({ open, onPasswordChanged }: ChangePassword
         description: 'Je wachtwoord is succesvol gewijzigd.',
       });
 
-      onPasswordChanged();
+      onPasswordChanged?.();
+      onOpenChange?.(false);
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({

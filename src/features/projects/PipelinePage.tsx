@@ -3,7 +3,7 @@
  * Visual pipeline for website development projects
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, TrendingUp, DollarSign } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -41,13 +41,15 @@ export default function PipelinePage() {
   
   const createProject = useCreateProject();
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('nl-NL', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = useMemo(
+    () => (amount: number) =>
+      new Intl.NumberFormat('nl-NL', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(amount),
+    []
+  );
 
   const handleDragStart = (project: Project) => {
     setDraggedProject(project);
@@ -242,6 +244,10 @@ export default function PipelinePage() {
           createProject.mutate(data, {
             onSuccess: () => {
               setCreateDialogOpen(false);
+              toast.success('Project aangemaakt');
+            },
+            onError: (error) => {
+              toast.error(`Fout bij aanmaken: ${error.message}`);
             },
           });
         }}

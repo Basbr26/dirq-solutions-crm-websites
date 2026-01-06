@@ -6,6 +6,10 @@ import {
   useDeleteContact,
 } from "./hooks/useContactMutations";
 import { ContactForm } from "./components/ContactForm";
+import { useInteractions } from '@/features/interactions/hooks/useInteractions';
+import { InteractionCard } from '@/features/interactions/components/InteractionCard';
+import { ContactFormData } from '@/types/crm';
+import { toast } from 'sonner';
 import {
   User,
   Mail,
@@ -22,6 +26,7 @@ import {
   Star,
   Crown,
   Smartphone,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +55,13 @@ import { format } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useAuth } from "@/hooks/useAuth";
 
+// Safe initials generation helper
+const getInitials = (firstName: string, lastName: string): string => {
+  const first = firstName?.trim()?.[0]?.toUpperCase() || '';
+  const last = lastName?.trim()?.[0]?.toUpperCase() || '';
+  return first && last ? `${first}${last}` : first || last || '?';
+};
+
 export default function ContactDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -60,15 +72,19 @@ export default function ContactDetailPage() {
   const { data: contact, isLoading } = useContact(id!);
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
+  const { data: interactionsData, isLoading: isLoadingInteractions } = useInteractions({
+    contactId: id,
+    pageSize: 10,
+  });
 
   const canEdit = role === "ADMIN" || role === "SALES" || role === "MANAGER";
   const canDelete = role === "ADMIN" || role === "SALES";
 
-  const handleUpdate = (formData: any) => {
+  const handleUpdate = (formData: ContactFormData) => {
     if (!contact) return;
 
     // Handle "none" value from company dropdown
-    const updateData = {
+    const updateData: Partial<ContactFormData> = {
       ...formData,
       company_id:
         formData.company_id === "none" ? null : formData.company_id,
@@ -79,6 +95,10 @@ export default function ContactDetailPage() {
       {
         onSuccess: () => {
           setEditDialogOpen(false);
+          toast.success('Contact bijgewerkt');
+        },
+        onError: (error) => {
+          toast.error(`Fout bij bijwerken: ${error.message}`);
         },
       }
     );
@@ -88,7 +108,11 @@ export default function ContactDetailPage() {
     if (!contact) return;
     deleteContact.mutate(contact.id, {
       onSuccess: () => {
+        toast.success('Contact verwijderd');
         navigate("/contacts");
+      },
+      onError: (error) => {
+        toast.error(`Fout bij verwijderen: ${error.message}`);
       },
     });
   };
@@ -116,7 +140,7 @@ export default function ContactDetailPage() {
     );
   }
 
-  const initials = `${contact.first_name[0]}${contact.last_name[0]}`.toUpperCase();
+  const initials = getInitials(contact.first_name, contact.last_name);
   const fullName = `${contact.first_name} ${contact.last_name}`;
 
   return (
@@ -165,7 +189,10 @@ export default function ContactDetailPage() {
         </div>
         <div className="flex gap-2">
           {canEdit && (
-            <Button onClick={() => setEditDialogOpen(true)}>
+            <Button
+              onClick={() => setEditDialogOpen(true)}
+              disabled={updateContact.isPending || deleteContact.isPending}
+            >
               <Edit className="mr-2 h-4 w-4" />
               Bewerken
             </Button>
@@ -174,6 +201,7 @@ export default function ContactDetailPage() {
             <Button
               variant="destructive"
               onClick={() => setDeleteDialogOpen(true)}
+              disabled={updateContact.isPending || deleteContact.isPending}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Verwijderen
@@ -382,20 +410,66 @@ export default function ContactDetailPage() {
 
         <TabsContent value="interactions" className="space-y-4">
           <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">
-                Interacties worden binnenkort beschikbaar
-              </p>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Interacties ({interactionsData?.count || 0})
+              </CardTitle>
+              {canEdit && (
+                <Button size="sm">
+                  Nieuwe interactie
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent>
+              {isLoadingInteractions ? (
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-24" />
+                  ))}
+                </div>
+              ) : interactionsData?.interactions && interactionsData.interactions.length > 0 ? (
+                <div className="space-y-4">
+                  {interactionsData.interactions.map((interaction) => (
+                    <InteractionCard key={interaction.id} interaction={interaction} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
+                  <p className="text-muted-foreground">Nog geen interacties</p>
+                  {canEdit && (
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                    >
+                      Eerste interactie toevoegen
+                    </Button>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="documents" className="space-y-4">
           <Card>
-            <CardContent className="pt-6">
-              <p className="text-center text-muted-foreground">
-                Documenten worden binnenkort beschikbaar
-              </p>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Documenten (0)
+              </CardTitle>
+              <Button size="sm" disabled>
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="font-medium mb-2">Nog geen documenten geüpload</p>
+                <p className="text-sm">Upload contracten, CV's en andere bestanden</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

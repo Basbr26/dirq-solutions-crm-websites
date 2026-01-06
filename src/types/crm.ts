@@ -90,7 +90,7 @@ export interface Company {
   owner?: Profile; // Joined data
   notes?: string;
   tags?: string[];
-  custom_fields?: Record<string, any>;
+  custom_fields?: CustomFields;
   created_at: string;
   updated_at: string;
   last_contact_date?: string;
@@ -155,7 +155,7 @@ export interface Project {
   owner?: Profile;
   source?: string;
   tags?: string[];
-  custom_fields?: Record<string, any>;
+  custom_fields?: CustomFields;
   
   created_at: string;
   updated_at: string;
@@ -500,6 +500,80 @@ export interface KanbanColumn {
 }
 
 // =============================================
+// NOTIFICATIONS
+// =============================================
+
+export type NotificationType = 
+  | 'deadline'
+  | 'approval'
+  | 'update'
+  | 'reminder'
+  | 'escalation'
+  | 'digest';
+
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  priority: NotificationPriority;
+  title: string;
+  message: string;
+  entity_type?: 'company' | 'contact' | 'lead' | 'quote' | 'project' | 'task';
+  entity_id?: string;
+  deep_link?: string;
+  read_at?: string;
+  is_digest?: boolean;
+  created_at: string;
+}
+
+export interface NotificationPreferences {
+  user_id: string;
+  in_app_enabled: boolean;
+  email_enabled: boolean;
+  sms_enabled: boolean;
+  types_enabled: NotificationType[];
+  digest_enabled: boolean;
+  digest_frequency?: 'hourly' | 'daily' | 'weekly';
+  digest_time?: string;
+  do_not_disturb_start?: string;
+  do_not_disturb_end?: string;
+  ai_automation_enabled: boolean;
+  ai_digest_only: boolean;
+  ai_failure_notify: boolean;
+}
+
+// =============================================
+// MUTATION TYPES (for React Query)
+// =============================================
+
+export interface MutationOptions<TData = unknown> {
+  onSuccess?: (data: TData) => void;
+  onError?: (error: ApiError) => void;
+}
+
+export interface UpdateMutationPayload<T> {
+  id: string;
+  data: Partial<T>;
+}
+
+export interface DeleteMutationPayload {
+  id: string;
+}
+
+// Specific mutation payloads matching audit requirements
+// These extend UpdateMutationPayload to provide semantic type names for mutations
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CompanyUpdatePayload extends UpdateMutationPayload<CompanyFormData> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ContactUpdatePayload extends UpdateMutationPayload<ContactFormData> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ProjectUpdatePayload extends UpdateMutationPayload<ProjectFormData> {}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface QuoteUpdatePayload extends UpdateMutationPayload<QuoteFormData> {}
+
+// =============================================
 // API RESPONSE TYPES
 // =============================================
 
@@ -515,4 +589,43 @@ export interface ApiError {
   message: string;
   code?: string;
   details?: any;
+}
+
+export interface ApiSuccess<T = unknown> {
+  data: T;
+  message?: string;
+}
+
+// =============================================
+// UTILITY TYPES
+// =============================================
+
+// Custom fields can be strings, numbers, booleans, or null
+export type CustomFieldValue = string | number | boolean | null;
+export type CustomFields = Record<string, CustomFieldValue>;
+
+export type WithTimestamps<T> = T & {
+  created_at: string;
+  updated_at: string;
+};
+
+export type WithOwner<T> = T & {
+  owner_id: string;
+  owner?: Profile;
+};
+
+export type Nullable<T> = T | null;
+export type Optional<T> = T | undefined;
+
+// Type guard helpers
+export function isCompany(entity: unknown): entity is Company {
+  return typeof entity === 'object' && entity !== null && 'name' in entity && 'status' in entity;
+}
+
+export function isContact(entity: unknown): entity is Contact {
+  return typeof entity === 'object' && entity !== null && 'first_name' in entity && 'last_name' in entity;
+}
+
+export function isProject(entity: unknown): entity is Project {
+  return typeof entity === 'object' && entity !== null && 'title' in entity && 'stage' in entity;
 }

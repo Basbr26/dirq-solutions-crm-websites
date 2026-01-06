@@ -3,10 +3,12 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { User, Bell, Palette, Shield } from 'lucide-react';
-import { ProfileSettings } from '@/components/settings/ProfileSettings';
-import { NotificationPreferences } from '@/components/settings/NotificationPreferences';
-import { AppearanceSettings } from '@/components/settings/AppearanceSettings';
-import { AccountSettings } from '@/components/settings/AccountSettings';
+import { 
+  ProfileSettings, 
+  NotificationPreferences, 
+  AppearanceSettings, 
+  AccountSettings 
+} from '@/components/settings';
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
