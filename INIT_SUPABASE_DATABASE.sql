@@ -29,8 +29,10 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email VARCHAR(255) UNIQUE,
+  voornaam VARCHAR(255),
+  achternaam VARCHAR(255),
   full_name VARCHAR(255),
-  role VARCHAR(50) DEFAULT 'employee' CHECK (role IN ('employee', 'manager', 'hr', 'super_admin')),
+  role VARCHAR(50) DEFAULT 'SUPPORT' CHECK (role IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'employee', 'manager', 'hr')),
   employee_number VARCHAR(50) UNIQUE,
   department_id UUID,
   manager_id UUID REFERENCES profiles(id),
@@ -105,12 +107,14 @@ CREATE TRIGGER update_profiles_updated_at
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role)
+  INSERT INTO public.profiles (id, email, voornaam, achternaam, full_name, role)
   VALUES (
     NEW.id,
     NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'voornaam', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'achternaam', ''),
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
-    'employee'
+    'SUPPORT'
   )
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
@@ -368,6 +372,58 @@ CREATE TABLE IF NOT EXISTS quote_line_items (
 
 CREATE INDEX idx_quote_line_items_quote_id ON quote_line_items(quote_id);
 
+-- NOTIFICATIONS TABLE
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('deadline', 'approval', 'update', 'reminder', 'escalation', 'digest')),
+  priority TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent', 'critical')),
+  priority_score INTEGER DEFAULT 50 CHECK (priority_score BETWEEN 0 AND 100),
+  
+  metadata JSONB DEFAULT '{}'::jsonb,
+  related_entity_type TEXT,
+  related_entity_id UUID,
+  
+  actions JSONB DEFAULT '[]'::jsonb,
+  deep_link TEXT,
+  
+  channels TEXT[] DEFAULT ARRAY['in_app']::TEXT[],
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'delivered', 'read', 'acted', 'failed')),
+  
+  scheduled_for TIMESTAMPTZ DEFAULT NOW(),
+  sent_at TIMESTAMPTZ,
+  delivered_at TIMESTAMPTZ,
+  read_at TIMESTAMPTZ,
+  acted_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,
+  
+  batch_id UUID,
+  is_digest BOOLEAN DEFAULT false,
+  digest_items JSONB DEFAULT '[]'::jsonb,
+  
+  is_escalated BOOLEAN DEFAULT false,
+  escalated_from UUID,
+  escalation_level INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_status ON notifications(status);
+CREATE INDEX idx_notifications_type ON notifications(type);
+CREATE INDEX idx_notifications_priority ON notifications(priority);
+CREATE INDEX idx_notifications_created_at ON notifications(created_at DESC);
+CREATE INDEX idx_notifications_read_at ON notifications(read_at);
+
+CREATE TRIGGER update_notifications_updated_at
+  BEFORE UPDATE ON notifications
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
 -- ============================================================
 -- Step 4: Seed Initial Data
 -- ============================================================
@@ -542,6 +598,18 @@ CREATE POLICY "Admins can manage industries" ON industries
   FOR ALL USING (
     public.user_role() IN ('super_admin', 'ADMIN')
   );
+
+-- NOTIFICATIONS RLS
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own notifications" ON notifications
+  FOR SELECT USING (user_id = auth.uid());
+
+CREATE POLICY "Users can update own notifications" ON notifications
+  FOR UPDATE USING (user_id = auth.uid());
+
+CREATE POLICY "System can create notifications" ON notifications
+  FOR INSERT WITH CHECK (true);
 
 -- ============================================================
 -- SUCCESS! Database initialized.
