@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUpdateProject, useDeleteProject } from './hooks/useProjectMutations';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
+import { DocumentUpload } from '@/components/documents/DocumentUpload';
+import { DocumentsList } from '@/components/documents/DocumentsList';
 import {
   ArrowLeft,
   Edit,
@@ -68,6 +70,7 @@ export default function ProjectDetailPage() {
   const { role } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const updateProject = useUpdateProject(id!);
   const deleteProject = useDeleteProject();
@@ -389,8 +392,9 @@ export default function ProjectDetailPage() {
 
           {/* Tabs */}
           <Tabs defaultValue="quotes" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="quotes">Offertes ({quotes?.length || 0})</TabsTrigger>
+              <TabsTrigger value="documents">Documenten</TabsTrigger>
               <TabsTrigger value="activity">Activiteiten</TabsTrigger>
             </TabsList>
 
@@ -435,6 +439,24 @@ export default function ProjectDetailPage() {
                       </Button>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="documents" className="mt-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Documenten
+                  </CardTitle>
+                  <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
+                    <Package className="h-4 w-4 mr-2" />
+                    Upload
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <DocumentsList projectId={id} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -636,6 +658,13 @@ export default function ProjectDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Document Upload Dialog */}
+      <DocumentUpload
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        projectId={id}
+      />
     </div>
   );
 }

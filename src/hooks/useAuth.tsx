@@ -34,6 +34,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, voornaam: string, achternaam: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -216,12 +218,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error during sign out:', error);
     } finally {
-      // Always clear local state and storage
-      localStorage.clear();
+      // Clear only auth-related items from localStorage
+      const authKeys = ['supabase.auth.token', 'sb-', 'supabase-auth-token'];
+      Object.keys(localStorage).forEach(key => {
+        if (authKeys.some(prefix => key.startsWith(prefix))) {
+          localStorage.removeItem(key);
+        }
+      });
       setUser(null);
       setSession(null);
       setProfile(null);
       setRole(null);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+      return { error };
+    } catch (error) {
+      return { error: error as Error };
     }
   };
 
@@ -234,6 +263,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
   };
 
   return (

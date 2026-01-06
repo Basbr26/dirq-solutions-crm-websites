@@ -8,6 +8,8 @@ import {
 import { ContactForm } from "./components/ContactForm";
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionCard } from '@/features/interactions/components/InteractionCard';
+import { DocumentUpload } from '@/components/documents/DocumentUpload';
+import { DocumentsList } from '@/components/documents/DocumentsList';
 import { ContactFormData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -68,6 +70,7 @@ export default function ContactDetailPage() {
   const { role } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const { data: contact, isLoading } = useContact(id!);
   const updateContact = useUpdateContact();
@@ -457,19 +460,15 @@ export default function ContactDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Documenten (0)
+                Documenten
               </CardTitle>
-              <Button size="sm" disabled>
+              <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
                 Upload
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="font-medium mb-2">Nog geen documenten geüpload</p>
-                <p className="text-sm">Upload contracten, CV's en andere bestanden</p>
-              </div>
+              <DocumentsList contactId={id} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -514,6 +513,13 @@ export default function ContactDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Document Upload Dialog */}
+      <DocumentUpload
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        contactId={id}
+      />
     </div>
   );
 }

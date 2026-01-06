@@ -11,6 +11,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { lazy, Suspense } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 // Lazy load CRM modules
 const CompaniesPage = lazy(() => import("./features/companies/CompaniesPage"));
@@ -94,6 +96,8 @@ function AnimatedRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<AnimatedRoute><RoleBasedRedirect /></AnimatedRoute>} />
         <Route path="/auth" element={<AnimatedRoute><Auth /></AnimatedRoute>} />
+        <Route path="/forgot-password" element={<AnimatedRoute><ForgotPassword /></AnimatedRoute>} />
+        <Route path="/reset-password" element={<AnimatedRoute><ResetPassword /></AnimatedRoute>} />
         
         <Route 
           path="/dashboard/super-admin" 

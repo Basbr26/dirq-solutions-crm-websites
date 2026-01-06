@@ -9,6 +9,8 @@ import { useProjects } from '@/features/projects/hooks/useProjects';
 import { ProjectCard } from '@/features/projects/components/ProjectCard';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
+import { DocumentUpload } from '@/components/documents/DocumentUpload';
+import { DocumentsList } from '@/components/documents/DocumentsList';
 import { CompanyFormData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -66,6 +68,7 @@ export default function CompanyDetailPage() {
   const { role } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   const { data: company, isLoading } = useCompany(id!);
   const updateCompany = useUpdateCompany();
@@ -523,19 +526,15 @@ export default function CompanyDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Documenten (0)
+                Documenten
               </CardTitle>
-              <Button size="sm" disabled>
+              <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
                 Upload
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-muted-foreground">
-                <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="font-medium mb-2">Nog geen documenten geüpload</p>
-                <p className="text-sm">Upload contracten, offertes en andere bestanden</p>
-              </div>
+              <DocumentsList companyId={id} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -599,6 +598,13 @@ export default function CompanyDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Document Upload Dialog */}
+      <DocumentUpload
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        companyId={id}
+      />
     </div>
   );
 }

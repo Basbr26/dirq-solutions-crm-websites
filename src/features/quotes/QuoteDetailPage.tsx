@@ -43,9 +43,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { QuoteForm } from './components/QuoteForm';
+import { QuotePDFDocument } from './components/QuotePDFDocument';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Quote, QuoteStatus } from '@/types/quotes';
+import { pdf } from '@react-pdf/renderer';
 
 const statusConfig: Record<QuoteStatus, { 
   label: string; 
@@ -141,9 +143,37 @@ export default function QuoteDetailPage() {
     });
   };
 
-  const exportToPDF = () => {
-    // TODO: Implement PDF export
-    toast.info('PDF export wordt binnenkort toegevoegd');
+  const exportToPDF = async () => {
+    if (!quote || !items) {
+      toast.error('Offerte data ontbreekt');
+      return;
+    }
+
+    try {
+      toast.loading('PDF genereren...');
+      
+      // Generate PDF blob
+      const blob = await pdf(
+        <QuotePDFDocument quote={quote} items={items} />
+      ).toBlob();
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `offerte-${quote.quote_number}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.dismiss();
+      toast.success('PDF gedownload');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      toast.dismiss();
+      toast.error('PDF export mislukt');
+    }
   };
 
   const formatCurrency = useMemo(

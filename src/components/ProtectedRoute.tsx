@@ -23,18 +23,18 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to appropriate dashboard based on role
+    // Redirect to appropriate dashboard based on CRM role
     switch (role) {
-      case 'super_admin':
-        return <Navigate to="/hr/dashboard" replace />;
-      case 'hr':
-        return <Navigate to="/hr/dashboard" replace />;
-      case 'manager':
-        return <Navigate to="/dashboard/manager" replace />;
-      case 'medewerker':
-        return <Navigate to="/employee" replace />;
+      case 'ADMIN':
+        return <Navigate to="/dashboard" replace />;
+      case 'SALES':
+        return <Navigate to="/dashboard" replace />;
+      case 'MANAGER':
+        return <Navigate to="/dashboard" replace />;
+      case 'SUPPORT':
+        return <Navigate to="/dashboard" replace />;
       default:
-        return <Navigate to="/" replace />;
+        return <Navigate to="/dashboard" replace />;
     }
   }
 
