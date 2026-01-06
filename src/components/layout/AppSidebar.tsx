@@ -146,7 +146,7 @@ export function AppSidebar() {
     >
       {/* Header */}
       <div className={cn(
-        'flex items-center h-16 border-b border-border px-4',
+        'flex items-center h-16 border-b border-border px-4 bg-card',
         collapsed ? 'justify-center' : 'justify-between'
       )}>
         {!collapsed && (
