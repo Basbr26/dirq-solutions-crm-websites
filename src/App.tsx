@@ -19,8 +19,10 @@ const ContactsPage = lazy(() => import("./features/contacts/ContactsPage"));
 const ContactDetailPage = lazy(() => import("./features/contacts/ContactDetailPage"));
 const QuotesPage = lazy(() => import("./features/quotes/QuotesPage"));
 const QuoteDetailPage = lazy(() => import("./features/quotes/QuoteDetailPage"));
+const ProjectsPage = lazy(() => import("./features/projects/ProjectsPage"));
 const PipelinePage = lazy(() => import("./features/projects/PipelinePage"));
 const ProjectDetailPage = lazy(() => import("./features/projects/ProjectDetailPage"));
+const InteractionsPage = lazy(() => import("./features/interactions/InteractionsPage"));
 
 // Dashboards
 import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
@@ -239,12 +241,38 @@ function AnimatedRoutes() {
         />
 
         <Route 
+          path="/projects" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <ProjectsPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
           path="/projects/:id" 
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'super_admin']}>
                 <Suspense fallback={<LoadingScreen />}>
                   <ProjectDetailPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+
+        <Route 
+          path="/interactions" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin']}>
+                <Suspense fallback={<LoadingScreen />}>
+                  <InteractionsPage />
                 </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
