@@ -12,8 +12,12 @@ interface UseContactsParams {
   isDecisionMaker?: boolean;
 }
 
-export function useContacts(params: UseContactsParams) {
+export function useContacts(params: UseContactsParams = {}) {
   const { role } = useAuth();
+
+  // Set defaults for pagination
+  const page = params.page || 1;
+  const pageSize = params.pageSize || 50;
 
   return useQuery({
     queryKey: ['contacts', params, role],
@@ -51,8 +55,8 @@ export function useContacts(params: UseContactsParams) {
       }
 
       // Apply pagination
-      const from = (params.page - 1) * params.pageSize;
-      const to = from + params.pageSize - 1;
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
       query = query.range(from, to);
 
       // Sort by last name
@@ -65,9 +69,9 @@ export function useContacts(params: UseContactsParams) {
       return {
         contacts: data as Contact[],
         count: count || 0,
-        page: params.page,
-        pageSize: params.pageSize,
-        hasMore: (count || 0) > params.page * params.pageSize
+        page: page,
+        pageSize: pageSize,
+        hasMore: (count || 0) > page * pageSize
       };
     },
   });
