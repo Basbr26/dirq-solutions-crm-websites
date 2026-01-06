@@ -4,7 +4,7 @@
  */
 
 // Cache management
-const CACHE_NAME = 'dirq-cache-v1';
+const CACHE_NAME = 'dirq-cache-v2'; // Updated to force cache refresh
 const urlsToCache = [
   '/',
   '/index.html',
