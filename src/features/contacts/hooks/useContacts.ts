@@ -30,8 +30,30 @@ export function useContacts(params: UseContactsParams) {
       if (role === 'SALES') {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          query = query.or(`owner_id.eq.${user.id},company_id.in.(select id from companies where owner_id = ${user.id})`);
+          if (params.companyId) {
+            // When viewing a specific company, check if user owns the company
+            const { data: companyData } = await supabase
+              .from('companies')
+              .select('owner_id')
+              .eq('id', params.companyId)
+              .single();
+            
+            // If user owns the company, show all contacts for that company
+            // Otherwise, only show contacts owned by the user
+            if (companyData?.owner_id === user.id) {
+              query = query.eq('company_id', params.companyId);
+            } else {
+              query = query.eq('company_id', params.companyId).eq('owner_id', user.id);
+            }
+          } else {
+            // General contact list: show own contacts + contacts from owned companies
+            const companiesSubquery = `(select id from companies where owner_id = '${user.id}')`;
+            query = query.or(`owner_id.eq.${user.id},company_id.in.${companiesSubquery}`);
+          }
         }
+      } else if (params.companyId) {
+        // For ADMIN/MANAGER, directly apply company filter if provided
+        query = query.eq('company_id', params.companyId);
       }
       // ADMIN and MANAGER see all contacts
 
@@ -40,9 +62,10 @@ export function useContacts(params: UseContactsParams) {
         query = query.or(`first_name.ilike.%${params.search}%,last_name.ilike.%${params.search}%,email.ilike.%${params.search}%,position.ilike.%${params.search}%`);
       }
 
-      if (params.companyId) {
-        query = query.eq('company_id', params.companyId);
-      }
+      // Remove duplicate companyId filter since it's handled above
+      // if (params.companyId) {
+      //   query = query.eq('company_id', params.companyId);
+      // }
 
       if (params.isPrimary !== undefined) {
         query = query.eq('is_primary', params.isPrimary);
