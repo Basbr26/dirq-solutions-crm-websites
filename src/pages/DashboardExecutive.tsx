@@ -206,7 +206,7 @@ export default function DashboardExecutive() {
       // Load all projects for revenue calculation
       const { data: projects, error: projectsError } = await supabase
         .from('projects')
-        .select('id, value, stage, probability, created_at');
+        .select('id, value, stage, probability, created_at, source');
 
       if (projectsError) throw projectsError;
 
