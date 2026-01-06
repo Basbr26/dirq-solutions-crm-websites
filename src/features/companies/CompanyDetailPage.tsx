@@ -11,6 +11,7 @@ import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { CompanyFormData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -124,29 +125,33 @@ export default function CompanyDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 space-y-6 p-4 md:p-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <AppLayout title="Bedrijf" subtitle="Details laden...">
+        <div className="space-y-6">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </AppLayout>
     );
   }
 
   if (!company) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Bedrijf niet gevonden</h3>
-            <p className="text-muted-foreground mb-4">
-              Dit bedrijf bestaat niet of je hebt geen toegang.
-            </p>
-            <Link to="/companies">
-              <Button>Terug naar overzicht</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <AppLayout title="Bedrijf niet gevonden" subtitle="">
+        <div className="flex items-center justify-center py-12">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-6 text-center">
+              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Bedrijf niet gevonden</h3>
+              <p className="text-muted-foreground mb-4">
+                Dit bedrijf bestaat niet of je hebt geen toegang.
+              </p>
+              <Link to="/companies">
+                <Button>Terug naar overzicht</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
     );
   }
 
@@ -154,7 +159,27 @@ export default function CompanyDetailPage() {
   const priorityStyle = priorityConfig[company.priority];
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
+    <AppLayout
+      title={company.name}
+      subtitle={company.industry?.name || 'Bedrijf'}
+      actions={
+        <div className="flex gap-2">
+          {canEdit && (
+            <Button onClick={() => setEditDialogOpen(true)} variant="outline">
+              <Edit className="h-4 w-4 mr-2" />
+              Bewerken
+            </Button>
+          )}
+          {canDelete && (
+            <Button onClick={() => setDeleteDialogOpen(true)} variant="destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Verwijderen
+            </Button>
+          )}
+        </div>
+      }
+    >
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4">
         <Link to="/companies">
@@ -164,50 +189,25 @@ export default function CompanyDetailPage() {
           </Button>
         </Link>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-start gap-4">
-            <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <h1 className="text-3xl font-bold">{company.name}</h1>
-                <Badge className={statusStyle.color} variant="outline">
-                  {statusStyle.label}
-                </Badge>
-                <Badge className={priorityStyle.color} variant="outline">
-                  {priorityStyle.label}
-                </Badge>
+        <div className="flex items-start gap-4">
+          <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Building2 className="h-8 w-8 text-primary" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap mb-2">
+              <Badge className={statusStyle.color} variant="outline">
+                {statusStyle.label}
+              </Badge>
+              <Badge className={priorityStyle.color} variant="outline">
+                {priorityStyle.label}
+              </Badge>
               </div>
               {company.industry && (
                 <p className="text-muted-foreground">{company.industry.name}</p>
               )}
             </div>
           </div>
-
-          <div className="flex gap-2">
-            {canEdit && (
-              <Button
-                onClick={() => setEditDialogOpen(true)}
-                disabled={updateCompany.isPending || deleteCompany.isPending}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Bewerken
-              </Button>
-            )}
-            {canDelete && (
-              <Button
-                variant="destructive"
-                onClick={() => setDeleteDialogOpen(true)}
-                disabled={updateCompany.isPending || deleteCompany.isPending}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Verwijderen
-              </Button>
-            )}
-          </div>
         </div>
-      </div>
 
       {/* Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -566,6 +566,7 @@ export default function CompanyDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
 
       {/* Edit Dialog */}
       <CompanyForm
@@ -605,6 +606,6 @@ export default function CompanyDetailPage() {
         onOpenChange={setUploadDialogOpen}
         companyId={id}
       />
-    </div>
+    </AppLayout>
   );
 }

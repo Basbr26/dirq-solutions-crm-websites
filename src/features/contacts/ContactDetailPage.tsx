@@ -10,6 +10,7 @@ import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionCard } from '@/features/interactions/components/InteractionCard';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { ContactFormData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -122,24 +123,29 @@ export default function ContactDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-12 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <AppLayout title="Contact" subtitle="Details laden...">
+        <div className="space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </AppLayout>
     );
   }
 
   if (!contact) {
     return (
-      <div className="container mx-auto p-6">
+      <AppLayout title="Contact niet gevonden" subtitle="">
         <Card>
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
+          <CardContent className="pt-6 text-center">
+            <p className="text-muted-foreground">
               Contact niet gevonden
             </p>
+            <Link to="/contacts" className="mt-4 inline-block">
+              <Button>Terug naar overzicht</Button>
+            </Link>
           </CardContent>
         </Card>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -147,70 +153,60 @@ export default function ContactDetailPage() {
   const fullName = `${contact.first_name} ${contact.last_name}`;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/contacts")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="text-2xl">{initials}</AvatarFallback>
-            </Avatar>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-3xl font-bold">{fullName}</h1>
-                {contact.is_primary && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-blue-500/10 text-blue-500 border-blue-500/20"
-                  >
-                    <Star className="h-3 w-3 mr-1" />
-                    Primair
-                  </Badge>
-                )}
-                {contact.is_decision_maker && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-purple-500/10 text-purple-500 border-purple-500/20"
-                  >
-                    <Crown className="h-3 w-3 mr-1" />
-                    Beslisser
-                  </Badge>
-                )}
-              </div>
-              {contact.position && (
-                <p className="text-muted-foreground">{contact.position}</p>
-              )}
-            </div>
-          </div>
-        </div>
+    <AppLayout
+      title={fullName}
+      subtitle={contact.position || 'Contact'}
+      actions={
         <div className="flex gap-2">
           {canEdit && (
-            <Button
-              onClick={() => setEditDialogOpen(true)}
-              disabled={updateContact.isPending || deleteContact.isPending}
-            >
-              <Edit className="mr-2 h-4 w-4" />
+            <Button onClick={() => setEditDialogOpen(true)} variant="outline">
+              <Edit className="h-4 w-4 mr-2" />
               Bewerken
             </Button>
           )}
           {canDelete && (
-            <Button
-              variant="destructive"
-              onClick={() => setDeleteDialogOpen(true)}
-              disabled={updateContact.isPending || deleteContact.isPending}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
+            <Button onClick={() => setDeleteDialogOpen(true)} variant="destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
               Verwijderen
             </Button>
           )}
         </div>
+      }
+    >
+      <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link to="/contacts">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Terug naar overzicht
+          </Button>
+        </Link>
+      </div>
+
+      <div className="flex items-center gap-4">
+          <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-semibold text-2xl">
+            {initials}
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              {contact.is_primary && (
+                <Badge className="bg-blue-500">
+                  <Star className="h-3 w-3 mr-1" />
+                  Primair Contact
+                </Badge>
+              )}
+              {contact.is_decision_maker && (
+                <Badge className="bg-purple-500">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Beslisser
+                </Badge>
+              )}
+            </div>
+            {contact.position && (
+              <p className="text-muted-foreground mt-1">{contact.position}</p>
+            )}
+          </div>
       </div>
 
       {/* Content */}
@@ -520,6 +516,7 @@ export default function ContactDetailPage() {
         onOpenChange={setUploadDialogOpen}
         contactId={id}
       />
-    </div>
+      </div>
+    </AppLayout>
   );
 }
