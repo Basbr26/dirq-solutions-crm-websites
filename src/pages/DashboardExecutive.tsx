@@ -34,7 +34,7 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { format, subMonths, startOfMonth } from 'date-fns';
+import { format, subMonths, startOfMonth, formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 interface KPICardProps {
@@ -119,6 +119,13 @@ export default function DashboardExecutive() {
   const [activeDeals, setActiveDeals] = useState(0);
   const [avgDealSize, setAvgDealSize] = useState(0);
 
+  // Additional CRM Stats
+  const [activeCompanies, setActiveCompanies] = useState(0);
+  const [newContacts, setNewContacts] = useState(0);
+  const [quotesSent, setQuotesSent] = useState(0);
+  const [topDeals, setTopDeals] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+
   // Chart Data
   const [revenueTrendData, setRevenueTrendData] = useState<RevenueTrendPoint[]>([]);
   const [pipelineData, setPipelineData] = useState<PipelineDataPoint[]>([]);
@@ -190,11 +197,120 @@ export default function DashboardExecutive() {
       const leadSources = generateSourceData(projects || []);
       setSourceData(leadSources);
 
+      // Load additional CRM stats
+      await loadCRMStats();
+
     } catch (error) {
       console.error('Error loading executive data:', error);
       toast.error('Fout bij laden van dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCRMStats = async () => {
+    try {
+      // Active companies (status = 'active')
+      const { count: companiesCount } = await supabase
+        .from('companies')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      setActiveCompanies(companiesCount || 0);
+
+      // New contacts this month
+      const firstDayOfMonth = new Date();
+      firstDayOfMonth.setDate(1);
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+      
+      const { count: contactsCount } = await supabase
+        .from('contacts')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', firstDayOfMonth.toISOString());
+      setNewContacts(contactsCount || 0);
+
+      // Quotes sent this month
+      const { count: quotesCount } = await supabase
+        .from('quotes')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['sent', 'accepted', 'negotiation'])
+        .gte('created_at', firstDayOfMonth.toISOString());
+      setQuotesSent(quotesCount || 0);
+
+      // Top 3 deals by value (excluding lost/maintenance)
+      const { data: topDealsData } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          value,
+          stage,
+          company:companies(name)
+        `)
+        .not('stage', 'in', '(lost,maintenance)')
+        .order('value', { ascending: false })
+        .limit(3);
+      setTopDeals(topDealsData || []);
+
+      // Recent activity: latest created companies, contacts, and projects
+      const recentActivities = [];
+      
+      // Latest company
+      const { data: latestCompany } = await supabase
+        .from('companies')
+        .select('name, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (latestCompany) {
+        recentActivities.push({
+          type: 'company',
+          text: `Bedrijf toegevoegd: ${latestCompany.name}`,
+          timestamp: latestCompany.created_at,
+        });
+      }
+
+      // Latest quote
+      const { data: latestQuote } = await supabase
+        .from('quotes')
+        .select('id, created_at, company:companies(name)')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (latestQuote) {
+        recentActivities.push({
+          type: 'quote',
+          text: `Offerte verstuurd naar ${latestQuote.company?.name || 'onbekend'}`,
+          timestamp: latestQuote.created_at,
+        });
+      }
+
+      // Latest won project
+      const { data: latestWon } = await supabase
+        .from('projects')
+        .select('title, created_at, company:companies(name)')
+        .eq('stage', 'live')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (latestWon) {
+        recentActivities.push({
+          type: 'won',
+          text: `Deal gewonnen: ${latestWon.company?.name || latestWon.title}`,
+          timestamp: latestWon.created_at,
+        });
+      }
+
+      // Sort by timestamp and take top 3
+      recentActivities.sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setRecentActivity(recentActivities.slice(0, 3));
+
+    } catch (error) {
+      console.error('Error loading CRM stats:', error);
     }
   };
 
@@ -261,160 +377,6 @@ export default function DashboardExecutive() {
     }));
   };
 
-  const generateVerzuimTrendData = () => {
-    const data = [];
-    const now = new Date();
-
-    // Historical data (last 12 months)
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now);
-      date.setMonth(date.getMonth() - i);
-      const month = date.toLocaleDateString('nl-NL', { month: 'short' });
-
-      data.push({
-        month,
-        verzuim: 3 + Math.random() * 3, // Random between 3-6%
-        isForecast: false,
-      });
-    }
-
-    // Forecast (next 3 months)
-    const lastValue = data[data.length - 1].verzuim;
-    for (let i = 1; i <= 3; i++) {
-      const date = new Date(now);
-      date.setMonth(date.getMonth() + i);
-      const month = date.toLocaleDateString('nl-NL', { month: 'short' });
-
-      data.push({
-        month,
-        verzuim: lastValue + (Math.random() - 0.5) * 0.5,
-        isForecast: true,
-      });
-    }
-
-    return data;
-  };
-
-  const generatePredictions = async (employees: unknown[], activeCases: unknown[]) => {
-    // Generate mock predictions for demo
-    const samplePredictions: VerzuimPrediction[] = [
-      {
-        employeeId: '1',
-        employeeName: 'Jan Jansen',
-        riskScore: 85,
-        riskLevel: 'high',
-        confidence: 87,
-        factors: [
-          { name: 'Hoge Bradford Factor', impact: 0.8, description: 'Bradford Factor van 450' },
-          { name: 'Frequentie', impact: 0.6, description: '5 verzuimgevallen' },
-        ],
-        recommendations: [
-          'Plan preventief verzuimgesprek binnen 2 weken',
-          'Check werkdruk en arbeidsomstandigheden',
-        ],
-      },
-      {
-        employeeId: '2',
-        employeeName: 'Maria de Vries',
-        riskScore: 62,
-        riskLevel: 'medium',
-        confidence: 75,
-        factors: [
-          { name: 'Seizoen', impact: 0.3, description: 'Wintermaanden hebben hoger verzuim' },
-        ],
-        recommendations: ['Monitor verzuimpatroon komende maand'],
-      },
-      {
-        employeeId: '3',
-        employeeName: 'Piet Bakker',
-        riskScore: 78,
-        riskLevel: 'high',
-        confidence: 82,
-        factors: [
-          { name: 'Frequentie', impact: 0.7, description: '6 verzuimgevallen' },
-          { name: 'Leeftijd', impact: 0.4, description: 'Leeftijdsgroep met verhoogd risico' },
-        ],
-        recommendations: [
-          'Plan preventief verzuimgesprek binnen 2 weken',
-          'Analyseer oorzaken van frequent kort verzuim',
-        ],
-      },
-    ];
-
-    setPredictions(samplePredictions);
-  };
-
-  const generateAlerts = (verzuimPct: number, activeCount: number, avgCost: number) => {
-    const newAlerts: SmartAlert[] = [];
-
-    // Budget warning
-    if (avgCost > 5000) {
-      newAlerts.push({
-        id: '1',
-        type: 'budget',
-        severity: 'warning',
-        title: 'Verzuimkosten boven gemiddelde',
-        description: 'Gemiddelde kosten per verzuimgeval zijn hoger dan het benchmark',
-        metric: `€${avgCost}`,
-        threshold: '€4.500',
-        actionLabel: 'Bekijk kostenanalyse',
-        actionUrl: '/executive/costs',
-      });
-    }
-
-    // Critical deadlines
-    newAlerts.push({
-      id: '2',
-      type: 'deadline',
-      severity: 'critical',
-      title: 'Poortwachter deadline nadert',
-      description: '2 medewerkers bereiken de 42-weken grens binnen 5 dagen',
-      metric: '5 dagen',
-      actionLabel: 'Bekijk dossiers',
-      actionUrl: '/cases',
-    });
-
-    // Capacity risk
-    if (verzuimPct > 5) {
-      newAlerts.push({
-        id: '3',
-        type: 'capacity',
-        severity: activeCount > 10 ? 'critical' : 'warning',
-        title: 'Verhoogd verzuimpercentage',
-        description: 'Team Productie heeft >15% verzuim - capaciteitsprobleem',
-        metric: `${verzuimPct}%`,
-        threshold: '5%',
-        actionLabel: 'Team analyse',
-        actionUrl: '/teams/productie',
-      });
-    }
-
-    // Compliance
-    newAlerts.push({
-      id: '4',
-      type: 'compliance',
-      severity: 'warning',
-      title: 'Ontbrekende Plan van Aanpak documenten',
-      description: '3 dossiers missen verplichte Plan van Aanpak na 8 weken',
-      metric: '3 dossiers',
-      actionLabel: 'Bekijk dossiers',
-      actionUrl: '/compliance',
-    });
-
-    setAlerts(newAlerts);
-  };
-
-  const handleExportReport = () => {
-    toast.success('Rapport wordt gegenereerd...');
-    // Implementation for PDF export
-  };
-
-  const handleAlertAction = (alert: SmartAlert) => {
-    if (alert.actionUrl) {
-      navigate(alert.actionUrl);
-    }
-  };
-
 
   if (loading) {
     return (
@@ -471,10 +433,12 @@ export default function DashboardExecutive() {
             trend={-2.1}
             icon={TrendingUp}
             subtitle="Won vs totaal"
+            href="/pipeline"
           />
           <KPICard
             title="Actieve Deals"
             value={activeDeals}
+            trend={4.2}
             icon={Briefcase}
             subtitle="In pipeline"
             href="/pipeline"
@@ -485,6 +449,7 @@ export default function DashboardExecutive() {
             trend={5.7}
             icon={Building2}
             subtitle="Per project"
+            href="/pipeline"
           />
         </div>
 
@@ -620,19 +585,19 @@ export default function DashboardExecutive() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Actieve Bedrijven</span>
                   <Badge variant="secondary" className="text-lg">
-                    {Math.floor(Math.random() * 50) + 20}
+                    {activeCompanies}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Nieuwe Contacten (deze maand)</span>
                   <Badge variant="secondary" className="text-lg">
-                    {Math.floor(Math.random() * 20) + 5}
+                    {newContacts}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Offertes Verstuurd</span>
                   <Badge variant="secondary" className="text-lg">
-                    {Math.floor(Math.random() * 15) + 5}
+                    {quotesSent}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
@@ -651,25 +616,27 @@ export default function DashboardExecutive() {
                 <CardDescription>Hoogste deal waardes</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {[
-                    { company: 'TechCorp B.V.', value: 45000, stage: 'negotiation' },
-                    { company: 'MediaGroup NL', value: 38000, stage: 'quote_sent' },
-                    { company: 'RetailChain', value: 32000, stage: 'in_development' },
-                  ].map((deal, idx) => (
-                    <div key={idx} className="flex justify-between items-start border-b pb-2 last:border-0">
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{deal.company}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {deal.stage.replace('_', ' ')}
-                        </p>
+                {topDeals.length > 0 ? (
+                  <div className="space-y-3">
+                    {topDeals.map((deal) => (
+                      <div key={deal.id} className="flex justify-between items-start border-b pb-2 last:border-0">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{deal.company?.name || deal.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {deal.stage.replace('_', ' ')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-sm">{formatCurrency(deal.value)}</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-sm">{formatCurrency(deal.value)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Geen actieve deals
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -679,29 +646,32 @@ export default function DashboardExecutive() {
                 <CardTitle>Recente Activiteit</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Nieuwe offerte verstuurd</p>
-                      <p className="text-xs text-muted-foreground">2 uur geleden</p>
-                    </div>
+                {recentActivity.length > 0 ? (
+                  <div className="space-y-3 text-sm">
+                    {recentActivity.map((activity, idx) => {
+                      const Icon = activity.type === 'quote' ? FileText : 
+                                   activity.type === 'company' ? Building2 : Target;
+                      const timeAgo = formatDistanceToNow(new Date(activity.timestamp), { 
+                        addSuffix: true, 
+                        locale: nl 
+                      });
+                      
+                      return (
+                        <div key={idx} className="flex gap-2">
+                          <Icon className="h-4 w-4 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="font-medium">{activity.text}</p>
+                            <p className="text-xs text-muted-foreground">{timeAgo}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="flex gap-2">
-                    <Building2 className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Bedrijf toegevoegd</p>
-                      <p className="text-xs text-muted-foreground">5 uur geleden</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Target className="h-4 w-4 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Deal gewonnen</p>
-                      <p className="text-xs text-muted-foreground">1 dag geleden</p>
-                    </div>
-                  </div>
-                </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Geen recente activiteit
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

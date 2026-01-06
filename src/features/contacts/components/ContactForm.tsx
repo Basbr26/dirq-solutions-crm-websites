@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,26 @@ export function ContactForm({
       notes: contact?.notes || "",
     },
   });
+
+  // Reset form when contact changes
+  useEffect(() => {
+    if (contact) {
+      form.reset({
+        first_name: contact.first_name || "",
+        last_name: contact.last_name || "",
+        email: contact.email || "",
+        phone: contact.phone || "",
+        mobile: contact.mobile || "",
+        position: contact.position || "",
+        department: contact.department || "",
+        linkedin_url: contact.linkedin_url || "",
+        company_id: contact.company_id || undefined,
+        is_primary: contact.is_primary || false,
+        is_decision_maker: contact.is_decision_maker || false,
+        notes: contact.notes || "",
+      });
+    }
+  }, [contact, form]);
 
   return (
     <Form {...form}>
@@ -215,7 +236,7 @@ export function ContactForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bedrijf</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecteer een bedrijf" />

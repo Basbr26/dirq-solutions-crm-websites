@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useContacts } from "./hooks/useContacts";
 import { useContactMutations } from "./hooks/useContactMutations";
 import { ContactCard } from "./components/ContactCard";
@@ -37,6 +38,7 @@ import {
 import { ContactCreateData } from "@/types/crm";
 
 export function ContactsPage() {
+  const [searchParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filterCompanyId, setFilterCompanyId] = useState<string | undefined>();
@@ -46,6 +48,16 @@ export function ContactsPage() {
   >();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [preselectedCompanyId, setPreselectedCompanyId] = useState<string | undefined>();
+
+  // Check for company_id in URL parameters
+  useEffect(() => {
+    const companyId = searchParams.get('company_id');
+    if (companyId) {
+      setPreselectedCompanyId(companyId);
+      setShowCreateDialog(true);
+    }
+  }, [searchParams]);
 
   const pageSize = 20;
   
@@ -359,8 +371,12 @@ export function ContactsPage() {
             </DialogDescription>
           </DialogHeader>
           <ContactForm
+            contact={preselectedCompanyId ? { company_id: preselectedCompanyId } as any : undefined}
             onSubmit={handleCreateContact}
-            onCancel={() => setShowCreateDialog(false)}
+            onCancel={() => {
+              setShowCreateDialog(false);
+              setPreselectedCompanyId(undefined);
+            }}
             isSubmitting={createContact.isPending}
           />
         </DialogContent>
