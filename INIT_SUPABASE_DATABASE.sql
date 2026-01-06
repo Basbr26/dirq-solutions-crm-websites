@@ -68,32 +68,30 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if they exist
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
-DROP POLICY IF EXISTS "HR can view all profiles" ON profiles;
-DROP POLICY IF EXISTS "HR can update all profiles" ON profiles;
-DROP POLICY IF EXISTS "Managers can view team profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Admins can update all profiles" ON profiles;
 
--- Create RLS policies
+-- Create RLS policies (FIXED - no infinite recursion)
 CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "HR can view all profiles" ON profiles
+-- Use direct role check from auth.uid() lookup to avoid recursion
+CREATE POLICY "Admins can view all profiles" ON profiles
   FOR SELECT USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('hr', 'super_admin'))
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'hr', 'MANAGER')
   );
 
-CREATE POLICY "HR can update all profiles" ON profiles
+CREATE POLICY "Admins can update all profiles" ON profiles
   FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('hr', 'super_admin'))
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN')
   );
 
-CREATE POLICY "Managers can view team profiles" ON profiles
-  FOR SELECT USING (
-    manager_id = auth.uid() OR
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('hr', 'manager', 'super_admin'))
-  );
+-- INSERT policy for auto-creation
+CREATE POLICY "Service role can insert profiles" ON profiles
+  FOR INSERT WITH CHECK (true);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_profiles_role ON profiles(role);
@@ -287,6 +285,248 @@ CREATE TRIGGER update_interactions_updated_at
   BEFORE UPDATE ON interactions
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- PROJECTS TABLE (Website Development Projects)
+CREATE TABLE IF NOT EXISTS projects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  project_type TEXT CHECK (project_type IN ('landing_page', 'corporate_website', 'ecommerce', 'web_app', 'blog', 'portfolio', 'custom')),
+  website_url TEXT,
+  number_of_pages INTEGER,
+  features TEXT[],
+  hosting_included BOOLEAN DEFAULT false,
+  maintenance_contract BOOLEAN DEFAULT false,
+  launch_date DATE,
+  stage TEXT NOT NULL DEFAULT 'lead' CHECK (stage IN ('lead', 'quote_requested', 'quote_sent', 'negotiation', 'quote_signed', 'in_development', 'review', 'live', 'maintenance', 'lost')),
+  value DECIMAL(15,2) NOT NULL DEFAULT 0,
+  probability INTEGER DEFAULT 0 CHECK (probability BETWEEN 0 AND 100),
+  expected_close_date DATE,
+  owtep 5: RLS Policies for New Tables
+-- ============================================================
+
+-- PROJECTS RLS
+ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view projects" ON projects
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create projects" ON projects
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update own projects" ON projects
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- QUOTES RLS
+ALTER TABLE quotes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view quotes" ON quotes
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create quotes" ON quotes
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update own quotes" ON quotes
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- QUOTE LINE ITEMS RLS
+ALTER TABLE quote_line_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view line items" ON quote_line_items
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM quotes
+      WHERE quotes.id = quote_line_items.quote_id
+      AND (quotes.owner_id = auth.uid() OR 
+           (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER'))
+    )
+  );
+
+CREATE POLICY "Users can manage line items" ON quote_line_items
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM quotes
+      WHERE quotes.id = quote_line_items.quote_id
+      AND (quotes.owner_id = auth.uid() OR 
+           (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER'))
+    )
+  );
+
+-- INTERACTIONS RLS
+ALTER TABLE interactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view interactions" ON interactions
+  FOR SELECT USING (
+    user_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create interactions" ON interactions
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER', 'SUPPORT')
+  );
+
+CREATE POLICY "Users can update own interactions" ON interactions
+  FOR UPDATE USING (
+    user_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- COMPANIES RLS
+ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view companies" ON companies
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER', 'SUPPORT')
+  );
+
+CREATE POLICY "Users can create companies" ON companies
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update companies" ON companies
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- CONTACTS RLS
+ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view contacts" ON contacts
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER', 'SUPPORT')
+  );
+
+CREATE POLICY "Users can create contacts" ON contacts
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update contacts" ON contacts
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- LEADS RLS
+ALTER TABLE leads ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view leads" ON leads
+  FOR SELECT USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+CREATE POLICY "Users can create leads" ON leads
+  FOR INSERT WITH CHECK (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
+  );
+
+CREATE POLICY "Users can update own leads" ON leads
+  FOR UPDATE USING (
+    owner_id = auth.uid() OR
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN', 'MANAGER')
+  );
+
+-- INDUSTRIES (public read)
+ALTER TABLE industries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view industries" ON industries
+  FOR SELECT USING (true);
+
+CREATE POLICY "Admins can manage industries" ON industries
+  FOR ALL USING (
+    (SELECT role FROM profiles WHERE id = auth.uid() LIMIT 1) IN ('super_admin', 'ADMIN')
+  );
+
+-- ============================================================
+-- SUCCESS! Database initialized.
+-- Next steps:
+-- 1. Run this ENTIRE script in Supabase SQL Editor
+-- 2. Create your first user via Supabase Authentication
+-- 3. Update user role: UPDATE profiles SET role = 'super_admin' WHERE email = 'your@email.com';
+-- 4. Refresh your CRM applicationEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_projects_company_id ON projects(company_id);
+CREATE INDEX idx_projects_owner_id ON projects(owner_id);
+CREATE INDEX idx_projects_stage ON projects(stage);
+
+CREATE TRIGGER update_projects_updated_at
+  BEFORE UPDATE ON projects
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- QUOTES TABLE (Project Quotes/Proposals)
+CREATE TABLE IF NOT EXISTS quotes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_number TEXT UNIQUE NOT NULL,
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  contact_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
+  project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'accepted', 'declined', 'expired')),
+  valid_until DATE,
+  subtotal DECIMAL(15,2) NOT NULL DEFAULT 0,
+  tax_rate DECIMAL(5,2) DEFAULT 21.00,
+  tax_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  total_amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
+  notes TEXT,
+  terms_and_conditions TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  sent_at TIMESTAMPTZ,
+  accepted_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_quotes_company_id ON quotes(company_id);
+CREATE INDEX idx_quotes_owner_id ON quotes(owner_id);
+CREATE INDEX idx_quotes_status ON quotes(status);
+CREATE INDEX idx_quotes_quote_number ON quotes(quote_number);
+
+CREATE TRIGGER update_quotes_updated_at
+  BEFORE UPDATE ON quotes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- QUOTE LINE ITEMS TABLE
+CREATE TABLE IF NOT EXISTS quote_line_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  quote_id UUID NOT NULL REFERENCES quotes(id) ON DELETE CASCADE,
+  description TEXT NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 1,
+  unit_price DECIMAL(15,2) NOT NULL,
+  total_price DECIMAL(15,2) NOT NULL,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_quote_line_items_quote_id ON quote_line_items(quote_id);
 
 -- ============================================================
 -- Step 4: Seed Initial Data
