@@ -59,6 +59,7 @@ interface CRMDocumentGeneratorProps {
   companyId?: string;
   contactId?: string;
   projectId?: string;
+  defaultType?: DocumentType;
   onGenerated?: (documentUrl: string) => void;
 }
 
@@ -99,12 +100,13 @@ export function CRMDocumentGenerator({
   companyId,
   contactId,
   projectId,
+  defaultType = 'contract',
   onGenerated,
 }: CRMDocumentGeneratorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [selectedType, setSelectedType] = useState<DocumentType>('contract');
+  const [selectedType, setSelectedType] = useState<DocumentType>(defaultType);
   const [generating, setGenerating] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});

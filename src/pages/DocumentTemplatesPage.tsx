@@ -180,7 +180,9 @@ export default function DocumentTemplatesPage() {
                       ))}
                     </ul>
                   </div>
-                  <CRMDocumentGenerator />
+                  <CRMDocumentGenerator 
+                    defaultType={template.id as DocumentType}
+                  />
                 </div>
               </CardContent>
             </Card>
