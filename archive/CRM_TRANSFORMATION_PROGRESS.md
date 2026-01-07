@@ -6,7 +6,146 @@
 
 ---
 
-## 📋 LAATSTE UPDATE - 7 Januari 2026 - SPRINT 1 AFGEROND ✅
+## 📋 LAATSTE UPDATE - 7 Januari 2026 18:30 - BUGFIXES & STABILITEIT ✅
+
+### 🐛 KRITIEKE BUGFIXES (7 Januari 2026 Avond)
+
+#### 1. Interactions RLS Policies Fixed ✅
+**Probleem:** 403 Forbidden errors bij aanmaken en ophalen van interactions
+**Migraties:**
+- `20260107_fix_interactions_rls.sql` - Aangepaste INSERT policy
+  - Verwijderd: Company ownership requirement
+  - Toegevoegd: Visibility check (users can insert if they can SEE the company)
+  - Policy: `WITH CHECK (user_id = auth.uid() AND (company_id IS NULL OR EXISTS (...)))`
+  
+- `20260107_fix_interactions_select_policy.sql` - Nieuwe SELECT policy
+  - Users kunnen eigen interactions zien
+  - Admins zien alles
+  - Anyone can see interactions for visible companies
+  - Fixes: 403 errors bij ophalen interaction history
+
+**Impact:** Users kunnen nu zonder errors interactions aanmaken en bekijken
+
+#### 2. Super Admin Role Recognition ✅
+**Probleem:** `super_admin` role werd niet herkend door database functies
+**Migratie:** `20260107_fix_is_admin_function.sql`
+- Updated `is_admin_or_manager()` functie
+- Was: `SELECT get_user_role() IN ('ADMIN', 'MANAGER')`
+- Nu: `SELECT get_user_role() IN ('ADMIN', 'MANAGER', 'super_admin')`
+
+**Impact:** Super admin heeft nu volledige admin rechten in RLS policies
+
+#### 3. Audit Log Trigger Fixed ✅
+**Probleem:** Audit trigger faalde met column/type errors bij interactions INSERT
+**Migratie:** `20260107_fix_audit_trigger_func.sql`
+
+**Fixes:**
+1. Column mapping:
+   - `table_name` → `subject_type`
+   - `record_id` → `subject_id`
+
+2. Enum casting:
+   - TG_OP 'INSERT' → 'CREATE'::audit_action
+   - Added CASE statement voor correcte mapping
+
+3. Missing columns:
+   - Added `gen_random_uuid()::text` voor id column
+   - Cast `auth.uid()` to text voor user_id
+
+**Impact:** Audit logging werkt nu correct zonder errors
+
+#### 4. Calendar Events Table Created ✅
+**Probleem:** 404 errors - table 'public.calendar_events' bestaat niet
+**Migratie:** `20260107_create_calendar_events.sql`
+
+**Tabel Schema:**
+- Core: id, user_id, title, description, location
+- Timing: start_time, end_time, all_day
+- Type: event_type (meeting/call/task/reminder/other), color
+- Relations: company_id, contact_id, project_id (nullable FKs)
+- Recurrence: is_recurring, recurrence_pattern, recurrence_end_date
+- Sync: google_event_id (unique, voor Google Calendar)
+- Reminders: reminder_minutes, reminder_sent
+
+**RLS Policies:** Full CRUD voor own events, admins kunnen alles zien/bewerken
+
+**Indexes:**
+- user_id, start_time, company_id, project_id, google_event_id
+
+#### 5. Calendar Integration - Scheduled Interactions ✅
+**Bestand:** [CalendarPage.tsx](src/pages/CalendarPage.tsx)
+
+**Wijzigingen:**
+- Extended query om scheduled interactions op te halen
+  - Meetings met `scheduled_at`
+  - Calls met `scheduled_at`
+  - Demos met `scheduled_at`
+  - Tasks met `due_date` (getoond als all-day events)
+
+**Color Coding:**
+- Calls: #3b82f6 (blauw)
+- Meetings: #10b981 (groen)
+- Demos: #06b6d4 (cyan)
+- Tasks: #f59e0b (oranje)
+
+**Impact:** Unified calendar view met alle geplande activiteiten uit interactions + calendar_events
+
+#### 6. Quotes 400 Bad Request Fixed ✅
+**Probleem:** Quotes page toonde 400 errors, pagina laadde traag
+**Root Cause:** Database kolom = `owner_id`, code gebruikte `created_by`
+
+**Gewijzigde Bestanden:**
+- [useQuotes.ts](src/features/quotes/hooks/useQuotes.ts)
+  - Foreign key: `profiles!quotes_created_by_fkey` → `profiles!quotes_owner_id_fkey`
+  - Filter: `created_by` → `owner_id`
+  
+- [useQuoteMutations.ts](src/features/quotes/hooks/useQuoteMutations.ts)
+  - Insert: `created_by: user.id` → `owner_id: user.id`
+  - Notification query: `created_by` → `owner_id`
+
+- [quotes.ts](src/types/quotes.ts)
+  - Interface: `created_by: string` → `owner_id: string`
+  - Filters: `created_by?: string` → `owner_id?: string`
+
+**Impact:** Quotes page laadt nu zonder errors, consistent met companies/contacts/projects naming
+
+#### 7. UI Improvements ✅
+**Bestanden:**
+- [CreateEventDialog.tsx](src/components/calendar/CreateEventDialog.tsx)
+  - Button tekst: "Nieuw Event" → "Nieuwe Activiteit"
+  - Dialog titel: "Nieuw Event" → "Nieuwe Activiteit"
+
+- [AddInteractionDialog.tsx](src/features/interactions/components/AddInteractionDialog.tsx)
+  - Added useEffect hook to pre-select interaction type
+  - Quick action buttons (📞 Gesprek, 📧 E-mail) werken nu correct
+
+- [InteractionTimeline.tsx](src/features/interactions/components/InteractionTimeline.tsx)
+  - Removed broken onClick handler (setEditingInteraction undefined)
+  - Cards zijn nu alleen actionable via dropdown menu
+
+**Impact:** Betere UX, geen TypeScript compilation errors
+
+### 📊 Database Migraties Overzicht (7 Jan 2026)
+```sql
+20260107_fix_interactions_rls.sql              -- INSERT policy fix
+20260107_fix_interactions_select_policy.sql    -- SELECT policy toegevoegd
+20260107_fix_is_admin_function.sql             -- super_admin herkenning
+20260107_fix_audit_trigger_func.sql            -- audit_log trigger fix
+20260107_create_calendar_events.sql            -- calendar_events tabel
+```
+
+### 🎯 Resultaat
+✅ Interactions systeem volledig werkend (geen 403 errors)  
+✅ Super admin role correct herkend in alle policies  
+✅ Audit logging werkt zonder errors  
+✅ Calendar heeft eigen events tabel + scheduled interactions  
+✅ Quotes page laadt zonder 400 errors  
+✅ UI consistency verbeterd (Nederlandse teksten)  
+✅ TypeScript compilation zonder errors  
+
+---
+
+## 📋 UPDATE - 7 Januari 2026 - SPRINT 1 AFGEROND ✅
 
 ### 🎯 SPRINT 1: PRODUCTION-READY FEATURES (15 uur)
 **Status:** ✅ COMPLEET - CRM is nu 100% productie-klaar!
