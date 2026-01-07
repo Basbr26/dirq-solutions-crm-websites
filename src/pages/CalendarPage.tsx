@@ -474,22 +474,26 @@ export default function CalendarPage() {
       )}
 
       {/* Event Detail - Side Panel on Desktop, Dialog on Mobile */}
-      {selectedEvent && isDesktop ? (
-        <SidePanel
-          open={!!selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-          title="Event Details"
-          width="lg"
-        >
-          <EventDetailContent event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-        </SidePanel>
-      ) : selectedEvent ? (
-        <EventDetailDialog
-          event={selectedEvent}
-          open={!!selectedEvent}
-          onOpenChange={(open) => !open && setSelectedEvent(null)}
-        />
-      ) : null}
+      {selectedEvent && (
+        isDesktop ? (
+          <SidePanel
+            open={!!selectedEvent}
+            onClose={() => setSelectedEvent(null)}
+            title="Event Details"
+            width="lg"
+          >
+            <EventDetailContent event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+          </SidePanel>
+        ) : (
+          <EventDetailDialog
+            event={selectedEvent}
+            open={!!selectedEvent}
+            onOpenChange={(open) => {
+              if (!open) setSelectedEvent(null);
+            }}
+          />
+        )
+      )}
     </AppLayout>
   );
 }
