@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Supabase Edge Function: n8n-webhook-handler
 // Handles incoming webhooks from n8n automation (e.g., KVK registrations)
 

@@ -53,7 +53,7 @@ import {
   type MeetingNotesData,
 } from '@/lib/crmDocumentTemplates';
 
-type DocumentType = 'contract' | 'invoice' | 'proposal' | 'nda' | 'meeting_notes';
+export type DocumentType = 'contract' | 'invoice' | 'proposal' | 'nda' | 'meeting_notes';
 
 interface CRMDocumentGeneratorProps {
   companyId?: string;
