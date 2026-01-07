@@ -309,7 +309,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
       </CardContent>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] flex flex-col">
+        <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>
               Gebruiker bewerken: {selectedUser?.voornaam} {selectedUser?.achternaam}

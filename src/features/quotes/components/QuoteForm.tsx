@@ -145,7 +145,7 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-4xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{quote ? 'Offerte Bewerken' : 'Nieuwe Offerte'}</DialogTitle>
           <DialogDescription>

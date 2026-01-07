@@ -156,7 +156,7 @@ export function DocumentSigningDialog({ document, onSigned }: DocumentSigningDia
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Document ondertekenen</DialogTitle>
             <DialogDescription>

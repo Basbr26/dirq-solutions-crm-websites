@@ -609,7 +609,7 @@ function WorkflowBuilderContent() {
 
       {/* Execution History Dialog */}
       <Dialog open={showExecutions} onOpenChange={setShowExecutions}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-4xl h-[95vh] sm:h-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Workflow Executions</DialogTitle>
             <DialogDescription>
@@ -697,7 +697,7 @@ function WorkflowBuilderContent() {
 
       {/* Templates Dialog */}
       <Dialog open={showTemplates} onOpenChange={setShowTemplates}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Workflow Templates</DialogTitle>
             <DialogDescription>

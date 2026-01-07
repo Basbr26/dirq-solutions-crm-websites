@@ -268,7 +268,7 @@ export default function WorkflowExecutions() {
 
       {/* Logs Dialog */}
       <Dialog open={showLogsDialog} onOpenChange={setShowLogsDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-4xl h-[95vh] sm:h-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Execution Logs</DialogTitle>
             <DialogDescription>
