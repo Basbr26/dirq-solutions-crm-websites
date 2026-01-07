@@ -20,14 +20,6 @@ export default function DocumentProcessing() {
       title="Document Beheer"
       subtitle="Upload offertes, contracten en projectdocumenten voor automatische analyse"
     >
-      <div className="p-4 md:p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Document Beheer</h1>
-        <p className="text-muted-foreground">
-          Upload offertes, contracten en projectdocumenten voor automatische analyse en categorisatie
-        </p>
-      </div>
-
       <Tabs defaultValue="upload" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upload" className="flex items-center gap-2">
@@ -94,7 +86,6 @@ export default function DocumentProcessing() {
             voor compliance.
           </p>
         </Card>
-      </div>
       </div>
     </AppLayout>
   );
