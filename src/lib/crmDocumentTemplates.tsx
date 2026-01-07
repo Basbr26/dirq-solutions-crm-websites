@@ -11,9 +11,13 @@ import {
   View,
   StyleSheet,
   Font,
+  Image,
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+
+// Import Dirq logo
+import dirqLogo from '@/assets/dirq-logo.png';
 
 // Shared styles for all CRM documents
 const sharedStyles = StyleSheet.create({
@@ -132,13 +136,18 @@ export const ContractTemplate = ({ data }: { data: ContractData }) => (
     <Page size="A4" style={sharedStyles.page}>
       {/* Header */}
       <View style={sharedStyles.header}>
-        <Text style={sharedStyles.companyName}>{data.companyName}</Text>
-        {data.companyAddress && (
-          <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
-        )}
-        {data.companyKvK && (
-          <Text style={sharedStyles.companyInfo}>KvK: {data.companyKvK}</Text>
-        )}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={sharedStyles.companyName}>{data.companyName}</Text>
+            {data.companyAddress && (
+              <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
+            )}
+            {data.companyKvK && (
+              <Text style={sharedStyles.companyInfo}>KvK: {data.companyKvK}</Text>
+            )}
+          </View>
+          <Image src={dirqLogo} style={{ width: 80, height: 'auto', objectFit: 'contain' }} />
+        </View>
       </View>
 
       {/* Title */}
@@ -281,16 +290,21 @@ export const InvoiceTemplate = ({ data }: { data: InvoiceData }) => (
     <Page size="A4" style={sharedStyles.page}>
       {/* Header */}
       <View style={sharedStyles.header}>
-        <Text style={sharedStyles.companyName}>{data.companyName}</Text>
-        {data.companyAddress && (
-          <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
-        )}
-        {data.companyKvK && (
-          <Text style={sharedStyles.companyInfo}>KvK: {data.companyKvK}</Text>
-        )}
-        {data.companyBtw && (
-          <Text style={sharedStyles.companyInfo}>BTW-nummer: {data.companyBtw}</Text>
-        )}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={sharedStyles.companyName}>{data.companyName}</Text>
+            {data.companyAddress && (
+              <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
+            )}
+            {data.companyKvK && (
+              <Text style={sharedStyles.companyInfo}>KvK: {data.companyKvK}</Text>
+            )}
+            {data.companyBtw && (
+              <Text style={sharedStyles.companyInfo}>BTW-nummer: {data.companyBtw}</Text>
+            )}
+          </View>
+          <Image src={dirqLogo} style={{ width: 80, height: 'auto', objectFit: 'contain' }} />
+        </View>
       </View>
 
       {/* Title and Invoice Details */}
@@ -436,10 +450,15 @@ export const ProposalTemplate = ({ data }: { data: ProposalData }) => (
     <Page size="A4" style={sharedStyles.page}>
       {/* Header */}
       <View style={sharedStyles.header}>
-        <Text style={sharedStyles.companyName}>{data.companyName}</Text>
-        {data.companyAddress && (
-          <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
-        )}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={sharedStyles.companyName}>{data.companyName}</Text>
+            {data.companyAddress && (
+              <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
+            )}
+          </View>
+          <Image src={dirqLogo} style={{ width: 80, height: 'auto', objectFit: 'contain' }} />
+        </View>
       </View>
 
       {/* Title */}
@@ -591,10 +610,15 @@ export const NDATemplate = ({ data }: { data: NDAData }) => (
     <Page size="A4" style={sharedStyles.page}>
       {/* Header */}
       <View style={sharedStyles.header}>
-        <Text style={sharedStyles.companyName}>{data.companyName}</Text>
-        {data.companyAddress && (
-          <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
-        )}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <View style={{ flex: 1 }}>
+            <Text style={sharedStyles.companyName}>{data.companyName}</Text>
+            {data.companyAddress && (
+              <Text style={sharedStyles.companyInfo}>{data.companyAddress}</Text>
+            )}
+          </View>
+          <Image src={dirqLogo} style={{ width: 80, height: 'auto', objectFit: 'contain' }} />
+        </View>
       </View>
 
       {/* Title */}
@@ -741,6 +765,11 @@ interface MeetingNotesData {
 export const MeetingNotesTemplate = ({ data }: { data: MeetingNotesData }) => (
   <Document>
     <Page size="A4" style={sharedStyles.page}>
+      {/* Logo */}
+      <View style={{ marginBottom: 20, alignItems: 'flex-end' }}>
+        <Image src={dirqLogo} style={{ width: 80, height: 'auto', objectFit: 'contain' }} />
+      </View>
+      
       {/* Title */}
       <Text style={sharedStyles.documentTitle}>GESPREKSVERSLAG</Text>
       <Text style={{ fontSize: 14, marginBottom: 20, color: '#475569' }}>
