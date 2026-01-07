@@ -81,12 +81,7 @@ export default function ContactDetailPage() {
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
-  // Handle 'new' route - redirect to contacts page (create happens via dialog there)
-  if (id === 'new') {
-    navigate('/contacts', { replace: true });
-    return null;
-  }
-
+  // All hooks must be called unconditionally before any early returns
   const { data: contact, isLoading } = useContact(id!);
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
@@ -94,6 +89,12 @@ export default function ContactDetailPage() {
     contactId: id,
     pageSize: 10,
   });
+
+  // Handle 'new' route - redirect to contacts page (create happens via dialog there)
+  if (id === 'new') {
+    navigate('/contacts', { replace: true });
+    return null;
+  }
 
   const canEdit = role === "ADMIN" || role === "SALES" || role === "MANAGER";
   const canDelete = role === "ADMIN" || role === "SALES";

@@ -304,9 +304,8 @@ export default function CompanySettingsPage() {
             </Card>
           </TabsContent>
 
-        </Tabs>
-
-        <div className="flex justify-end gap-4 mt-6">
+          {/* Payroll Tab */}
+          <TabsContent value="payroll" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Loonkosten & Werkgeverslasten</CardTitle>
