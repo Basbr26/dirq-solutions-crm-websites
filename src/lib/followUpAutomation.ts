@@ -3,7 +3,7 @@
  * Automatically creates LinkedIn follow-up tasks 4 days after physical mail is sent
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { addDays } from 'date-fns';
 
 interface CreateFollowUpTaskParams {
