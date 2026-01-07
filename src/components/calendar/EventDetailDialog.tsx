@@ -68,22 +68,17 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span>
-              {format(new Date(event.start_date), 'EEEE d MMMM yyyy', { locale: nl })}
-              {event.end_date && event.end_date !== event.start_date && (
-                <> - {format(new Date(event.end_date), 'EEEE d MMMM yyyy', { locale: nl })}</>
-              )}
+              {format(new Date(event.start_time), 'EEEE d MMMM yyyy', { locale: nl })}
             </span>
           </div>
 
-          {event.start_time && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {event.start_time}
-                {event.end_time && <> - {event.end_time}</>}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span>
+              {format(new Date(event.start_time), 'HH:mm', { locale: nl })}
+              {event.end_time && <> - {format(new Date(event.end_time), 'HH:mm', { locale: nl })}</>}
+            </span>
+          </div>
 
           {event.location && (
             <div className="flex items-center gap-2 text-sm">

@@ -39,15 +39,36 @@ export function CreateEventDialog() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const values: any = {};
     
-    formData.forEach((value, key) => {
-      if (key === 'is_all_day') {
-        values[key] = value === 'on';
-      } else {
-        values[key] = value;
-      }
-    });
+    // Extract form values
+    const title = formData.get('title') as string;
+    const event_type = formData.get('event_type') as string;
+    const location = formData.get('location') as string;
+    const description = formData.get('description') as string;
+    const start_date = formData.get('start_date') as string;
+    const start_time = formData.get('start_time') as string;
+    const end_date = formData.get('end_date') as string;
+    const end_time = formData.get('end_time') as string;
+
+    // Combine date + time into ISO timestamps
+    const start_datetime = start_time 
+      ? new Date(`${start_date}T${start_time}`).toISOString()
+      : new Date(`${start_date}T00:00:00`).toISOString();
+    
+    const end_datetime = end_date && end_time
+      ? new Date(`${end_date}T${end_time}`).toISOString()
+      : end_date
+      ? new Date(`${end_date}T23:59:59`).toISOString()
+      : new Date(new Date(start_datetime).getTime() + 3600000).toISOString(); // +1 hour default
+
+    const values = {
+      title,
+      event_type,
+      location: location || undefined,
+      description: description || undefined,
+      start_time: start_datetime,
+      end_time: end_datetime,
+    };
 
     createMutation.mutate(values);
   };
