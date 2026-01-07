@@ -64,6 +64,7 @@ export interface CreateInteractionData {
   is_task?: boolean;
   task_status?: 'pending' | 'completed' | 'cancelled';
   due_date?: string;
+  completed_at?: string;
   tags?: string[];
 }
 
