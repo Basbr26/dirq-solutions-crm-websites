@@ -24,7 +24,7 @@ export interface Quote {
   rejected_at?: string;
   payment_terms?: string;
   delivery_time?: string;
-  created_by: string;
+  owner_id: string;
   notes?: string;
   client_notes?: string;
   created_at: string;
@@ -100,7 +100,7 @@ export interface UpdateQuoteInput {
 export interface QuoteFilters {
   status?: QuoteStatus;
   company_id?: string;
-  created_by?: string;
+  owner_id?: string;
   search?: string;
 }
 

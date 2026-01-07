@@ -57,12 +57,12 @@ export function CreateEventDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Nieuw Event
+          Nieuwe Activiteit
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nieuw Event</DialogTitle>
+          <DialogTitle>Nieuwe Activiteit</DialogTitle>
           <DialogDescription>
             Maak een nieuwe kalenderafspraak aan
           </DialogDescription>

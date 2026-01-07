@@ -42,7 +42,7 @@ export function useCreateQuote() {
           tax_rate,
           tax_amount,
           total_amount,
-          created_by: user.id,
+          owner_id: user.id,
           status: 'draft',
         })
         .select()
@@ -174,7 +174,7 @@ export function useUpdateQuoteStatus(id: string) {
         // Fetch company name for notification
         const { data: quoteData } = await supabase
           .from('quotes')
-          .select('title, created_by, companies(name)')
+          .select('title, owner_id, companies(name)')
           .eq('id', id)
           .single();
 
@@ -182,7 +182,7 @@ export function useUpdateQuoteStatus(id: string) {
           await notifyQuoteStatusChange(
             id,
             status,
-            quoteData.created_by,
+            quoteData.owner_id,
             (quoteData as any).companies?.name || 'Onbekend bedrijf',
             quoteData.title
           );

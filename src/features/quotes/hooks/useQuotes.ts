@@ -17,7 +17,7 @@ export function useQuotes(filters?: QuoteFilters) {
           *,
           companies!quotes_company_id_fkey (id, name),
           contacts!quotes_contact_id_fkey (id, first_name, last_name, email),
-          profiles!quotes_created_by_fkey (id, full_name)
+          profiles!quotes_owner_id_fkey (id, full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -27,8 +27,8 @@ export function useQuotes(filters?: QuoteFilters) {
       if (filters?.company_id) {
         query = query.eq('company_id', filters.company_id);
       }
-      if (filters?.created_by) {
-        query = query.eq('created_by', filters.created_by);
+      if (filters?.owner_id) {
+        query = query.eq('owner_id', filters.owner_id);
       }
       if (filters?.search) {
         query = query.or(`title.ilike.%${filters.search}%,quote_number.ilike.%${filters.search}%`);
@@ -51,7 +51,7 @@ export function useQuote(id: string) {
           *,
           companies!quotes_company_id_fkey (id, name, email, phone),
           contacts!quotes_contact_id_fkey (id, first_name, last_name, email, phone, position),
-          profiles!quotes_created_by_fkey (id, full_name, email)
+          profiles!quotes_owner_id_fkey (id, full_name, email)
         `)
         .eq('id', id)
         .single();
