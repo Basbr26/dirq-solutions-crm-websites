@@ -74,7 +74,7 @@ export default function CalendarPage() {
   
   const queryClient = useQueryClient();
   
-  // Fetch events for current month
+  // Fetch events for current month (calendar_events + scheduled interactions)
   const { data: events, isLoading } = useQuery({
     queryKey: ['calendar-events', user?.id, date.getFullYear(), date.getMonth()],
     queryFn: async () => {
@@ -83,7 +83,8 @@ export default function CalendarPage() {
       const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
       const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
       
-      const { data, error } = await supabase
+      // Fetch calendar events
+      const { data: calendarData, error: calendarError } = await supabase
         .from('calendar_events')
         .select('*')
         .eq('user_id', user.id)
@@ -91,12 +92,85 @@ export default function CalendarPage() {
         .lte('start_time', endOfMonth.toISOString())
         .order('start_time');
       
-      if (error) {
-        console.error('Error fetching calendar events:', error);
-        throw error;
+      if (calendarError) {
+        console.error('Error fetching calendar events:', calendarError);
       }
+
+      // Fetch scheduled interactions (calls, meetings, demos with scheduled_at)
+      const { data: scheduledInteractions, error: scheduledError } = await supabase
+        .from('interactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('type', ['meeting', 'call', 'demo'])
+        .not('scheduled_at', 'is', null)
+        .gte('scheduled_at', startOfMonth.toISOString())
+        .lte('scheduled_at', endOfMonth.toISOString())
+        .order('scheduled_at');
+
+      if (scheduledError) {
+        console.error('Error fetching scheduled interactions:', scheduledError);
+      }
+
+      // Fetch tasks with due dates
+      const { data: tasks, error: tasksError } = await supabase
+        .from('interactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_task', true)
+        .eq('task_status', 'pending')
+        .not('due_date', 'is', null)
+        .gte('due_date', startOfMonth.toISOString().split('T')[0])
+        .lte('due_date', endOfMonth.toISOString().split('T')[0])
+        .order('due_date');
+
+      if (tasksError) {
+        console.error('Error fetching tasks:', tasksError);
+      }
+
+      // Type color mapping
+      const typeColors: Record<string, string> = {
+        call: '#3b82f6',      // blue
+        meeting: '#10b981',   // green
+        demo: '#06b6d4',      // cyan
+        task: '#f59e0b',      // orange
+      };
+
+      // Combine all sources
+      const allEvents: CalendarEvent[] = [
+        ...(calendarData || []),
+        // Transform scheduled interactions
+        ...(scheduledInteractions || []).map(interaction => ({
+          id: interaction.id,
+          user_id: interaction.user_id,
+          title: interaction.subject,
+          description: interaction.description,
+          event_type: interaction.type as any,
+          start_time: interaction.scheduled_at!,
+          end_time: interaction.completed_at || new Date(new Date(interaction.scheduled_at!).getTime() + (interaction.duration_minutes || 60) * 60000).toISOString(),
+          all_day: false,
+          color: typeColors[interaction.type] || '#6b7280',
+          location: null,
+          is_virtual: false,
+          meeting_url: null,
+        })),
+        // Transform tasks
+        ...(tasks || []).map(task => ({
+          id: task.id,
+          user_id: task.user_id,
+          title: `📋 ${task.subject}`,
+          description: task.description,
+          event_type: 'task' as any,
+          start_time: task.due_date!,
+          end_time: task.due_date!,
+          all_day: true,
+          color: typeColors.task,
+          location: null,
+          is_virtual: false,
+          meeting_url: null,
+        }))
+      ];
       
-      return data as CalendarEvent[];
+      return allEvents as CalendarEvent[];
     },
     enabled: !!user
   });

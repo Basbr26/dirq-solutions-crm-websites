@@ -15,9 +15,9 @@ export function useQuotes(filters?: QuoteFilters) {
         .from('quotes')
         .select(`
           *,
-          companies!company_id (id, name),
-          contacts!contact_id (id, first_name, last_name, email),
-          profiles!created_by (id, full_name)
+          companies!quotes_company_id_fkey (id, name),
+          contacts!quotes_contact_id_fkey (id, first_name, last_name, email),
+          profiles!quotes_created_by_fkey (id, full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -49,9 +49,9 @@ export function useQuote(id: string) {
         .from('quotes')
         .select(`
           *,
-          companies!company_id (id, name, email, phone),
-          contacts!contact_id (id, first_name, last_name, email, phone, position),
-          profiles!created_by (id, full_name, email)
+          companies!quotes_company_id_fkey (id, name, email, phone),
+          contacts!quotes_contact_id_fkey (id, first_name, last_name, email, phone, position),
+          profiles!quotes_created_by_fkey (id, full_name, email)
         `)
         .eq('id', id)
         .single();

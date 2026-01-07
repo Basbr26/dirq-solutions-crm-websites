@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { 
@@ -77,6 +77,14 @@ export function AddInteractionDialog({
 
   const createInteraction = useCreateInteraction();
   const selectedType = watch('type');
+
+  // Update form when dialog opens with new defaultType
+  useEffect(() => {
+    if (open) {
+      setValue('type', defaultType);
+      setIsTask(defaultType === 'task');
+    }
+  }, [open, defaultType, setValue]);
 
   const onSubmit = async (data: any) => {
     // Use either the prop companyId or the selected one from the dropdown
