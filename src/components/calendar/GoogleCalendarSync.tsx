@@ -36,7 +36,7 @@ export function GoogleCalendarSync() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('google_calendar_sync, last_calendar_sync, google_access_token, google_token_expires_at')
+      .select('*')
       .eq('id', user.id)
       .single();
 
