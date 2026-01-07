@@ -15,6 +15,12 @@ export interface Profile {
   department_id?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  // Google Calendar sync fields
+  google_calendar_sync?: boolean;
+  last_calendar_sync?: string | null;
+  google_access_token?: string | null;
+  google_refresh_token?: string | null;
+  google_token_expires_at?: string | null;
   // Legacy fields (optional)
   voornaam?: string;
   achternaam?: string;

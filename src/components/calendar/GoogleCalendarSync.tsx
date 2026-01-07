@@ -36,13 +36,33 @@ export function GoogleCalendarSync() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('google_calendar_sync, last_calendar_sync')
+      .select('google_calendar_sync, last_calendar_sync, google_access_token, google_token_expires_at')
       .eq('id', user.id)
       .single();
 
     if (data) {
       setAutoSync(data.google_calendar_sync || false);
       setLastSyncTime(data.last_calendar_sync ? new Date(data.last_calendar_sync) : null);
+      
+      // Check if user has valid token
+      if (data.google_access_token) {
+        const expiresAt = data.google_token_expires_at ? new Date(data.google_token_expires_at) : null;
+        const isExpired = expiresAt ? expiresAt < new Date() : true;
+        
+        if (!isExpired) {
+          // Token is valid, restore session
+          setIsSignedIn(true);
+        } else {
+          // Token expired, clear from database
+          await supabase
+            .from('profiles')
+            .update({
+              google_access_token: null,
+              google_token_expires_at: null,
+            })
+            .eq('id', user.id);
+        }
+      }
     }
   }, [user]);
 
@@ -89,10 +109,30 @@ export function GoogleCalendarSync() {
   const handleSignIn = async () => {
     setIsLoading(true);
     try {
-      const token = await signInToGoogle();
-      if (token) {
+      const tokenResponse = await signInToGoogle();
+      if (tokenResponse && user) {
+        // Calculate token expiry time
+        const expiresAt = new Date();
+        expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
+
+        // Store tokens securely in Supabase profiles table
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({
+            google_access_token: tokenResponse.access_token,
+            google_token_expires_at: expiresAt.toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error('Error storing Google tokens:', updateError);
+          toast.error('Kon tokens niet opslaan in database');
+          return;
+        }
+
         setIsSignedIn(true);
-        toast.success('Verbonden met Google Calendar');
+        toast.success('Verbonden met Google Calendar - Tokens veilig opgeslagen');
         
         // Perform initial sync
         if (autoSync) {
@@ -109,10 +149,29 @@ export function GoogleCalendarSync() {
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    if (!user) return;
+
+    // Revoke token at Google
     signOutFromGoogle();
+
+    // Clear tokens from database
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        google_access_token: null,
+        google_refresh_token: null,
+        google_token_expires_at: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Error clearing Google tokens:', error);
+    }
+
     setIsSignedIn(false);
-    toast.info('Verbinding met Google Calendar verbroken');
+    toast.info('Verbinding met Google Calendar verbroken - Tokens verwijderd');
   };
 
   const handleSync = async () => {

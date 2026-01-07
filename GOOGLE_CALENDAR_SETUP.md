@@ -64,18 +64,37 @@ Deze guide helpt je bij het opzetten van Google Calendar synchronisatie voor het
    ```env
    VITE_GOOGLE_CLIENT_ID=jouw-client-id.apps.googleusercontent.com
    VITE_GOOGLE_API_KEY=jouw-api-key
+   VITE_GOOGLE_REDIRECT_URI=http://localhost:5173
    ```
 
+   **Productie omgeving (Netlify):**
+   ```env
+   VITE_GOOGLE_CLIENT_ID=jouw-client-id.apps.googleusercontent.com
+   VITE_GOOGLE_API_KEY=jouw-api-key
+   VITE_GOOGLE_REDIRECT_URI=https://jouw-domein.nl
+   ```
+
+   ⚠️ **BELANGRIJK:** De `VITE_GOOGLE_REDIRECT_URI` moet exact overeenkomen met de URI die je hebt toegevoegd in Google Cloud Console onder "Authorized redirect URIs".
+
 ### Database Migratie
-Run de Google Calendar sync migratie:
+Run de Google Calendar sync migraties:
 ```bash
 # Via Supabase CLI
 supabase db push
 
-# Of handmatig via Supabase Dashboard
-# Kopieer de inhoud van supabase/migrations/20260108_google_calendar_sync.sql
-# en voer uit in SQL Editor
+# Of handmatig via Supabase Dashboard SQL Editor:
+# 1. Kopieer inhoud van supabase/migrations/20260108_google_calendar_sync.sql
+# 2. Kopieer inhoud van supabase/migrations/20260107_add_google_oauth_tokens.sql
+# 3. Voer beide uit in volgorde
 ```
+
+**Wat wordt toegevoegd aan database:**
+- `profiles.google_calendar_sync` (BOOLEAN) - Auto-sync toggle
+- `profiles.last_calendar_sync` (TIMESTAMPTZ) - Laatste sync timestamp
+- `profiles.google_access_token` (TEXT) - OAuth access token (verloopt na 1 uur)
+- `profiles.google_refresh_token` (TEXT) - OAuth refresh token (langdurig)
+- `profiles.google_token_expires_at` (TIMESTAMPTZ) - Token vervaldatum
+- `calendar_events.google_event_id` (TEXT UNIQUE) - Google event ID voor duplicate prevention
 
 ## 3. Gebruikershandleiding
 

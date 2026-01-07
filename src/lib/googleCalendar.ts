@@ -13,6 +13,7 @@ declare global {
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
+const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || window.location.origin;
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 
@@ -51,6 +52,7 @@ export async function initGoogleCalendar(): Promise<boolean> {
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
       callback: '', // Will be set during sign-in
+      redirect_uri: GOOGLE_REDIRECT_URI, // Explicitly set redirect URI
     });
 
     return true;
@@ -75,8 +77,13 @@ function loadGoogleScript(src: string): Promise<void> {
 
 /**
  * Sign in to Google and get access token
+ * Returns full OAuth response including access_token, expires_in, and scope
  */
-export async function signInToGoogle(): Promise<string | null> {
+export async function signInToGoogle(): Promise<{
+  access_token: string;
+  expires_in: number;
+  scope: string;
+} | null> {
   return new Promise((resolve) => {
     tokenClient.callback = (response: any) => {
       if (response.error) {
@@ -84,7 +91,13 @@ export async function signInToGoogle(): Promise<string | null> {
         resolve(null);
         return;
       }
-      resolve(response.access_token);
+      
+      // Return full response for token storage
+      resolve({
+        access_token: response.access_token,
+        expires_in: response.expires_in || 3600, // Default 1 hour
+        scope: response.scope,
+      });
     };
 
     if (gapi.client.getToken() === null) {
