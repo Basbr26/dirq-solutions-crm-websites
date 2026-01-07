@@ -1,7 +1,7 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 7 Januari 2026 20:00  
-**Version:** 1.0.1  
+**Last Updated:** 7 Januari 2026 22:30  
+**Version:** 1.0.2  
 **Production Status:** ✅ Production Ready
 
 ---
@@ -46,6 +46,11 @@
 - ✅ Deal cards met probability & value
 - ✅ Detail pages met full project info
 - ✅ Stage transitions met automation
+- ✅ **Lead-to-Customer Conversion** (NEW)
+  - 1-click conversie naar klant
+  - Confetti celebration (3s, Dirq turquoise)
+  - Auto-update: company→customer, project→quote_signed, probability→90
+  - Deal won notification naar eigenaar
 - ✅ CSV Export
 - ✅ Company/Contact linking
 - ✅ Website-specific fields (hosting, pages, features)
@@ -177,6 +182,7 @@
 ✅ Audit log trigger column mapping  
 ✅ Calendar_events tabel aangemaakt  
 ✅ Quotes owner_id consistency (was created_by)  
+✅ **Quotes foreign key joins** - Contact via nested project join
 
 ### Frontend Fixes
 ✅ AddInteractionDialog pre-select type fix  
@@ -184,6 +190,16 @@
 ✅ CreateEventDialog tekst ("Nieuwe Activiteit")  
 ✅ InteractionTimeline TypeScript errors  
 ✅ useQuotes foreign key syntax  
+✅ **CaseDetail import** - Verwijderde HR pagina uit App.tsx  
+✅ **useConvertLead scope** - projectValue parameter in onSuccess  
+✅ **Project.value** - estimated_value → value property
+
+### New Features (v1.0.2)
+🎉 **Lead-to-Customer Conversion** met confetti celebration  
+- useConvertLead hook (130 regels)  
+- Database updates: company status, project stage, probability  
+- Canvas-confetti integratie (Dirq turquoise)  
+- Gradient button met pulse animatie  
 
 ---
 

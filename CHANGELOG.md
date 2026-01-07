@@ -10,6 +10,66 @@ Alle updates, features, bugfixes en migraties in chronologische volgorde.
 
 ---
 
+## [1.0.2] - 2026-01-07 - Lead Conversion & Quotes Fix
+
+### ✨ Added
+- **Lead-to-Customer Conversion Flow** - Converteer leads naar klanten met confetti celebratie
+  - New Hook: `useConvertLead` - Encapsulated conversion logic met database updates
+  - Company status update: `lead` → `customer`
+  - Project stage update: → `quote_signed`, probability → 90
+  - Deal won notification via `notifyDealClosed()`
+  - 3-second confetti animation met Dirq turquoise (#06BDC7) + complementary colors
+  - Button in ProjectDetailPage: Gradient emerald→green, pulse animation, alleen bij negotiation/quote_sent stages
+  - Dependencies: `canvas-confetti@1.9.3` (already installed)
+
+### 🐛 Fixed
+- **Quotes 400 Error** - Foreign key join failures opgelost
+  - Root cause: Quotes tabel heeft geen `contact_id` foreign key
+  - Solution: Contact ophalen via nested project join
+  - Query structuur: `project:projects → contact:contacts` (nested)
+  - Explicit foreign key hints: `quotes_company_id_fkey`, `quotes_project_id_fkey`, `quotes_owner_id_fkey`
+  - Removed: Direct `contacts` join (non-existent relation)
+- **CaseDetail Import** - Verwijderde HR pagina stond nog als lazy import in App.tsx
+- **useConvertLead TypeScript** - `projectValue` scope issue in onSuccess callback
+  - Fix: Destructure all params in onSuccess: `{ projectTitle, companyName, ownerId, projectValue }`
+- **ProjectDetailPage TypeScript** - `project.estimated_value` bestaat niet
+  - Fix: Gebruik `project.value` (correcte property naam)
+
+### 📦 Dependencies
+- `canvas-confetti@1.9.3` - Voor celebration animations
+- `papaparse@5.4.1` - CSV parsing (reeds geïnstalleerd)
+- `@types/papaparse` - TypeScript types
+
+---
+
+## [1.0.1] - 2026-01-07 - Complete HR Code Cleanup
+
+### 🗑️ Removed - HR to CRM Transformation
+- **9 HR files verwijderd** (2799 regels code)
+  - `src/types/verzuimDocumentTypes.ts` - HR document types
+  - `src/lib/analytics/verzuimPredictor.ts` - Absence prediction ML
+  - `src/pages/CaseDetail.tsx` - HR case management
+  - `src/components/TaskDialog.tsx` - HR task creation (referenced deleted taskTemplates)
+  - `src/lib/documentTemplates.ts` - HR document templates
+  - `src/lib/taskTemplates.ts` - Predefined HR tasks
+  - `src/lib/notifications/templates.ts` - HR notification templates
+  - `src/lib/notifications/escalation.ts` - HR escalation logic
+
+### 🔄 Changed
+- **Workflow Categories** - HR → CRM focused
+  - Old: `'onboarding' | 'offboarding' | 'verzuim' | 'contract' | 'performance' | 'other'`
+  - New: `'sales' | 'project' | 'quote' | 'lead' | 'client_onboarding' | 'other'`
+- **Email Branding** - Resend email footers updated
+  - Old: "© Dirq Solutions | Verzuim Management System"
+  - New: "© Dirq Solutions | CRM voor Website Ontwikkeling"
+  - Updated: Digest emails + Notification emails
+
+### 📄 Documentation
+- STATUS.md: Removed "Stale HR code" from Medium Priority issues
+- Version bump: 1.0.0 → 1.0.1
+
+---
+
 ## [1.0.0] - 2026-01-07 - Bugfixes & Stabiliteit
 
 ### 🐛 Fixed
