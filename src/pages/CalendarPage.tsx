@@ -16,7 +16,6 @@ import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { CalendarFilters } from '@/components/calendar/CalendarFilters';
 import { HorizontalDatePicker } from '@/components/calendar/HorizontalDatePicker';
-import { GoogleCalendarSync } from '@/components/calendar/GoogleCalendarSync';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SidePanel } from '@/components/ui/side-panel';
@@ -59,7 +58,6 @@ export default function CalendarPage() {
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
   const [showFilters, setShowFilters] = useState(false);
-  const [showGoogleSync, setShowGoogleSync] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [filters, setFilters] = useState({
     meeting: true,
@@ -268,14 +266,6 @@ export default function CalendarPage() {
       hideQuickAction={true}
       actions={
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowGoogleSync(true)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Google Calendar
-          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -482,16 +472,6 @@ export default function CalendarPage() {
           <CreateEventDialog />
         </div>
       )}
-      
-      {/* Google Calendar Sync Side Panel */}
-      <SidePanel
-        open={showGoogleSync}
-        onClose={() => setShowGoogleSync(false)}
-        title="Google Calendar Synchronisatie"
-        width="lg"
-      >
-        <GoogleCalendarSync />
-      </SidePanel>
 
       {/* Event Detail - Side Panel on Desktop, Dialog on Mobile */}
       {selectedEvent && isDesktop ? (

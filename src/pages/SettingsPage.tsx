@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { User, Bell, Palette, Shield } from 'lucide-react';
+import { User, Bell, Palette, Shield, Plug } from 'lucide-react';
 import { 
   ProfileSettings, 
   NotificationPreferences, 
   AppearanceSettings, 
-  AccountSettings 
+  AccountSettings,
+  IntegrationsSettings 
 } from '@/components/settings';
 
 export function SettingsPage() {
@@ -20,7 +21,7 @@ export function SettingsPage() {
     >
       <div className="py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+          <TabsList className="grid w-full grid-cols-5 lg:w-[750px]">
             <TabsTrigger value="profile" className="gap-2">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profiel</span>
@@ -32,6 +33,10 @@ export function SettingsPage() {
             <TabsTrigger value="appearance" className="gap-2">
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Weergave</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="gap-2">
+              <Plug className="h-4 w-4" />
+              <span className="hidden sm:inline">Integraties</span>
             </TabsTrigger>
             <TabsTrigger value="account" className="gap-2">
               <Shield className="h-4 w-4" />
@@ -49,6 +54,10 @@ export function SettingsPage() {
 
           <TabsContent value="appearance" className="space-y-4">
             <AppearanceSettings />
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-4">
+            <IntegrationsSettings />
           </TabsContent>
 
           <TabsContent value="account" className="space-y-4">
