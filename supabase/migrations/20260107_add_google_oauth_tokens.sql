@@ -29,12 +29,5 @@ COMMENT ON COLUMN profiles.google_refresh_token IS
 COMMENT ON COLUMN profiles.google_token_expires_at IS 
 'Timestamp when the Google access token expires (UTC)';
 
--- RLS Policy: Users can only update their own tokens
-CREATE POLICY "Users can update own Google tokens" ON profiles
-  FOR UPDATE
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Grant authenticated users access to their own token columns
--- Note: Tokens should be encrypted at application level before storage
-GRANT SELECT, UPDATE ON profiles TO authenticated;
+-- Note: Existing RLS policies on profiles already allow users to update their own records
+-- No additional policy needed for Google token columns

@@ -179,36 +179,59 @@ export function GoogleCalendarSync() {
 
     setIsSyncing(true);
     try {
-      // Fetch local events
+      // Fetch local events without Google ID
       const { data: localEvents } = await supabase
         .from('calendar_events')
         .select('*')
         .eq('user_id', user.id)
         .is('google_event_id', null);
 
-      // Sync to Google
+      // Sync to Google Calendar
       const syncToResults = await syncToGoogleCalendar(localEvents || []);
 
-      // Sync from Google
+      // Sync from Google Calendar
       const syncFromResults = await syncFromGoogleCalendar(async (googleEvent) => {
-        // Check if event already exists
-        const { data: existing } = await supabase
-          .from('calendar_events')
-          .select('id')
-          .eq('google_event_id', googleEvent.google_event_id)
-          .single();
+        try {
+          // Check if event already exists
+          const { data: existing, error: checkError } = await supabase
+            .from('calendar_events')
+            .select('id')
+            .eq('google_event_id', googleEvent.google_event_id)
+            .maybeSingle(); // Use maybeSingle instead of single to avoid 406 error
 
-        if (existing) return; // Skip if already imported
+          if (checkError) {
+            console.error('Error checking existing event:', checkError);
+            return;
+          }
 
-        // Import the event
-        const { error } = await supabase
-          .from('calendar_events')
-          .insert({
-            ...googleEvent,
-            user_id: user.id,
-          });
+          if (existing) {
+            return; // Skip if already imported
+          }
 
-        if (error) throw error;
+          // Import the event with all required fields
+          const { error: insertError } = await supabase
+            .from('calendar_events')
+            .insert({
+              user_id: user.id,
+              title: googleEvent.title || 'Untitled Event',
+              description: googleEvent.description || null,
+              start_time: googleEvent.start_time,
+              end_time: googleEvent.end_time,
+              all_day: googleEvent.all_day || false,
+              location: googleEvent.location || null,
+              event_type: googleEvent.event_type || 'meeting',
+              color: googleEvent.color || '#10b981',
+              is_virtual: googleEvent.is_virtual || false,
+              meeting_url: googleEvent.meeting_url || null,
+              google_event_id: googleEvent.google_event_id,
+            });
+
+          if (insertError) {
+            console.error('Error inserting event:', insertError);
+          }
+        } catch (err) {
+          console.error('Error processing event:', err);
+        }
       });
 
       // Update last sync time
