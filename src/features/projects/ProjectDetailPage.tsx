@@ -7,12 +7,12 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useUpdateProject, useDeleteProject, useConvertLeadToCustomer } from './hooks/useProjectMutations';
+import { useUpdateProject, useDeleteProject } from './hooks/useProjectMutations';
+import { useConvertLead } from './hooks/useConvertLead';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
-import confetti from 'canvas-confetti';
 import {
   ArrowLeft,
   Edit,
@@ -77,7 +77,7 @@ export default function ProjectDetailPage() {
 
   const updateProject = useUpdateProject(id!);
   const deleteProject = useDeleteProject();
-  const convertLead = useConvertLeadToCustomer(id!);
+  const convertLead = useConvertLead();
 
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   const canDelete = role === 'ADMIN';
@@ -106,41 +106,17 @@ export default function ProjectDetailPage() {
   // Show conversion button if project is in negotiation or quote_sent stage
   const canConvert = project && ['negotiation', 'quote_sent'].includes(project.stage);
 
-  // Handle lead to customer conversion with confetti
-  const handleConvertToCustomer = async () => {
-    convertLead.mutate(undefined, {
-      onSuccess: () => {
-        // Trigger confetti animation
-        const duration = 3 * 1000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+  // Handle lead to customer conversion
+  const handleConvertToCustomer = () => {
+    if (!project) return;
 
-        function randomInRange(min: number, max: number) {
-          return Math.random() * (max - min) + min;
-        }
-
-        const interval: any = setInterval(function() {
-          const timeLeft = animationEnd - Date.now();
-
-          if (timeLeft <= 0) {
-            return clearInterval(interval);
-          }
-
-          const particleCount = 50 * (timeLeft / duration);
-
-          // Fire confetti from two origins for full-screen effect
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
-          });
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
-          });
-        }, 250);
-      }
+    convertLead.mutate({
+      projectId: project.id,
+      companyId: project.company_id,
+      projectTitle: project.title,
+      companyName: project.companies?.name || 'Unknown',
+      ownerId: project.owner_id,
+      projectValue: project.estimated_value || 0,
     });
   };
 
@@ -273,7 +249,7 @@ export default function ProjectDetailPage() {
               <Button 
                 onClick={handleConvertToCustomer}
                 disabled={convertLead.isPending}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                className="relative bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse"
               >
                 {convertLead.isPending ? (
                   <>
@@ -282,8 +258,8 @@ export default function ProjectDetailPage() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Converteer naar Klant
+                    <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                    🎉 Converteer naar Klant
                   </>
                 )}
               </Button>

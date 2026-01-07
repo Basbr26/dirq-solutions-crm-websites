@@ -46,7 +46,6 @@ const GebruikersbeheerPage = lazy(() => import("./pages/GebruikersbeheerPage"));
 const AIChatPage = lazy(() => import("./pages/AIChatPage"));
 
 // Lazy load utility pages
-const CaseDetail = lazy(() => import("./pages/CaseDetail"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
