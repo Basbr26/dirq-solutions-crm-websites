@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Phone, Mail, Calendar, FileText, CheckSquare, Presentation, Pencil, Trash2, Check, X, Building2, User } from 'lucide-react';
+import { Phone, Mail, Calendar, FileText, CheckSquare, Presentation, Pencil, Trash2, Check, X, Building2, User, Mailbox, Video } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useUpdateInteraction, useDeleteInteraction, type Interaction } from '../hooks/useInteractions';
@@ -31,6 +31,12 @@ const typeConfig = {
   note: { icon: FileText, label: 'Notitie', color: 'bg-gray-500' },
   task: { icon: CheckSquare, label: 'Taak', color: 'bg-orange-500' },
   demo: { icon: Presentation, label: 'Demo', color: 'bg-pink-500' },
+  physical_mail: { icon: Mailbox, label: 'Fysiek Kaartje', color: 'bg-pink-600' },
+  linkedin_video_audit: { icon: Video, label: 'LinkedIn Video Audit', color: 'bg-red-500' },
+  requirement_discussion: { icon: FileText, label: 'Requirements Discussie', color: 'bg-indigo-500' },
+  quote_presentation: { icon: Presentation, label: 'Offerte Presentatie', color: 'bg-cyan-500' },
+  review_session: { icon: CheckSquare, label: 'Review Sessie', color: 'bg-amber-500' },
+  training: { icon: Calendar, label: 'Training', color: 'bg-emerald-500' },
 };
 
 const taskStatusConfig = {

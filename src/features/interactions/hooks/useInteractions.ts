@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { handleInteractionCreated } from '@/lib/followUpAutomation';
 
 export interface Interaction {
   id: string;
@@ -154,6 +155,18 @@ export function useCreateInteraction() {
         .single();
 
       if (error) throw error;
+
+      // Automatically create follow-up task for physical mail
+      if (interaction.type === 'physical_mail') {
+        await handleInteractionCreated({
+          id: interaction.id,
+          type: interaction.type,
+          company_id: interaction.company_id,
+          contact_id: interaction.contact_id,
+          user_id: interaction.user_id,
+        });
+      }
+
       return interaction;
     },
     onSuccess: () => {

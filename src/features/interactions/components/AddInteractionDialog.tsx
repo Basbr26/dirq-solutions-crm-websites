@@ -11,7 +11,9 @@ import {
   Clock,
   ArrowDownCircle,
   ArrowUpCircle,
-  Building2
+  Building2,
+  Mailbox,
+  Video
 } from 'lucide-react';
 import {
   Dialog,
@@ -41,7 +43,7 @@ interface AddInteractionDialogProps {
   onOpenChange: (open: boolean) => void;
   companyId?: string;
   contactId?: string;
-  defaultType?: 'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo';
+  defaultType?: 'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo' | 'physical_mail' | 'linkedin_video_audit';
 }
 
 const interactionTypes = [
@@ -51,6 +53,8 @@ const interactionTypes = [
   { value: 'note', label: 'Notitie', icon: FileText, color: 'text-gray-500' },
   { value: 'task', label: 'Taak', icon: CheckSquare, color: 'text-orange-500' },
   { value: 'demo', label: 'Demo', icon: Presentation, color: 'text-teal-500' },
+  { value: 'physical_mail', label: 'Fysiek Kaartje', icon: Mailbox, color: 'text-pink-500' },
+  { value: 'linkedin_video_audit', label: 'LinkedIn Video Audit', icon: Video, color: 'text-red-500' },
 ];
 
 export function AddInteractionDialog({

@@ -49,7 +49,9 @@ export type InteractionType =
   | 'requirement_discussion'  // Discussing website requirements
   | 'quote_presentation'      // Presenting quote to client
   | 'review_session'          // Client reviewing website
-  | 'training';               // Client training on CMS
+  | 'training'                // Client training on CMS
+  | 'physical_mail'           // Fysiek kaartje/brochure verstuurd
+  | 'linkedin_video_audit';   // LinkedIn video audit verstuurd
 export type InteractionDirection = 'inbound' | 'outbound';
 export type TaskStatus = 'pending' | 'completed' | 'cancelled';
 
@@ -136,11 +138,13 @@ export interface Project {
   // Website-specific
   project_type?: ProjectType;
   website_url?: string;
+  website_builder?: '10web.io' | 'Landingpage.ai';
   number_of_pages?: number;
   features?: string[]; // ['cms', 'seo', 'analytics', 'multilingual', etc.]
   hosting_included: boolean;
   maintenance_contract: boolean;
   launch_date?: string;
+  delivery_deadline?: string;
   
   // Pipeline
   stage: ProjectStage;
@@ -219,10 +223,18 @@ export interface QuoteItem {
   unit_price: number;
   total_price: number;
   category?: string;
+  is_addon?: boolean; // Voor add-ons zoals Logo design, Extra pagina's, Rush delivery
   sort_order?: number;
   created_at: string;
   updated_at: string;
 }
+
+// Standaard Add-on Opties
+export const QUOTE_ADDONS = {
+  LOGO_DESIGN: { title: 'Logo design', price: 350, description: 'Professioneel logo ontwerp' },
+  EXTRA_PAGES: { title: 'Extra pagina\'s', price: 150, description: 'Prijs per extra pagina' },
+  RUSH_DELIVERY: { title: 'Rush delivery', price: 300, description: 'Versnelde oplevering binnen 2 weken' },
+} as const;
 
 export interface ProjectStats {
   total: number;
