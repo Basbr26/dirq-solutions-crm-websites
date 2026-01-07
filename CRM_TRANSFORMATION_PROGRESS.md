@@ -2,7 +2,118 @@
 
 **Project:** Dirq Solutions CRM - Transformatie van HR App naar CRM  
 **Datum Start:** 3 Januari 2026  
-**Status:** FASE 2 COMPLEET - 95% MVP Ready 🎉
+**Status:** FASE 2 COMPLEET - 98% MVP Ready 🎉
+
+---
+
+## 📋 LAATSTE UPDATE - 7 Januari 2026
+
+### ✨ CRM Document Generator Systeem ✅
+**Commit:** fa4b642  
+**Impact:** HIGH - Complete document generatie voor CRM workflows
+
+#### 📄 5 Professionele Document Templates
+Alle templates volledig in het Nederlands met Dirq branding:
+
+1. **Contract Template** - Overeenkomst van opdracht
+   - Partijen met KvK nummers
+   - Project beschrijving en deliverables lijst
+   - Looptijd en betalingstermijn
+   - Handtekening blokken beide partijen
+
+2. **Factuur Template** - Professionele factuur
+   - Meerdere factuurregels met aantal/prijs
+   - Automatische BTW berekening (21%)
+   - Subtotaal/BTW/Totaal overzicht
+   - IBAN en betaalgegevens
+   - Vervaldatum tracking
+
+3. **Projectvoorstel Template** - Uitgebreid voorstel (2 pagina's)
+   - Executive summary
+   - Doelstellingen lijst
+   - Aanpak beschrijving
+   - Planning tabel met fases en doorlooptijd
+   - Investering overzicht met call-to-action
+
+4. **NDA Template** - Geheimhoudingsovereenkomst
+   - Definitie vertrouwelijke informatie
+   - Verplichtingen beide partijen
+   - Configureerbare looptijd (jaren)
+   - Teruggave bepaling
+   - Handtekening blokken
+
+5. **Gespreksverslag Template** - Meeting notities
+   - Datum, tijd, locatie, aanwezigen
+   - Agenda items
+   - Notities en besluiten
+   - Actiepunten tabel (taak, eigenaar, deadline)
+   - Volgende vergadering planning
+
+#### 🎨 UI Components
+**CRMDocumentGenerator** (`src/components/documents/CRMDocumentGenerator.tsx` - 772 lijnen):
+- Modal interface met clean design
+- Tab systeem: Bewerken | Voorbeeld
+- Dynamische formulieren per document type
+- Real-time PDF preview met iframe
+- Download & upload naar Supabase storage
+- Form validatie en error handling
+- Toast notificaties voor feedback
+
+**Speciale Features:**
+- **Factuur:** Line item management met automatische berekeningen
+- **Agenda items:** Multi-line input voor lijsten
+- **Datum fields:** Native date/datetime pickers
+- **Bedragen:** Real-time totaal berekening
+
+#### 📚 Document Templates Pagina
+**DocumentTemplatesPage** (`src/pages/DocumentTemplatesPage.tsx` - 222 lijnen):
+- Gallery view met template cards
+- Color-coded icons per categorie
+- Template features lijst
+- Stats dashboard (5 templates, 4 categorieën)
+- Quick start guide (4 stappen)
+- Tips section met best practices
+
+#### ⚙️ Workflow Integration
+**Updated** `src/lib/workflow/executor.ts`:
+```typescript
+async function generateDocument(config, context) {
+  // Template validation (contract, invoice, proposal, nda, meeting_notes)
+  // Data merging (config.data + context.variables)
+  // Task creation for document generation
+  // Logging en error handling
+}
+```
+
+#### 🗂️ Bestanden
+- ✅ `src/lib/crmDocumentTemplates.tsx` (894 lijnen) - 5 React PDF templates
+- ✅ `src/components/documents/CRMDocumentGenerator.tsx` (772 lijnen) - Generator UI
+- ✅ `src/pages/DocumentTemplatesPage.tsx` (222 lijnen) - Templates gallery
+- ✅ `src/lib/workflow/executor.ts` (UPDATED) - generate_document actie
+- ✅ `src/App.tsx` (UPDATED) - Route `/documents/templates`
+- ✅ `src/components/layout/AppSidebar.tsx` (UPDATED) - Menu item Documenten
+
+#### 🎯 Toegang & Navigatie
+- **Route:** `/documents/templates`
+- **Sidebar:** "Automatisering" → "Documenten"
+- **Rollen:** ADMIN, MANAGER, SALES, super_admin
+- **Lazy loaded:** Via React.lazy() voor performance
+
+#### 💡 Technische Stack
+- **PDF Engine:** @react-pdf/renderer voor high-quality output
+- **Styling:** Professional layout met Dirq turquoise (#0ea5e9)
+- **Date Formatting:** date-fns met locale/nl voor Nederlandse datums
+- **Storage:** Supabase storage bucket 'documents'
+- **Type Safety:** Volledige TypeScript interfaces per template
+
+#### 📊 Template Data Types
+```typescript
+ContractData: contractNumber, parties, project, deliverables, payment
+InvoiceData: invoiceNumber, lineItems[], tax calculations, payment details
+ProposalData: executiveSummary, objectives[], timeline[], investment
+NDAData: parties, purpose, duration, confidentiality terms
+MeetingNotesData: attendees[], agenda[], notes, decisions[], actionItems[]
+```
 
 ---
 
