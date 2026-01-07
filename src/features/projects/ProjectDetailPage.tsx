@@ -116,7 +116,7 @@ export default function ProjectDetailPage() {
       projectTitle: project.title,
       companyName: project.companies?.name || 'Unknown',
       ownerId: project.owner_id,
-      projectValue: project.estimated_value || 0,
+      projectValue: project.value || 0,
     });
   };
 

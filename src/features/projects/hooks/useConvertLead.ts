@@ -22,7 +22,7 @@ export function useConvertLead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ projectId, companyId }: ConvertLeadParams) => {
+    mutationFn: async ({ projectId, companyId, projectTitle, companyName, ownerId, projectValue }: ConvertLeadParams) => {
       // Step 1: Update Company status to 'customer'
       const { error: companyError } = await supabase
         .from('companies')
@@ -44,7 +44,7 @@ export function useConvertLead() {
 
       return { projectId, companyId };
     },
-    onSuccess: async ({ projectId }, { projectTitle, companyName, ownerId }) => {
+    onSuccess: async ({ projectId }, { projectTitle, companyName, ownerId, projectValue }) => {
       // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
