@@ -209,6 +209,19 @@ export function useDeleteInteraction() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // First delete any linked calendar events (orphaned events without interaction_id)
+      // This handles old events created before interaction_id foreign key was added
+      const { error: calendarError } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('interaction_id', id);
+
+      if (calendarError) {
+        console.warn('Could not delete linked calendar events:', calendarError);
+        // Don't throw - continue with interaction delete
+      }
+
+      // Delete the interaction (CASCADE will handle new events with FK)
       const { error } = await supabase
         .from('interactions')
         .delete()
@@ -218,6 +231,7 @@ export function useDeleteInteraction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interactions'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] }); // Also refresh calendar
       toast.success('Interactie verwijderd');
     },
     onError: (error: Error) => {
