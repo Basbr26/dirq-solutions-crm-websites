@@ -20,6 +20,7 @@ import {
   Shield,
   Layers,
   Calendar,
+  Workflow,
 } from 'lucide-react';
 
 interface NavItem {
@@ -59,6 +60,12 @@ const getNavGroups = (role: string | null): NavGroup[] => {
         { title: 'Offertes', icon: FileText, href: '/quotes', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
         { title: 'Activiteiten', icon: MessageSquare, href: '/interactions', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
         { title: 'Agenda', icon: Calendar, href: '/calendar', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+      ],
+    },
+    {
+      title: 'Automatisering',
+      items: [
+        { title: 'Workflows', icon: Workflow, href: '/workflows/templates', roles: ['ADMIN', 'MANAGER', 'super_admin'] },
       ],
     },
   ];
