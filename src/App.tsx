@@ -35,6 +35,7 @@ import DashboardCRM from "./pages/DashboardCRM";
 
 // Lazy load CRM utility pages
 const DocumentProcessing = lazy(() => import("./pages/DocumentProcessing"));
+const DocumentTemplatesPage = lazy(() => import("./pages/DocumentTemplatesPage"));
 const WorkflowBuilder = lazy(() => import("./pages/WorkflowBuilder"));
 const WorkflowTemplatesPage = lazy(() => import("./pages/WorkflowTemplatesPage"));
 const WorkflowExecutions = lazy(() => import("./pages/WorkflowExecutions"));
@@ -375,6 +376,18 @@ function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'super_admin']}>
                 <Suspense fallback={<SuspenseFallback />}>
                   <WorkflowTemplatesPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/documents/templates" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <DocumentTemplatesPage />
                 </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>

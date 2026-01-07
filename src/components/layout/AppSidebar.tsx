@@ -66,6 +66,7 @@ const getNavGroups = (role: string | null): NavGroup[] => {
       title: 'Automatisering',
       items: [
         { title: 'Workflows', icon: Workflow, href: '/workflows/templates', roles: ['ADMIN', 'MANAGER', 'super_admin'] },
+        { title: 'Documenten', icon: FileText, href: '/documents/templates', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'] },
       ],
     },
   ];
