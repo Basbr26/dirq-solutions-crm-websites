@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, CreditCard, Users, FileText, TrendingUp, Save, AlertCircle } from "lucide-react";
+import { Building2, CreditCard, Save, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CompanySettingsPage() {
@@ -68,13 +68,7 @@ export default function CompanySettingsPage() {
     const values = Object.fromEntries(formData.entries());
     
     // Convert numeric fields
-    const numericFields = [
-      'fiscal_year_start_month', 'payroll_day_of_month', 'employer_social_charges_percentage', 
-      'pension_employer_percentage', 'pension_employee_percentage',
-      'overtime_threshold_hours', 'overtime_rate',
-      'holiday_allowance_percentage', 'holiday_allowance_month',
-      'default_fulltime_hours', 'probation_period_months', 'notice_period_weeks'
-    ];
+    const numericFields = ['fiscal_year_start_month', 'payroll_day_of_month'];
     
     const processedValues: any = {};
     Object.entries(values).forEach(([key, value]) => {
@@ -107,7 +101,7 @@ export default function CompanySettingsPage() {
           Bedrijfsinstellingen
         </h1>
         <p className="text-muted-foreground mt-2">
-          Configureer bedrijfsgegevens, loonkosten en arbeidsvoorwaarden
+          Configureer bedrijfsgegevens en financiële instellingen
         </p>
       </div>
 
@@ -122,7 +116,7 @@ export default function CompanySettingsPage() {
 
       <form onSubmit={handleSubmit}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               Basis
@@ -130,18 +124,6 @@ export default function CompanySettingsPage() {
             <TabsTrigger value="financial" className="flex items-center gap-2">
               <CreditCard className="h-4 w-4" />
               Financieel
-            </TabsTrigger>
-            <TabsTrigger value="payroll" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Loonkosten
-            </TabsTrigger>
-            <TabsTrigger value="cao" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              CAO
-            </TabsTrigger>
-            <TabsTrigger value="policies" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Beleid
             </TabsTrigger>
           </TabsList>
 
@@ -322,8 +304,9 @@ export default function CompanySettingsPage() {
             </Card>
           </TabsContent>
 
-          {/* Payroll & Costs Tab */}
-          <TabsContent value="payroll" className="space-y-6">
+        </Tabs>
+
+        <div className="flex justify-end gap-4 mt-6">
             <Card>
               <CardHeader>
                 <CardTitle>Loonkosten & Werkgeverslasten</CardTitle>

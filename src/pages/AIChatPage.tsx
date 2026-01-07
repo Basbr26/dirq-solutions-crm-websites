@@ -12,6 +12,9 @@ const PROMPT_CHIPS = [
   "Welke offertes zijn verstuurd?",
   "Toon bedrijven in mijn portfolio",
   "Welke contacten moet ik bellen?",
+  "Wat is mijn omzet deze maand?",
+  "Welke leads moet ik opvolgen?",
+  "Toon mijn top 5 klanten",
 ]
 
 interface Message {
@@ -49,7 +52,7 @@ export default function AIChatPage() {
   }
   
   return (
-    <AppLayout title="HR Assistent">
+    <AppLayout title="CRM Assistent">
       <div className="flex flex-col h-[calc(100vh-4rem)]">
         {/* Header */}
         <div className="flex-shrink-0 border-b p-4 bg-background">

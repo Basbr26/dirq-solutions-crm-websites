@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Filter, Download } from 'lucide-react';
+import { Plus, Search, Filter, Download, Upload } from 'lucide-react';
 import { useCompanies, useCompanyStats } from './hooks/useCompanies';
 import { useCreateCompany } from './hooks/useCompanyMutations';
 import { CompanyCard } from './components/CompanyCard';
@@ -22,6 +22,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useDebounce } from '@/hooks/useDebounce';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { CSVImportDialog } from '@/components/CSVImportDialog';
 
 export default function CompaniesPage() {
   const { role } = useAuth();
@@ -29,6 +32,7 @@ export default function CompaniesPage() {
   const [filters, setFilters] = useState<CompanyFiltersType>({});
   const [showFilters, setShowFilters] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const createCompany = useCreateCompany();
 
@@ -45,6 +49,110 @@ export default function CompaniesPage() {
   const { data: stats } = useCompanyStats();
 
   const canCreateCompany = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
+
+  const handleExportCSV = async () => {
+    try {
+      toast.info('Bedrijven exporteren...');
+      
+      let query = supabase
+        .from('companies')
+        .select('name, email, phone, website, status, priority, company_size, industries(name), created_at');
+
+      // Apply same filters as current view
+      if (activeFilters.status && activeFilters.status.length > 0) {
+        query = query.in('status', activeFilters.status);
+      }
+      if (activeFilters.priority && activeFilters.priority.length > 0) {
+        query = query.in('priority', activeFilters.priority);
+      }
+      if (activeFilters.search) {
+        query = query.or(`name.ilike.%${activeFilters.search}%,email.ilike.%${activeFilters.search}%`);
+      }
+
+      const { data: companies, error } = await query;
+      
+      if (error) throw error;
+      if (!companies || companies.length === 0) {
+        toast.warning('Geen bedrijven om te exporteren');
+        return;
+      }
+
+      // Convert to CSV
+      const headers = ['Naam', 'Email', 'Telefoon', 'Website', 'Status', 'Prioriteit', 'Grootte', 'Industrie', 'Aangemaakt'];
+      const rows = companies.map(c => [
+        c.name || '',
+        c.email || '',
+        c.phone || '',
+        c.website || '',
+        c.status || '',
+        c.priority || '',
+        c.company_size || '',
+        c.industries?.name || '',
+        c.created_at ? format(new Date(c.created_at), 'yyyy-MM-dd') : ''
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `bedrijven-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success(`${companies.length} bedrijven geëxporteerd`);
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error('Fout bij exporteren: ' + error.message);
+    }
+  };
+
+  const handleImport = async (data: any[], fieldMapping: Record<string, string>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const row of data) {
+      try {
+        // Map CSV fields to database fields
+        const companyData: any = {
+          name: row.name || row.Naam,
+          email: row.email || row.Email || undefined,
+          phone: row.phone || row.Telefoon || undefined,
+          website: row.website || row.Website || undefined,
+          status: (row.status || row.Status || 'prospect').toLowerCase(),
+          priority: (row.priority || row.Prioriteit || 'medium').toLowerCase(),
+          company_size: row.company_size || row.Grootte || undefined,
+          notes: row.notes || row.Notities || undefined,
+          owner_id: user.id,
+        };
+
+        // Insert into database
+        const { error } = await supabase
+          .from('companies')
+          .insert([companyData]);
+
+        if (error) {
+          console.error('Insert error for row:', row, error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (error) {
+        console.error('Row processing error:', error);
+        errorCount++;
+      }
+    }
+
+    return { success: successCount, errors: errorCount };
+  };
 
   return (
     <AppLayout
@@ -134,10 +242,17 @@ export default function CompaniesPage() {
             )}
           </Button>
 
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
+          
+          {canCreateCompany && (
+            <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Import
+            </Button>
+          )}
         </div>
       </div>
 
@@ -286,6 +401,17 @@ export default function CompaniesPage() {
           });
         }}
         isLoading={createCompany.isPending}
+      />
+
+      {/* CSV Import Dialog */}
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Bedrijven Importeren"
+        description="Importeer meerdere bedrijven tegelijk vanuit een CSV bestand"
+        requiredFields={['name']}
+        optionalFields={['email', 'phone', 'website', 'status', 'priority', 'company_size', 'notes']}
+        onImport={handleImport}
       />
     </div>
     </AppLayout>

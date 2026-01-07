@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, FileText, CheckCircle2, XCircle, Clock, Send, Search } from 'lucide-react';
+import { Plus, FileText, CheckCircle2, XCircle, Clock, Send, Search, Download } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import type { QuoteStatus } from '@/types/quotes';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusConfig: Record<QuoteStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }> = {
   draft: { label: 'Concept', variant: 'secondary', icon: FileText },
@@ -46,6 +47,67 @@ export default function QuotesPage() {
   });
   const createQuote = useCreateQuote();
 
+  const handleExportCSV = async () => {
+    try {
+      toast.info('Offertes exporteren...');
+      
+      let query = supabase
+        .from('quotes')
+        .select('quote_number, title, companies(name), contacts(first_name, last_name), status, total_amount, valid_until, sent_at, accepted_at, rejected_at, created_at');
+
+      // Apply same filters as current view
+      if (statusFilter && statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+      if (debouncedSearch) {
+        query = query.or(`title.ilike.%${debouncedSearch}%,quote_number.ilike.%${debouncedSearch}%`);
+      }
+
+      const { data: quotesData, error } = await query;
+      
+      if (error) throw error;
+      if (!quotesData || quotesData.length === 0) {
+        toast.warning('Geen offertes om te exporteren');
+        return;
+      }
+
+      // Convert to CSV
+      const headers = ['Offertenummer', 'Titel', 'Bedrijf', 'Contact', 'Status', 'Bedrag', 'Geldig tot', 'Verzonden', 'Geaccepteerd', 'Afgewezen', 'Aangemaakt'];
+      const rows = quotesData.map((q: any) => [
+        q.quote_number || '',
+        q.title || '',
+        q.companies?.name || '',
+        q.contacts ? `${q.contacts.first_name} ${q.contacts.last_name}` : '',
+        q.status || '',
+        q.total_amount?.toString() || '',
+        q.valid_until ? format(new Date(q.valid_until), 'yyyy-MM-dd') : '',
+        q.sent_at ? format(new Date(q.sent_at), 'yyyy-MM-dd') : '',
+        q.accepted_at ? format(new Date(q.accepted_at), 'yyyy-MM-dd') : '',
+        q.rejected_at ? format(new Date(q.rejected_at), 'yyyy-MM-dd') : '',
+        q.created_at ? format(new Date(q.created_at), 'yyyy-MM-dd') : ''
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `offertes-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success(`${quotesData.length} offertes geëxporteerd`);
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error('Fout bij exporteren: ' + error.message);
+    }
+  };
+
   const formatCurrency = useMemo(
     () => (amount: number) =>
       new Intl.NumberFormat('nl-NL', {
@@ -60,10 +122,16 @@ export default function QuotesPage() {
       title="Offertes"
       subtitle="Beheer en volg al je sales offertes"
       actions={
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nieuwe Offerte
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nieuwe Offerte
+          </Button>
+        </div>
       }
     >
       <div className="p-4 md:p-6 space-y-6">

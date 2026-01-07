@@ -471,6 +471,18 @@ export interface CompanyFilters {
   priority?: CompanyPriority[];
 }
 
+// Advanced multi-dimensional filtering for companies
+export interface AdvancedCompanyFilters extends CompanyFilters {
+  created_after?: string;            // ISO date string
+  created_before?: string;           // ISO date string
+  last_contact_after?: string;       // Last contact date filter
+  last_contact_before?: string;      // Last contact date filter
+  revenue_min?: number;              // Minimum annual revenue
+  revenue_max?: number;              // Maximum annual revenue
+  company_sizes?: CompanySize[];     // Multiple company sizes
+  tags?: string[];                   // Filter by tags
+}
+
 export interface InteractionFilters {
   type?: InteractionType[];
   company_id?: string[];
@@ -504,12 +516,24 @@ export interface KanbanColumn {
 // =============================================
 
 export type NotificationType = 
+  // Generic types
   | 'deadline'
   | 'approval'
   | 'update'
   | 'reminder'
   | 'escalation'
-  | 'digest';
+  | 'digest'
+  // CRM-specific types
+  | 'quote_accepted'       // Quote was accepted by client
+  | 'quote_rejected'       // Quote was rejected
+  | 'quote_expiring'       // Quote expires soon
+  | 'lead_assigned'        // New lead assigned to user
+  | 'project_stage_changed' // Project moved to new stage
+  | 'deal_won'            // Project successfully closed
+  | 'deal_lost'           // Project lost
+  | 'follow_up_reminder'   // Follow up with contact/company
+  | 'contact_created'      // New contact added
+  | 'company_created';     // New company added
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 

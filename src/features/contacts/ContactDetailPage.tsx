@@ -81,6 +81,12 @@ export default function ContactDetailPage() {
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
 
+  // Handle 'new' route - redirect to contacts page (create happens via dialog there)
+  if (id === 'new') {
+    navigate('/contacts', { replace: true });
+    return null;
+  }
+
   const { data: contact, isLoading } = useContact(id!);
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();

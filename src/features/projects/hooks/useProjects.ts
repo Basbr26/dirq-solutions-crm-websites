@@ -1,13 +1,18 @@
 /**
  * Projects Query Hooks
- * React Query hooks for fetching projects data
+ * React Query hooks for fetching projects data with advanced filtering
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Project, ProjectFilters, PipelineStats, ProjectStage } from '@/types/projects';
+import type { Project, ProjectFilters, AdvancedProjectFilters, PipelineStats, ProjectStage } from '@/types/projects';
 
-export function useProjects(filters?: ProjectFilters) {
+/**
+ * Fetch projects with advanced multi-dimensional filtering
+ * Supports: multiple stages, value ranges, date ranges, multiple owners, etc.
+ * @param filters - Advanced filter object
+ */
+export function useProjects(filters?: AdvancedProjectFilters) {
   return useQuery({
     queryKey: ['projects', filters],
     queryFn: async () => {
@@ -21,6 +26,7 @@ export function useProjects(filters?: ProjectFilters) {
         `)
         .order('created_at', { ascending: false });
 
+      // Basic filters (backward compatible)
       if (filters?.stage) {
         query = query.eq('stage', filters.stage);
       }
@@ -35,6 +41,57 @@ export function useProjects(filters?: ProjectFilters) {
       }
       if (filters?.search) {
         query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
+      }
+
+      // =============================================
+      // ADVANCED FILTERS - Multi-dimensional
+      // =============================================
+
+      // Multiple stages at once (e.g., negotiation + quote_sent)
+      if (filters?.stages && filters.stages.length > 0) {
+        query = query.in('stage', filters.stages);
+      }
+
+      // Value range filtering (min/max deal value)
+      if (filters?.value_min !== undefined) {
+        query = query.gte('value', filters.value_min);
+      }
+      if (filters?.value_max !== undefined) {
+        query = query.lte('value', filters.value_max);
+      }
+
+      // Date range filtering (created_at)
+      if (filters?.created_after) {
+        query = query.gte('created_at', filters.created_after);
+      }
+      if (filters?.created_before) {
+        query = query.lte('created_at', filters.created_before);
+      }
+
+      // Expected close date filtering
+      if (filters?.expected_close_after) {
+        query = query.gte('expected_close_date', filters.expected_close_after);
+      }
+      if (filters?.expected_close_before) {
+        query = query.lte('expected_close_date', filters.expected_close_before);
+      }
+
+      // Probability range (useful for filtering high-confidence deals)
+      if (filters?.probability_min !== undefined) {
+        query = query.gte('probability', filters.probability_min);
+      }
+      if (filters?.probability_max !== undefined) {
+        query = query.lte('probability', filters.probability_max);
+      }
+
+      // Multiple project types
+      if (filters?.project_types && filters.project_types.length > 0) {
+        query = query.in('project_type', filters.project_types);
+      }
+
+      // Multiple owners (useful for team views)
+      if (filters?.owner_ids && filters.owner_ids.length > 0) {
+        query = query.in('owner_id', filters.owner_ids);
       }
 
       const { data, error } = await query;

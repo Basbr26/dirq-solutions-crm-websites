@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
-import { DepartmentManagement } from '@/components/DepartmentManagement';
 import { UserManagement } from '@/components/UserManagement';
 import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, UserPlus, Shield, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,9 +13,9 @@ import { nl } from 'date-fns/locale';
 
 interface Stats {
   totalUsers: number;
-  totalDepartments: number;
-  totalManagers: number;
-  totalEmployees: number;
+  totalCompanies: number;
+  totalProjects: number;
+  activeDeals: number;
 }
 
 export default function DashboardSuperAdmin() {
@@ -29,19 +27,9 @@ export default function DashboardSuperAdmin() {
   });
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('users');
 
   useEffect(() => {
     loadStats();
-
-    // Listen for tab change events from mobile nav
-    const handleTabChange = (e: CustomEvent) => {
-      if (e.detail === 'users') setActiveTab('users');
-      if (e.detail === 'departments') setActiveTab('departments');
-    };
-
-    window.addEventListener('nav-tab-change', handleTabChange as EventListener);
-    return () => window.removeEventListener('nav-tab-change', handleTabChange as EventListener);
   }, []);
 
   const loadStats = async () => {
@@ -51,28 +39,27 @@ export default function DashboardSuperAdmin() {
         .from('profiles')
         .select('*', { count: 'exact', head: true });
 
-      // Get total departments
-      const { count: deptCount } = await supabase
-        .from('departments')
+      // Get total companies
+      const { count: companyCount } = await supabase
+        .from('companies')
         .select('*', { count: 'exact', head: true });
 
-      // Get managers count
-      const { count: managerCount } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'MANAGER');
+      // Get total projects
+      const { count: projectCount } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true });
 
-      // Get employees count
-      const { count: employeeCount } = await supabase
-        .from('profiles')
+      // Get active deals (negotiation + quote_sent)
+      const { count: activeDealsCount } = await supabase
+        .from('projects')
         .select('*', { count: 'exact', head: true })
-        .eq('role', 'SUPPORT');
+        .in('stage', ['negotiation', 'quote_sent']);
 
       setStats({
         totalUsers: userCount || 0,
-        totalDepartments: deptCount || 0,
-        totalManagers: managerCount || 0,
-        totalEmployees: employeeCount || 0,
+        totalCompanies: companyCount || 0,
+        totalProjects: projectCount || 0,
+        activeDeals: activeDealsCount || 0,
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -101,10 +88,10 @@ export default function DashboardSuperAdmin() {
         <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
           <div className="mb-6 sm:mb-8">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2">
-              Organisatiebeheer
+              Systeem Administratie
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Beheer gebruikers, afdelingen en rollen
+              Beheer gebruikers, CRM-data en systeeminstellingen
             </p>
           </div>
 
@@ -127,18 +114,15 @@ export default function DashboardSuperAdmin() {
               </CardContent>
             </Card>
 
-            <Card 
-              className="cursor-pointer transition-colors hover:bg-muted/50"
-              onClick={() => setActiveTab('departments')}
-            >
+            <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-4">
                   <div className="p-2 sm:p-3 rounded-lg bg-secondary/10 flex-shrink-0">
                     <Building2 className="h-4 w-4 sm:h-6 sm:w-6 text-secondary-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground">Afdelingen</p>
-                    <p className="text-xl sm:text-2xl font-bold">{stats.totalDepartments}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Bedrijven</p>
+                    <p className="text-xl sm:text-2xl font-bold">{stats.totalCompanies}</p>
                   </div>
                 </div>
               </CardContent>
@@ -151,8 +135,8 @@ export default function DashboardSuperAdmin() {
                     <Shield className="h-4 w-4 sm:h-6 sm:w-6 text-accent-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground">Managers</p>
-                    <p className="text-xl sm:text-2xl font-bold">{stats.totalManagers}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Projecten</p>
+                    <p className="text-xl sm:text-2xl font-bold">{stats.totalProjects}</p>
                   </div>
                 </div>
               </CardContent>
@@ -165,34 +149,23 @@ export default function DashboardSuperAdmin() {
                     <BarChart3 className="h-4 w-4 sm:h-6 sm:w-6 text-muted-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs sm:text-sm text-muted-foreground">Medewerkers</p>
-                    <p className="text-xl sm:text-2xl font-bold">{stats.totalEmployees}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Actieve Deals</p>
+                    <p className="text-xl sm:text-2xl font-bold">{stats.activeDeals}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-4 sm:mb-6 w-full sm:w-auto grid grid-cols-2 sm:flex">
-              <TabsTrigger value="users" className="text-xs sm:text-sm gap-1 sm:gap-2">
-                <Users className="h-3 w-3 sm:h-4 sm:w-4" />
-                Gebruikers
-              </TabsTrigger>
-              <TabsTrigger value="departments" className="text-xs sm:text-sm gap-1 sm:gap-2">
-                <Building2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                Afdelingen
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="users">
-              <UserManagement onRefresh={loadStats} />
-            </TabsContent>
-
-            <TabsContent value="departments">
-              <DepartmentManagement onRefresh={loadStats} />
-            </TabsContent>
-          </Tabs>
+          <div className="w-full">
+            <div className="mb-4 sm:mb-6">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Gebruikersbeheer
+              </h2>
+            </div>
+            <UserManagement onRefresh={loadStats} />
+          </div>
         </div>
       </PullToRefresh>
 

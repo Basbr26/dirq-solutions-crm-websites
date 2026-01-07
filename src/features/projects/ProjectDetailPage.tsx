@@ -7,11 +7,12 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useUpdateProject, useDeleteProject } from './hooks/useProjectMutations';
+import { useUpdateProject, useDeleteProject, useConvertLeadToCustomer } from './hooks/useProjectMutations';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
+import confetti from 'canvas-confetti';
 import {
   ArrowLeft,
   Edit,
@@ -28,6 +29,8 @@ import {
   Plus,
   Link as LinkIcon,
   Package,
+  Sparkles,
+  CheckCircle2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -74,11 +77,12 @@ export default function ProjectDetailPage() {
 
   const updateProject = useUpdateProject(id!);
   const deleteProject = useDeleteProject();
+  const convertLead = useConvertLeadToCustomer(id!);
 
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   const canDelete = role === 'ADMIN';
 
-  // Fetch project with all related data
+  // Fetch project data
   const { data: project, isLoading } = useQuery({
     queryKey: ['projects', id],
     queryFn: async () => {
@@ -98,6 +102,47 @@ export default function ProjectDetailPage() {
     },
     enabled: !!id,
   });
+
+  // Show conversion button if project is in negotiation or quote_sent stage
+  const canConvert = project && ['negotiation', 'quote_sent'].includes(project.stage);
+
+  // Handle lead to customer conversion with confetti
+  const handleConvertToCustomer = async () => {
+    convertLead.mutate(undefined, {
+      onSuccess: () => {
+        // Trigger confetti animation
+        const duration = 3 * 1000;
+        const animationEnd = Date.now() + duration;
+        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+        function randomInRange(min: number, max: number) {
+          return Math.random() * (max - min) + min;
+        }
+
+        const interval: any = setInterval(function() {
+          const timeLeft = animationEnd - Date.now();
+
+          if (timeLeft <= 0) {
+            return clearInterval(interval);
+          }
+
+          const particleCount = 50 * (timeLeft / duration);
+
+          // Fire confetti from two origins for full-screen effect
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+          });
+          confetti({
+            ...defaults,
+            particleCount,
+            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+          });
+        }, 250);
+      }
+    });
+  };
 
   // Fetch related quotes
   const { data: quotes } = useQuery({
@@ -224,6 +269,25 @@ export default function ProjectDetailPage() {
           </div>
 
           <div className="flex gap-2 flex-wrap">
+            {canConvert && canEdit && (
+              <Button 
+                onClick={handleConvertToCustomer}
+                disabled={convertLead.isPending}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+              >
+                {convertLead.isPending ? (
+                  <>
+                    <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Converteren...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Converteer naar Klant
+                  </>
+                )}
+              </Button>
+            )}
             {canEdit && (
               <Button onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" />

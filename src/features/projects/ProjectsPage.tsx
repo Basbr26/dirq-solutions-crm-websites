@@ -5,7 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, FolderKanban, TrendingUp, Euro, BarChart3 } from 'lucide-react';
+import { Plus, Search, Filter, FolderKanban, TrendingUp, Euro, BarChart3, Download } from 'lucide-react';
 import { useProjects, usePipelineStats } from './hooks/useProjects';
 import { useCreateProject } from './hooks/useProjectMutations';
 import { ProjectForm } from './components/ProjectForm';
@@ -28,6 +28,7 @@ import { nl } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const projectTypeLabels: Record<ProjectType, string> = {
   landing_page: 'Landing Page',
@@ -63,6 +64,71 @@ export default function ProjectsPage() {
 
   const canCreateProject = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
 
+  const handleExportCSV = async () => {
+    try {
+      toast.info('Projecten exporteren...');
+      
+      let query = supabase
+        .from('projects')
+        .select('title, companies(name), contacts(first_name, last_name), stage, project_type, value, probability, expected_close_date, actual_close_date, hosting_included, maintenance_contract, created_at');
+
+      // Apply same filters as current view
+      if (stageFilter) {
+        query = query.eq('stage', stageFilter);
+      }
+      if (typeFilter) {
+        query = query.eq('project_type', typeFilter);
+      }
+      if (debouncedSearch) {
+        query = query.or(`title.ilike.%${debouncedSearch}%`);
+      }
+
+      const { data: projectsData, error } = await query;
+      
+      if (error) throw error;
+      if (!projectsData || projectsData.length === 0) {
+        toast.warning('Geen projecten om te exporteren');
+        return;
+      }
+
+      // Convert to CSV
+      const headers = ['Titel', 'Bedrijf', 'Contact', 'Fase', 'Type', 'Waarde', 'Kans %', 'Verwachte afsluiting', 'Daadwerkelijke afsluiting', 'Hosting', 'Onderhoud', 'Aangemaakt'];
+      const rows = projectsData.map((p: any) => [
+        p.title || '',
+        p.companies?.name || '',
+        p.contacts ? `${p.contacts.first_name} ${p.contacts.last_name}` : '',
+        p.stage || '',
+        p.project_type || '',
+        p.value?.toString() || '',
+        p.probability?.toString() || '',
+        p.expected_close_date ? format(new Date(p.expected_close_date), 'yyyy-MM-dd') : '',
+        p.actual_close_date ? format(new Date(p.actual_close_date), 'yyyy-MM-dd') : '',
+        p.hosting_included ? 'Ja' : 'Nee',
+        p.maintenance_contract ? 'Ja' : 'Nee',
+        p.created_at ? format(new Date(p.created_at), 'yyyy-MM-dd') : ''
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `projecten-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success(`${projectsData.length} projecten geëxporteerd`);
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error('Fout bij exporteren: ' + error.message);
+    }
+  };
+
   const formatCurrency = useMemo(
     () => (amount: number) =>
       new Intl.NumberFormat('nl-NL', {
@@ -79,6 +145,10 @@ export default function ProjectsPage() {
       subtitle="Overzicht van alle website ontwikkel projecten"
       actions={
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
           <Button 
             variant="outline" 
             onClick={() => navigate('/pipeline')}

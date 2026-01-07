@@ -3,6 +3,14 @@
  * Handles OAuth and sync with Google Calendar
  */
 
+// Declare global types for Google APIs
+declare global {
+  interface Window {
+    gapi: any;
+    google: any;
+  }
+}
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
@@ -39,7 +47,7 @@ export async function initGoogleCalendar(): Promise<boolean> {
     });
 
     // Initialize token client for OAuth
-    tokenClient = google.accounts.oauth2.initTokenClient({
+    tokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
       callback: '', // Will be set during sign-in
@@ -95,7 +103,7 @@ export async function signInToGoogle(): Promise<string | null> {
 export function signOutFromGoogle(): void {
   const token = gapi.client.getToken();
   if (token !== null) {
-    google.accounts.oauth2.revoke(token.access_token);
+    window.google.accounts.oauth2.revoke(token.access_token);
     gapi.client.setToken('');
   }
 }

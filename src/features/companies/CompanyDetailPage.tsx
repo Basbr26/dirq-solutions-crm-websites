@@ -468,7 +468,7 @@ export default function CompanyDetailPage() {
                 Website Projecten ({projectsData?.length || 0})
               </CardTitle>
               {canEdit && (
-                <Link to={`/pipeline/new?company_id=${id}`}>
+                <Link to={`/projects/new?company_id=${id}`}>
                   <Button size="sm">
                     <TrendingUp className="h-4 w-4 mr-2" />
                     Nieuw project
@@ -499,7 +499,7 @@ export default function CompanyDetailPage() {
                     Dit bedrijf heeft nog geen website projecten of leads.
                   </p>
                   {canEdit && (
-                    <Link to={`/pipeline/new?company_id=${id}`}>
+                    <Link to={`/projects/new?company_id=${id}`}>
                       <Button>
                         <TrendingUp className="h-4 w-4 mr-2" />
                         Eerste project aanmaken

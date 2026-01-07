@@ -94,7 +94,7 @@ export function useContact(id: string) {
       if (error) throw error;
       return data as Contact;
     },
-    enabled: !!id,
+    enabled: !!id && id !== 'new',
   });
 }
 

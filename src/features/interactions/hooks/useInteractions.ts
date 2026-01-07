@@ -103,11 +103,11 @@ export function useInteractions(filters: InteractionFilters = {}) {
         query = query.eq('company_id', filters.companyId);
       }
 
-      if (filters.contactId) {
+      if (filters.contactId && filters.contactId !== 'new') {
         query = query.eq('contact_id', filters.contactId);
       }
 
-      if (filters.leadId) {
+      if (filters.leadId && filters.leadId !== 'new') {
         query = query.eq('lead_id', filters.leadId);
       }
 

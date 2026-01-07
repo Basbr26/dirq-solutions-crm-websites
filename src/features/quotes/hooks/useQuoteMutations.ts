@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { CreateQuoteInput, UpdateQuoteInput, QuoteStatus } from '@/types/quotes';
+import { notifyQuoteStatusChange } from '@/lib/crmNotifications';
 
 export function useCreateQuote() {
   const queryClient = useQueryClient();
@@ -152,7 +153,7 @@ export function useUpdateQuoteStatus(id: string) {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, status) => {
+    onSuccess: async (quote, status) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quotes', id] });
       queryClient.invalidateQueries({ queryKey: ['quote-stats'] });
@@ -167,6 +168,26 @@ export function useUpdateQuoteStatus(id: string) {
       };
       
       toast.success(`Offerte status: ${statusLabels[status]}`);
+
+      // Send notification for accepted/rejected status
+      if (status === 'accepted' || status === 'rejected') {
+        // Fetch company name for notification
+        const { data: quoteData } = await supabase
+          .from('quotes')
+          .select('title, created_by, companies(name)')
+          .eq('id', id)
+          .single();
+
+        if (quoteData) {
+          await notifyQuoteStatusChange(
+            id,
+            status,
+            quoteData.created_by,
+            (quoteData as any).companies?.name || 'Onbekend bedrijf',
+            quoteData.title
+          );
+        }
+      }
     },
     onError: (error: Error) => {
       toast.error(`Fout bij status wijziging: ${error.message}`);

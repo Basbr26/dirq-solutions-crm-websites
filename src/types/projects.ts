@@ -127,6 +127,21 @@ export interface ProjectFilters {
   search?: string;
 }
 
+// Advanced multi-dimensional filtering
+export interface AdvancedProjectFilters extends ProjectFilters {
+  stages?: ProjectStage[];          // Multiple stages at once
+  value_min?: number;                // Minimum deal value
+  value_max?: number;                // Maximum deal value
+  created_after?: string;            // ISO date string
+  created_before?: string;           // ISO date string
+  expected_close_after?: string;     // Filter by expected close date
+  expected_close_before?: string;    // Filter by expected close date
+  probability_min?: number;          // Minimum probability (0-100)
+  probability_max?: number;          // Maximum probability (0-100)
+  project_types?: ProjectType[];     // Multiple project types
+  owner_ids?: string[];              // Multiple owners
+}
+
 export interface PipelineStats {
   total_projects: number;
   total_value: number;

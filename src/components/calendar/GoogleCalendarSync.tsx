@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -31,12 +31,27 @@ export function GoogleCalendarSync() {
     initializeGoogle();
   }, []);
 
+  const loadSyncSettings = useCallback(async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('google_calendar_sync, last_calendar_sync')
+      .eq('id', user.id)
+      .single();
+
+    if (data) {
+      setAutoSync(data.google_calendar_sync || false);
+      setLastSyncTime(data.last_calendar_sync ? new Date(data.last_calendar_sync) : null);
+    }
+  }, [user]);
+
   useEffect(() => {
     // Load sync settings from database
     if (user) {
       loadSyncSettings();
     }
-  }, [user]);
+  }, [user, loadSyncSettings]);
 
   const initializeGoogle = async () => {
     setIsLoading(true);
@@ -51,21 +66,6 @@ export function GoogleCalendarSync() {
       toast.error('Google Calendar kon niet worden geïnitialiseerd');
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadSyncSettings = async () => {
-    if (!user) return;
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('google_calendar_sync, last_calendar_sync')
-      .eq('id', user.id)
-      .single();
-
-    if (data) {
-      setAutoSync(data.google_calendar_sync || false);
-      setLastSyncTime(data.last_calendar_sync ? new Date(data.last_calendar_sync) : null);
     }
   };
 

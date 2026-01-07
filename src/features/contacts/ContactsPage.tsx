@@ -34,8 +34,13 @@ import {
   Crown,
   Building2,
   Loader2,
+  Download,
+  Upload,
 } from "lucide-react";
 import { ContactCreateData } from "@/types/crm";
+import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
+import { CSVImportDialog } from '@/components/CSVImportDialog';
 
 export function ContactsPage() {
   const [searchParams] = useSearchParams();
@@ -49,6 +54,7 @@ export function ContactsPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [preselectedCompanyId, setPreselectedCompanyId] = useState<string | undefined>();
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   // Check for company_id in URL parameters
   useEffect(() => {
@@ -93,6 +99,135 @@ export function ContactsPage() {
         toast.error('Fout bij aanmaken contact: ' + error.message);
       },
     });
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      toast.info('Contacten exporteren...');
+      
+      let query = supabase
+        .from('contacts')
+        .select('first_name, last_name, email, phone, mobile, position, department, companies(name), is_primary, is_decision_maker, created_at');
+
+      // Apply same filters as current view
+      if (filterCompanyId) {
+        query = query.eq('company_id', filterCompanyId);
+      }
+      if (filterIsPrimary !== undefined) {
+        query = query.eq('is_primary', filterIsPrimary);
+      }
+      if (filterIsDecisionMaker !== undefined) {
+        query = query.eq('is_decision_maker', filterIsDecisionMaker);
+      }
+      if (debouncedSearch) {
+        query = query.or(`first_name.ilike.%${debouncedSearch}%,last_name.ilike.%${debouncedSearch}%,email.ilike.%${debouncedSearch}%`);
+      }
+
+      const { data: contacts, error } = await query;
+      
+      if (error) throw error;
+      if (!contacts || contacts.length === 0) {
+        toast.warning('Geen contacten om te exporteren');
+        return;
+      }
+
+      // Convert to CSV
+      const headers = ['Voornaam', 'Achternaam', 'Email', 'Telefoon', 'Mobiel', 'Functie', 'Afdeling', 'Bedrijf', 'Primair', 'Beslisser', 'Aangemaakt'];
+      const rows = contacts.map((c: any) => [
+        c.first_name || '',
+        c.last_name || '',
+        c.email || '',
+        c.phone || '',
+        c.mobile || '',
+        c.position || '',
+        c.department || '',
+        c.companies?.name || '',
+        c.is_primary ? 'Ja' : 'Nee',
+        c.is_decision_maker ? 'Ja' : 'Nee',
+        c.created_at ? format(new Date(c.created_at), 'yyyy-MM-dd') : ''
+      ]);
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contacten-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success(`${contacts.length} contacten geëxporteerd`);
+    } catch (error: any) {
+      console.error('Export error:', error);
+      toast.error('Fout bij exporteren: ' + error.message);
+    }
+  };
+
+  const handleImport = async (data: any[], fieldMapping: Record<string, string>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get all companies for lookup
+    const { data: companies } = await supabase
+      .from('companies')
+      .select('id, name');
+
+    const companyMap = new Map(
+      companies?.map(c => [c.name.toLowerCase(), c.id]) || []
+    );
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const row of data) {
+      try {
+        // Map CSV fields to database fields
+        const contactData: any = {
+          first_name: row.first_name || row.Voornaam,
+          last_name: row.last_name || row.Achternaam,
+          email: row.email || row.Email || undefined,
+          phone: row.phone || row.Telefoon || undefined,
+          mobile: row.mobile || row.Mobiel || undefined,
+          position: row.position || row.Functie || undefined,
+          department: row.department || row.Afdeling || undefined,
+          is_primary: row.is_primary === 'Ja' || row.is_primary === 'true' || row.is_primary === true,
+          is_decision_maker: row.is_decision_maker === 'Ja' || row.is_decision_maker === 'true' || row.is_decision_maker === true,
+          notes: row.notes || row.Notities || undefined,
+          owner_id: user.id,
+        };
+
+        // Try to match company by name
+        const companyName = row.company || row.Bedrijf;
+        if (companyName) {
+          const companyId = companyMap.get(companyName.toLowerCase());
+          if (companyId) {
+            contactData.company_id = companyId;
+          }
+        }
+
+        // Insert into database
+        const { error } = await supabase
+          .from('contacts')
+          .insert([contactData]);
+
+        if (error) {
+          console.error('Insert error for row:', row, error);
+          errorCount++;
+        } else {
+          successCount++;
+        }
+      } catch (error) {
+        console.error('Row processing error:', error);
+        errorCount++;
+      }
+    }
+
+    return { success: successCount, errors: errorCount };
   };
 
   const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
@@ -183,13 +318,23 @@ export function ContactsPage() {
             className="pl-10"
           />
         </div>
-        <Button
-          variant={showFilters ? "secondary" : "outline"}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="mr-2 h-4 w-4" />
-          Filters
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant={showFilters ? "secondary" : "outline"}
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+          </Button>
+          <Button variant="outline" onClick={handleExportCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+        </div>
       </div>
 
       {/* Advanced Filters */}
@@ -385,6 +530,17 @@ export function ContactsPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* CSV Import Dialog */}
+      <CSVImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        title="Contacten Importeren"
+        description="Importeer meerdere contactpersonen tegelijk vanuit een CSV bestand"
+        requiredFields={['first_name', 'last_name']}
+        optionalFields={['email', 'phone', 'mobile', 'position', 'department', 'company', 'is_primary', 'is_decision_maker', 'notes']}
+        onImport={handleImport}
+      />
     </div>
     </AppLayout>
   );
