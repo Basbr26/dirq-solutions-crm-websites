@@ -101,13 +101,11 @@ export function CreateEventDialog() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="meeting">Sales Meeting</SelectItem>
-                <SelectItem value="call">Sales Call</SelectItem>
-                <SelectItem value="demo">Product Demo</SelectItem>
-                <SelectItem value="followup">Follow-up</SelectItem>
-                <SelectItem value="deadline">Project Deadline</SelectItem>
-                <SelectItem value="training">Training</SelectItem>
-                <SelectItem value="personal">Persoonlijk</SelectItem>
+                <SelectItem value="meeting">Vergadering</SelectItem>
+                <SelectItem value="call">Telefoongesprek</SelectItem>
+                <SelectItem value="task">Taak</SelectItem>
+                <SelectItem value="reminder">Herinnering</SelectItem>
+                <SelectItem value="other">Overig</SelectItem>
               </SelectContent>
             </Select>
           </div>
