@@ -45,13 +45,32 @@ export function GoogleCalendarSync() {
       setLastSyncTime(data.last_calendar_sync ? new Date(data.last_calendar_sync) : null);
       
       // Check if user has valid token
-      if (data.google_access_token) {
-        const expiresAt = data.google_token_expires_at ? new Date(data.google_token_expires_at) : null;
-        const isExpired = expiresAt ? expiresAt < new Date() : true;
+      if (data.google_access_token && data.google_token_expires_at) {
+        const expiresAt = new Date(data.google_token_expires_at);
+        const isExpired = expiresAt < new Date();
         
         if (!isExpired) {
-          // Token is valid, restore session
-          setIsSignedIn(true);
+          // Token is valid, restore session in gapi client
+          try {
+            // Wait for gapi to be initialized
+            const checkGapi = setInterval(() => {
+              if (window.gapi?.client) {
+                clearInterval(checkGapi);
+                // Restore token in gapi client
+                window.gapi.client.setToken({
+                  access_token: data.google_access_token,
+                  expires_in: Math.floor((expiresAt.getTime() - Date.now()) / 1000),
+                });
+                setIsSignedIn(true);
+                console.log('Google Calendar sessie hersteld uit database');
+              }
+            }, 100);
+            
+            // Timeout after 5 seconds
+            setTimeout(() => clearInterval(checkGapi), 5000);
+          } catch (error) {
+            console.error('Error restoring Google session:', error);
+          }
         } else {
           // Token expired, clear from database
           await supabase
