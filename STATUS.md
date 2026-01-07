@@ -1,7 +1,7 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 7 Januari 2026 18:30  
-**Version:** 1.0.0  
+**Last Updated:** 7 Januari 2026 20:00  
+**Version:** 1.0.1  
 **Production Status:** ✅ Production Ready
 
 ---
@@ -160,7 +160,6 @@
 
 ### Medium Priority
 - ⚠️ Testing coverage laag (2/10)
-- ⚠️ Stale HR code nog aanwezig in sommige dashboards
 - ⚠️ Email notifications niet volledig geïmplementeerd (placeholders)
 
 ### Low Priority

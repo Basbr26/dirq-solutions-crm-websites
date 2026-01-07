@@ -96,7 +96,7 @@ export interface Workflow {
   description?: string;
   definition: WorkflowDefinition;
   created_by: string;
-  category: 'onboarding' | 'offboarding' | 'verzuim' | 'contract' | 'performance' | 'other';
+  category: 'sales' | 'project' | 'quote' | 'lead' | 'client_onboarding' | 'other';
   is_active: boolean;
   is_template: boolean;
   version: number;

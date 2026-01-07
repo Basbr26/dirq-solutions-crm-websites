@@ -92,7 +92,7 @@ export const generateDigestEmailTemplate = (
         
         <div class="footer">
           <p><a href="https://dirq.app/notifications">View all notifications</a></p>
-          <p>© Dirq Solutions | Verzuim Management System</p>
+          <p>© Dirq Solutions | CRM voor Website Ontwikkeling</p>
         </div>
       </div>
     </body>
@@ -157,7 +157,7 @@ export const generateActionEmailTemplate = (
         </div>
         
         <div class="footer">
-          <p>© Dirq Solutions | Verzuim Management System</p>
+          <p>© Dirq Solutions | CRM voor Website Ontwikkeling</p>
           <p><a href="https://dirq.app">Visit your dashboard</a></p>
         </div>
       </div>
