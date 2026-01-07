@@ -17,7 +17,7 @@ export function useQuotes(filters?: QuoteFilters) {
           *,
           companies (id, name),
           contacts (id, first_name, last_name, email),
-          owner:profiles!owner_id (id, full_name)
+          owner:profiles (id, full_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -51,7 +51,7 @@ export function useQuote(id: string) {
           *,
           companies (id, name, email, phone),
           contacts (id, first_name, last_name, email, phone, position),
-          owner:profiles!owner_id (id, full_name, email)
+          owner:profiles (id, full_name, email)
         `)
         .eq('id', id)
         .single();
