@@ -11,8 +11,6 @@ import {
   Search,
   UserPlus,
   FileText,
-  Heart,
-  UserMinus,
   ClipboardCheck,
   Calendar,
   Workflow,
@@ -23,20 +21,16 @@ import {
 import { toast } from 'sonner';
 
 const categoryIcons: Record<string, React.ElementType> = {
-  onboarding: UserPlus,
-  offboarding: UserMinus,
-  verzuim: Heart,
-  contract: FileText,
-  performance: ClipboardCheck,
+  sales: UserPlus,
+  project: FileText,
+  finance: ClipboardCheck,
   other: Calendar,
 };
 
 const categoryLabels: Record<string, string> = {
-  onboarding: 'Onboarding',
-  offboarding: 'Offboarding',
-  verzuim: 'Verzuim',
-  contract: 'Contracten',
-  performance: 'Performance',
+  sales: 'Sales',
+  project: 'Projecten',
+  finance: 'Finance',
   other: 'Overig',
 };
 
@@ -86,7 +80,7 @@ export default function WorkflowTemplatesPage() {
               <div className="flex-1">
                 <h2 className="text-xl font-semibold mb-2">Workflow Templates</h2>
                 <p className="text-muted-foreground">
-                  Bespaar tijd met voorgedefinieerde workflows voor veelvoorkomende HR processen. Kies een
+                  Bespaar tijd met voorgedefinieerde workflows voor veelvoorkomende CRM processen. Kies een
                   template, pas aan naar jouw wensen en activeer!
                 </p>
               </div>

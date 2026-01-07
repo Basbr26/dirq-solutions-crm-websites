@@ -1,0 +1,307 @@
+/**
+ * Google Calendar API Integration
+ * Handles OAuth and sync with Google Calendar
+ */
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || '';
+const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'];
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+
+let gapi: any = null;
+let tokenClient: any = null;
+
+/**
+ * Initialize Google API client
+ */
+export async function initGoogleCalendar(): Promise<boolean> {
+  try {
+    // Load Google API script if not already loaded
+    if (!window.gapi) {
+      await loadGoogleScript('https://apis.google.com/js/api.js');
+    }
+    
+    if (!window.google) {
+      await loadGoogleScript('https://accounts.google.com/gsi/client');
+    }
+
+    gapi = window.gapi;
+
+    // Initialize gapi client
+    await new Promise<void>((resolve) => {
+      gapi.load('client', async () => {
+        await gapi.client.init({
+          apiKey: GOOGLE_API_KEY,
+          discoveryDocs: DISCOVERY_DOCS,
+        });
+        resolve();
+      });
+    });
+
+    // Initialize token client for OAuth
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES,
+      callback: '', // Will be set during sign-in
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error initializing Google Calendar:', error);
+    return false;
+  }
+}
+
+/**
+ * Load Google script dynamically
+ */
+function loadGoogleScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * Sign in to Google and get access token
+ */
+export async function signInToGoogle(): Promise<string | null> {
+  return new Promise((resolve) => {
+    tokenClient.callback = (response: any) => {
+      if (response.error) {
+        console.error('Google sign-in error:', response.error);
+        resolve(null);
+        return;
+      }
+      resolve(response.access_token);
+    };
+
+    if (gapi.client.getToken() === null) {
+      // Prompt the user to select a Google Account and ask for consent
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    } else {
+      // Skip display of account chooser and consent dialog
+      tokenClient.requestAccessToken({ prompt: '' });
+    }
+  });
+}
+
+/**
+ * Sign out from Google
+ */
+export function signOutFromGoogle(): void {
+  const token = gapi.client.getToken();
+  if (token !== null) {
+    google.accounts.oauth2.revoke(token.access_token);
+    gapi.client.setToken('');
+  }
+}
+
+/**
+ * Check if user is signed in to Google
+ */
+export function isGoogleSignedIn(): boolean {
+  return gapi?.client?.getToken() !== null;
+}
+
+/**
+ * Fetch events from Google Calendar
+ */
+export async function fetchGoogleCalendarEvents(
+  calendarId: string = 'primary',
+  timeMin?: Date,
+  timeMax?: Date
+): Promise<any[]> {
+  try {
+    const request = {
+      calendarId,
+      timeMin: timeMin?.toISOString() || new Date().toISOString(),
+      timeMax: timeMax?.toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 250,
+      orderBy: 'startTime',
+    };
+
+    const response = await gapi.client.calendar.events.list(request);
+    return response.result.items || [];
+  } catch (error) {
+    console.error('Error fetching Google Calendar events:', error);
+    throw error;
+  }
+}
+
+/**
+ * Create event in Google Calendar
+ */
+export async function createGoogleCalendarEvent(event: {
+  summary: string;
+  description?: string;
+  location?: string;
+  start: { dateTime: string; timeZone?: string };
+  end: { dateTime: string; timeZone?: string };
+  attendees?: { email: string }[];
+  reminders?: {
+    useDefault: boolean;
+    overrides?: { method: string; minutes: number }[];
+  };
+}): Promise<any> {
+  try {
+    const response = await gapi.client.calendar.events.insert({
+      calendarId: 'primary',
+      resource: event,
+    });
+    return response.result;
+  } catch (error) {
+    console.error('Error creating Google Calendar event:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update event in Google Calendar
+ */
+export async function updateGoogleCalendarEvent(
+  eventId: string,
+  event: any
+): Promise<any> {
+  try {
+    const response = await gapi.client.calendar.events.update({
+      calendarId: 'primary',
+      eventId,
+      resource: event,
+    });
+    return response.result;
+  } catch (error) {
+    console.error('Error updating Google Calendar event:', error);
+    throw error;
+  }
+}
+
+/**
+ * Delete event from Google Calendar
+ */
+export async function deleteGoogleCalendarEvent(eventId: string): Promise<void> {
+  try {
+    await gapi.client.calendar.events.delete({
+      calendarId: 'primary',
+      eventId,
+    });
+  } catch (error) {
+    console.error('Error deleting Google Calendar event:', error);
+    throw error;
+  }
+}
+
+/**
+ * Sync local events to Google Calendar
+ */
+export async function syncToGoogleCalendar(localEvents: any[]): Promise<{
+  synced: number;
+  errors: number;
+}> {
+  let synced = 0;
+  let errors = 0;
+
+  for (const event of localEvents) {
+    try {
+      // Skip if already synced
+      if (event.google_event_id) {
+        continue;
+      }
+
+      const googleEvent = {
+        summary: event.title,
+        description: event.description || '',
+        location: event.location || '',
+        start: {
+          dateTime: event.start_time,
+          timeZone: 'Europe/Amsterdam',
+        },
+        end: {
+          dateTime: event.end_time,
+          timeZone: 'Europe/Amsterdam',
+        },
+      };
+
+      const result = await createGoogleCalendarEvent(googleEvent);
+      
+      // Store the Google event ID in local database
+      // This would need a Supabase update call here
+      
+      synced++;
+    } catch (error) {
+      console.error(`Error syncing event ${event.id}:`, error);
+      errors++;
+    }
+  }
+
+  return { synced, errors };
+}
+
+/**
+ * Sync Google Calendar events to local database
+ */
+export async function syncFromGoogleCalendar(
+  onEventImport: (event: any) => Promise<void>
+): Promise<{ imported: number; errors: number }> {
+  let imported = 0;
+  let errors = 0;
+
+  try {
+    const now = new Date();
+    const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const threeMonthsAhead = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+    const googleEvents = await fetchGoogleCalendarEvents(
+      'primary',
+      threeMonthsAgo,
+      threeMonthsAhead
+    );
+
+    for (const event of googleEvents) {
+      try {
+        // Convert Google event to local format
+        const localEvent = {
+          google_event_id: event.id,
+          title: event.summary || 'Untitled Event',
+          description: event.description || null,
+          start_time: event.start.dateTime || event.start.date,
+          end_time: event.end.dateTime || event.end.date,
+          all_day: !event.start.dateTime,
+          location: event.location || null,
+          event_type: 'meeting',
+          color: '#10b981', // Default green color
+          is_virtual: event.conferenceData?.entryPoints?.some(
+            (e: any) => e.entryPointType === 'video'
+          ) || false,
+          meeting_url: event.conferenceData?.entryPoints?.find(
+            (e: any) => e.entryPointType === 'video'
+          )?.uri || event.hangoutLink || null,
+        };
+
+        await onEventImport(localEvent);
+        imported++;
+      } catch (error) {
+        console.error(`Error importing event ${event.id}:`, error);
+        errors++;
+      }
+    }
+  } catch (error) {
+    console.error('Error syncing from Google Calendar:', error);
+    throw error;
+  }
+
+  return { imported, errors };
+}
+
+// TypeScript declarations for global objects
+declare global {
+  interface Window {
+    gapi: any;
+    google: any;
+  }
+}

@@ -202,11 +202,373 @@ const quoteApprovalTemplate: WorkflowDefinition = {
   ],
 };
 
-// Placeholder templates (keep structure for now, can be enhanced later)
-const projectOnboardingTemplate: WorkflowDefinition = leadNurturingTemplate;
-const clientFollowUpTemplate: WorkflowDefinition = leadNurturingTemplate;
-const contractSigningTemplate: WorkflowDefinition = quoteApprovalTemplate;
-const paymentReminderTemplate: WorkflowDefinition = quoteApprovalTemplate;
+// ============================================================================
+// PROJECT ONBOARDING TEMPLATE
+// ============================================================================
+
+const projectOnboardingTemplate: WorkflowDefinition = {
+  nodes: [
+    {
+      id: 'trigger-1',
+      type: 'trigger',
+      position: { x: 100, y: 100 },
+      data: {
+        label: 'Project gewonnen',
+        triggerType: 'event',
+        event: 'project.won',
+      },
+    },
+    {
+      id: 'action-1',
+      type: 'action',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Maak projectdossier aan',
+        actionType: 'create_record',
+        config: {
+          table: 'projects',
+          fields: {
+            name: '{{project.name}}',
+            company_id: '{{project.company_id}}',
+            status: 'kickoff',
+          },
+        },
+      },
+    },
+    {
+      id: 'notification-1',
+      type: 'notification',
+      position: { x: 100, y: 300 },
+      data: {
+        label: 'Notificeer klant',
+        to: '{{project.contact_email}}',
+        subject: 'Welkom! Laten we beginnen met {{project.name}}',
+        message: 'We zijn verheugd om met jullie te werken aan dit project.',
+        channels: ['email'],
+      },
+    },
+    {
+      id: 'wait-1',
+      type: 'wait',
+      position: { x: 100, y: 400 },
+      data: {
+        label: 'Wacht 1 dag',
+        waitType: 'duration',
+        config: {
+          duration: 1,
+          unit: 'days',
+        },
+      },
+    },
+    {
+      id: 'notification-2',
+      type: 'notification',
+      position: { x: 100, y: 500 },
+      data: {
+        label: 'Plan kickoff meeting',
+        to: ['{{project.owner}}', '{{project.contact_email}}'],
+        subject: 'Kickoff meeting plannen',
+        message: 'Tijd om een kickoff meeting in te plannen voor project {{project.name}}',
+        channels: ['email', 'in_app'],
+      },
+    },
+  ],
+  edges: [
+    { id: 'e1-2', source: 'trigger-1', target: 'action-1' },
+    { id: 'e2-3', source: 'action-1', target: 'notification-1' },
+    { id: 'e3-4', source: 'notification-1', target: 'wait-1' },
+    { id: 'e4-5', source: 'wait-1', target: 'notification-2' },
+  ],
+};
+
+// ============================================================================
+// CLIENT FOLLOW-UP TEMPLATE
+// ============================================================================
+
+const clientFollowUpTemplate: WorkflowDefinition = {
+  nodes: [
+    {
+      id: 'trigger-1',
+      type: 'trigger',
+      position: { x: 100, y: 100 },
+      data: {
+        label: 'Meeting voltooid',
+        triggerType: 'event',
+        event: 'interaction.completed',
+      },
+    },
+    {
+      id: 'wait-1',
+      type: 'wait',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Wacht 4 uur',
+        waitType: 'duration',
+        config: {
+          duration: 4,
+          unit: 'hours',
+        },
+      },
+    },
+    {
+      id: 'notification-1',
+      type: 'notification',
+      position: { x: 100, y: 300 },
+      data: {
+        label: 'Bedankmail',
+        to: '{{interaction.contact_email}}',
+        subject: 'Bedankt voor het gesprek',
+        message: 'Fijn dat we kennis hebben gemaakt. Hierbij de besproken informatie.',
+        channels: ['email'],
+      },
+    },
+    {
+      id: 'wait-2',
+      type: 'wait',
+      position: { x: 100, y: 400 },
+      data: {
+        label: 'Wacht 3 dagen',
+        waitType: 'duration',
+        config: {
+          duration: 3,
+          unit: 'days',
+        },
+      },
+    },
+    {
+      id: 'notification-2',
+      type: 'notification',
+      position: { x: 100, y: 500 },
+      data: {
+        label: 'Herinnering aan sales',
+        to: '{{interaction.owner}}',
+        subject: 'Follow-up: {{interaction.company_name}}',
+        message: 'Tijd voor een follow-up gesprek met {{interaction.contact_name}}',
+        channels: ['in_app', 'email'],
+      },
+    },
+  ],
+  edges: [
+    { id: 'e1-2', source: 'trigger-1', target: 'wait-1' },
+    { id: 'e2-3', source: 'wait-1', target: 'notification-1' },
+    { id: 'e3-4', source: 'notification-1', target: 'wait-2' },
+    { id: 'e4-5', source: 'wait-2', target: 'notification-2' },
+  ],
+};
+
+// ============================================================================
+// CONTRACT SIGNING TEMPLATE
+// ============================================================================
+
+const contractSigningTemplate: WorkflowDefinition = {
+  nodes: [
+    {
+      id: 'trigger-1',
+      type: 'trigger',
+      position: { x: 100, y: 100 },
+      data: {
+        label: 'Quote geaccepteerd',
+        triggerType: 'event',
+        event: 'quote.accepted',
+      },
+    },
+    {
+      id: 'action-1',
+      type: 'action',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Genereer contract',
+        actionType: 'generate_document',
+        config: {
+          template: 'contract_template',
+          output_path: 'contracts/{{quote.id}}/contract.pdf',
+        },
+      },
+    },
+    {
+      id: 'notification-1',
+      type: 'notification',
+      position: { x: 100, y: 300 },
+      data: {
+        label: 'Verstuur contract',
+        to: '{{quote.contact_email}}',
+        subject: 'Contract ter ondertekening',
+        message: 'Hierbij het contract voor project {{quote.project_name}}. Graag digitaal ondertekenen.',
+        channels: ['email'],
+      },
+    },
+    {
+      id: 'wait-1',
+      type: 'wait',
+      position: { x: 100, y: 400 },
+      data: {
+        label: 'Wacht 7 dagen',
+        waitType: 'duration',
+        config: {
+          duration: 7,
+          unit: 'days',
+        },
+      },
+    },
+    {
+      id: 'condition-1',
+      type: 'condition',
+      position: { x: 100, y: 500 },
+      data: {
+        label: 'Contract getekend?',
+        condition: '{{contract.status}} == "signed"',
+        trueLabel: 'Ja',
+        falseLabel: 'Nee',
+      },
+    },
+    {
+      id: 'notification-2',
+      type: 'notification',
+      position: { x: 300, y: 600 },
+      data: {
+        label: 'Herinnering',
+        to: '{{quote.contact_email}}',
+        subject: 'Herinnering: Contract ondertekening',
+        message: 'Nog niet het contract ontvangen. Kunnen we je ergens mee helpen?',
+        channels: ['email'],
+      },
+    },
+    {
+      id: 'notification-3',
+      type: 'notification',
+      position: { x: -100, y: 600 },
+      data: {
+        label: 'Feliciteer team',
+        to: ['{{quote.owner}}', 'role:sales'],
+        subject: 'Contract getekend! 🎉',
+        message: 'Contract voor {{quote.company_name}} is getekend. Project kan starten!',
+        channels: ['in_app', 'email'],
+      },
+    },
+  ],
+  edges: [
+    { id: 'e1-2', source: 'trigger-1', target: 'action-1' },
+    { id: 'e2-3', source: 'action-1', target: 'notification-1' },
+    { id: 'e3-4', source: 'notification-1', target: 'wait-1' },
+    { id: 'e4-5', source: 'wait-1', target: 'condition-1' },
+    { id: 'e5-6', source: 'condition-1', target: 'notification-2', label: 'Nee' },
+    { id: 'e5-7', source: 'condition-1', target: 'notification-3', label: 'Ja' },
+  ],
+};
+
+// ============================================================================
+// PAYMENT REMINDER TEMPLATE
+// ============================================================================
+
+const paymentReminderTemplate: WorkflowDefinition = {
+  nodes: [
+    {
+      id: 'trigger-1',
+      type: 'trigger',
+      position: { x: 100, y: 100 },
+      data: {
+        label: 'Factuur vervallen',
+        triggerType: 'event',
+        event: 'invoice.overdue',
+      },
+    },
+    {
+      id: 'wait-1',
+      type: 'wait',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Wacht 3 dagen',
+        waitType: 'duration',
+        config: {
+          duration: 3,
+          unit: 'days',
+        },
+      },
+    },
+    {
+      id: 'notification-1',
+      type: 'notification',
+      position: { x: 100, y: 300 },
+      data: {
+        label: 'Vriendelijke herinnering',
+        to: '{{invoice.client_email}}',
+        subject: 'Herinnering: Factuur {{invoice.number}}',
+        message: 'De betaaltermijn van factuur {{invoice.number}} is verstreken. Kunnen we je ergens mee helpen?',
+        channels: ['email'],
+      },
+    },
+    {
+      id: 'wait-2',
+      type: 'wait',
+      position: { x: 100, y: 400 },
+      data: {
+        label: 'Wacht 7 dagen',
+        waitType: 'duration',
+        config: {
+          duration: 7,
+          unit: 'days',
+        },
+      },
+    },
+    {
+      id: 'condition-1',
+      type: 'condition',
+      position: { x: 100, y: 500 },
+      data: {
+        label: 'Betaald?',
+        condition: '{{invoice.status}} == "paid"',
+        trueLabel: 'Ja',
+        falseLabel: 'Nee',
+      },
+    },
+    {
+      id: 'notification-2',
+      type: 'notification',
+      position: { x: 300, y: 600 },
+      data: {
+        label: 'Tweede herinnering',
+        to: '{{invoice.client_email}}',
+        subject: 'Tweede herinnering: Factuur {{invoice.number}}',
+        message: 'We hebben nog geen betaling ontvangen voor factuur {{invoice.number}}.',
+        channels: ['email'],
+      },
+    },
+    {
+      id: 'wait-3',
+      type: 'wait',
+      position: { x: 300, y: 700 },
+      data: {
+        label: 'Wacht 5 dagen',
+        waitType: 'duration',
+        config: {
+          duration: 5,
+          unit: 'days',
+        },
+      },
+    },
+    {
+      id: 'notification-3',
+      type: 'notification',
+      position: { x: 300, y: 800 },
+      data: {
+        label: 'Escaleer naar manager',
+        to: 'role:finance_manager',
+        subject: 'Escalatie: Onbetaalde factuur {{invoice.number}}',
+        message: 'Factuur {{invoice.number}} voor {{invoice.company_name}} is >14 dagen onbetaald.',
+        channels: ['email', 'in_app'],
+      },
+    },
+  ],
+  edges: [
+    { id: 'e1-2', source: 'trigger-1', target: 'wait-1' },
+    { id: 'e2-3', source: 'wait-1', target: 'notification-1' },
+    { id: 'e3-4', source: 'notification-1', target: 'wait-2' },
+    { id: 'e4-5', source: 'wait-2', target: 'condition-1' },
+    { id: 'e5-6', source: 'condition-1', target: 'notification-2', label: 'Nee' },
+    { id: 'e6-7', source: 'notification-2', target: 'wait-3' },
+    { id: 'e7-8', source: 'wait-3', target: 'notification-3' },
+  ],
+};
 
 // ============================================================================
 // TEMPLATE EXPORT

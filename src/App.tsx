@@ -15,25 +15,23 @@ import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
-// Lazy load CRM modules
-const CompaniesPage = lazy(() => import("./features/companies/CompaniesPage"));
-const CompanyDetailPage = lazy(() => import("./features/companies/CompanyDetailPage"));
-const ContactsPage = lazy(() => import("./features/contacts/ContactsPage"));
-const ContactDetailPage = lazy(() => import("./features/contacts/ContactDetailPage"));
-const QuotesPage = lazy(() => import("./features/quotes/QuotesPage"));
-const QuoteDetailPage = lazy(() => import("./features/quotes/QuoteDetailPage"));
-const ProjectsPage = lazy(() => import("./features/projects/ProjectsPage"));
-const PipelinePage = lazy(() => import("./features/projects/PipelinePage"));
-const ProjectDetailPage = lazy(() => import("./features/projects/ProjectDetailPage"));
-const InteractionsPage = lazy(() => import("./features/interactions/InteractionsPage"));
+// Preload all main CRM modules (sidebar items - no lazy loading)
+import CompaniesPage from "./features/companies/CompaniesPage";
+import CompanyDetailPage from "./features/companies/CompanyDetailPage";
+import ContactsPage from "./features/contacts/ContactsPage";
+import ContactDetailPage from "./features/contacts/ContactDetailPage";
+import QuotesPage from "./features/quotes/QuotesPage";
+import QuoteDetailPage from "./features/quotes/QuoteDetailPage";
+import ProjectsPage from "./features/projects/ProjectsPage";
+import PipelinePage from "./features/projects/PipelinePage";
+import ProjectDetailPage from "./features/projects/ProjectDetailPage";
+import InteractionsPage from "./features/interactions/InteractionsPage";
+import { SettingsPage } from "./pages/SettingsPage";
 
-// Lazy load Settings
-const SettingsPage = lazy(() => import("./pages/SettingsPage").then(m => ({ default: m.SettingsPage })));
-
-// Lazy load Dashboards (heavy pages with charts)
-const DashboardSuperAdmin = lazy(() => import("./pages/DashboardSuperAdmin"));
-const DashboardExecutive = lazy(() => import("./pages/DashboardExecutive"));
-const DashboardCRM = lazy(() => import("./pages/DashboardCRM"));
+// Preload Dashboards (frequently accessed)
+import DashboardSuperAdmin from "./pages/DashboardSuperAdmin";
+import DashboardExecutive from "./pages/DashboardExecutive";
+import DashboardCRM from "./pages/DashboardCRM";
 
 // Lazy load CRM utility pages
 const DocumentProcessing = lazy(() => import("./pages/DocumentProcessing"));

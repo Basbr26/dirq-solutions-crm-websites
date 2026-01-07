@@ -16,6 +16,7 @@ import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { CalendarFilters } from '@/components/calendar/CalendarFilters';
 import { HorizontalDatePicker } from '@/components/calendar/HorizontalDatePicker';
+import { GoogleCalendarSync } from '@/components/calendar/GoogleCalendarSync';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SidePanel } from '@/components/ui/side-panel';
@@ -192,6 +193,18 @@ export default function CalendarPage() {
       hideQuickAction={true}
       actions={
         <div className="flex gap-2">
+          <SidePanel
+            trigger={
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Google Calendar
+              </Button>
+            }
+            title="Google Calendar Synchronisatie"
+            description="Synchroniseer uw CRM agenda met Google Calendar"
+          >
+            <GoogleCalendarSync />
+          </SidePanel>
           <Button
             variant="outline"
             size="sm"
