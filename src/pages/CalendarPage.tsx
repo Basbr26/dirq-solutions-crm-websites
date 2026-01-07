@@ -59,6 +59,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
   const [showFilters, setShowFilters] = useState(false);
+  const [showGoogleSync, setShowGoogleSync] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [filters, setFilters] = useState({
     meeting: true,
@@ -267,18 +268,14 @@ export default function CalendarPage() {
       hideQuickAction={true}
       actions={
         <div className="flex gap-2">
-          <SidePanel
-            trigger={
-              <Button variant="outline" size="sm">
-                <Download className="h-4 w-4 mr-2" />
-                Google Calendar
-              </Button>
-            }
-            title="Google Calendar Synchronisatie"
-            description="Synchroniseer uw CRM agenda met Google Calendar"
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowGoogleSync(true)}
           >
-            <GoogleCalendarSync />
-          </SidePanel>
+            <Download className="h-4 w-4 mr-2" />
+            Google Calendar
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -486,6 +483,16 @@ export default function CalendarPage() {
         </div>
       )}
       
+      {/* Google Calendar Sync Side Panel */}
+      <SidePanel
+        open={showGoogleSync}
+        onClose={() => setShowGoogleSync(false)}
+        title="Google Calendar Synchronisatie"
+        width="lg"
+      >
+        <GoogleCalendarSync />
+      </SidePanel>
+
       {/* Event Detail - Side Panel on Desktop, Dialog on Mobile */}
       {selectedEvent && isDesktop ? (
         <SidePanel
