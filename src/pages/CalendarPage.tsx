@@ -82,7 +82,7 @@ export default function CalendarPage() {
       const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
       const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
       
-      // Fetch calendar events
+      // Fetch calendar events (alleen toekomstige en huidige maand)
       const { data: calendarData, error: calendarError } = await supabase
         .from('calendar_events')
         .select('*')
