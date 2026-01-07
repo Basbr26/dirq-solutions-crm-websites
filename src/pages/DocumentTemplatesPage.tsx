@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { CRMDocumentGenerator } from '@/components/documents/CRMDocumentGenerator';
 import { Badge } from '@/components/ui/badge';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const templates = [
   {
@@ -87,15 +88,10 @@ export default function DocumentTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Document Templates</h1>
-        <p className="text-muted-foreground">
-          Professionele CRM documenten genereren voor contracten, facturen, voorstellen en meer.
-        </p>
-      </div>
-
+    <AppLayout
+      title="Document Templates"
+      subtitle="Professionele CRM documenten genereren voor contracten, facturen, voorstellen en meer"
+    >
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
@@ -252,6 +248,6 @@ export default function DocumentTemplatesPage() {
           </p>
         </CardContent>
       </Card>
-    </div>
+    </AppLayout>
   );
 }
