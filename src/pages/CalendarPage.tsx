@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Download, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Download, Filter, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
@@ -500,6 +500,27 @@ export default function CalendarPage() {
 
 // Helper component for Event Detail Content (reusable in both SidePanel and Dialog)
 function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('calendar_events')
+        .delete()
+        .eq('id', event.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
+      toast.success('Event verwijderd');
+      onClose();
+    },
+    onError: (error: any) => {
+      toast.error(`Fout bij verwijderen: ${error.message}`);
+    },
+  });
+
   return (
     <div className="space-y-4">
       <div>
@@ -530,6 +551,26 @@ function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose:
             </a>
           </div>
         )}
+      </div>
+
+      {/* Delete Button */}
+      <div className="flex justify-end gap-2 pt-4 border-t">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onClose}
+        >
+          Sluiten
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => deleteMutation.mutate()}
+          disabled={deleteMutation.isPending}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          {deleteMutation.isPending ? 'Verwijderen...' : 'Verwijderen'}
+        </Button>
       </div>
     </div>
   );
