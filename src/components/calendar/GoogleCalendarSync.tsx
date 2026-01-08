@@ -255,13 +255,16 @@ export function GoogleCalendarSync() {
       const now = new Date();
       setLastSyncTime(now);
       
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({
           last_calendar_sync: now.toISOString(),
-          updated_at: now.toISOString(),
         })
         .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Error updating last sync time:', updateError);
+      }
 
       const totalSynced = syncToResults.synced + syncFromResults.imported;
       const totalErrors = syncToResults.errors + syncFromResults.errors;
