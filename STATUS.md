@@ -79,22 +79,25 @@
 ### 📅 Calendar Module
 - ✅ Calendar events tabel met interaction_id FK (CASCADE DELETE)
 - ✅ Month/Week/Day views (react-big-calendar)
-- ✅ Scheduled interactions integration (auto-sync)
-- ✅ Tasks met due dates (pending status filter)
-- ✅ Color coding per type (meeting, call, task, etc.)
-- ✅ **Google Calendar OAuth 2.0 Integration** (NEW v1.0.1)
-  - ✅ Token storage in database (google_access_token, google_refresh_token)
+- ✅ Scheduled interactions integration (auto-display)
+- ✅ **Taken met due dates** (NEW v1.0.1) - Oranje all-day events met 📋 emoji
+- ✅ Color coding per type (meeting, call, task, demo)
+- ✅ **Google Calendar Sync V2** (NEW v1.0.1)
+  - ✅ **Bi-directional auto-sync** - Elke 1 minuut (bijna real-time)
+  - ✅ **Refresh Tokens** - Maanden-lange sessies zonder re-authenticatie
+  - ✅ **Edge Function** - Server-side token refresh (CLIENT_SECRET blijft veilig)
+  - ✅ **ETag Conflict Resolution** - Update detection via google_event_etag
+  - ✅ **Sync Stats** - Imported/exported/errors tracking in UI
+  - ✅ Token storage in database (access_token, refresh_token, expires_at)
   - ✅ Persistent sessions (token restoration on page load)
-  - ✅ Token expiry tracking (google_token_expires_at)
-  - ✅ Bidirectional sync (Google → CRM, CRM → Google)
   - ✅ Duplicate prevention (google_event_id unique constraint)
-  - ✅ Settings → Integraties tab (UX improvement)
-- ✅ **Rich Event Detail Views** (NEW v1.0.1)
+  - ✅ Settings → Integraties tab (GoogleCalendarSyncV2 component)
+- ✅ **Rich Event Detail Views** (v1.0.1)
   - ✅ Desktop: SidePanel met colored icon badges
   - ✅ Mobile: Dialog met structured sections
   - ✅ Delete confirmation (AlertDialog)
   - ✅ Consistent styling met Activiteiten module
-- ✅ **Orphaned Events Prevention** (NEW v1.0.1)
+- ✅ **Orphaned Events Prevention** (v1.0.1)
   - ✅ CASCADE DELETE bij interaction verwijdering
   - ✅ Calendar query invalidation bij delete
   - ✅ Cleanup SQL scripts

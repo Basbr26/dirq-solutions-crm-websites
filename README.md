@@ -3,7 +3,8 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)]()
+[![Version](https://img.shields.io/badge/version-1.0.1-blue)]()
+[![Completion](https://img.shields.io/badge/completion-98%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
 
@@ -30,8 +31,9 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Quote Generator** - PDF export met BTW berekeningen  
 ✅ **Project Tracking** - Hosting, pages, features specifiek voor websites  
 ✅ **Task Management** - Met calendar integration en CASCADE delete  
-✅ **Google Calendar Sync** - Bidirectional sync met persistent sessions  
-✅ **Calendar Integration** - Desktop SidePanel + Mobile Dialog met rijke detail views  
+✅ **Google Calendar Sync** - Bi-directional auto-sync (1 min interval) via Edge Functions  
+✅ **Refresh Tokens** - Maanden-lange sessies zonder re-authenticatie  
+✅ **Calendar Integration** - Taken + geplande activiteiten in kalender, Desktop SidePanel + Mobile Dialog  
 ✅ **Document Generation** - 5 professional templates  
 ✅ **CSV Import/Export** - Bulk operations  
 ✅ **Mobile Optimized** - Native app experience met pull-to-refresh  
@@ -127,8 +129,9 @@ Default super admin account:
 - **Functions:** Edge Functions (optional n8n webhooks)
 
 ### Integrations
-- **Google Calendar API** - OAuth 2.0 sync
-- **Google OAuth** - Token storage met expiry tracking
+- **Google Calendar API** - OAuth 2.0 bi-directional sync (1 min auto-sync)
+- **Google OAuth** - Refresh tokens (access_type: offline) voor maanden-lange sessies
+- **Supabase Edge Functions** - Server-side token refresh (CLIENT_SECRET blijft veilig)
 - **n8n** - Optional webhook automation (KVK registrations)
 
 ### Deployment
@@ -165,8 +168,10 @@ dirq-solutions-crm/
 │   └── integrations/         # External integrations
 │       └── supabase/
 ├── supabase/
-│   ├── migrations/           # Database migrations (20+)
-│   └── functions/            # Edge Functions (n8n)
+│   ├── migrations/           # Database migrations (22+)
+│   └── functions/            # Edge Functions
+│       ├── google-calendar-refresh/  # Token refresh (server-side)
+│       └── _shared/          # Gedeelde utilities (CORS)
 ├── public/                   # Static assets
 ├── STATUS.md                 # Current status & features
 ├── CHANGELOG.md              # Version history
