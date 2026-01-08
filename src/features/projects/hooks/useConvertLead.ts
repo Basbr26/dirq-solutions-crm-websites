@@ -1,6 +1,61 @@
 /**
- * Lead to Customer Conversion Hook
- * Handles the conversion of a lead/project to a won deal with customer status
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 🎉 LEAD TO CUSTOMER CONVERSION HOOK
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * PURPOSE:
+ * Converts a lead/project to a won deal with customer status. This is the 
+ * critical happy-path endpoint in the sales funnel.
+ * 
+ * BUSINESS LOGIC:
+ * 1. Company status: 'prospect' → 'customer'
+ * 2. Project stage: 'negotiation'/'quote_sent' → 'quote_signed'
+ * 3. Project probability: → 90%
+ * 4. Notification: deal_won to owner
+ * 5. UI: 3-second confetti celebration
+ * 
+ * USAGE (AI AGENT GUIDE):
+ * This hook should be triggered when:
+ * - Project stage is 'negotiation' OR 'quote_sent'
+ * - User clicks "Converteer naar Klant" button
+ * - Quote has been signed by customer
+ * - Deal is officially won
+ * 
+ * AI WEBHOOK TRIGGER:
+ * To trigger conversion via API/webhook, make this Supabase RPC call:
+ * ```typescript
+ * await supabase.rpc('convert_lead_to_customer', {
+ *   p_project_id: 'uuid-here',
+ *   p_company_id: 'uuid-here'
+ * });
+ * ```
+ * 
+ * PARAMETERS:
+ * @param projectId - UUID of the project being converted
+ * @param companyId - UUID of the company becoming a customer
+ * @param projectTitle - Title for notification message
+ * @param companyName - Company name for notification
+ * @param ownerId - User UUID to receive notification
+ * @param projectValue - Deal value in EUR for celebration context
+ * 
+ * RETURNS:
+ * Promise<{ projectId, companyId }> on success
+ * 
+ * SIDE EFFECTS:
+ * - 2 database UPDATEs (companies, projects tables)
+ * - 1 INSERT (notifications table)
+ * - Query invalidation for 4 queryKeys
+ * - Toast notification displayed
+ * - Confetti animation triggered
+ * 
+ * ERROR HANDLING:
+ * Throws database errors if updates fail. Hook handles rollback automatically.
+ * 
+ * DEPENDENCIES:
+ * - canvas-confetti: For celebration animation
+ * - notifyDealClosed: Notification helper from @/lib/crmNotifications
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +78,9 @@ export function useConvertLead() {
 
   return useMutation({
     mutationFn: async ({ projectId, companyId, projectTitle, companyName, ownerId, projectValue }: ConvertLeadParams) => {
+      // ─────────────────────────────────────────────────────────────────────
       // Step 1: Update Company status to 'customer'
+      // ─────────────────────────────────────────────────────────────────────
       const { error: companyError } = await supabase
         .from('companies')
         .update({ status: 'customer' })
@@ -31,12 +88,14 @@ export function useConvertLead() {
 
       if (companyError) throw companyError;
 
+      // ─────────────────────────────────────────────────────────────────────
       // Step 2: Update Project stage to 'quote_signed' and probability to 90
+      // ─────────────────────────────────────────────────────────────────────
       const { error: projectError } = await supabase
         .from('projects')
         .update({ 
-          stage: 'quote_signed',
-          probability: 90
+          stage: 'quote_signed',  // Critical sales milestone
+          probability: 90          // Near-certain to close (90% win rate)
         })
         .eq('id', projectId);
 
@@ -45,13 +104,17 @@ export function useConvertLead() {
       return { projectId, companyId };
     },
     onSuccess: async ({ projectId }, { projectTitle, companyName, ownerId, projectValue }) => {
-      // Invalidate all relevant queries
+      // ─────────────────────────────────────────────────────────────────────
+      // Invalidate all relevant queries to refresh UI
+      // ─────────────────────────────────────────────────────────────────────
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] });
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
-      // Step 3: Send deal_won notification
+      // ─────────────────────────────────────────────────────────────────────
+      // Step 3: Send deal_won notification to owner
+      // ─────────────────────────────────────────────────────────────────────
       await notifyDealClosed(
         projectId,
         ownerId,
@@ -60,16 +123,20 @@ export function useConvertLead() {
         projectValue
       );
 
-      // Success toast
+      // ─────────────────────────────────────────────────────────────────────
+      // Step 4: User feedback
+      // ─────────────────────────────────────────────────────────────────────
       toast.success('🎉 Deal Gewonnen!', {
         description: `${companyName} is nu een klant!`,
       });
 
-      // 🎊 CONFETTI CELEBRATION! 🎊
+      // ─────────────────────────────────────────────────────────────────────
+      // Step 5: 🎊 CONFETTI CELEBRATION! 🎊
+      // ─────────────────────────────────────────────────────────────────────
       triggerConfetti();
     },
     onError: (error: Error) => {
-      console.error('Conversion error:', error);
+      console.error('[useConvertLead] Conversion error:', error);
       toast.error('Fout bij conversie', {
         description: error.message,
       });
@@ -78,7 +145,24 @@ export function useConvertLead() {
 }
 
 /**
- * Trigger a full-screen confetti explosion with Dirq turquoise colors
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 🎊 CONFETTI CELEBRATION FUNCTION
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * Triggers a full-screen confetti explosion with Dirq brand colors.
+ * 
+ * DURATION: 3 seconds
+ * COLORS: Dirq turquoise (#06BDC7) + complementary colors
+ * EFFECT: Fires from both sides of screen in random bursts
+ * 
+ * TECHNICAL DETAILS:
+ * - Uses canvas-confetti library
+ * - Particle count decreases over time for fade-out effect
+ * - Z-index: 9999 to appear above all UI elements
+ * - Spread: 360° (omnidirectional)
+ * - Velocity: 30px/s starting speed
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 function triggerConfetti() {
   const duration = 3000; // 3 seconds

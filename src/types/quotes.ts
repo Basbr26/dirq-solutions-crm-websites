@@ -3,6 +3,11 @@
  * For managing sales quotes and proposals
  */
 
+import type { QuoteStatus } from './crm';
+
+// Re-export for convenience
+export type { QuoteStatus } from './crm';
+
 export interface Quote {
   id: string;
   company_id: string;
@@ -60,7 +65,7 @@ export interface QuoteItem {
   created_at: string;
 }
 
-export type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'rejected' | 'expired';
+// Removed duplicate: Use QuoteStatus from @/types/crm
 
 export interface CreateQuoteInput {
   company_id: string;

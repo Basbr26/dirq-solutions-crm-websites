@@ -103,10 +103,39 @@ export default function ProjectDetailPage() {
     enabled: !!id,
   });
 
-  // Show conversion button if project is in negotiation or quote_sent stage
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎯 CONVERSION BUTTON VISIBILITY LOGIC
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Show "Converteer naar Klant" button ONLY when project is in these stages:
+  // - 'negotiation': Deal is being finalized
+  // - 'quote_sent': Quote has been sent and awaiting signature
+  // 
+  // AI AGENT RULE: Button should NOT appear for:
+  // - 'lead', 'quote_requested' (too early in funnel)
+  // - 'quote_signed', 'in_development', 'review', 'live' (already converted)
+  // - 'lost' (deal is dead)
+  // ═══════════════════════════════════════════════════════════════════════════
   const canConvert = project && ['negotiation', 'quote_sent'].includes(project.stage);
 
-  // Handle lead to customer conversion
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🚀 LEAD TO CUSTOMER CONVERSION HANDLER
+  // ═══════════════════════════════════════════════════════════════════════════
+  // This is the critical action that transitions a lead to a paying customer.
+  // It triggers the useConvertLead hook which handles:
+  // 1. Database updates (company status, project stage, probability)
+  // 2. Notification to owner
+  // 3. Confetti celebration animation
+  // 
+  // AI AGENT TRIGGER POINT:
+  // Call this function when:
+  // - Quote is signed by customer
+  // - Deal is officially won
+  // - Customer verbally agrees to proceed
+  // 
+  // WEBHOOK EXAMPLE:
+  // POST /api/v1/projects/{id}/convert
+  // { "action": "convert_to_customer" }
+  // ═══════════════════════════════════════════════════════════════════════════
   const handleConvertToCustomer = () => {
     if (!project) return;
 

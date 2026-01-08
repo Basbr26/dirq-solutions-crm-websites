@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { useUpdateInteraction, useDeleteInteraction, type Interaction } from '../hooks/useInteractions';
 import { useNavigate } from 'react-router-dom';
+import { InteractionType, InteractionDirection, TaskStatus } from '@/types/crm';
 
 interface InteractionDetailDialogProps {
   interaction: Interaction | null;
@@ -53,15 +54,24 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
   const updateMutation = useUpdateInteraction();
   const deleteMutation = useDeleteInteraction();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    subject: string;
+    description: string;
+    type: InteractionType;
+    direction: InteractionDirection;
+    duration_minutes: number;
+    scheduled_at: string;
+    due_date: string;
+    task_status: TaskStatus;
+  }>({
     subject: '',
     description: '',
-    type: 'call' as 'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo',
-    direction: 'outbound' as 'inbound' | 'outbound',
+    type: 'call',
+    direction: 'outbound',
     duration_minutes: 0,
     scheduled_at: '',
     due_date: '',
-    task_status: 'pending' as 'pending' | 'completed' | 'cancelled',
+    task_status: 'pending',
   });
 
   // Update form data when interaction changes
