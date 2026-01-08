@@ -70,6 +70,7 @@ export default function CalendarPage() {
     training: true,
     company: true,
     personal: true,
+    task: true, // Taken met due_date
   });
   const isDesktop = useMediaQuery('(min-width: 768px)');
   
@@ -118,10 +119,9 @@ export default function CalendarPage() {
         .select('*')
         .eq('user_id', user.id)
         .eq('is_task', true)
-        .eq('task_status', 'pending')
         .not('due_date', 'is', null)
-        .gte('due_date', startOfMonth.toISOString().split('T')[0])
-        .lte('due_date', endOfMonth.toISOString().split('T')[0])
+        .gte('due_date', format(startOfMonth, 'yyyy-MM-dd'))
+        .lte('due_date', format(endOfMonth, 'yyyy-MM-dd'))
         .order('due_date');
 
       if (tasksError) {

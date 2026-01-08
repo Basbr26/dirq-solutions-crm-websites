@@ -12,6 +12,7 @@ interface CalendarFiltersProps {
     training: boolean;
     company: boolean;
     personal: boolean;
+    task: boolean;
   };
   onChange: (filters: any) => void;
 }
@@ -112,6 +113,17 @@ export function CalendarFilters({ filters, onChange }: CalendarFiltersProps) {
           />
           <Label htmlFor="personal" className="text-sm cursor-pointer">
             Persoonlijk
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="task"
+            checked={filters.task}
+            onCheckedChange={(checked) => handleFilterChange('task', checked as boolean)}
+          />
+          <Label htmlFor="task" className="text-sm cursor-pointer">
+            📋 Taken
           </Label>
         </div>
       </CardContent>
