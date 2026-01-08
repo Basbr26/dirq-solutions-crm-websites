@@ -319,6 +319,62 @@ export async function syncFromGoogleCalendar(
   return { imported, errors };
 }
 
+/**
+ * Refresh access token using refresh token
+ * Uses Supabase Edge Function for security (CLIENT_SECRET blijft server-side)
+ */
+export async function refreshAccessToken(refreshToken: string): Promise<{
+  access_token: string;
+  expires_in: number;
+} | null> {
+  try {
+    // Get Supabase URL from environment
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) {
+      console.error('VITE_SUPABASE_URL not configured');
+      return null;
+    }
+
+    // Call Edge Function voor veilige server-side token refresh
+    const response = await fetch(`${supabaseUrl}/functions/v1/google-calendar-refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Supabase anon key voor Edge Function auth
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      },
+      body: JSON.stringify({
+        refresh_token: refreshToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Token refresh error:', error);
+      return null;
+    }
+
+    const data = await response.json();
+    return {
+      access_token: data.access_token,
+      expires_in: data.expires_in || 3600,
+    };
+  } catch (error) {
+    console.error('Error refreshing access token:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if token is expired or about to expire (within 5 minutes)
+ */
+export function isTokenExpired(expiresAt: string): boolean {
+  const expiryDate = new Date(expiresAt);
+  const now = new Date();
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+  return expiryDate <= fiveMinutesFromNow;
+}
+
 // TypeScript declarations for global objects
 declare global {
   interface Window {
