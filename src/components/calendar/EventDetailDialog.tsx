@@ -197,7 +197,14 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               variant="destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
-          Edit Dialog */}
+              <Trash2 className="h-4 w-4 mr-2" />
+              Verwijderen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
       <EditEventDialog
         event={event}
         open={showEditDialog}
@@ -209,13 +216,6 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
           }
         }}
       />
-
-      {/*     <Trash2 className="h-4 w-4 mr-2" />
-              Verwijderen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
