@@ -3,6 +3,7 @@ import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { QuickActionSheet } from './QuickActionSheet';
+import { CommandBar } from '@/components/CommandBar';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -48,6 +49,9 @@ export function AppLayout({ children, title, subtitle, actions, hideQuickAction 
           onClose={() => setShowQuickActions(false)}
         />
       )}
+      
+      {/* AI Command Bar - accessible via Cmd/Ctrl+K */}
+      <CommandBar variant="floating" />
     </div>
   );
 }

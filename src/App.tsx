@@ -48,6 +48,9 @@ const AIChatPage = lazy(() => import("./pages/AIChatPage"));
 // Lazy load utility pages
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Public pages (no auth required)
+const PublicSignPage = lazy(() => import("./pages/PublicSignPage"));
+
 const queryClient = new QueryClient();
 
 // Page transition variants
@@ -93,6 +96,18 @@ function AnimatedRoutes() {
         <Route path="/auth" element={<AnimatedRoute><Auth /></AnimatedRoute>} />
         <Route path="/forgot-password" element={<AnimatedRoute><ForgotPassword /></AnimatedRoute>} />
         <Route path="/reset-password" element={<AnimatedRoute><ResetPassword /></AnimatedRoute>} />
+        
+        {/* Public E-Sign page - no authentication required */}
+        <Route 
+          path="/sign/:token" 
+          element={
+            <AnimatedRoute>
+              <Suspense fallback={<SuspenseFallback />}>
+                <PublicSignPage />
+              </Suspense>
+            </AnimatedRoute>
+          } 
+        />
         
         <Route 
           path="/dashboard/super-admin" 

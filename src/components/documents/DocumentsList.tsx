@@ -1,6 +1,6 @@
 /**
  * DocumentsList Component
- * Display and manage uploaded documents
+ * Display and manage uploaded documents with E-Sign functionality
  */
 
 import { useState } from 'react';
@@ -20,6 +20,16 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
   File,
   Download,
   Trash2,
@@ -27,6 +37,12 @@ import {
   FileSpreadsheet,
   FileImage,
   ExternalLink,
+  PenLine,
+  Copy,
+  Check,
+  Send,
+  Clock,
+  XCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -44,6 +60,10 @@ interface Document {
   description: string | null;
   category: string | null;
   uploaded_by: string | null;
+  sign_status?: 'concept' | 'verzonden' | 'getekend' | 'geweigerd';
+  sign_token?: string | null;
+  sign_link_expires_at?: string | null;
+  signer_email?: string | null;
   profiles?: {
     voornaam: string;
     achternaam: string;
@@ -66,6 +86,14 @@ const categoryLabels: Record<string, string> = {
   other: 'Anders',
 };
 
+// E-Sign status labels and colors
+const signStatusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof Clock }> = {
+  concept: { label: 'Concept', variant: 'outline', icon: FileText },
+  verzonden: { label: 'Verzonden', variant: 'secondary', icon: Send },
+  getekend: { label: 'Getekend', variant: 'default', icon: Check },
+  geweigerd: { label: 'Geweigerd', variant: 'destructive', icon: XCircle },
+};
+
 const getFileIcon = (fileType: string) => {
   if (fileType.includes('pdf')) return FileText;
   if (fileType.includes('spreadsheet') || fileType.includes('excel')) return FileSpreadsheet;
@@ -82,6 +110,10 @@ export const DocumentsList = ({
   const { role, user } = useAuth();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [signLinkDoc, setSignLinkDoc] = useState<Document | null>(null);
+  const [signerEmail, setSignerEmail] = useState('');
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   // Fetch documents
   const { data: documents = [], isLoading } = useQuery<Document[]>({
@@ -136,6 +168,63 @@ export const DocumentsList = ({
       toast.error(`Verwijderen mislukt: ${error.message}`);
     },
   });
+
+  // Generate sign link mutation
+  const generateSignLinkMutation = useMutation({
+    mutationFn: async ({ docId, email }: { docId: string; email: string }) => {
+      // Generate a secure token
+      const token = crypto.randomUUID();
+      
+      // Set expiry to 7 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      // Update document with sign token
+      const { error } = await supabase
+        .from('documents')
+        .update({
+          sign_token: token,
+          sign_status: 'verzonden',
+          sign_link_expires_at: expiresAt.toISOString(),
+          signer_email: email,
+        })
+        .eq('id', docId);
+
+      if (error) throw error;
+
+      // Return the full sign link
+      const baseUrl = window.location.origin;
+      return `${baseUrl}/sign/${token}`;
+    },
+    onSuccess: (link) => {
+      setGeneratedLink(link);
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      toast.success('Sign link gegenereerd');
+    },
+    onError: (error: Error) => {
+      toast.error(`Genereren mislukt: ${error.message}`);
+    },
+  });
+
+  const handleGenerateSignLink = () => {
+    if (!signLinkDoc || !signerEmail) return;
+    generateSignLinkMutation.mutate({ docId: signLinkDoc.id, email: signerEmail });
+  };
+
+  const handleCopyLink = async () => {
+    if (!generatedLink) return;
+    await navigator.clipboard.writeText(generatedLink);
+    setCopiedLink(true);
+    toast.success('Link gekopieerd naar klembord');
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const closeSignLinkDialog = () => {
+    setSignLinkDoc(null);
+    setSignerEmail('');
+    setGeneratedLink(null);
+    setCopiedLink(false);
+  };
 
   const handleDownload = async (doc: Document) => {
     try {
@@ -223,11 +312,25 @@ export const DocumentsList = ({
                       <h4 className="font-semibold truncate">
                         {doc.title || doc.file_name}
                       </h4>
-                      {doc.category && (
-                        <Badge variant="secondary" className="flex-shrink-0">
-                          {categoryLabels[doc.category] || doc.category}
-                        </Badge>
-                      )}
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        {doc.sign_status && signStatusConfig[doc.sign_status] && (
+                          <Badge 
+                            variant={signStatusConfig[doc.sign_status].variant}
+                            className="gap-1"
+                          >
+                            {(() => {
+                              const StatusIcon = signStatusConfig[doc.sign_status!].icon;
+                              return <StatusIcon className="h-3 w-3" />;
+                            })()}
+                            {signStatusConfig[doc.sign_status].label}
+                          </Badge>
+                        )}
+                        {doc.category && (
+                          <Badge variant="secondary" className="flex-shrink-0">
+                            {categoryLabels[doc.category] || doc.category}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     <p className="text-sm text-muted-foreground truncate mb-2">
@@ -255,6 +358,17 @@ export const DocumentsList = ({
 
                   {/* Actions */}
                   <div className="flex gap-2 flex-shrink-0">
+                    {/* Sign link button - only for PDFs without existing signature */}
+                    {doc.file_type.includes('pdf') && (!doc.sign_status || doc.sign_status === 'concept') && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSignLinkDoc(doc)}
+                        title="Genereer sign link"
+                      >
+                        <PenLine className="h-4 w-4 text-primary" />
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -302,6 +416,96 @@ export const DocumentsList = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Generate Sign Link Dialog */}
+      <Dialog open={!!signLinkDoc} onOpenChange={(open) => !open && closeSignLinkDialog()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PenLine className="h-5 w-5 text-primary" />
+              E-Sign Link Genereren
+            </DialogTitle>
+            <DialogDescription>
+              Genereer een veilige link waarmee de ontvanger het document digitaal kan ondertekenen.
+              De link is 7 dagen geldig.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!generatedLink ? (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="signer-email">E-mail ondertekenaar</Label>
+                <Input
+                  id="signer-email"
+                  type="email"
+                  placeholder="naam@bedrijf.nl"
+                  value={signerEmail}
+                  onChange={(e) => setSignerEmail(e.target.value)}
+                />
+              </div>
+              <div className="rounded-lg border bg-muted/50 p-3">
+                <p className="text-sm font-medium">{signLinkDoc?.title || signLinkDoc?.file_name}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {signLinkDoc && formatFileSize(signLinkDoc.file_size)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center gap-2">
+                <Check className="h-5 w-5 text-green-600" />
+                <span className="text-sm font-medium text-green-600">Link succesvol gegenereerd</span>
+              </div>
+              <div className="relative">
+                <Input
+                  readOnly
+                  value={generatedLink}
+                  className="pr-20 font-mono text-xs"
+                />
+                <Button
+                  size="sm"
+                  variant={copiedLink ? 'default' : 'outline'}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7"
+                  onClick={handleCopyLink}
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check className="h-3 w-3 mr-1" />
+                      Gekopieerd
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3 mr-1" />
+                      Kopieer
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                De ondertekenaar ontvangt geen automatische e-mail. Stuur de link handmatig of via je eigen mailclient.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            {!generatedLink ? (
+              <>
+                <Button variant="outline" onClick={closeSignLinkDialog}>
+                  Annuleren
+                </Button>
+                <Button 
+                  onClick={handleGenerateSignLink}
+                  disabled={!signerEmail || generateSignLinkMutation.isPending}
+                >
+                  {generateSignLinkMutation.isPending ? 'Genereren...' : 'Genereer Link'}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={closeSignLinkDialog}>Sluiten</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

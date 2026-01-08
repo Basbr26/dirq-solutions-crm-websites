@@ -3,10 +3,11 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-1.0.1-blue)]()
-[![Completion](https://img.shields.io/badge/completion-98%25-success)]()
+[![Version](https://img.shields.io/badge/version-1.1.0-blue)]()
+[![Completion](https://img.shields.io/badge/completion-99%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
+[![Mobile-First](https://img.shields.io/badge/mobile--first-ready-green)]()
 
 ---
 
@@ -43,6 +44,9 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Role-Based Access** - 5 gebruikersrollen met RLS  
 ✅ **Outreach Tracking** - LinkedIn videos, physical mail, direct messages  
 ✅ **Lead Conversion** - Automated lead → project conversion  
+✅ **E-Sign Documents** - Digitale handtekeningen met audit trail  
+✅ **AI Agent Integration** - n8n/Manus/Gemini ready met data-agent anchors  
+✅ **Command Bar** - AI-powered command input (Cmd+K)  
 
 ---
 
@@ -206,25 +210,125 @@ dirq-solutions-crm/
 
 ---
 
+## 🤖 AI Agent Integration
+
+Het CRM is voorbereid voor integratie met AI agents (Manus, n8n, Gemini). Agents kunnen contextgegevens extraheren en commando's uitvoeren.
+
+### Agent Context API
+
+```typescript
+// Client-side: verkrijg CRM context voor AI agents
+import { getAgentContext } from '@/lib/agent-context';
+
+const context = getAgentContext();
+// Retourneert: { currentPage, user, navigation, dataElements, timestamp }
+```
+
+### Global Agent Interface
+
+De CRM registreert `window.DirqAgent` automatisch:
+
+```javascript
+// Vanuit browser console of externe agent
+const context = window.DirqAgent.getContext();
+await window.DirqAgent.sendCommand({
+  command: 'create_quote',
+  parameters: { company_id: 'uuid', amount: 5000 }
+});
+```
+
+### Data-Agent Attributes
+
+Elementen met `data-agent-*` attributen zijn gemarkeerd voor AI-extractie:
+
+```html
+<div data-agent-role="summary-card" data-agent-id="company-123">
+  <span data-agent-field="name">Bedrijfsnaam</span>
+  <span data-agent-field="revenue">€50,000</span>
+</div>
+```
+
+| Attribute | Beschrijving |
+|-----------|-------------|
+| `data-agent-role` | Semantische rol (summary-card, list-item, form) |
+| `data-agent-id` | Unieke identifier voor het element |
+| `data-agent-field` | Veldnaam voor data-extractie |
+| `data-agent-action` | Actie die het element kan triggeren |
+
+### n8n Webhook Configuratie
+
+De Command Bar stuurt commando's naar een configureerbare n8n webhook:
+
+```env
+VITE_N8N_WEBHOOK_URL=https://your-n8n.com/webhook/crm-agent
+```
+
+---
+
+## ✍️ E-Sign Systeem
+
+Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledige audit trail.
+
+### Features
+
+- **Public Sign Links** - Ondertekenen zonder account via `/sign/:token`
+- **Signature Canvas** - Touch-friendly handtekeningveld
+- **PDF Embedding** - Handtekening wordt in PDF ingevoegd via pdf-lib
+- **Audit Trail** - IP-adres, user agent, timestamps, locatie
+- **Status Tracking** - Concept → Verzonden → Getekend/Geweigerd
+- **Link Expiry** - 7 dagen geldigheid
+
+### Workflow
+
+1. Upload PDF document bij Company/Contact/Quote
+2. Klik op ✒️ icoon om sign link te genereren
+3. Voer e-mail ondertekenaar in
+4. Kopieer link en stuur naar ontvanger
+5. Ontvanger opent link, vult gegevens in, tekent
+6. Document krijgt status "Getekend" met audit record
+
+### Database Tabellen
+
+- `document_signing_audit` - Volledige audit trail per ondertekening
+- Columns: `signer_name`, `signer_email`, `signature_image`, `ip_address`, `user_agent`, `signed_at`
+
+### Publieke Route
+
+```
+/sign/:token - Geen authenticatie vereist
+```
+
+---
+
 ## 📊 Current Status
 
-**Version:** 1.0.1  
+**Version:** 1.1.0  
 **Status:** ✅ Production Ready  
 **Last Updated:** 8 Januari 2026
 
-**Completion:** 98%
+**Completion:** 99%
 
 | Category | Status |
 |----------|--------|
 | Core Features | ✅ 100% |
 | Google Calendar Integration | ✅ 100% |
 | Mobile UX | ✅ 100% |
+| E-Sign System | ✅ 100% |
+| AI Agent Integration | ✅ 100% |
 | Performance | ✅ 95% |
 | Security | ✅ 100% |
 | Testing | ⚠️ 20% |
-| Documentation | ✅ 85% |
+| Documentation | ✅ 90% |
 
-### Recent Updates (v1.0.1)
+### Recent Updates (v1.1.0)
+- ✅ Mobile-First UI overhaul (overflow fixes, scrollable tabs, FAB)
+- ✅ AI Agent Integration (data-agent attributes, getAgentContext)
+- ✅ Command Bar met Cmd+K shortcut
+- ✅ E-Sign System (public signing, signature canvas, PDF embedding)
+- ✅ Document sign status badges en link generation
+- ✅ n8n webhook integration voor agent commands
+
+### Previous Updates (v1.0.1)
 - ✅ Google Calendar persistent sessions (OAuth token storage)
 - ✅ Calendar events CASCADE delete bij interaction delete
 - ✅ Rijke event detail views (consistent met Activiteiten)
