@@ -283,6 +283,33 @@ export async function syncFromGoogleCalendar(
       threeMonthsAhead
     );
 
+    // Also fetch deleted events to sync deletions
+    const deletedEventsRequest = {
+      calendarId: 'primary',
+      timeMin: threeMonthsAgo.toISOString(),
+      timeMax: threeMonthsAhead.toISOString(),
+      showDeleted: true,
+      singleEvents: true,
+      maxResults: 250,
+    };
+    
+    const deletedResponse = await gapi.client.calendar.events.list(deletedEventsRequest);
+    const deletedEvents = (deletedResponse.result.items || []).filter((e: any) => e.status === 'cancelled');
+
+    // Process deletions first
+    for (const deletedEvent of deletedEvents) {
+      try {
+        // Delete from local database if it exists
+        await onEventImport({
+          google_event_id: deletedEvent.id,
+          _action: 'delete', // Special flag for deletion
+        } as any);
+      } catch (error) {
+        console.error(`Error deleting event ${deletedEvent.id}:`, error);
+        errors++;
+      }
+    }
+
     for (const event of googleEvents) {
       try {
         // Convert Google event to local format

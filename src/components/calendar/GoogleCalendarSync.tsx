@@ -211,6 +211,19 @@ export function GoogleCalendarSync() {
       // Sync from Google Calendar
       const syncFromResults = await syncFromGoogleCalendar(async (googleEvent) => {
         try {
+          // Handle deletions
+          if ((googleEvent as any)._action === 'delete') {
+            const { error: deleteError } = await supabase
+              .from('calendar_events')
+              .delete()
+              .eq('google_event_id', googleEvent.google_event_id);
+            
+            if (deleteError) {
+              console.error('Error deleting event:', deleteError);
+            }
+            return;
+          }
+
           // Check if event already exists
           const { data: existing, error: checkError } = await supabase
             .from('calendar_events')
