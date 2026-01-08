@@ -10,7 +10,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, Download, Filter, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Plus, Download, Filter, ChevronLeft, ChevronRight, Trash2, Building2, User, Link as LinkIcon, X, MapPin, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
@@ -501,7 +503,18 @@ export default function CalendarPage() {
 // Helper component for Event Detail Content (reusable in both SidePanel and Dialog)
 function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const eventTypeConfig = {
+    meeting: { label: 'Vergadering', color: 'bg-green-500' },
+    call: { label: 'Telefoongesprek', color: 'bg-blue-500' },
+    task: { label: 'Taak', color: 'bg-orange-500' },
+    reminder: { label: 'Herinnering', color: 'bg-purple-500' },
+    personal: { label: 'Persoonlijk', color: 'bg-gray-500' },
+    training: { label: 'Training', color: 'bg-indigo-500' },
+    demo: { label: 'Demo', color: 'bg-pink-500' },
+    other: { label: 'Overig', color: 'bg-slate-500' },
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -514,6 +527,7 @@ function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose:
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
       toast.success('Event verwijderd');
+      setShowDeleteDialog(false);
       onClose();
     },
     onError: (error: any) => {
@@ -521,57 +535,126 @@ function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose:
     },
   });
 
+  const config = eventTypeConfig[event.event_type as keyof typeof eventTypeConfig] || eventTypeConfig.other;
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
-        {event.description && (
-          <p className="text-muted-foreground">{event.description}</p>
-        )}
-      </div>
-      
-      <div className="space-y-2 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">Tijd:</span>
-          <span>{format(new Date(event.start_time), 'PPP HH:mm', { locale: nl })} - {format(new Date(event.end_time), 'HH:mm', { locale: nl })}</span>
+    <>
+      <div className="space-y-6">
+        {/* Header with icon and badge */}
+        <div className="flex items-start gap-3">
+          <div className={`p-2 rounded-lg ${config.color}`}>
+            <CalendarIcon className="h-5 w-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold mb-1">{event.title}</h3>
+            <Badge variant="secondary">{config.label}</Badge>
+          </div>
         </div>
-        
+
+        {/* Time & Date Section */}
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <CalendarIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Datum</p>
+              <p className="text-base">
+                {format(new Date(event.start_time), 'EEEE d MMMM yyyy', { locale: nl })}
+              </p>
+            </div>
+          </div>
+
+          {!event.all_day && (
+            <div className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Tijd</p>
+                <p className="text-base">
+                  {format(new Date(event.start_time), 'HH:mm', { locale: nl })}
+                  {event.end_time && <> - {format(new Date(event.end_time), 'HH:mm', { locale: nl })}</>}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Location */}
         {event.location && (
-          <div className="flex items-center gap-2">
-            <span className="font-medium">Locatie:</span>
-            <span>{event.location}</span>
+          <div className="flex items-start gap-3">
+            <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Locatie</p>
+              <p className="text-base">{event.location}</p>
+            </div>
           </div>
         )}
-        
+
+        {/* Meeting URL */}
         {event.meeting_url && (
-          <div className="flex items-center gap-2">
-            <span className="font-medium">Meeting URL:</span>
-            <a href={event.meeting_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-              Deelnemen
-            </a>
+          <div className="flex items-start gap-3">
+            <LinkIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Meeting Link</p>
+              <a 
+                href={event.meeting_url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-base text-primary hover:underline"
+              >
+                Deelnemen aan meeting
+              </a>
+            </div>
           </div>
         )}
+
+        {/* Description */}
+        {event.description && (
+          <div className="border-t pt-4">
+            <p className="text-sm font-medium text-muted-foreground mb-2">Beschrijving</p>
+            <p className="text-base whitespace-pre-wrap">{event.description}</p>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Sluiten
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Verwijderen
+          </Button>
+        </div>
       </div>
 
-      {/* Delete Button */}
-      <div className="flex justify-end gap-2 pt-4 border-t">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onClose}
-        >
-          Sluiten
-        </Button>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => deleteMutation.mutate()}
-          disabled={deleteMutation.isPending}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          {deleteMutation.isPending ? 'Verwijderen...' : 'Verwijderen'}
-        </Button>
-      </div>
-    </div>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dit calendar event wordt permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteMutation.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? 'Verwijderen...' : 'Verwijderen'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
