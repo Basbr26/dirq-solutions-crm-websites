@@ -29,12 +29,15 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Contact Management** - Met interaction history  
 ✅ **Quote Generator** - PDF export met BTW berekeningen  
 ✅ **Project Tracking** - Hosting, pages, features specifiek voor websites  
-✅ **Task Management** - Met calendar integration  
-✅ **Google Calendar Sync** - Bidirectional synchronization  
+✅ **Task Management** - Met calendar integration en CASCADE delete  
+✅ **Google Calendar Sync** - Bidirectional sync met persistent sessions  
+✅ **Calendar Integration** - Desktop SidePanel + Mobile Dialog met rijke detail views  
 ✅ **Document Generation** - 5 professional templates  
 ✅ **CSV Import/Export** - Bulk operations  
-✅ **Mobile Optimized** - Native app experience  
-✅ **Role-Based Access** - 5 gebruikersrollen  
+✅ **Mobile Optimized** - Native app experience met pull-to-refresh  
+✅ **Role-Based Access** - 5 gebruikersrollen met RLS  
+✅ **Outreach Tracking** - LinkedIn videos, physical mail, direct messages  
+✅ **Lead Conversion** - Automated lead → project conversion  
 
 ---
 
@@ -104,21 +107,29 @@ Default super admin account:
 ## 🏗️ Tech Stack
 
 ### Frontend
-- **Framework:** React 18 + TypeScript
+- **Framework:** React 18 + TypeScript 5.7
 - **Build Tool:** Vite 6
 - **UI Library:** shadcn/ui + Tailwind CSS
 - **State:** React Query (TanStack Query v5)
 - **Forms:** React Hook Form + Zod
 - **Charts:** Recharts
 - **PDF:** @react-pdf/renderer
-- **Calendar:** react-big-calendar
+- **Calendar:** react-big-calendar + Google Calendar API
 - **CSV:** papaparse
+- **Date:** date-fns (with NL locale)
 
 ### Backend
-- **Database:** Supabase (PostgreSQL)
-- **Auth:** Supabase Auth
+- **Database:** Supabase (PostgreSQL 15)
+- **Auth:** Supabase Auth (JWT + OAuth2.0)
 - **Storage:** Supabase Storage
 - **Real-time:** Supabase Realtime (subscriptions)
+- **RLS:** Row Level Security policies
+- **Functions:** Edge Functions (optional n8n webhooks)
+
+### Integrations
+- **Google Calendar API** - OAuth 2.0 sync
+- **Google OAuth** - Token storage met expiry tracking
+- **n8n** - Optional webhook automation (KVK registrations)
 
 ### Deployment
 - **Hosting:** Netlify
@@ -141,19 +152,26 @@ dirq-solutions-crm/
 │   ├── components/            # Shared UI components
 │   │   ├── ui/               # shadcn/ui components
 │   │   ├── layout/           # Layout components
-│   │   ├── calendar/         # Calendar components
-│   │   └── documents/        # Document generation
+│   │   ├── calendar/         # Calendar + Google Sync
+│   │   ├── documents/        # Document generation
+│   │   ├── settings/         # Settings (Integraties tab)
+│   │   └── ai/               # AI integrations
 │   ├── hooks/                # Custom React hooks
 │   ├── lib/                  # Utilities & helpers
+│   │   ├── googleCalendar.ts # Google Calendar API
+│   │   └── followUpAutomation.ts
 │   ├── pages/                # Route pages
 │   ├── types/                # TypeScript types
 │   └── integrations/         # External integrations
 │       └── supabase/
 ├── supabase/
-│   └── migrations/           # Database migrations
+│   ├── migrations/           # Database migrations (20+)
+│   └── functions/            # Edge Functions (n8n)
 ├── public/                   # Static assets
 ├── STATUS.md                 # Current status & features
 ├── CHANGELOG.md              # Version history
+├── GOOGLE_CALENDAR_SETUP.md  # Setup guide
+├── GOOGLE_OAUTH_SECURITY_AUDIT.md
 └── archive/                  # Historical documents
 ```
 
@@ -182,20 +200,29 @@ dirq-solutions-crm/
 
 ## 📊 Current Status
 
-**Version:** 1.0.0  
+**Version:** 1.0.1  
 **Status:** ✅ Production Ready  
-**Last Updated:** 7 Januari 2026
+**Last Updated:** 8 Januari 2026
 
-**Completion:** 95%
+**Completion:** 98%
 
 | Category | Status |
 |----------|--------|
 | Core Features | ✅ 100% |
+| Google Calendar Integration | ✅ 100% |
 | Mobile UX | ✅ 100% |
 | Performance | ✅ 95% |
 | Security | ✅ 100% |
 | Testing | ⚠️ 20% |
-| Documentation | ✅ 80% |
+| Documentation | ✅ 85% |
+
+### Recent Updates (v1.0.1)
+- ✅ Google Calendar persistent sessions (OAuth token storage)
+- ✅ Calendar events CASCADE delete bij interaction delete
+- ✅ Rijke event detail views (consistent met Activiteiten)
+- ✅ Desktop SidePanel + Mobile Dialog voor calendar events
+- ✅ Delete confirmation dialogs
+- ✅ Orphaned events cleanup
 
 Zie [STATUS.md](STATUS.md) voor details.
 

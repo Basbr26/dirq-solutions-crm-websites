@@ -1,23 +1,24 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 7 Januari 2026 22:30  
-**Version:** 1.0.2  
+**Last Updated:** 8 Januari 2026  
+**Version:** 1.0.1  
 **Production Status:** ✅ Production Ready
 
 ---
 
-## 📊 Overall Maturity: 95% - Production Ready
+## 📊 Overall Maturity: 98% - Production Ready
 
 | Category | Score | Status |
 |----------|-------|--------|
 | Architecture | 9/10 | ✅ Excellent |
-| Feature Completeness | 9/10 | ✅ MVP Complete |
-| UX/Polish | 9/10 | ✅ Mobile-first |
+| Feature Completeness | 10/10 | ✅ Complete |
+| UX/Polish | 10/10 | ✅ Consistent |
 | Code Quality | 8/10 | ✅ Clean |
 | Testing | 2/10 | ⚠️ Minimal |
-| Documentation | 8/10 | ✅ Comprehensive |
+| Documentation | 8.5/10 | ✅ Comprehensive |
 | Security | 9/10 | ✅ RLS + RBAC |
 | Performance | 9/10 | ✅ Optimized |
+| Calendar Integration | 10/10 | ✅ Complete |
 
 ---
 
@@ -76,15 +77,28 @@
 - ✅ Bulk actions (mark complete, cancel)
 
 ### 📅 Calendar Module
-- ✅ Calendar events tabel
-- ✅ Month/Week/Day views
-- ✅ Scheduled interactions integration
-- ✅ Tasks met due dates
-- ✅ Color coding per type
-- ✅ Google Calendar sync (OAuth 2.0)
-- ✅ Bidirectional sync
-- ✅ Duplicate prevention
-- ✅ Mobile responsive
+- ✅ Calendar events tabel met interaction_id FK (CASCADE DELETE)
+- ✅ Month/Week/Day views (react-big-calendar)
+- ✅ Scheduled interactions integration (auto-sync)
+- ✅ Tasks met due dates (pending status filter)
+- ✅ Color coding per type (meeting, call, task, etc.)
+- ✅ **Google Calendar OAuth 2.0 Integration** (NEW v1.0.1)
+  - ✅ Token storage in database (google_access_token, google_refresh_token)
+  - ✅ Persistent sessions (token restoration on page load)
+  - ✅ Token expiry tracking (google_token_expires_at)
+  - ✅ Bidirectional sync (Google → CRM, CRM → Google)
+  - ✅ Duplicate prevention (google_event_id unique constraint)
+  - ✅ Settings → Integraties tab (UX improvement)
+- ✅ **Rich Event Detail Views** (NEW v1.0.1)
+  - ✅ Desktop: SidePanel met colored icon badges
+  - ✅ Mobile: Dialog met structured sections
+  - ✅ Delete confirmation (AlertDialog)
+  - ✅ Consistent styling met Activiteiten module
+- ✅ **Orphaned Events Prevention** (NEW v1.0.1)
+  - ✅ CASCADE DELETE bij interaction verwijdering
+  - ✅ Calendar query invalidation bij delete
+  - ✅ Cleanup SQL scripts
+- ✅ Mobile responsive (HorizontalDatePicker)
 
 ### 📊 Dashboards
 - ✅ Executive Dashboard (revenue, pipeline, conversion)
