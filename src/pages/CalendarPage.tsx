@@ -42,8 +42,7 @@ interface CalendarEvent {
   all_day: boolean;
   color: string;
   location: string | null;
-  is_virtual: boolean;
-  meeting_url: string | null;
+  google_event_id?: string | null;
 }
 
 interface BigCalendarEvent {
@@ -151,8 +150,6 @@ export default function CalendarPage() {
           all_day: false,
           color: typeColors[interaction.type] || '#6b7280',
           location: null,
-          is_virtual: false,
-          meeting_url: null,
         })),
         // Transform tasks
         ...(tasks || []).map(task => ({
@@ -584,24 +581,6 @@ function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose:
             <div>
               <p className="text-sm font-medium text-muted-foreground">Locatie</p>
               <p className="text-base">{event.location}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Meeting URL */}
-        {event.meeting_url && (
-          <div className="flex items-start gap-3">
-            <LinkIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Meeting Link</p>
-              <a 
-                href={event.meeting_url} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="text-base text-primary hover:underline"
-              >
-                Deelnemen aan meeting
-              </a>
             </div>
           </div>
         )}

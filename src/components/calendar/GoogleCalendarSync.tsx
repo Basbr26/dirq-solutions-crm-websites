@@ -240,8 +240,6 @@ export function GoogleCalendarSync() {
               location: googleEvent.location || null,
               event_type: googleEvent.event_type || 'meeting',
               color: googleEvent.color || '#10b981',
-              is_virtual: googleEvent.is_virtual || false,
-              meeting_url: googleEvent.meeting_url || null,
               google_event_id: googleEvent.google_event_id,
             });
 
