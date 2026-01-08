@@ -296,13 +296,20 @@ export async function syncFromGoogleCalendar(
           location: event.location || null,
           event_type: 'meeting',
           color: '#10b981', // Default green color
-          is_virtual: event.conferenceData?.entryPoints?.some(
-            (e: any) => e.entryPointType === 'video'
-          ) || false,
-          meeting_url: event.conferenceData?.entryPoints?.find(
-            (e: any) => e.entryPointType === 'video'
-          )?.uri || event.hangoutLink || null,
+          // NOTE: is_virtual and meeting_url zijn niet in database schema
+          // Wordt tijdelijk opgeslagen in description als het een video call is
         };
+
+        // Als het een video meeting is, voeg URL toe aan description
+        const meetingUrl = event.conferenceData?.entryPoints?.find(
+          (e: any) => e.entryPointType === 'video'
+        )?.uri || event.hangoutLink;
+        
+        if (meetingUrl && localEvent.description) {
+          localEvent.description += `\n\nVideo meeting: ${meetingUrl}`;
+        } else if (meetingUrl) {
+          localEvent.description = `Video meeting: ${meetingUrl}`;
+        }
 
         await onEventImport(localEvent);
         imported++;
