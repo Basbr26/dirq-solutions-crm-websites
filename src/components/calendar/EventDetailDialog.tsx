@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Calendar, Clock, MapPin, Trash2, Building2, User, Link as LinkIcon, Pencil, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { EditEventDialog } from './EditEventDialog';
 
 interface EventDetailDialogProps {
   event: any;
@@ -31,7 +32,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -186,10 +187,30 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               Sluiten
             </Button>
             <Button
+              variant="outline"
+              onClick={() => setShowEditDialog(true)}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Bewerken
+            </Button>
+            <Button
               variant="destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+          Edit Dialog */}
+      <EditEventDialog
+        event={event}
+        open={showEditDialog}
+        onOpenChange={(open) => {
+          setShowEditDialog(open);
+          if (!open) {
+            // Close detail dialog as well after successful edit
+            onOpenChange(false);
+          }
+        }}
+      />
+
+      {/*     <Trash2 className="h-4 w-4 mr-2" />
               Verwijderen
             </Button>
           </DialogFooter>
