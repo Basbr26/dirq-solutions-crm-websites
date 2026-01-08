@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { FloatingActionButton } from '@/components/ui/floating-action-button';
 import { Plus, Download, Filter, ChevronLeft, ChevronRight, Trash2, Building2, User, Link as LinkIcon, X, MapPin, Clock, Calendar as CalendarIcon } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
@@ -467,8 +468,14 @@ export default function CalendarPage() {
       
       {/* Floating Action Button - Mobile only */}
       {!isDesktop && (
-        <div className="fixed bottom-20 left-4 z-40">
-          <CreateEventDialog />
+        <div 
+          className="fixed z-40 md:hidden"
+          style={{
+            right: '1rem',
+            bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          <CreateEventDialog variant="fab" />
         </div>
       )}
 

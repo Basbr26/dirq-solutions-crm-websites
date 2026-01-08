@@ -8,6 +8,11 @@ import {
   isGoogleSignedIn,
   syncToGoogleCalendar,
   syncFromGoogleCalendar,
+  refreshAccessToken,
+  isTokenExpired,
+  registerGoogleCalendarWebhook,
+  stopGoogleCalendarWebhook,
+  webhookNeedsRenewal,
 } from '@/lib/googleCalendar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -135,11 +140,14 @@ export function GoogleCalendarSync() {
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
 
         // Store tokens securely in Supabase profiles table
+        // NOTE: Current OAuth flow (implicit) doesn't return refresh_token
+        // For persistent auth, need to switch to authorization_code flow
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
             google_access_token: tokenResponse.access_token,
             google_token_expires_at: expiresAt.toISOString(),
+            // google_refresh_token: tokenResponse.refresh_token, // TODO: Add when switching to auth code flow
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
@@ -152,6 +160,27 @@ export function GoogleCalendarSync() {
 
         setIsSignedIn(true);
         toast.success('Verbonden met Google Calendar - Tokens veilig opgeslagen');
+        
+        // Register webhook for real-time sync
+        try {
+          const webhookResult = await registerGoogleCalendarWebhook(user.id);
+          if (webhookResult) {
+            // Store webhook info in database
+            await supabase
+              .from('profiles')
+              .update({
+                webhook_channel_id: webhookResult.channelId,
+                webhook_resource_id: webhookResult.resourceId,
+                webhook_expiration: new Date(parseInt(webhookResult.expiration)).toISOString(),
+              })
+              .eq('id', user.id);
+            console.log('Google Calendar webhook registered successfully');
+          }
+        } catch (webhookError) {
+          console.error('Error registering webhook:', webhookError);
+          // Don't fail sign-in if webhook fails
+          toast.warning('Webhook registratie mislukt, fallback naar polling');
+        }
         
         // Perform initial sync
         if (autoSync) {
@@ -171,6 +200,23 @@ export function GoogleCalendarSync() {
   const handleSignOut = async () => {
     if (!user) return;
 
+    // Stop webhook before signing out
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('webhook_channel_id, webhook_resource_id')
+        .eq('id', user.id)
+        .single();
+
+      if (data?.webhook_channel_id && data?.webhook_resource_id) {
+        await stopGoogleCalendarWebhook(data.webhook_channel_id, data.webhook_resource_id);
+        console.log('Google Calendar webhook stopped');
+      }
+    } catch (webhookError) {
+      console.error('Error stopping webhook:', webhookError);
+      // Continue with sign out even if webhook stop fails
+    }
+
     // Revoke token at Google
     signOutFromGoogle();
 
@@ -181,6 +227,9 @@ export function GoogleCalendarSync() {
         google_access_token: null,
         google_refresh_token: null,
         google_token_expires_at: null,
+        webhook_channel_id: null,
+        webhook_resource_id: null,
+        webhook_expiration: null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id);
@@ -193,7 +242,7 @@ export function GoogleCalendarSync() {
     toast.info('Verbinding met Google Calendar verbroken - Tokens verwijderd');
   };
 
-  const handleSync = async () => {
+  const handleSync = useCallback(async () => {
     if (!user || !isSignedIn) return;
 
     setIsSyncing(true);
@@ -207,6 +256,18 @@ export function GoogleCalendarSync() {
 
       // Sync to Google Calendar
       const syncToResults = await syncToGoogleCalendar(localEvents || []);
+
+      // Update local events with Google IDs
+      for (const syncedEvent of syncToResults.syncedEvents) {
+        const { error: updateError } = await supabase
+          .from('calendar_events')
+          .update({ google_event_id: syncedEvent.googleEventId })
+          .eq('id', syncedEvent.localId);
+
+        if (updateError) {
+          console.error('Error updating google_event_id:', updateError);
+        }
+      }
 
       // Sync from Google Calendar
       const syncFromResults = await syncFromGoogleCalendar(async (googleEvent) => {
@@ -229,7 +290,7 @@ export function GoogleCalendarSync() {
             .from('calendar_events')
             .select('id')
             .eq('google_event_id', googleEvent.google_event_id)
-            .maybeSingle(); // Use maybeSingle instead of single to avoid 406 error
+            .maybeSingle();
 
           if (checkError) {
             console.error('Error checking existing event:', checkError);
@@ -295,7 +356,7 @@ export function GoogleCalendarSync() {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [user, isSignedIn]);
 
   const handleAutoSyncToggle = async (enabled: boolean) => {
     setAutoSync(enabled);
@@ -307,6 +368,116 @@ export function GoogleCalendarSync() {
       toast.info('Automatische synchronisatie uitgeschakeld');
     }
   };
+
+  // Auto-refresh token elke 50 minuten (voor 1-uur expiry)
+  useEffect(() => {
+    if (!user || !isSignedIn) return;
+
+    const refreshInterval = setInterval(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('google_refresh_token, google_token_expires_at')
+        .eq('id', user.id)
+        .single();
+
+      if (!data?.google_refresh_token || !data?.google_token_expires_at) {
+        console.log('No refresh token available');
+        return;
+      }
+
+      // Check if token needs refresh (expires binnen 10 minuten)
+      if (isTokenExpired(data.google_token_expires_at)) {
+        console.log('Token expiring soon, refreshing...');
+        
+        const newToken = await refreshAccessToken(data.google_refresh_token);
+        
+        if (newToken) {
+          // Calculate new expiry
+          const expiresAt = new Date();
+          expiresAt.setSeconds(expiresAt.getSeconds() + newToken.expires_in);
+
+          // Update database
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              google_access_token: newToken.access_token,
+              google_token_expires_at: expiresAt.toISOString(),
+            })
+            .eq('id', user.id);
+
+          if (error) {
+            console.error('Error updating refreshed token:', error);
+          } else {
+            // Update gapi client
+            window.gapi?.client?.setToken({
+              access_token: newToken.access_token,
+              expires_in: newToken.expires_in,
+            });
+            console.log('Token automatically refreshed');
+          }
+        } else {
+          console.error('Token refresh failed, user needs to re-authenticate');
+          toast.error('Google Calendar sessie verlopen, log opnieuw in');
+          setIsSignedIn(false);
+        }
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [user, isSignedIn]);
+
+  // Automatic sync interval (elke 15 minuten als autoSync enabled)
+  useEffect(() => {
+    if (!autoSync || !isSignedIn) return;
+
+    const syncInterval = setInterval(() => {
+      console.log('Automatic sync triggered');
+      handleSync();
+    }, 15 * 60 * 1000); // Every 15 minutes
+
+    return () => clearInterval(syncInterval);
+  }, [autoSync, isSignedIn, handleSync]); // Added handleSync to dependencies
+
+  // Check and renew webhook if needed (check every hour)
+  useEffect(() => {
+    if (!user || !isSignedIn) return;
+
+    const checkWebhook = async () => {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('webhook_expiration')
+          .eq('id', user.id)
+          .single();
+
+        if (data?.webhook_expiration && webhookNeedsRenewal(new Date(data.webhook_expiration).getTime())) {
+          console.log('Webhook expiring soon, renewing...');
+          const webhookResult = await registerGoogleCalendarWebhook(user.id);
+          if (webhookResult) {
+            await supabase
+              .from('profiles')
+              .update({
+                webhook_channel_id: webhookResult.channelId,
+                webhook_resource_id: webhookResult.resourceId,
+                webhook_expiration: new Date(parseInt(webhookResult.expiration)).toISOString(),
+              })
+              .eq('id', user.id);
+            toast.info('Webhook verlengd voor real-time sync');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking webhook expiration:', error);
+      }
+    };
+
+    // Check immediately on mount
+    checkWebhook();
+
+    // Then check every hour
+    const webhookCheckInterval = setInterval(checkWebhook, 60 * 60 * 1000);
+
+    return () => clearInterval(webhookCheckInterval);
+  }, [user, isSignedIn]);
 
   if (!isInitialized && !isLoading) {
     return (

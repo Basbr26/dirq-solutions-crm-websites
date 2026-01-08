@@ -219,13 +219,16 @@ export async function deleteGoogleCalendarEvent(eventId: string): Promise<void> 
 
 /**
  * Sync local events to Google Calendar
+ * Returns array of successfully synced events with their Google IDs
  */
 export async function syncToGoogleCalendar(localEvents: any[]): Promise<{
   synced: number;
   errors: number;
+  syncedEvents: Array<{ localId: string; googleEventId: string }>;
 }> {
   let synced = 0;
   let errors = 0;
+  const syncedEvents: Array<{ localId: string; googleEventId: string }> = [];
 
   for (const event of localEvents) {
     try {
@@ -250,17 +253,21 @@ export async function syncToGoogleCalendar(localEvents: any[]): Promise<{
 
       const result = await createGoogleCalendarEvent(googleEvent);
       
-      // Store the Google event ID in local database
-      // This would need a Supabase update call here
-      
-      synced++;
+      // Store mapping for caller to update database
+      if (result && result.id) {
+        syncedEvents.push({
+          localId: event.id,
+          googleEventId: result.id,
+        });
+        synced++;
+      }
     } catch (error) {
       console.error(`Error syncing event ${event.id}:`, error);
       errors++;
     }
   }
 
-  return { synced, errors };
+  return { synced, errors, syncedEvents };
 }
 
 /**
@@ -409,10 +416,105 @@ export function isTokenExpired(expiresAt: string): boolean {
   return expiryDate <= fiveMinutesFromNow;
 }
 
-// TypeScript declarations for global objects
-declare global {
-  interface Window {
-    gapi: any;
-    google: any;
+/**
+ * Register webhook with Google Calendar for push notifications
+ * This enables real-time sync instead of 15-minute polling
+ * 
+ * @param userId - User ID for channel token
+ * @param webhookUrl - Public HTTPS URL for webhook endpoint
+ * @returns Watch response with channel ID and expiration
+ */
+export async function registerGoogleCalendarWebhook(
+  userId: string,
+  webhookUrl?: string
+): Promise<{
+  channelId: string;
+  resourceId: string;
+  expiration: string;
+} | null> {
+  try {
+    // Default webhook URL (Supabase Edge Function)
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+    const defaultWebhookUrl = `${supabaseUrl}/functions/v1/google-calendar-webhook`;
+    const url = webhookUrl || defaultWebhookUrl;
+
+    // Generate unique channel ID and token
+    const channelId = `user_${userId}_${Date.now()}`;
+    const channelToken = channelId; // Use same value for simplicity
+
+    console.log('Registering Google Calendar webhook:', {
+      channelId,
+      url,
+    });
+
+    // Register watch channel with Google Calendar API
+    const response = await gapi.client.calendar.events.watch({
+      calendarId: 'primary',
+      resource: {
+        id: channelId,
+        type: 'web_hook',
+        address: url,
+        token: channelToken,
+        // Optional: Set expiration (max 7 days = 604800 seconds)
+        // If not set, Google uses maximum allowed time
+        params: {
+          ttl: '604800', // 7 days in seconds
+        },
+      },
+    });
+
+    console.log('Webhook registered successfully:', response.result);
+
+    return {
+      channelId: response.result.id,
+      resourceId: response.result.resourceId,
+      expiration: response.result.expiration,
+    };
+  } catch (error) {
+    console.error('Error registering webhook:', error);
+    return null;
   }
+}
+
+/**
+ * Stop (unregister) webhook with Google Calendar
+ * Call this when user disables auto-sync or signs out
+ * 
+ * @param channelId - Channel ID from registration
+ * @param resourceId - Resource ID from registration
+ */
+export async function stopGoogleCalendarWebhook(
+  channelId: string,
+  resourceId: string
+): Promise<boolean> {
+  try {
+    console.log('Stopping Google Calendar webhook:', {
+      channelId,
+      resourceId,
+    });
+
+    await gapi.client.calendar.channels.stop({
+      resource: {
+        id: channelId,
+        resourceId: resourceId,
+      },
+    });
+
+    console.log('Webhook stopped successfully');
+    return true;
+  } catch (error) {
+    console.error('Error stopping webhook:', error);
+    return false;
+  }
+}
+
+/**
+ * Check if webhook needs renewal (expires within 24 hours)
+ * 
+ * @param expirationTimestamp - Expiration timestamp in milliseconds
+ * @returns true if webhook should be renewed
+ */
+export function webhookNeedsRenewal(expirationTimestamp: number): boolean {
+  const oneDayInMs = 24 * 60 * 60 * 1000;
+  return Date.now() > expirationTimestamp - oneDayInMs;
 }

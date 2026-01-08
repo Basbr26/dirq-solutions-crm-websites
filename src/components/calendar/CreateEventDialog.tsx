@@ -9,8 +9,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export function CreateEventDialog() {
+interface CreateEventDialogProps {
+  /** Display as a Floating Action Button */
+  variant?: 'default' | 'fab';
+}
+
+export function CreateEventDialog({ variant = 'default' }: CreateEventDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -76,10 +82,24 @@ export function CreateEventDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nieuwe Activiteit
-        </Button>
+        {variant === 'fab' ? (
+          <Button
+            className={cn(
+              "h-14 w-14 rounded-full shadow-lg",
+              "bg-primary hover:bg-primary/90",
+              "flex items-center justify-center",
+              "active:scale-95 transition-transform"
+            )}
+            aria-label="Nieuwe activiteit"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        ) : (
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nieuwe Activiteit
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

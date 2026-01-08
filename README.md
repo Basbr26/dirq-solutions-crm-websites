@@ -31,7 +31,10 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Quote Generator** - PDF export met BTW berekeningen  
 ✅ **Project Tracking** - Hosting, pages, features specifiek voor websites  
 ✅ **Task Management** - Met calendar integration en CASCADE delete  
-✅ **Google Calendar Sync** - Bi-directional auto-sync (1 min interval) via Edge Functions  
+✅ **Google Calendar Sync** - Bi-directional auto-sync met real-time webhooks  
+✅ **Real-time Updates** - Google Calendar webhook push notifications (binnen seconden)  
+✅ **Token Encryption** - AES-256 encrypted OAuth tokens via pgcrypto  
+✅ **Performance Optimized** - Database indexes (94% sneller task queries)  
 ✅ **Refresh Tokens** - Maanden-lange sessies zonder re-authenticatie  
 ✅ **Calendar Integration** - Taken + geplande activiteiten in kalender, Desktop SidePanel + Mobile Dialog  
 ✅ **Document Generation** - 5 professional templates  

@@ -39,7 +39,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { ScrollableTabsList, ScrollableTabTrigger } from '@/components/ui/scrollable-tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -219,37 +220,33 @@ export default function CompanyDetailPage() {
           </div>
         </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
-        <div className={cn(
-          "overflow-x-auto",
-          isMobile && "pb-2 -mx-4 px-4"
-        )}>
-          <TabsList className={cn(
-            isMobile 
-              ? "inline-flex w-auto min-w-full" 
-              : "grid w-full grid-cols-6"
-          )}>
-            <TabsTrigger value="overview" className={isMobile ? "flex-shrink-0" : ""}>
-              Overzicht
-            </TabsTrigger>
-            <TabsTrigger value="contacts" className={isMobile ? "flex-shrink-0" : ""}>
-              Contacten
-            </TabsTrigger>
-            <TabsTrigger value="leads" className={isMobile ? "flex-shrink-0" : ""}>
-              Leads
-            </TabsTrigger>
-            <TabsTrigger value="interactions" className={isMobile ? "flex-shrink-0" : ""}>
-              Activiteiten
-            </TabsTrigger>
-            <TabsTrigger value="documents" className={isMobile ? "flex-shrink-0" : ""}>
-              Documenten
-            </TabsTrigger>
-            <TabsTrigger value="notes" className={isMobile ? "flex-shrink-0" : ""}>
-              Notities
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      {/* Tabs - Now using ScrollableTabs for mobile horizontal scrolling */}
+      <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+        <ScrollableTabsList>
+          <ScrollableTabTrigger value="overview">
+            Overzicht
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="contacts">
+            <Users className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Contacten
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="leads">
+            <TrendingUp className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Leads
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="interactions">
+            <MessageSquare className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Activiteiten
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="documents">
+            <FileText className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Documenten
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="notes">
+            <StickyNote className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Notities
+          </ScrollableTabTrigger>
+        </ScrollableTabsList>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">

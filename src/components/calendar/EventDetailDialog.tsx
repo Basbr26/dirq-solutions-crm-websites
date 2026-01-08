@@ -10,6 +10,7 @@ import { Calendar, Clock, MapPin, Trash2, Building2, User, Link as LinkIcon, Pen
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { EditEventDialog } from './EditEventDialog';
+import { deleteGoogleCalendarEvent } from '@/lib/googleCalendar';
 
 interface EventDetailDialogProps {
   event: any;
@@ -36,6 +37,22 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      // If event is synced with Google Calendar, delete from Google first
+      if (event.google_event_id) {
+        try {
+          await deleteGoogleCalendarEvent(event.google_event_id);
+        } catch (error) {
+          console.error('Error deleting from Google Calendar:', error);
+          // Continue with local delete even if Google delete fails
+          toast({ 
+            title: 'Waarschuwing', 
+            description: 'Event kon niet uit Google Calendar worden verwijderd, maar wordt wel lokaal verwijderd',
+            variant: 'destructive' 
+          });
+        }
+      }
+      
+      // Delete from local database
       const { error } = await supabase
         .from('calendar_events')
         .delete()
@@ -44,7 +61,10 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-      toast({ title: 'Event verwijderd', description: 'Het calendar event is succesvol verwijderd' });
+      const description = event.google_event_id 
+        ? 'Het event is verwijderd uit zowel de kalender als Google Calendar'
+        : 'Het event is verwijderd uit de kalender';
+      toast({ title: 'Event verwijderd', description });
       setShowDeleteDialog(false);
       onOpenChange(false);
     },

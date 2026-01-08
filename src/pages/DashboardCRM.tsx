@@ -64,29 +64,32 @@ interface KPICardProps {
 function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardProps) {
   const content = (
     <>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      {/* Reduced padding on mobile: p-3 vs p-6 on sm+ */}
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+        <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+      <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+        {/* Smaller text on mobile */}
+        <div className="text-lg sm:text-2xl font-bold truncate">{value}</div>
+        {subtitle && <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">{subtitle}</p>}
         {trend !== undefined && (
-          <div className="flex items-center text-xs mt-2">
+          <div className="flex items-center text-[10px] sm:text-xs mt-2">
             {trend > 0 ? (
               <>
-                <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+                <TrendingUp className="h-3 w-3 text-green-500 mr-1 flex-shrink-0" />
                 <span className="text-green-500">+{trend}%</span>
               </>
             ) : trend < 0 ? (
               <>
-                <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+                <TrendingDown className="h-3 w-3 text-red-500 mr-1 flex-shrink-0" />
                 <span className="text-red-500">{trend}%</span>
               </>
             ) : (
               <span className="text-muted-foreground">Onveranderd</span>
             )}
-            <span className="text-muted-foreground ml-1">vs vorige maand</span>
+            {/* Hide "vs vorige maand" on mobile to save space */}
+            <span className="text-muted-foreground ml-1 hidden sm:inline">vs vorige maand</span>
           </div>
         )}
       </CardContent>
@@ -171,9 +174,9 @@ export default function DashboardCRM() {
       title="CRM Dashboard" 
       subtitle={format(new Date(), 'EEEE d MMMM yyyy', { locale: nl })}
     >
-      <div className="p-4 md:p-6 space-y-6">
-        {/* KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="space-y-4 sm:space-y-6">
+        {/* KPI Cards - 2 columns on mobile, 4 on desktop */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           <KPICard
             title="Pipeline Waarde"
             value={formatCurrency(pipelineStats?.total_value || 0)}
@@ -207,17 +210,17 @@ export default function DashboardCRM() {
           />
         </div>
 
-        {/* Charts Row 1 */}
-        <div className="grid gap-4 md:grid-cols-2">
+        {/* Charts Row 1 - Stack on mobile */}
+        <div className="grid gap-4 lg:grid-cols-2">
           {/* Revenue Trend */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Omzet Ontwikkeling</CardTitle>
-              <CardDescription>Afgelopen 6 maanden</CardDescription>
+          <Card className="overflow-hidden">
+            <CardHeader className="p-3 sm:p-6">
+              <CardTitle className="text-sm sm:text-base">Omzet Ontwikkeling</CardTitle>
+              <CardDescription className="text-xs">Afgelopen 6 maanden</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-2 sm:p-6 pt-0">
               {revenueLoading ? (
-                <div className="h-[300px] space-y-3">
+                <div className="h-[200px] sm:h-[300px] space-y-3">
                   <Skeleton className="h-8 w-full" />
                   <Skeleton className="h-8 w-full" />
                   <Skeleton className="h-8 w-full" />
