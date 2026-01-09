@@ -10,6 +10,97 @@ Alle updates, features, bugfixes en migraties in chronologische volgorde.
 
 ---
 
+## [2.0.0] - 2026-01-09 - Project Velocity Complete (Database + API Gateway)
+
+### 🎯 Added - Fase 1 (Database Foundation)
+- **External Data Integration Fields**
+  - `linkedin_url` (TEXT) - LinkedIn company URL voor Apollo.io enrichment
+  - `website_url` (TEXT) - Company website voor API ingestion
+  - `phone` (TEXT) - Main phone number voor API ingestion
+  - `kvk_number` (TEXT, UNIQUE) - Dutch Chamber of Commerce number
+  - `source` (TEXT, CHECK) - Data source tracking (Manual, Apollo, KVK, Manus, n8n_automation, Website)
+  - `ai_audit_summary` (TEXT) - AI-generated audit van Manus/Gemini
+  - `tech_stack` (TEXT[]) - Technology stack array
+  - `video_audit_url` (TEXT) - Manus AI video audit URL
+  - `total_mrr` (DECIMAL) - **Auto-calculated** monthly recurring revenue
+
+- **Project Finance & Tracking**
+  - `package_id` (TEXT, CHECK) - Package type: finance_starter, finance_growth
+  - `selected_addons` (TEXT[]) - Addon IDs: addon_logo, addon_rush, addon_page
+  - `calculated_total` (DECIMAL) - Total one-time project cost
+  - `monthly_recurring_revenue` (DECIMAL) - MRR per project
+  - `intake_status` (JSONB) - Onboarding checklist (logo, colors, texts, nba_check)
+  - `dns_status` (TEXT, CHECK) - DNS propagation: pending, active, failed, propagated
+  - `hosting_provider` (TEXT) - Hosting provider name
+
+- **Data Integrity Layer**
+  - Foreign Key: `projects.company_id` → `companies.id` (CASCADE DELETE)
+  - CHECK constraints: source, dns_status, package_id validation
+  - UNIQUE constraint: kvk_number per company
+
+- **Performance Indexes**
+  - `idx_companies_kvk` - Fast KVK API lookups
+  - `idx_companies_linkedin` - Apollo enrichment queries
+  - `idx_companies_source` - Source filtering
+  - `idx_projects_package` - Package analytics
+  - `idx_projects_intake_logo` - Onboarding status queries
+
+- **MRR Aggregation System**
+  - Trigger: `update_company_mrr()` - Auto-recalculates company.total_mrr
+  - Fires on: projects INSERT/UPDATE/DELETE
+  - Prevents manual MRR desync
+  - Ensures accurate revenue tracking
+
+### 🎯 Added - Fase 2 (API Gateway)
+- **Secure Edge Function: ingest-prospect**
+  - API key authentication via `x-api-key` header
+  - Zod input validation schemas (KVK format, LinkedIn URLs, etc.)
+  - Idempotent UPSERT operations (safe retries via kvk_number)
+  - Structured JSON logging (request_id, duration_ms, metadata)
+  - Health check endpoint: `/health`
+  - CORS support voor webhook integraties
+  - Rate limit headers (100 requests/hour)
+
+- **Type-Safe Pricing Architecture**
+  - `src/config/pricing.ts` met const assertions
+  - FINANCE_PACKAGES: STARTER (€799.95), GROWTH (€1299.95)
+  - ADD_ONS: Logo (€350), Rush (€300), Extra Page (€150)
+  - RECURRING_SERVICES: Hosting & Security (€50/maand)
+  - `calculateProjectTotal()` helper matching DB logic
+  - Type exports: PackageId, AddonId (compile-time safety)
+
+### 🔄 Changed
+- Migrations: Added paired UP/DOWN migrations voor safe rollback
+- Contact Form: Added proper autocomplete attributes (given-name, family-name, email, tel)
+- Companies table: +9 columns (linkedin_url, website_url, phone, kvk_number, source, ai_audit_summary, tech_stack, video_audit_url, total_mrr)
+- Projects table: +7 columns (package_id, selected_addons, calculated_total, monthly_recurring_revenue, intake_status, dns_status, hosting_provider)
+
+### 🐛 Fixed
+- Column name queries: `naam` → `name` in verification queries
+- Constraint existence checks: All constraints wrapped in DO blocks (idempotent migrations)
+- Contact form autofill: Browser now correctly splits first/last names
+
+### 📚 Documentation
+- Added: `PROJECT_VELOCITY_COMPLETE_GUIDE.md` (720 lines) - Complete implementation guide
+- Updated: `MIGRATION_GUIDE_VELOCITY_PHASE1.md` - Database migration details
+- Updated: `STATUS.md` - Version 1.2.0 → 2.0.0
+- Updated: `README.md` - Enterprise-grade architecture badges
+
+### 🔐 Security
+- API key authentication voor Edge Functions
+- Input validation met Zod schemas
+- Rate limiting headers
+- Structured audit logging
+- CORS configured voor n8n webhooks
+
+### 🚀 Performance
+- 5 nieuwe database indexes voor n8n automation
+- Response time target: <200ms
+- Auto-aggregation eliminates manual calculations
+- Idempotent operations prevent duplicate data
+
+---
+
 ## [1.0.2] - 2026-01-07 - Lead Conversion & Quotes Fix
 
 ### ✨ Added

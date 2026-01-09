@@ -1,7 +1,7 @@
 -- ============================================================
--- PROJECT VELOCITY - PHASE 1: ROLLBACK MIGRATION
+-- PROJECT VELOCITY - COMPLETE ROLLBACK
 -- Migration: 20260109_velocity_phase1_down.sql
--- Purpose: Safe rollback of all Phase 1 changes
+-- Purpose: Safe rollback of all Phase 1 + Fase 2 prep changes
 -- ============================================================
 
 -- Omgekeerde volgorde: Triggers → Functions → Indexes → Constraints → Columns

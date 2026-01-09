@@ -1,7 +1,7 @@
 -- ============================================================
--- PROJECT VELOCITY - PHASE 1: AI SALES ENGINE FOUNDATION
+-- PROJECT VELOCITY - COMPLETE IMPLEMENTATION
 -- Migration: 20260109_velocity_phase1_up.sql
--- Goal: €240K ARR Infrastructure with External Data Integration
+-- Goal: €240K ARR Infrastructure + API Gateway Foundation
 -- ============================================================
 
 -- ============================================================
@@ -9,6 +9,8 @@
 -- ============================================================
 ALTER TABLE companies 
 ADD COLUMN IF NOT EXISTS linkedin_url TEXT,
+ADD COLUMN IF NOT EXISTS website_url TEXT,        -- For Fase 2 API
+ADD COLUMN IF NOT EXISTS phone TEXT,              -- For Fase 2 API
 ADD COLUMN IF NOT EXISTS kvk_number TEXT UNIQUE, -- Uniek voor KVK lookups
 ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'Manual',
 ADD COLUMN IF NOT EXISTS ai_audit_summary TEXT,
