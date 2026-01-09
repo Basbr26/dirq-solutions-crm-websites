@@ -129,6 +129,52 @@
 
 ---
 
+## 🎯 PROJECT VELOCITY - FASE 3 (PLANNED) ⏳
+
+### **Operational Activation - n8n Workflow Deployment**
+
+#### **Status:** Ready for Deployment
+- [x] **Deployment Guide Created** (N8N_DEPLOYMENT_GUIDE.md)
+  - Complete smoke test suite (cURL validation)
+  - n8n HTTP Request node configuration
+  - KVK Scanner prototype workflow JSON
+  - Error handling & logging setup
+  - Monitoring & debugging procedures
+  
+- [ ] **Smoke Tests Execution**
+  - Health check (GET /health)
+  - Authentication test (401 validation)
+  - Create company test (201 Created)
+  - Idempotency test (200 Updated)
+  - Validation error test (400 Bad Request)
+  
+- [ ] **n8n Workflow Deployment**
+  - Import KVK Scanner prototype
+  - Configure Supabase API Key credential
+  - Set up error handling branches
+  - Activate scheduled trigger (daily 08:00)
+  
+- [ ] **Production Testing**
+  - Manual workflow execution
+  - Verify 3 mock companies in database
+  - Check system user ownership
+  - Validate structured logging output
+  - Confirm idempotency behavior
+  
+- [ ] **Monitoring Setup**
+  - n8n execution logs dashboard
+  - Supabase Edge Function logs
+  - Daily metrics tracking
+  - Error alerting (Slack/email)
+
+#### **Next Steps (Fase 4):**
+- Replace mock data with real KVK API
+- Implement Apollo.io enrichment
+- Add Manus AI video audit integration
+- Scale to 10-50 companies/day
+
+---
+
 ## 🎯 PROJECT VELOCITY - PHASE 1 (v1.2.0) ✅ COMPLETE
 
 ### **AI Sales Engine Foundation - €240K ARR Infrastructure**
