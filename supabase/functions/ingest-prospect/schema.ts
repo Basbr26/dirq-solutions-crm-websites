@@ -13,7 +13,7 @@ export const ProspectSchema = z.object({
     
   kvk_number: z.string()
     .regex(/^\d{8}$/, 'KVK number must be exactly 8 digits')
-    .transform(val => val.trim()),
+    .transform((val: string) => val.trim()),
     
   email: z.string()
     .email('Invalid email format')
@@ -39,7 +39,7 @@ export const ProspectSchema = z.object({
   website_url: z.string()
     .url('Invalid website URL')
     .refine(
-      url => !url?.includes('linkedin.com'), 
+      (url: string) => !url?.includes('linkedin.com'), 
       'Use linkedin_url field for LinkedIn profiles'
     )
     .optional()

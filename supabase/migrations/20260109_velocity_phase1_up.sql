@@ -143,13 +143,13 @@ COMMENT ON TRIGGER trigger_update_company_mrr ON projects IS
 -- ============================================================
 -- VERIFICATION QUERY (Run after migration)
 -- ============================================================
--- SELECT 
---   c.name,
---   c.kvk_number,
---   c.source,
---   c.total_mrr,
---   COUNT(p.id) AS project_count,
---   SUM(p.monthly_recurring_revenue) AS calculated_mrr
--- FROM companies c
--- LEFT JOIN projects p ON p.company_id = c.id
--- GROUP BY c.id, c.name, c.kvk_number, c.source, c.total_mrr;
+SELECT 
+  c.name,
+  c.kvk_number,
+  c.source,
+  c.total_mrr,
+  COUNT(p.id) AS project_count,
+  SUM(p.monthly_recurring_revenue) AS calculated_mrr
+FROM companies c
+LEFT JOIN projects p ON p.company_id = c.id
+GROUP BY c.id, c.name, c.kvk_number, c.source, c.total_mrr;

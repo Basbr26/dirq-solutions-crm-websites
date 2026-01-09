@@ -171,7 +171,8 @@ serve(async (req) => {
         })
     }
 
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     console.error('Error processing webhook:', error)
     return new Response(JSON.stringify({ 
       error: 'Internal server error',

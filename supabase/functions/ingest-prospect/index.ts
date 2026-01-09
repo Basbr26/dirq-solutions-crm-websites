@@ -9,12 +9,19 @@
  * - Structured JSON logging
  * - CORS support
  * - Health check endpoint
+ * 
+ * System User: 00000000-0000-0000-0000-000000000001 (n8n Automation)
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { ProspectSchema } from './schema.ts';
 import type { IngestProspectResponse, ErrorResponse } from './types.ts';
+
+// ============================================================
+// CONSTANTS
+// ============================================================
+const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000001'; // n8n Automation
 
 // ============================================================
 // STRUCTURED LOGGER
@@ -128,7 +135,8 @@ serve(async (req: Request) => {
   try { 
     body = await req.json(); 
   } catch(e) { 
-    log('warn', 'Invalid JSON received', { requestId, error: e.message });
+    const error = e as Error;
+    log('warn', 'Invalid JSON received', { requestId, error: error.message });
     return jsonResponse({ 
       success: false, 
       error: 'Invalid JSON' 
@@ -171,22 +179,26 @@ serve(async (req: Request) => {
       .maybeSingle();
 
     // Upsert operation (idempotent via kvk_number unique constraint)
+    // Use system user ID for automation-created companies
+    const upsertData = {
+      name: prospect.company_name,
+      kvk_number: prospect.kvk_number,
+      email: prospect.email,
+      phone: prospect.phone,
+      city: prospect.city,
+      linkedin_url: prospect.linkedin_url,
+      website_url: prospect.website_url,
+      source: prospect.source,
+      tech_stack: prospect.tech_stack,
+      ai_audit_summary: prospect.ai_audit_summary,
+      status: 'prospect',
+      updated_at: new Date().toISOString(),
+      owner_id: SYSTEM_USER_ID // System user for automation-created records
+    };
+
     const { data, error } = await supabase
       .from('companies')
-      .upsert({
-        name: prospect.company_name,
-        kvk_number: prospect.kvk_number,
-        email: prospect.email,
-        phone: prospect.phone,
-        city: prospect.city,
-        linkedin_url: prospect.linkedin_url,
-        website_url: prospect.website_url,
-        source: prospect.source,
-        tech_stack: prospect.tech_stack,
-        ai_audit_summary: prospect.ai_audit_summary,
-        status: 'prospect',
-        updated_at: new Date().toISOString()
-      }, { 
+      .upsert(upsertData, { 
         onConflict: 'kvk_number',
         ignoreDuplicates: false
       })
@@ -220,21 +232,26 @@ serve(async (req: Request) => {
       }
     }, existing ? 200 : 201);
 
-  } catch (error) {
+  } catch (err) {
     const duration = Math.round(performance.now() - startTime);
+    const error = err as any; // PostgrestError has dynamic properties
     
     log('error', 'Database operation failed', { 
       requestId,
       error: error.message,
+      error_details: error.details || error.hint || 'No additional details',
+      error_code: error.code,
       kvk_number: prospect.kvk_number,
       source: prospect.source,
-      duration_ms: duration
+      duration_ms: duration,
+      stack: error.stack
     });
     
     return jsonResponse({ 
       success: false, 
       error: 'Processing failed',
-      details: error.message 
+      message: error.message, // Include error message in response for debugging
+      details: error.details || error.hint
     }, 500);
   }
 });
