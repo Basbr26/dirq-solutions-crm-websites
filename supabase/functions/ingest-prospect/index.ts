@@ -17,6 +17,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { ProspectSchema } from './schema.ts';
 import type { IngestProspectResponse, ErrorResponse } from './types.ts';
+import { generateCompanyAudit, extractTechStack, generateLeadScore } from './gemini-enrichment.ts';
 
 // ============================================================
 // CONSTANTS
@@ -220,6 +221,75 @@ serve(async (req: Request) => {
       duration_ms: duration
     });
 
+    // ============================================================
+    // 8. TRIGGER AI ENRICHMENT (ASYNC - Don't block response)
+    // ============================================================
+    if (prospect.website_url && prospect.source === 'n8n_automation') {
+      log('info', 'Triggering AI enrichment', { 
+        requestId, 
+        company_id: data.id 
+      });
+
+      // Fire-and-forget async enrichment
+      Promise.all([
+        // Generate AI audit
+        generateCompanyAudit(
+          prospect.company_name,
+          prospect.website_url,
+          prospect.industry
+        ).then(audit => {
+          if (audit) {
+            return supabase
+              .from('companies')
+              .update({ 
+                ai_audit_summary: audit,
+                ai_enrichment_status: 'completed'
+              })
+              .eq('id', data.id);
+          }
+        }),
+        
+        // Extract tech stack
+        extractTechStack(prospect.website_url).then(stack => {
+          if (stack.length > 0) {
+            return supabase
+              .from('companies')
+              .update({ tech_stack: stack })
+              .eq('id', data.id);
+          }
+        }),
+
+        // Generate lead score
+        generateLeadScore(
+          prospect.company_name,
+          undefined, // Company size not in payload yet
+          prospect.industry,
+          undefined  // Website quality not assessed yet
+        ).then(score => {
+          if (score !== null) {
+            // Store lead score in enrichment_data JSONB
+            return supabase
+              .from('companies')
+              .update({ 
+                enrichment_data: { lead_score: score, generated_at: new Date().toISOString() }
+              })
+              .eq('id', data.id);
+          }
+        })
+      ]).then(() => {
+        log('info', 'AI enrichment completed', { 
+          requestId, 
+          company_id: data.id 
+        });
+      }).catch(err => {
+        log('warn', 'AI enrichment failed (non-blocking)', { 
+          requestId, 
+          company_id: data.id,
+          error: err.message
+        });
+      });
+    }
+
     return jsonResponse({
       success: true,
       action,
@@ -228,6 +298,7 @@ serve(async (req: Request) => {
       metadata: { 
         kvk_number: data.kvk_number, 
         source: prospect.source,
+        ai_enrichment: prospect.website_url ? 'triggered' : 'skipped',
         timestamp: new Date().toISOString()
       }
     }, existing ? 200 : 201);
