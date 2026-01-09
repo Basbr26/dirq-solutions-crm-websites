@@ -1,8 +1,8 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
 **Last Updated:** 9 Januari 2026  
-**Version:** 1.2.0 - Project Velocity Phase 1  
-**Production Status:** ✅ Production Ready + Enterprise Architecture
+**Version:** 2.0.1 - Project Velocity Complete (Phase 1 + 2)  
+**Production Status:** ✅ Production Ready + Enterprise Architecture + API Gateway
 
 ---
 
@@ -13,13 +13,119 @@
 | Architecture | 10/10 | ✅ Enterprise-Grade |
 | Feature Completeness | 10/10 | ✅ Complete |
 | UX/Polish | 10/10 | ✅ Consistent |
-| Code Quality | 9/10 | ✅ Type-Safe |
+| Code Quality | 10/10 | ✅ Type-Safe + Error Handling |
 | Testing | 2/10 | ⚠️ Minimal |
-| Documentation | 9/10 | ✅ Comprehensive |
-| Security | 10/10 | ✅ RLS + FK + Triggers |
+| Documentation | 10/10 | ✅ Comprehensive + Deployment Guide |
+| Security | 10/10 | ✅ RLS + FK + API Keys |
 | Performance | 10/10 | ✅ Indexed + Optimized |
 | Calendar Integration | 10/10 | ✅ Complete |
 | Data Integrity | 10/10 | ✅ Foreign Keys + Constraints |
+| API Integration | 10/10 | ✅ Edge Functions + Webhooks |
+
+---
+
+## 🎯 PROJECT VELOCITY - COMPLETE (v2.0.0 - v2.0.1) ✅
+
+### **AI Sales Engine - €240K ARR Infrastructure with API Gateway**
+
+#### **FASE 1: Database Foundation** ✅
+- [x] **External Data Integration**
+  - KVK API fields (kvk_number with UNIQUE constraint)
+  - Apollo.io fields (linkedin_url, website_url, phone, tech_stack array)
+  - Manus AI fields (ai_audit_summary, video_audit_url)
+  - Source tracking with CHECK constraint (Manual, Apollo, KVK, Website, Manus, n8n_automation)
+  
+- [x] **Project Finance System**
+  - Package ID validation (finance_starter, finance_growth)
+  - Selected addons array (addon_logo, addon_rush, addon_page)
+  - Calculated total (DECIMAL 10,2 precision)
+  - Monthly Recurring Revenue tracking
+  - DNS status workflow (pending → active → propagated)
+  
+- [x] **Intake/Onboarding Tracker**
+  - JSONB structure (logo_received, colors_approved, texts_received, nba_check_complete)
+  - Indexed for performance (logo_received lookup)
+  
+- [x] **Data Integrity Layer**
+  - Foreign Key: projects.company_id → companies.id (CASCADE DELETE)
+  - CHECK constraints on source, dns_status, package_id
+  - UNIQUE constraint on kvk_number
+  
+- [x] **Performance Indexes**
+  - idx_companies_kvk (KVK API lookups)
+  - idx_companies_linkedin (Apollo enrichment)
+  - idx_companies_source (Source filtering)
+  - idx_projects_package (Package analytics)
+  - idx_projects_intake_logo (Onboarding status queries)
+  
+- [x] **MRR Aggregation System**
+  - Trigger: update_company_mrr() on projects INSERT/UPDATE/DELETE
+  - Auto-calculates company.total_mrr from project MRRs
+  - Prevents manual MRR desync
+
+#### **FASE 2: API Gateway (v2.0.0 - v2.0.1)** ✅
+- [x] **Secure Edge Function** (`ingest-prospect`)
+  - Deno runtime with TypeScript
+  - API key authentication (x-api-key header)
+  - Zod input validation (regex patterns, URL validation)
+  - Idempotent UPSERT via kvk_number
+  - Structured JSON logging (request_id, duration_ms, metadata)
+  - Health check endpoint (/health)
+  - CORS support for webhooks
+  
+- [x] **System User Architecture**
+  - UUID: 00000000-0000-0000-0000-000000000001
+  - Profile: n8n Automation <system@dirqsolutions.nl>
+  - Role: SYSTEM (new role in profiles constraint)
+  - Ownership: API-created companies owned by system user
+  - FK bypass: profiles.id FK with NOT VALID (allows system user)
+  
+- [x] **Response Handling**
+  - HTTP 201: Created (new company)
+  - HTTP 200: Updated (existing company via kvk_number)
+  - HTTP 401: Unauthorized (missing/wrong API key)
+  - HTTP 400: Validation failed (Zod errors with details)
+  - HTTP 500: Processing failed (with error message for debugging)
+  
+- [x] **TypeScript Quality**
+  - Explicit types for Zod callbacks
+  - Type assertions for error handling
+  - 14 → 2 errors (remaining are Deno import warnings)
+  
+- [x] **Deployment & Testing**
+  - Deployed to: pdqdrdddgbiiktcwdslv.supabase.co
+  - API key configured via Supabase secrets
+  - CREATE tested: HTTP 201 ✅
+  - UPDATE tested: HTTP 200 ✅
+  - Idempotency verified ✅
+  
+#### **Documentation** ✅
+- [x] **PROJECT_VELOCITY_COMPLETE_GUIDE.md** (720 lines)
+  - Database migration steps
+  - API key generation (openssl rand -base64 32)
+  - Edge Function deployment commands
+  - Test curl commands (health, auth, idempotency)
+  - n8n HTTP Request node configuration
+  - Business metrics queries (MRR, ARR tracking)
+  - Structured logging examples
+  - Troubleshooting guide (401/400/500 errors)
+  
+#### **Type-Safe Pricing Architecture** ✅
+- [x] `/src/config/pricing.ts` with const assertions
+- [x] FINANCE_PACKAGES (STARTER €799.95, GROWTH €1299.95)
+- [x] RECURRING_SERVICES (Hosting & Security €50/month)
+- [x] ADD_ONS (Logo €350, Rush €300, Extra Page €150)
+- [x] calculateProjectTotal() helper (matches DB logic)
+- [x] Type exports: PackageId, AddonId
+- [x] VALID_PACKAGE_IDS array (DB validation)
+- [x] ARR/LTV calculation helpers
+
+#### **Migrations** ✅
+- [x] `20260109_velocity_phase1_up.sql` (156 lines) - Database schema
+- [x] `20260109_velocity_phase1_down.sql` (paired rollback)
+- [x] `20260109_system_user.sql` (76 lines) - System user + role constraint
+- [x] Comments for all new columns/triggers/functions
+- [x] Verification queries included
 
 ---
 

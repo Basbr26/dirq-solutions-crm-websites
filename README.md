@@ -3,12 +3,14 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)]()
+[![Version](https://img.shields.io/badge/version-2.0.1-blue)]()
 [![Completion](https://img.shields.io/badge/completion-99%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
 [![Mobile-First](https://img.shields.io/badge/mobile--first-ready-green)]()
 [![Enterprise](https://img.shields.io/badge/architecture-enterprise--grade-purple)]()
+[![API Gateway](https://img.shields.io/badge/API-Edge%20Functions-orange)]()
+[![n8n Ready](https://img.shields.io/badge/n8n-integration%20ready-blueviolet)]()
 
 ---
 
@@ -48,6 +50,10 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **E-Sign Documents** - Digitale handtekeningen met audit trail  
 ✅ **AI Agent Integration** - n8n/Manus/Gemini ready met data-agent anchors  
 ✅ **Command Bar** - AI-powered command input (Cmd+K)  
+✅ **API Gateway** - Secure Edge Functions voor n8n/KVK/Apollo webhooks  
+✅ **System User** - Enterprise ownership tracking voor automation  
+✅ **MRR Tracking** - Auto-calculated ARR via database triggers  
+✅ **External Data** - KVK, LinkedIn, AI audit fields  
 
 ---
 
