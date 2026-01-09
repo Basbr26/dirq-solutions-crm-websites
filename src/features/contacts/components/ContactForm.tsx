@@ -108,7 +108,11 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Voornaam *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Jan" {...field} />
+                  <Input 
+                    placeholder="Jan" 
+                    autoComplete="given-name"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -122,7 +126,11 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>Achternaam *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Jansen" {...field} />
+                  <Input 
+                    placeholder="Jansen" 
+                    autoComplete="family-name"
+                    {...field} 
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -142,6 +150,7 @@ export function ContactForm({
                   <Input
                     type="email"
                     inputMode="email"
+                    autoComplete="email"
                     placeholder="jan.jansen@bedrijf.nl"
                     {...field}
                   />
@@ -162,6 +171,7 @@ export function ContactForm({
                     placeholder="+31 20 123 4567" 
                     inputMode="tel"
                     type="tel"
+                    autoComplete="tel-national"
                     {...field} 
                   />
                 </FormControl>
@@ -183,6 +193,7 @@ export function ContactForm({
                     placeholder="+31 6 12 34 56 78" 
                     inputMode="tel"
                     type="tel"
+                    autoComplete="tel-local"
                     {...field} 
                   />
                 </FormControl>
