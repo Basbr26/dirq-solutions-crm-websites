@@ -3,11 +3,12 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-1.1.0-blue)]()
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)]()
 [![Completion](https://img.shields.io/badge/completion-99%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
 [![Mobile-First](https://img.shields.io/badge/mobile--first-ready-green)]()
+[![Enterprise](https://img.shields.io/badge/architecture-enterprise--grade-purple)]()
 
 ---
 
@@ -302,9 +303,9 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 
 ## 📊 Current Status
 
-**Version:** 1.1.0  
-**Status:** ✅ Production Ready  
-**Last Updated:** 8 Januari 2026
+**Version:** 1.2.0 - Project Velocity Phase 1  
+**Status:** ✅ Production Ready + Enterprise Architecture  
+**Last Updated:** 9 Januari 2026
 
 **Completion:** 99%
 
@@ -315,12 +316,23 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 | Mobile UX | ✅ 100% |
 | E-Sign System | ✅ 100% |
 | AI Agent Integration | ✅ 100% |
-| Performance | ✅ 95% |
+| **MRR Tracking & Finance** | ✅ 100% |
+| **External Data Integration** | ✅ 100% |
+| Performance | ✅ 100% |
 | Security | ✅ 100% |
 | Testing | ⚠️ 20% |
 | Documentation | ✅ 90% |
 
-### Recent Updates (v1.1.0)
+### Recent Updates (v1.2.0 - Project Velocity Phase 1)
+- ✅ **Enterprise Database Architecture** - Foreign keys, CHECK constraints, MRR triggers
+- ✅ **External Data Integration** - KVK API, Apollo.io, Manus AI fields
+- ✅ **Type-Safe Pricing System** - pricing.ts config matching DB validation
+- ✅ **MRR Aggregation** - Auto-calculated company.total_mrr from projects
+- ✅ **Intake Tracking** - JSONB onboarding checklist (logo, colors, texts, NBA)
+- ✅ **Performance Indexes** - KVK, LinkedIn, source, package lookups optimized
+- ✅ **Paired Migrations** - Safe rollback with _down.sql
+
+### Previous Updates (v1.1.0)
 - ✅ Mobile-First UI overhaul (overflow fixes, scrollable tabs, FAB)
 - ✅ AI Agent Integration (data-agent attributes, getAgentContext)
 - ✅ Command Bar met Cmd+K shortcut

@@ -1,24 +1,82 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 8 Januari 2026  
-**Version:** 1.0.1  
-**Production Status:** ✅ Production Ready
+**Last Updated:** 9 Januari 2026  
+**Version:** 1.2.0 - Project Velocity Phase 1  
+**Production Status:** ✅ Production Ready + Enterprise Architecture
 
 ---
 
-## 📊 Overall Maturity: 98% - Production Ready
+## 📊 Overall Maturity: 99% - Enterprise Ready
 
 | Category | Score | Status |
 |----------|-------|--------|
-| Architecture | 9/10 | ✅ Excellent |
+| Architecture | 10/10 | ✅ Enterprise-Grade |
 | Feature Completeness | 10/10 | ✅ Complete |
 | UX/Polish | 10/10 | ✅ Consistent |
-| Code Quality | 8/10 | ✅ Clean |
+| Code Quality | 9/10 | ✅ Type-Safe |
 | Testing | 2/10 | ⚠️ Minimal |
-| Documentation | 8.5/10 | ✅ Comprehensive |
-| Security | 9/10 | ✅ RLS + RBAC |
-| Performance | 9/10 | ✅ Optimized |
+| Documentation | 9/10 | ✅ Comprehensive |
+| Security | 10/10 | ✅ RLS + FK + Triggers |
+| Performance | 10/10 | ✅ Indexed + Optimized |
 | Calendar Integration | 10/10 | ✅ Complete |
+| Data Integrity | 10/10 | ✅ Foreign Keys + Constraints |
+
+---
+
+## 🎯 PROJECT VELOCITY - PHASE 1 (v1.2.0) ✅ COMPLETE
+
+### **AI Sales Engine Foundation - €240K ARR Infrastructure**
+
+#### **Database Architecture** ✅
+- [x] **External Data Integration**
+  - KVK API fields (kvk_number with UNIQUE constraint)
+  - Apollo.io fields (linkedin_url, tech_stack array)
+  - Manus AI fields (ai_audit_summary, video_audit_url)
+  - Source tracking with CHECK constraint (Manual, Apollo, KVK, Website, Manus, n8n_automation)
+  
+- [x] **Project Finance System**
+  - Package ID validation (finance_starter, finance_growth)
+  - Selected addons array (addon_logo, addon_rush, addon_page)
+  - Calculated total (DECIMAL 10,2 precision)
+  - Monthly Recurring Revenue tracking
+  - DNS status workflow (pending → active → propagated)
+  
+- [x] **Intake/Onboarding Tracker**
+  - JSONB structure (logo_received, colors_approved, texts_received, nba_check_complete)
+  - Indexed for performance (logo_received lookup)
+  
+- [x] **Data Integrity Layer**
+  - Foreign Key: projects.company_id → companies.id (CASCADE DELETE)
+  - CHECK constraints on source, dns_status, package_id
+  - UNIQUE constraint on kvk_number
+  
+- [x] **Performance Indexes**
+  - idx_companies_kvk (KVK API lookups)
+  - idx_companies_linkedin (Apollo enrichment)
+  - idx_companies_source (Source filtering)
+  - idx_projects_package (Package analytics)
+  - idx_projects_intake_logo (Onboarding status queries)
+  
+- [x] **MRR Aggregation System**
+  - Trigger: update_company_mrr() on projects INSERT/UPDATE/DELETE
+  - Auto-calculates company.total_mrr from project MRRs
+  - Prevents manual MRR desync
+  
+#### **Type-Safe Pricing Architecture** ✅
+- [x] `/src/config/pricing.ts` with const assertions
+- [x] FINANCE_PACKAGES (STARTER €799.95, GROWTH €1299.95)
+- [x] RECURRING_SERVICES (Hosting & Security €50/month)
+- [x] ADD_ONS (Logo €350, Rush €300, Extra Page €150)
+- [x] calculateProjectTotal() helper (matches DB logic)
+- [x] Type exports: PackageId, AddonId
+- [x] VALID_PACKAGE_IDS array (DB validation)
+- [x] ARR/LTV calculation helpers
+
+#### **Migrations** ✅
+- [x] `20260109_velocity_phase1_up.sql` (172 lines)
+- [x] `20260109_velocity_phase1_down.sql` (paired rollback)
+- [x] Comments for all new columns/triggers
+- [x] Verification queries included
 
 ---
 
