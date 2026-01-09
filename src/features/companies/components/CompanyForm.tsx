@@ -50,6 +50,10 @@ const companyFormSchema = z.object({
   status: z.enum(['prospect', 'active', 'inactive', 'churned']),
   priority: z.enum(['low', 'medium', 'high']),
   notes: z.string().optional(),
+  // v2.0 External Data Integration
+  kvk_number: z.string().regex(/^\d{8}$/, 'KVK nummer moet 8 cijfers zijn').optional().or(z.literal('')),
+  linkedin_url: z.string().url('Voer een geldige LinkedIn URL in').optional().or(z.literal('')),
+  source: z.enum(['Manual', 'Apollo', 'KVK', 'Website', 'Manus', 'n8n_automation']).optional(),
 });
 
 interface CompanyFormProps {
@@ -93,6 +97,9 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
       status: 'prospect',
       priority: 'medium',
       notes: '',
+      kvk_number: '',
+      linkedin_url: '',
+      source: 'Manual',
     },
   });
 
@@ -116,6 +123,9 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
         status: company.status,
         priority: company.priority,
         notes: company.notes || '',
+        kvk_number: company.kvk_number || '',
+        linkedin_url: company.linkedin_url || '',
+        source: company.source || 'Manual',
       });
     } else {
       form.reset({
@@ -134,6 +144,9 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
         status: 'prospect',
         priority: 'medium',
         notes: '',
+        kvk_number: '',
+        linkedin_url: '',
+        source: 'Manual',
       });
     }
   }, [company, open, form]);
@@ -332,6 +345,77 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     <FormControl>
                       <Input 
                         placeholder="https://www.company.com" 
+                        inputMode="url"
+                        type="url"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* External Data Integration (v2.0) */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Externe Data (optioneel)</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="kvk_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>KVK Nummer</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="12345678 (8 cijfers)" 
+                          inputMode="numeric"
+                          maxLength={8}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bron</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Manual">Handmatig</SelectItem>
+                          <SelectItem value="Apollo">Apollo.io</SelectItem>
+                          <SelectItem value="KVK">KVK API</SelectItem>
+                          <SelectItem value="Website">Website Form</SelectItem>
+                          <SelectItem value="Manus">Manus AI</SelectItem>
+                          <SelectItem value="n8n_automation">n8n Automation</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="linkedin_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>LinkedIn URL</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://www.linkedin.com/company/..." 
                         inputMode="url"
                         type="url"
                         {...field} 

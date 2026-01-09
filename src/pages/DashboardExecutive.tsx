@@ -120,6 +120,7 @@ export default function DashboardExecutive() {
   const [conversionRate, setConversionRate] = useState(0);
   const [activeDeals, setActiveDeals] = useState(0);
   const [avgDealSize, setAvgDealSize] = useState(0);
+  const [totalMRR, setTotalMRR] = useState(0); // v2.0 MRR tracking
 
   // Trend percentages (month-over-month)
   const [revenueTrend, setRevenueTrend] = useState<number | undefined>(undefined);
@@ -127,6 +128,7 @@ export default function DashboardExecutive() {
   const [conversionTrend, setConversionTrend] = useState<number | undefined>(undefined);
   const [dealsTrend, setDealsTrend] = useState<number | undefined>(undefined);
   const [avgDealTrend, setAvgDealTrend] = useState<number | undefined>(undefined);
+  const [mrrTrend, setMrrTrend] = useState<number | undefined>(undefined); // v2.0 MRR trend
 
   // Additional CRM Stats
   const [activeCompanies, setActiveCompanies] = useState(0);
@@ -309,6 +311,9 @@ export default function DashboardExecutive() {
       const leadSources = generateSourceData(projects || []);
       setSourceData(leadSources);
 
+      // v2.0: Load MRR data from companies.total_mrr
+      await loadMRRData();
+
       // Load additional CRM stats
       await loadCRMStats();
 
@@ -426,6 +431,55 @@ export default function DashboardExecutive() {
     }
   };
 
+  const loadMRRData = async () => {
+    try {
+      const now = new Date();
+      const firstDayThisMonth = startOfMonth(now);
+      const firstDayLastMonth = startOfMonth(subMonths(now, 1));
+
+      // Get current month MRR from active companies
+      const { data: currentMRRData, error: currentError } = await supabase
+        .from('companies')
+        .select('total_mrr')
+        .eq('status', 'active')
+        .not('total_mrr', 'is', null);
+
+      if (currentError) throw currentError;
+
+      const currentMRR = currentMRRData?.reduce((sum, company) => 
+        sum + (company.total_mrr || 0), 0
+      ) || 0;
+      setTotalMRR(currentMRR);
+
+      // Get previous month MRR by querying companies that were active last month
+      // Note: This is a simplified approach - for more accurate tracking,
+      // you'd want to store historical MRR snapshots
+      const { data: previousMRRData, error: previousError } = await supabase
+        .from('companies')
+        .select('total_mrr, created_at')
+        .eq('status', 'active')
+        .lt('created_at', firstDayThisMonth.toISOString())
+        .not('total_mrr', 'is', null);
+
+      if (previousError) throw previousError;
+
+      const previousMRR = previousMRRData?.reduce((sum, company) => 
+        sum + (company.total_mrr || 0), 0
+      ) || 0;
+
+      // Calculate trend
+      if (previousMRR > 0) {
+        const trend = calculatePercentageChange(currentMRR, previousMRR);
+        setMrrTrend(trend);
+      } else if (currentMRR > 0) {
+        setMrrTrend(100); // 100% growth if previous was 0
+      }
+
+    } catch (error) {
+      console.error('Error loading MRR data:', error);
+    }
+  };
+
   const generateRevenueTrendData = (projects: any[]): RevenueTrendPoint[] => {
     const months: RevenueTrendPoint[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -498,8 +552,8 @@ export default function DashboardExecutive() {
       >
         <div className="p-4 md:p-6">
           <div className="animate-pulse space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              {[1, 2, 3, 4, 5].map((i) => (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className="h-32 bg-muted rounded-lg" />
               ))}
             </div>
@@ -522,7 +576,7 @@ export default function DashboardExecutive() {
     >
       <div className="p-4 md:p-6 space-y-8">
         {/* KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
           <KPICard
             title="Totale Omzet"
             value={formatCurrency(totalRevenue)}
@@ -530,6 +584,14 @@ export default function DashboardExecutive() {
             icon={DollarSign}
             subtitle="Afgesloten deals"
             href="/pipeline"
+          />
+          <KPICard
+            title="Maandelijks Terugkerend"
+            value={formatCurrency(totalMRR)}
+            trend={mrrTrend}
+            icon={RefreshCw}
+            subtitle="MRR van actieve klanten"
+            href="/companies"
           />
           <KPICard
             title="Pipeline Waarde"

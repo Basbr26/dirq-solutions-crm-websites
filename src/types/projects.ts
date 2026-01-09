@@ -25,6 +25,20 @@ export interface Project {
   probability: number;
   expected_close_date?: string;
   
+  // v2.0 Finance fields
+  package_id?: 'finance_starter' | 'finance_growth';
+  selected_addons?: ('addon_logo' | 'addon_rush' | 'addon_page')[];
+  calculated_total?: number;
+  monthly_recurring_revenue?: number;
+  intake_status?: {
+    logo_received?: boolean;
+    colors_approved?: boolean;
+    texts_received?: boolean;
+    nba_check_complete?: boolean;
+  };
+  dns_status?: 'pending' | 'active' | 'failed' | 'propagated';
+  hosting_provider?: string;
+  
   // Ownership
   owner_id: string;
   
@@ -100,6 +114,10 @@ export interface CreateProjectInput {
   value: number;
   expected_close_date?: string;
   notes?: string;
+  // v2.0 Finance fields
+  package_id?: 'finance_starter' | 'finance_growth';
+  selected_addons?: ('addon_logo' | 'addon_rush' | 'addon_page')[];
+  monthly_recurring_revenue?: number;
 }
 
 export interface UpdateProjectInput {

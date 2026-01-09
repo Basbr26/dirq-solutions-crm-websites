@@ -459,6 +459,116 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
 
+          {/* v2.0 Finance Info */}
+          {(project.package_id || project.monthly_recurring_revenue || project.selected_addons?.length || project.intake_status || project.dns_status) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Finance Tracking (v2.0)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {project.package_id && (
+                    <div className="flex items-start gap-3">
+                      <Package className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Finance Pakket</p>
+                        <Badge variant="secondary">
+                          {project.package_id === 'finance_starter' ? 'Finance Starter' : 'Finance Growth'}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+
+                  {project.monthly_recurring_revenue !== null && project.monthly_recurring_revenue !== undefined && (
+                    <div className="flex items-start gap-3">
+                      <Euro className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">MRR</p>
+                        <p className="font-medium text-lg">{formatCurrency(project.monthly_recurring_revenue)}/maand</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {project.dns_status && (
+                    <div className="flex items-start gap-3">
+                      <Target className="h-5 w-5 text-muted-foreground mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">DNS Status</p>
+                        <Badge variant={
+                          project.dns_status === 'active' || project.dns_status === 'propagated' ? 'default' :
+                          project.dns_status === 'pending' ? 'secondary' : 'destructive'
+                        }>
+                          {project.dns_status}
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {project.selected_addons && project.selected_addons.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Geselecteerde Add-ons</p>
+                      <div className="flex flex-wrap gap-2">
+                        {project.selected_addons.map((addon, idx) => {
+                          const addonLabels: Record<string, string> = {
+                            addon_logo: 'Logo Design',
+                            addon_rush: 'Rush Levering',
+                            addon_page: 'Extra Pagina',
+                          };
+                          return (
+                            <Badge key={idx} variant="outline">
+                              {addonLabels[addon] || addon}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {project.intake_status && Object.keys(project.intake_status).length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-2">Intake Checklist</p>
+                      <div className="space-y-2">
+                        {project.intake_status.logo_received !== undefined && (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`h-4 w-4 ${project.intake_status.logo_received ? 'text-green-500' : 'text-muted-foreground'}`} />
+                            <span className="text-sm">Logo ontvangen</span>
+                          </div>
+                        )}
+                        {project.intake_status.colors_approved !== undefined && (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`h-4 w-4 ${project.intake_status.colors_approved ? 'text-green-500' : 'text-muted-foreground'}`} />
+                            <span className="text-sm">Kleuren goedgekeurd</span>
+                          </div>
+                        )}
+                        {project.intake_status.texts_received !== undefined && (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`h-4 w-4 ${project.intake_status.texts_received ? 'text-green-500' : 'text-muted-foreground'}`} />
+                            <span className="text-sm">Teksten ontvangen</span>
+                          </div>
+                        )}
+                        {project.intake_status.nba_check_complete !== undefined && (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 className={`h-4 w-4 ${project.intake_status.nba_check_complete ? 'text-green-500' : 'text-muted-foreground'}`} />
+                            <span className="text-sm">NBA check compleet</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Tabs */}
           <Tabs defaultValue="quotes" className="w-full">
             <TabsList className="grid w-full grid-cols-3">

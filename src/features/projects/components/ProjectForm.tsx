@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -49,9 +50,24 @@ const projectFormSchema = z.object({
   value: z.number().min(0, 'Waarde moet positief zijn').default(0),
   expected_close_date: z.string().optional(),
   notes: z.string().optional(),
+  // v2.0 Finance fields
+  package_id: z.enum(['finance_starter', 'finance_growth']).optional(),
+  selected_addons: z.array(z.enum(['addon_logo', 'addon_rush', 'addon_page'])).optional(),
+  monthly_recurring_revenue: z.number().min(0, 'MRR moet positief zijn').optional(),
 });
 
 type ProjectFormData = z.infer<typeof projectFormSchema>;
+
+const packageLabels: Record<string, string> = {
+  finance_starter: 'Finance Starter',
+  finance_growth: 'Finance Growth',
+};
+
+const addonLabels: Record<string, string> = {
+  addon_logo: 'Logo Design',
+  addon_rush: 'Rush Levering (48u)',
+  addon_page: 'Extra Pagina',
+};
 
 const projectTypeLabels: Record<ProjectType, string> = {
   landing_page: 'Landing Page',
@@ -86,6 +102,10 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
       value: 0,
       expected_close_date: '',
       notes: '',
+      // v2.0 fields
+      package_id: undefined,
+      selected_addons: [],
+      monthly_recurring_revenue: undefined,
     },
   });
 
@@ -108,6 +128,10 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
         value: project.value,
         expected_close_date: project.expected_close_date || '',
         notes: project.notes || '',
+        // v2.0 fields
+        package_id: project.package_id,
+        selected_addons: project.selected_addons || [],
+        monthly_recurring_revenue: project.monthly_recurring_revenue,
       });
     }
   }, [open, project, form]);
@@ -131,6 +155,10 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
       value: data.value,
       expected_close_date: data.expected_close_date || undefined,
       notes: data.notes,
+      // v2.0 fields
+      package_id: data.package_id,
+      selected_addons: data.selected_addons,
+      monthly_recurring_revenue: data.monthly_recurring_revenue,
     };
     onSubmit(submitData);
   };
@@ -306,7 +334,110 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
                   </FormItem>
                 )}
               />
+            </div>
 
+            {/* v2.0 Finance Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Finance (v2.0)</h3>
+              <p className="text-sm text-muted-foreground">
+                Optionele finance tracking voor maandelijkse omzet
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="package_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Finance Pakket</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecteer pakket" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.entries(packageLabels).map(([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Gekozen finance pakket
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="monthly_recurring_revenue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Maandelijkse Omzet (€)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          step="0.01"
+                          placeholder="49.00"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        MRR voor dit project
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="selected_addons"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Geselecteerde Add-ons</FormLabel>
+                    <div className="space-y-2">
+                      {Object.entries(addonLabels).map(([value, label]) => (
+                        <div key={value} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={value}
+                            checked={field.value?.includes(value as any)}
+                            onChange={(e) => {
+                              const currentValues = field.value || [];
+                              if (e.target.checked) {
+                                field.onChange([...currentValues, value]);
+                              } else {
+                                field.onChange(currentValues.filter((v: string) => v !== value));
+                              }
+                            }}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
+                          <label htmlFor={value} className="text-sm cursor-pointer">
+                            {label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <FormDescription>
+                      Extra opties voor dit project
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="notes"

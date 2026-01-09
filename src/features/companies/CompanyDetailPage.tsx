@@ -329,6 +329,25 @@ export default function CompanyDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {company.kvk_number && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">KVK Nummer</p>
+                    <p className="text-sm font-medium">{company.kvk_number}</p>
+                  </div>
+                )}
+                {company.linkedin_url && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">LinkedIn</p>
+                    <a
+                      href={company.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium hover:underline text-blue-600"
+                    >
+                      Bekijk profiel →
+                    </a>
+                  </div>
+                )}
                 {company.company_size && (
                   <div>
                     <p className="text-sm text-muted-foreground">Bedrijfsgrootte</p>
@@ -341,6 +360,22 @@ export default function CompanyDetailPage() {
                     <p className="text-sm font-medium">
                       € {company.annual_revenue.toLocaleString('nl-NL')}
                     </p>
+                  </div>
+                )}
+                {company.total_mrr && company.total_mrr > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Maandelijks Terugkerend</p>
+                    <p className="text-sm font-medium">
+                      € {company.total_mrr.toLocaleString('nl-NL')} MRR
+                    </p>
+                  </div>
+                )}
+                {company.source && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Bron</p>
+                    <Badge variant="outline" className="text-xs">
+                      {company.source === 'n8n_automation' ? 'n8n Automation' : company.source}
+                    </Badge>
                   </div>
                 )}
                 {company.owner && (
@@ -380,6 +415,60 @@ export default function CompanyDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{company.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* AI Audit (Manus) */}
+          {(company.ai_audit_summary || company.video_audit_url) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  AI Audit (Manus)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {company.ai_audit_summary && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Audit Samenvatting</p>
+                    <p className="text-sm whitespace-pre-wrap">{company.ai_audit_summary}</p>
+                  </div>
+                )}
+                {company.video_audit_url && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Video Audit</p>
+                    <a
+                      href={company.video_audit_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium hover:underline text-blue-600"
+                    >
+                      Bekijk video →
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tech Stack (Apollo.io) */}
+          {company.tech_stack && company.tech_stack.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Tech Stack
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {company.tech_stack.map((tech, idx) => (
+                    <Badge key={idx} variant="outline" className="text-xs">
+                      {tech}
+                    </Badge>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}

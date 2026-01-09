@@ -93,6 +93,14 @@ export interface Company {
   notes?: string;
   tags?: string[];
   custom_fields?: CustomFields;
+  // v2.0 External Data Integration
+  kvk_number?: string; // KVK API (8 digits, unique)
+  linkedin_url?: string; // Apollo.io
+  source?: 'Manual' | 'Apollo' | 'KVK' | 'Website' | 'Manus' | 'n8n_automation'; // Data source
+  tech_stack?: string[]; // Apollo.io tech stack
+  ai_audit_summary?: string; // Manus AI audit
+  video_audit_url?: string; // Manus AI video
+  total_mrr?: number; // Calculated MRR (auto-updated by trigger)
   created_at: string;
   updated_at: string;
   last_contact_date?: string;
@@ -145,6 +153,24 @@ export interface Project {
   maintenance_contract: boolean;
   launch_date?: string;
   delivery_deadline?: string;
+  
+  // v2.0 Finance System
+  package_id?: 'finance_starter' | 'finance_growth'; // Fixed packages
+  selected_addons?: ('addon_logo' | 'addon_rush' | 'addon_page')[]; // Add-ons array
+  calculated_total?: number; // Auto-calculated package + addons total
+  monthly_recurring_revenue?: number; // MRR for subscription services (e.g., hosting €50/month)
+  
+  // v2.0 Intake/Onboarding Tracker
+  intake_status?: {
+    logo_received?: boolean;
+    colors_approved?: boolean;
+    texts_received?: boolean;
+    nba_check_complete?: boolean;
+  };
+  
+  // v2.0 DNS/Hosting
+  dns_status?: 'pending' | 'active' | 'propagated'; // DNS workflow status
+  hosting_provider?: string; // e.g., "TransIP", "Hostinger"
   
   // Pipeline
   stage: ProjectStage;
@@ -372,6 +398,13 @@ export interface CompanyFormData {
   priority: CompanyPriority;
   notes?: string;
   tags?: string[];
+  // v2.0 External Data Integration (optional, can be set via API or manually)
+  kvk_number?: string;
+  linkedin_url?: string;
+  source?: 'Manual' | 'Apollo' | 'KVK' | 'Website' | 'Manus' | 'n8n_automation';
+  tech_stack?: string[];
+  ai_audit_summary?: string;
+  video_audit_url?: string;
 }
 
 export interface ContactFormData {

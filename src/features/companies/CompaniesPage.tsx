@@ -302,7 +302,30 @@ export default function CompaniesPage() {
                 </Select>
               </div>
 
-              <div className="md:col-span-2 flex items-end justify-end">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Bron (v2.0)</label>
+                <Select
+                  value={(filters as any).source || ''}
+                  onValueChange={(value) =>
+                    setFilters({ ...filters, source: value || undefined } as any)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Alle bronnen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Alle bronnen</SelectItem>
+                    <SelectItem value="Manual">Handmatig</SelectItem>
+                    <SelectItem value="Apollo">Apollo.io</SelectItem>
+                    <SelectItem value="KVK">KVK API</SelectItem>
+                    <SelectItem value="Website">Website Form</SelectItem>
+                    <SelectItem value="Manus">Manus AI</SelectItem>
+                    <SelectItem value="n8n_automation">n8n Automation</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end justify-end">
                 <Button
                   variant="ghost"
                   onClick={() => {
