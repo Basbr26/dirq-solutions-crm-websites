@@ -17,9 +17,18 @@ ADD COLUMN IF NOT EXISTS video_audit_url TEXT,
 ADD COLUMN IF NOT EXISTS total_mrr DECIMAL(10,2) DEFAULT 0.00;
 
 -- Data integrity constraints
-ALTER TABLE companies
-ADD CONSTRAINT chk_company_source 
-CHECK (source IN ('Manual', 'Apollo', 'KVK', 'Website', 'Manus', 'n8n_automation'));
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'chk_company_source' 
+    AND table_name = 'companies'
+  ) THEN
+    ALTER TABLE companies
+    ADD CONSTRAINT chk_company_source 
+    CHECK (source IN ('Manual', 'Apollo', 'KVK', 'Website', 'Manus', 'n8n_automation'));
+  END IF;
+END $$;
 
 -- ============================================================
 -- 2. PROJECT FINANCE & TRACKING
@@ -33,9 +42,18 @@ ADD COLUMN IF NOT EXISTS hosting_provider TEXT,
 ADD COLUMN IF NOT EXISTS dns_status TEXT DEFAULT 'pending';
 
 -- DNS status constraint
-ALTER TABLE projects
-ADD CONSTRAINT chk_dns_status 
-CHECK (dns_status IN ('pending', 'active', 'failed', 'propagated'));
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'chk_dns_status' 
+    AND table_name = 'projects'
+  ) THEN
+    ALTER TABLE projects
+    ADD CONSTRAINT chk_dns_status 
+    CHECK (dns_status IN ('pending', 'active', 'failed', 'propagated'));
+  END IF;
+END $$;
 
 -- ============================================================
 -- 3. INTAKE/ONBOARDING STATUS (Safe JSONB)
