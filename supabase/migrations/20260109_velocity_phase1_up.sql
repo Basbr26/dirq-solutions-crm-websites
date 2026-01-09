@@ -124,7 +124,7 @@ COMMENT ON TRIGGER trigger_update_company_mrr ON projects IS
 -- VERIFICATION QUERY (Run after migration)
 -- ============================================================
 -- SELECT 
---   c.naam,
+--   c.name,
 --   c.kvk_number,
 --   c.source,
 --   c.total_mrr,
@@ -132,4 +132,4 @@ COMMENT ON TRIGGER trigger_update_company_mrr ON projects IS
 --   SUM(p.monthly_recurring_revenue) AS calculated_mrr
 -- FROM companies c
 -- LEFT JOIN projects p ON p.company_id = c.id
--- GROUP BY c.id, c.naam, c.kvk_number, c.source, c.total_mrr;
+-- GROUP BY c.id, c.name, c.kvk_number, c.source, c.total_mrr;

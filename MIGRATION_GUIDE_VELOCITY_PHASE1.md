@@ -43,7 +43,7 @@ Open **Supabase Dashboard** → **SQL Editor**
 ```sql
 -- Run after migration to verify
 SELECT 
-  c.naam,
+  c.name,
   c.kvk_number,
   c.source,
   c.total_mrr,
@@ -51,7 +51,7 @@ SELECT
   SUM(p.monthly_recurring_revenue) AS calculated_mrr
 FROM companies c
 LEFT JOIN projects p ON p.company_id = c.id
-GROUP BY c.id, c.naam, c.kvk_number, c.source, c.total_mrr
+GROUP BY c.id, c.name, c.kvk_number, c.source, c.total_mrr
 LIMIT 5;
 ```
 
@@ -256,7 +256,16 @@ await supabase.from('projects').insert({
 // company.total_mrr automatically updates to 75.00!
 ```
 
-### 5. Track Onboarding Progress
+### 5. Query Companies by Source
+```typescript
+// Find all companies from specific source
+const { data } = await supabase
+  .from('companies')
+  .select('name, kvk_number, source, total_mrr')
+  .eq('source', 'Apollo');
+```
+
+### 6. Track Onboarding Progress
 ```typescript
 // Update intake checklist
 await supabase.from('projects')
@@ -335,7 +344,7 @@ GROUP BY package_id;
 **Cause:** Trying to set duplicate `kvk_number`  
 **Fix:** KVK numbers must be unique. Check existing values:
 ```sql
-SELECT naam, kvk_number FROM companies WHERE kvk_number IS NOT NULL;
+SELECT name, kvk_number FROM companies WHERE kvk_number IS NOT NULL;
 ```
 
 ### Error: "new row violates check constraint"
