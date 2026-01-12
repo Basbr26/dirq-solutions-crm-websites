@@ -27,7 +27,7 @@ export function useContacts(params: UseContactsParams = {}) {
         .select(`
           *,
           company:companies(id, name, status),
-          owner:profiles!contacts_owner_id_fkey(id, full_name)
+          owner:profiles!contacts_owner_id_fkey(id, voornaam, achternaam, email)
         `, { count: 'exact' });
 
       // RBAC handled by RLS policies on database level

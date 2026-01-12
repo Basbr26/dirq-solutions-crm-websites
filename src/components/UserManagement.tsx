@@ -59,13 +59,13 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
   const loadCurrentUserRole = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: role } = await supabase
-        .from('user_roles')
+      const { data: profile } = await supabase
+        .from('profiles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
-      console.log('Current user role:', role?.role);
-      setCurrentUserRole(role?.role as AppRole);
+      console.log('Current user role:', profile?.role);
+      setCurrentUserRole(profile?.role as AppRole);
     }
   };
 
@@ -79,13 +79,6 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
 
       if (profilesError) throw profilesError;
 
-      // Load roles
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
-
-      if (rolesError) throw rolesError;
-
       // Load departments
       const { data: depts, error: deptsError } = await supabase
         .from('departments')
@@ -97,12 +90,11 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
 
       // Combine users with their roles and departments
       const usersWithRoles = (profiles || []).map(profile => {
-        const userRole = roles?.find(r => r.user_id === profile.id);
         const dept = depts?.find(d => d.id === profile.department_id);
         const mgr = profiles?.find(p => p.id === profile.manager_id);
         return {
           ...profile,
-          role: userRole?.role as AppRole,
+          role: profile.role as AppRole,
           department: dept ? { name: dept.name } : null,
           manager: mgr ? { voornaam: mgr.voornaam, achternaam: mgr.achternaam } : null,
         };
@@ -145,19 +137,10 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
 
       // Update role if changed
       if (editRole !== selectedUser.role) {
-        // First delete existing role
-        await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', selectedUser.id);
-
-        // Then insert new role
         const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({
-            user_id: selectedUser.id,
-            role: editRole,
-          });
+          .from('profiles')
+          .update({ role: editRole })
+          .eq('id', selectedUser.id);
 
         if (roleError) throw roleError;
       }
