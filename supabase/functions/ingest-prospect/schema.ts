@@ -3,6 +3,7 @@
  * Ensures data integrity before database insertion
  */
 
+// @ts-expect-error - Deno runtime import
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 export const ProspectSchema = z.object({
