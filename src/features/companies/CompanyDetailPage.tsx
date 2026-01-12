@@ -6,7 +6,9 @@ import { useCompany } from './hooks/useCompanies';
 import { useUpdateCompany, useDeleteCompany } from './hooks/useCompanyMutations';
 import { CompanyForm } from './components/CompanyForm';
 import { useContacts } from '@/features/contacts/hooks/useContacts';
+import { useContactMutations } from '@/features/contacts/hooks/useContactMutations';
 import { ContactCard } from '@/features/contacts/components/ContactCard';
+import { ContactForm } from '@/features/contacts/components/ContactForm';
 import { useProjects } from '@/features/projects/hooks/useProjects';
 import { ProjectCard } from '@/features/projects/components/ProjectCard';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
@@ -16,7 +18,7 @@ import { AddInteractionDialog } from '@/features/interactions/components/AddInte
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { CompanyFormData } from '@/types/crm';
+import { CompanyFormData, ContactCreateData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
   Building2,
@@ -51,6 +53,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -78,11 +87,13 @@ export default function CompanyDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
+  const [createContactDialogOpen, setCreateContactDialogOpen] = useState(false);
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
   const { data: company, isLoading } = useCompany(id!);
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
+  const { createContact } = useContactMutations();
   
   // Fetch contacts for this company
   const { data: contactsData, isLoading: isLoadingContacts } = useContacts({
@@ -128,6 +139,24 @@ export default function CompanyDetailPage() {
       },
       onError: (error) => {
         toast.error(`Fout bij verwijderen: ${error.message}`);
+      },
+    });
+  };
+
+  const handleCreateContact = (formData: ContactCreateData) => {
+    // Auto-link to this company
+    const contactData = {
+      ...formData,
+      company_id: id,
+    };
+
+    createContact.mutate(contactData, {
+      onSuccess: () => {
+        setCreateContactDialogOpen(false);
+        toast.success('Contact aangemaakt');
+      },
+      onError: (error) => {
+        toast.error('Fout bij aanmaken contact: ' + error.message);
       },
     });
   };
@@ -501,12 +530,10 @@ export default function CompanyDetailPage() {
                 Contactpersonen ({contactsData?.count || 0})
               </CardTitle>
               {canEdit && (
-                <Link to={`/contacts/new?company_id=${id}`}>
-                  <Button size="sm">
-                    <Users className="h-4 w-4 mr-2" />
-                    Nieuw contact
-                  </Button>
-                </Link>
+                <Button size="sm" onClick={() => setCreateContactDialogOpen(true)}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Nieuw contact
+                </Button>
               )}
             </CardHeader>
             <CardContent>
@@ -743,6 +770,24 @@ export default function CompanyDetailPage() {
         companyId={id!}
         defaultType={interactionDefaultType}
       />
+
+      {/* Create Contact Dialog */}
+      <Dialog open={createContactDialogOpen} onOpenChange={setCreateContactDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Nieuw contactpersoon toevoegen</DialogTitle>
+            <DialogDescription>
+              Voeg een nieuwe contactpersoon toe aan {company.name}
+            </DialogDescription>
+          </DialogHeader>
+          <ContactForm
+            defaultCompanyId={id}
+            onSubmit={handleCreateContact}
+            onCancel={() => setCreateContactDialogOpen(false)}
+            isSubmitting={createContact.isPending}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Mobile Sticky Action Bar */}
       {isMobile && (canEdit || canDelete) && (

@@ -45,6 +45,7 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 interface ContactFormProps {
   contact?: Contact;
+  defaultCompanyId?: string;
   onSubmit: (data: ContactFormValues) => void;
   onCancel?: () => void;
   isSubmitting?: boolean;
@@ -52,6 +53,7 @@ interface ContactFormProps {
 
 export function ContactForm({
   contact,
+  defaultCompanyId,
   onSubmit,
   onCancel,
   isSubmitting = false,
@@ -69,7 +71,7 @@ export function ContactForm({
       position: contact?.position || "",
       department: contact?.department || "",
       linkedin_url: contact?.linkedin_url || "",
-      company_id: contact?.company_id || undefined,
+      company_id: contact?.company_id || defaultCompanyId || undefined,
       is_primary: contact?.is_primary || false,
       is_decision_maker: contact?.is_decision_maker || false,
       notes: contact?.notes || "",
@@ -88,13 +90,13 @@ export function ContactForm({
         position: contact.position || "",
         department: contact.department || "",
         linkedin_url: contact.linkedin_url || "",
-        company_id: contact.company_id || undefined,
+        company_id: contact.company_id || defaultCompanyId || undefined,
         is_primary: contact.is_primary || false,
         is_decision_maker: contact.is_decision_maker || false,
         notes: contact.notes || "",
       });
     }
-  }, [contact, form]);
+  }, [contact, defaultCompanyId, form]);
 
   return (
     <Form {...form}>
@@ -260,7 +262,11 @@ export function ContactForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bedrijf</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <Select 
+                onValueChange={field.onChange} 
+                value={field.value}
+                disabled={!!defaultCompanyId}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecteer een bedrijf" />
@@ -284,7 +290,10 @@ export function ContactForm({
                 </SelectContent>
               </Select>
               <FormDescription>
-                Koppel dit contact aan een bedrijf
+                {defaultCompanyId 
+                  ? "Dit contact wordt automatisch gekoppeld aan dit bedrijf"
+                  : "Koppel dit contact aan een bedrijf"
+                }
               </FormDescription>
               <FormMessage />
             </FormItem>

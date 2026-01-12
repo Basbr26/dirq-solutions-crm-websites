@@ -520,7 +520,7 @@ export function ContactsPage() {
             </DialogDescription>
           </DialogHeader>
           <ContactForm
-            contact={preselectedCompanyId ? { company_id: preselectedCompanyId } as any : undefined}
+            defaultCompanyId={preselectedCompanyId}
             onSubmit={handleCreateContact}
             onCancel={() => {
               setShowCreateDialog(false);
