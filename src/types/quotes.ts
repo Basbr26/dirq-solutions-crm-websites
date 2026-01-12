@@ -48,7 +48,9 @@ export interface Quote {
   };
   profiles?: {
     id: string;
-    full_name: string;
+    voornaam: string;
+    achternaam: string;
+    email?: string;
   };
 }
 

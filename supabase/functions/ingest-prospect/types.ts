@@ -32,6 +32,7 @@ export interface IngestProspectResponse {
   metadata?: {
     kvk_number: string;
     source: string;
+    ai_enrichment?: string;
     timestamp: string;
   };
 }

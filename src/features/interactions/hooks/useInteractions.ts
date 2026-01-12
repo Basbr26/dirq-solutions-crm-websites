@@ -37,7 +37,9 @@ export interface Interaction {
   };
   user?: {
     id: string;
-    full_name: string;
+    voornaam: string;
+    achternaam: string;
+    email?: string;
   };
 }
 
