@@ -123,7 +123,7 @@ export function InteractionItem({ interaction, compact = false }: InteractionIte
               {interaction.user && (
                 <div className="flex items-center gap-1">
                   <Users className="h-3 w-3" />
-                  <span>{interaction.user.full_name}</span>
+                  <span>{interaction.user.voornaam} {interaction.user.achternaam}</span>
                 </div>
               )}
               

@@ -86,7 +86,7 @@ export function useContact(id: string) {
         .select(`
           *,
           company:companies(id, name, status),
-          owner:profiles!contacts_owner_id_fkey(id, full_name)
+          owner:profiles!contacts_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id)
         .single();

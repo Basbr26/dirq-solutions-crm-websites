@@ -159,7 +159,7 @@ export function InteractionCard({ interaction }: InteractionCardProps) {
             {interaction.user && (
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <User className="h-3 w-3" />
-                {interaction.user.full_name}
+                {interaction.user.voornaam} {interaction.user.achternaam}
               </div>
             )}
           </div>

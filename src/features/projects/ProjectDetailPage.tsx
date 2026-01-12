@@ -729,7 +729,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {project.profiles.full_name}
+                      {project.profiles.voornaam} {project.profiles.achternaam}
                     </p>
                     <p className="text-sm text-muted-foreground">Eigenaar</p>
                   </div>

@@ -17,7 +17,7 @@ export function useQuotes(filters?: QuoteFilters) {
           *,
           company:companies!quotes_company_id_fkey (id, name, email, phone),
           project:projects!quotes_project_id_fkey (id, title),
-          owner:profiles!quotes_owner_id_fkey (id, full_name, email)
+          owner:profiles!quotes_owner_id_fkey (id, voornaam, achternaam, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -62,7 +62,7 @@ export function useQuote(id: string) {
               position
             )
           ),
-          owner:profiles!quotes_owner_id_fkey (id, full_name, email)
+          owner:profiles!quotes_owner_id_fkey (id, voornaam, achternaam, email)
         `)
         .eq('id', id)
         .single();

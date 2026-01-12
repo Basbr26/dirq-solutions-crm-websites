@@ -424,7 +424,7 @@ export default function ContactDetailPage() {
               {contact.owner && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Eigenaar:</span>
-                  <span>{contact.owner.full_name || "Onbekend"}</span>
+                  <span>{contact.owner.voornaam} {contact.owner.achternaam}</span>
                 </div>
               )}
             </CardContent>

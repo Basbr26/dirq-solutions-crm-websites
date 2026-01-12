@@ -559,7 +559,7 @@ export default function QuoteDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {quote.profiles.full_name}
+                      {quote.profiles.voornaam} {quote.profiles.achternaam}
                     </p>
                     <p className="text-sm text-muted-foreground">Aangemaakt door</p>
                   </div>

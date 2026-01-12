@@ -389,7 +389,7 @@ export default function ProjectsPage() {
 
                   {project.profiles && (
                     <div className="text-xs text-muted-foreground">
-                      Eigenaar: {project.profiles.full_name}
+                      Eigenaar: {project.profiles.voornaam} {project.profiles.achternaam}
                     </div>
                   )}
                 </CardContent>

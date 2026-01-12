@@ -294,7 +294,7 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
                 {interaction.user && (
                   <div>
                     <Label className="text-muted-foreground text-xs">Eigenaar</Label>
-                    <p className="mt-1 text-sm">{interaction.user.full_name}</p>
+                    <p className="mt-1 text-sm">{interaction.user.voornaam} {interaction.user.achternaam}</p>
                   </div>
                 )}
               </>

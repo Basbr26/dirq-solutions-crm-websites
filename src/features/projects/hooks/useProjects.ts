@@ -22,7 +22,7 @@ export function useProjects(filters?: AdvancedProjectFilters) {
           *,
           companies!projects_company_id_fkey (id, name),
           contacts!projects_contact_id_fkey (id, first_name, last_name),
-          profiles!projects_owner_id_fkey (id, full_name)
+          profiles!projects_owner_id_fkey (id, voornaam, achternaam, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -111,7 +111,7 @@ export function useProject(id: string) {
           *,
           companies!projects_company_id_fkey (id, name, email, phone, website),
           contacts!projects_contact_id_fkey (id, first_name, last_name, email, phone, position),
-          profiles!projects_owner_id_fkey (id, full_name, email)
+          profiles!projects_owner_id_fkey (id, voornaam, achternaam, email)
         `)
         .eq('id', id)
         .single();
