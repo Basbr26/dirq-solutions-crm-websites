@@ -90,7 +90,7 @@ export default function ProjectDetailPage() {
         .from('projects')
         .select(`
           *,
-          companies:companies(id, name, email, phone, website),
+          companies:companies!projects_company_id_fkey(id, name, email, phone, website),
           contacts:contacts(id, first_name, last_name, email, phone),
           profiles:profiles!projects_owner_id_fkey(id, voornaam, achternaam, email)
         `)
