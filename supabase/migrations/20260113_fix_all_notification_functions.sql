@@ -30,7 +30,9 @@ END;
 $$;
 
 -- Fix 2: notify_users function
-CREATE OR REPLACE FUNCTION notify_users(
+DROP FUNCTION IF EXISTS notify_users(uuid[],text,text,text,text,text,uuid,text,jsonb);
+
+CREATE FUNCTION notify_users(
   p_user_ids uuid[],
   p_title text,
   p_message text,
