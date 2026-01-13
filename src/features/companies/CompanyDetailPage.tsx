@@ -556,14 +556,8 @@ export default function CompanyDetailPage() {
                   <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                   <h3 className="text-lg font-semibold mb-2">Geen contactpersonen</h3>
                   <p className="text-muted-foreground mb-4">
-                    Dit bedrijf heeft nog geen contactpersonen.
+                    Dit bedrijf heeft nog geen contactpersonen. Gebruik de knop rechtsboven om een contact toe te voegen.
                   </p>
-                  {canEdit && (
-                    <Button onClick={() => setCreateContactDialogOpen(true)}>
-                      <Users className="h-4 w-4 mr-2" />
-                      Eerste contact toevoegen
-                    </Button>
-                  )}
                 </div>
               )}
             </CardContent>
