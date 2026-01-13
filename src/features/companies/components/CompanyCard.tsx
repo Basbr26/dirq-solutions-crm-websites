@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { SwipeableCard } from '@/components/ui/swipeable-card';
 import { CompanyForm } from './CompanyForm';
-import { useUpdateCompany, useDeleteCompany } from '../hooks/useCompanyMutations';
+import { useUpdateCompany } from '../hooks/useCompanyMutations';
 import { useAuth } from '@/hooks/useAuth';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -54,13 +54,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  // const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   const updateCompany = useUpdateCompany();
-  const deleteCompany = useDeleteCompany();
+  // const deleteCompany = useDeleteCompany();
   
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
-  const canDelete = role === 'ADMIN';
+  const canDelete = false;
   
   const statusStyle = statusConfig[company.status];
   const priorityStyle = priorityConfig[company.priority];
@@ -71,11 +71,11 @@ export function CompanyCard({ company }: CompanyCardProps) {
     setEditDialogOpen(true);
   };
 
-  const handleDelete = (e?: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    setDeleteDialogOpen(true);
-  };
+  // const handleDelete = (e?: React.MouseEvent) => {
+  //   e?.preventDefault();
+  //   e?.stopPropagation();
+  //   setDeleteDialogOpen(true);
+  // };
 
   const handleCall = () => {
     if (company.phone) {
@@ -84,13 +84,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
     }
   };
 
-  const confirmDelete = () => {
-    deleteCompany.mutate(company.id, {
-      onSuccess: () => {
-        setDeleteDialogOpen(false);
-      },
-    });
-  };
+  // const confirmDelete = () => {
+  //   deleteCompany.mutate(company.id, {
+  //     onSuccess: () => {
+  //       setDeleteDialogOpen(false);
+  //     },
+  //   });
+  // };
 
   const cardContent = (
     <Card className={cn(
@@ -142,12 +142,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
                         Bewerken
                       </DropdownMenuItem>
                     )}
-                    {canDelete && (
-                      <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Verwijderen
-                      </DropdownMenuItem>
-                    )}
+                    {/* Verwijderen uitgeschakeld voor bedrijven */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
@@ -288,26 +283,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
           isLoading={updateCompany.isPending}
         />
 
-        {/* Delete Confirmation */}
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Bedrijf verwijderen?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Weet je zeker dat je "{company.name}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuleren</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Verwijderen
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {/* Verwijderen uitgeschakeld voor bedrijven */}
       </>
     );
   }
@@ -335,26 +311,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
       isLoading={updateCompany.isPending}
     />
 
-    {/* Delete Confirmation */}
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Bedrijf verwijderen?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Weet je zeker dat je "{company.name}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuleren</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={confirmDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Verwijderen
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    {/* Verwijderen uitgeschakeld voor bedrijven */}
   </>
   );
 }

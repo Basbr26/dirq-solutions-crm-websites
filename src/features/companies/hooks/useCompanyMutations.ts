@@ -73,27 +73,4 @@ export function useUpdateCompany() {
   });
 }
 
-export function useDeleteCompany() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('companies')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['companies'] });
-      queryClient.invalidateQueries({ queryKey: ['company-stats'] });
-      toast.success('Bedrijf succesvol verwijderd');
-    },
-    onError: (error: Error) => {
-      toast.error('Fout bij verwijderen bedrijf', {
-        description: error.message,
-      });
-    },
-  });
-}
+// Verwijderen van bedrijven is uitgeschakeld
