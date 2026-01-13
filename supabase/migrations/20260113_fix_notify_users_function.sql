@@ -39,16 +39,3 @@ BEGIN
     'pending';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Verify function was created
-DO $$
-BEGIN
-  IF EXISTS (
-    SELECT 1 FROM pg_proc 
-    WHERE proname = 'notify_users'
-  ) THEN
-    RAISE NOTICE '✓ notify_users function successfully updated';
-  ELSE
-    RAISE EXCEPTION '✗ Failed to create notify_users function';
-  END IF;
-END $$;
