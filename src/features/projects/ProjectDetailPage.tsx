@@ -37,6 +37,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AppLayout } from '@/components/layout/AppLayout';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -219,44 +220,52 @@ export default function ProjectDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 space-y-6 p-4 md:p-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <AppLayout title="Project laden..." subtitle="Even geduld">
+        <div className="space-y-6">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-96 w-full" />
+        </div>
+      </AppLayout>
     );
   }
 
   if (!project) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center">
-            <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Project niet gevonden</h3>
-            <p className="text-muted-foreground mb-4">
-              Dit project bestaat niet of je hebt geen toegang.
-            </p>
-            <Link to="/pipeline">
-              <Button>Terug naar pipeline</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <AppLayout title="Project niet gevonden" subtitle="Dit project bestaat niet">
+        <div className="flex items-center justify-center py-12">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-6 text-center">
+              <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Project niet gevonden</h3>
+              <p className="text-muted-foreground mb-4">
+                Dit project bestaat niet of je hebt geen toegang.
+              </p>
+              <Link to="/pipeline">
+                <Button>Terug naar pipeline</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </AppLayout>
     );
   }
 
   const stageConfig = projectStageConfig[project.stage];
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4">
-        <Link to="/pipeline">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug naar pipeline
-          </Button>
-        </Link>
+    <AppLayout
+      title={project.title}
+      subtitle={`${stageConfig.label} • ${project.companies?.name || 'Geen bedrijf'}`}
+    >
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4">
+          <Link to="/pipeline">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Terug naar pipeline
+            </Button>
+          </Link>
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -844,6 +853,6 @@ export default function ProjectDetailPage() {
         onOpenChange={setUploadDialogOpen}
         projectId={id}
       />
-    </div>
+    </AppLayout>
   );
 }
