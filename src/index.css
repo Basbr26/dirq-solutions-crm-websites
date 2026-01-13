@@ -16,24 +16,25 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Smooth theme transitions - alleen backgrounds en borders om flikkeren te voorkomen */
-  *,
-  *::before,
-  *::after {
-    transition-property: background-color, border-color, box-shadow;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
+  /* 🚀 PERFORMANCE FIX: Disable global transitions - veroorzaakt frame drops */
+  /* Transitions worden nu alleen toegepast waar nodig via component-level styling */
+  
+  /* Enable native color-scheme switching */
+  html {
+    color-scheme: light dark;
   }
 
-  /* Snellere transition voor tekst en iconen */
-  *:not(svg):not(path):not(circle):not(rect):not(line) {
-    transition-property: background-color, border-color, box-shadow, color;
-    transition-duration: 150ms;
+  /* Performante body transition - alleen background */
+  body {
+    transition: background-color 100ms ease-out;
   }
 
-  /* Instant kleurwisseling voor SVG iconen */
-  svg, svg * {
-    transition: none;
+  /* Disable ALL transitions tijdens theme switch voor instant feedback */
+  html.disable-transitions,
+  html.disable-transitions *,
+  html.disable-transitions *::before,
+  html.disable-transitions *::after {
+    transition: none !important;
   }
 
   /* Exclude animations from theme transitions */

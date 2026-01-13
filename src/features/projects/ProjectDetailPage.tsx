@@ -11,6 +11,8 @@ import { useUpdateProject, useDeleteProject } from './hooks/useProjectMutations'
 import { useConvertLead } from './hooks/useConvertLead';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
+import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
+import { ProjectEditDialog } from './components/ProjectEditDialog';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
 import {
@@ -65,6 +67,7 @@ const projectTypeLabels = {
   blog: 'Blog',
   portfolio: 'Portfolio',
   custom: 'Custom',
+  ai_automation: 'AI Automatisering',
 };
 
 export default function ProjectDetailPage() {
@@ -75,6 +78,7 @@ export default function ProjectDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
 
   const updateProject = useUpdateProject(id!);
   const deleteProject = useDeleteProject();
@@ -316,7 +320,7 @@ export default function ProjectDetailPage() {
             )}
           </div>
         </div>
-      </div>
+        </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         {/* Main Content */}
@@ -436,6 +440,22 @@ export default function ProjectDetailPage() {
                       {project.features.map((feature, idx) => (
                         <Badge key={idx} variant="secondary">
                           {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {project.upsell_opportunities && project.upsell_opportunities.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">💰 Upsell Kansen</p>
+                    <div className="flex flex-wrap gap-2">
+                      {project.upsell_opportunities.map((upsell, idx) => (
+                        <Badge key={idx} variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                          {upsell}
                         </Badge>
                       ))}
                     </div>
@@ -651,8 +671,12 @@ export default function ProjectDetailPage() {
 
             <TabsContent value="activity" className="mt-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Activiteiten ({interactionsData?.interactions?.length || 0})</CardTitle>
+                  <Button size="sm" onClick={() => setAddInteractionDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Log Activiteit
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   {isLoadingInteractions ? (
@@ -671,7 +695,11 @@ export default function ProjectDetailPage() {
                     <div className="text-center py-12 text-muted-foreground">
                       <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p className="font-medium mb-2">Nog geen activiteiten</p>
-                      <p className="text-sm">Activiteiten worden automatisch gelogd bij interacties met dit project</p>
+                      <p className="text-sm mb-4">Log je eerste activiteit voor dit project</p>
+                      <Button variant="outline" onClick={() => setAddInteractionDialogOpen(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Log Activiteit
+                      </Button>
                     </div>
                   )}
                 </CardContent>
@@ -812,6 +840,7 @@ export default function ProjectDetailPage() {
           )}
         </div>
       </div>
+      </div>
 
       {/* Edit Dialog */}
       <ProjectForm
@@ -853,6 +882,26 @@ export default function ProjectDetailPage() {
         onOpenChange={setUploadDialogOpen}
         projectId={id}
       />
+
+      {/* Project Edit Dialog */}
+      {project && (
+        <ProjectEditDialog
+          project={project}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+        />
+      )}
+
+      {/* Add Interaction Dialog */}
+      {project && (
+        <AddInteractionDialog
+          open={addInteractionDialogOpen}
+          onOpenChange={setAddInteractionDialogOpen}
+          companyId={project.company_id}
+          contactId={project.contact_id}
+          projectId={id}
+        />
+      )}
     </AppLayout>
   );
 }

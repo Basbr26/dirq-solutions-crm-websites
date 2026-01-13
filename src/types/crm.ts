@@ -22,7 +22,8 @@ export type ProjectType =
   | 'web_app' 
   | 'blog' 
   | 'portfolio' 
-  | 'custom';
+  | 'custom'
+  | 'ai_automation'; // n8n workflows, Zapier, AI bots
 
 // Website Sales Funnel Stages
 export type ProjectStage = 
@@ -171,6 +172,9 @@ export interface Project {
   // v2.0 DNS/Hosting
   dns_status?: 'pending' | 'active' | 'propagated'; // DNS workflow status
   hosting_provider?: string; // e.g., "TransIP", "Hostinger"
+  
+  // v2.0.3 Upsell tracking
+  upsell_opportunities?: string[]; // e.g., ['SEO pakket', 'Logo design', 'AI chatbot']
   
   // Pipeline
   stage: ProjectStage;

@@ -41,7 +41,7 @@ export default function QuotesPage() {
   const debouncedSearch = useDebounce(search, 500);
   
   const { data: stats } = useQuoteStats();
-  const { data: quotes, isLoading } = useQuotes({
+  const { quotes, isLoading } = useQuotes({
     ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     ...(debouncedSearch ? { search: debouncedSearch } : {}),
   });
@@ -203,8 +203,8 @@ export default function QuotesPage() {
               </Card>
             ) : (
               <div className="space-y-4">
-                {quotes.map(quote => {
-                  const StatusIcon = statusConfig[quote.status].icon;
+                {quotes.map((quote: any) => {
+                  const StatusIcon = statusConfig[quote.status as keyof typeof statusConfig].icon;
                   return (
                     <Link key={quote.id} to={`/quotes/${quote.id}`}>
                       <Card className="p-6 hover:shadow-md transition-shadow">
@@ -212,9 +212,9 @@ export default function QuotesPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-lg font-semibold">{quote.title}</h3>
-                              <Badge variant={statusConfig[quote.status].variant}>
+                              <Badge variant={statusConfig[quote.status as keyof typeof statusConfig].variant}>
                                 <StatusIcon className="h-3 w-3 mr-1" />
-                                {statusConfig[quote.status].label}
+                                {statusConfig[quote.status as keyof typeof statusConfig].label}
                               </Badge>
                             </div>
                             <div className="space-y-1 text-sm text-muted-foreground">

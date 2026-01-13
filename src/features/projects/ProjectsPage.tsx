@@ -38,6 +38,7 @@ const projectTypeLabels: Record<ProjectType, string> = {
   custom: 'Custom',
   corporate_website: 'Corporate Website',
   web_app: 'Web App',
+  ai_automation: 'AI Automatisering',
 };
 
 export default function ProjectsPage() {
@@ -54,7 +55,7 @@ export default function ProjectsPage() {
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data: projects, isLoading } = useProjects({
+  const { projects, isLoading } = useProjects({
     search: debouncedSearch || undefined,
     stage: stageFilter || undefined,
     project_type: typeFilter || undefined,
@@ -322,8 +323,8 @@ export default function ProjectsPage() {
         </div>
       ) : projects && projects.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project) => {
-            const stageConfig = projectStageConfig[project.stage];
+          {projects.map((project: any) => {
+            const stageConfig = projectStageConfig[project.stage as keyof typeof projectStageConfig];
             return (
               <Card
                 key={project.id}
@@ -376,7 +377,7 @@ export default function ProjectsPage() {
 
                     {project.project_type && (
                       <Badge variant="outline">
-                        {projectTypeLabels[project.project_type]}
+                        {projectTypeLabels[project.project_type as keyof typeof projectTypeLabels]}
                       </Badge>
                     )}
                   </div>

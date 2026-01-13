@@ -107,6 +107,7 @@ export function captureMessage(message: string, level: 'info' | 'warning' | 'err
   if (import.meta.env.PROD) {
     Sentry.captureMessage(message, level);
   } else {
-    console[level]('Message:', message);
+    const consoleMethod = level === 'warning' ? 'warn' : level;
+    console[consoleMethod]('Message:', message);
   }
 }

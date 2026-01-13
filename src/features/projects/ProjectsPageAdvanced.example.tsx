@@ -39,7 +39,7 @@ export default function ProjectsPageWithAdvancedFilters() {
     search: debouncedSearch || undefined,
   }), [filters, debouncedSearch]);
 
-  const { data: projects, isLoading } = useProjects(activeFilters);
+  const { projects, isLoading } = useProjects(activeFilters);
   const { data: stats } = usePipelineStats();
 
   const canCreateProject = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
@@ -192,7 +192,7 @@ export default function ProjectsPageWithAdvancedFilters() {
               <Skeleton key={i} className="h-24 w-full" />
             ))
           ) : projects && projects.length > 0 ? (
-            projects.map((project) => (
+            projects.map((project: any) => (
               <Card
                 key={project.id}
                 className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -209,12 +209,12 @@ export default function ProjectsPageWithAdvancedFilters() {
                     <Badge
                       variant="outline"
                       style={{
-                        backgroundColor: `${projectStageConfig[project.stage]?.color}20`,
-                        borderColor: projectStageConfig[project.stage]?.color,
-                        color: projectStageConfig[project.stage]?.color,
+                        backgroundColor: `${projectStageConfig[project.stage as keyof typeof projectStageConfig]?.color}20`,
+                        borderColor: projectStageConfig[project.stage as keyof typeof projectStageConfig]?.color,
+                        color: projectStageConfig[project.stage as keyof typeof projectStageConfig]?.color,
                       }}
                     >
-                      {projectStageConfig[project.stage]?.label}
+                      {projectStageConfig[project.stage as keyof typeof projectStageConfig]?.label}
                     </Badge>
                   </div>
                   <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">

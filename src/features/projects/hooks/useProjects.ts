@@ -5,6 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { usePagination } from '@/hooks/usePagination';
 import type { Project, ProjectFilters, AdvancedProjectFilters, PipelineStats, ProjectStage } from '@/types/projects';
 
 /**
@@ -13,8 +14,10 @@ import type { Project, ProjectFilters, AdvancedProjectFilters, PipelineStats, Pr
  * @param filters - Advanced filter object
  */
 export function useProjects(filters?: AdvancedProjectFilters) {
-  return useQuery({
-    queryKey: ['projects', filters],
+  const pagination = usePagination({ initialPageSize: 25 });
+
+  const query = useQuery({
+    queryKey: ['projects', filters, pagination.page, pagination.pageSize],
     queryFn: async () => {
       let query = supabase
         .from('projects')
@@ -23,7 +26,7 @@ export function useProjects(filters?: AdvancedProjectFilters) {
           companies!projects_company_id_fkey (id, name),
           contacts!projects_contact_id_fkey (id, first_name, last_name),
           profiles!projects_owner_id_fkey (id, voornaam, achternaam, email)
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
       // Basic filters (backward compatible)
@@ -94,11 +97,28 @@ export function useProjects(filters?: AdvancedProjectFilters) {
         query = query.in('owner_id', filters.owner_ids);
       }
 
-      const { data, error } = await query;
+      // Pagination
+      query = query.range(pagination.offset, pagination.offset + pagination.pageSize - 1);
+
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data as Project[];
+      
+      return {
+        projects: data as Project[],
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pagination.pageSize),
+      };
     },
   });
+
+  return {
+    projects: query.data?.projects || [],
+    totalCount: query.data?.totalCount || 0,
+    totalPages: query.data?.totalPages || 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    pagination,
+  };
 }
 
 export function useProject(id: string) {

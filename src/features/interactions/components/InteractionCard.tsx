@@ -44,7 +44,7 @@ const taskStatusConfig = {
 export function InteractionCard({ interaction }: InteractionCardProps) {
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
-  const config = typeConfig[interaction.type];
+  const config = typeConfig[interaction.type as keyof typeof typeConfig] || typeConfig.note;
   const Icon = config.icon;
 
   const handleCompanyClick = (e: React.MouseEvent) => {

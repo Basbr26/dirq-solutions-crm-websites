@@ -58,7 +58,7 @@ export function ContactForm({
   onCancel,
   isSubmitting = false,
 }: ContactFormProps) {
-  const { data: companiesData, isLoading: isLoadingCompanies } = useCompanies();
+  const { companies: companiesData, isLoading: isLoadingCompanies } = useCompanies();
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -280,7 +280,7 @@ export function ContactForm({
                   ) : (
                     <>
                       <SelectItem value="none">Geen bedrijf</SelectItem>
-                      {companiesData?.companies.map((company) => (
+                      {companiesData.map((company: any) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
                         </SelectItem>

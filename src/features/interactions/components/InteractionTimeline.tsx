@@ -130,7 +130,7 @@ export function InteractionTimeline({
       <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-border" />
 
       {data.interactions.map((interaction, index) => {
-        const config = typeConfig[interaction.type];
+        const config = typeConfig[interaction.type as keyof typeof typeConfig] || typeConfig.note;
         const Icon = config.icon;
         const isLast = index === data.interactions.length - 1;
 

@@ -46,7 +46,7 @@ const projectFormSchema = z.object({
   contact_id: z.string().uuid('Selecteer een contactpersoon').optional().or(z.literal('')),
   title: z.string().min(1, 'Titel is verplicht'),
   description: z.string().optional(),
-  project_type: z.enum(['landing_page', 'corporate_website', 'ecommerce', 'web_app', 'blog', 'portfolio', 'custom']).optional(),
+  project_type: z.enum(['landing_page', 'corporate_website', 'ecommerce', 'web_app', 'blog', 'portfolio', 'custom', 'ai_automation']).optional(),
   value: z.number().min(0, 'Waarde moet positief zijn').default(0),
   expected_close_date: z.string().optional(),
   notes: z.string().optional(),
@@ -77,6 +77,7 @@ const projectTypeLabels: Record<ProjectType, string> = {
   blog: 'Blog',
   portfolio: 'Portfolio',
   custom: 'Custom',
+  ai_automation: 'AI Automatisering',
 };
 
 interface ProjectFormProps {
@@ -88,7 +89,7 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }: ProjectFormProps) {
-  const { data: companiesData } = useCompanies();
+  const { companies: companiesData } = useCompanies();
   const { toast } = useToast();
   
   const form = useForm<ProjectFormData>({
@@ -111,7 +112,7 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
 
   const selectedCompanyId = form.watch('company_id');
   
-  const { data: contactsData } = useContacts({
+  const { contacts: contactsData } = useContacts({
     companyId: selectedCompanyId || undefined,
   });
 
@@ -193,7 +194,7 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {companiesData?.companies.map((company) => (
+                          {companiesData.map((company: any) => (
                             <SelectItem key={company.id} value={company.id}>
                               {company.name}
                             </SelectItem>
@@ -222,7 +223,7 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {contactsData?.contacts.map((contact) => (
+                          {contactsData.map((contact: any) => (
                             <SelectItem key={contact.id} value={contact.id}>
                               {contact.first_name} {contact.last_name}
                             </SelectItem>

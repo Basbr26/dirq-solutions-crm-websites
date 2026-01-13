@@ -38,12 +38,13 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
 // Lazy load Recharts to improve initial bundle size
+// Note: Bar and Pie components have complex generic types that don't work well with lazy()
+// Import them directly instead
+import { Bar, Pie } from 'recharts';
 const LineChart = lazy(() => import('recharts').then(m => ({ default: m.LineChart })));
 const Line = lazy(() => import('recharts').then(m => ({ default: m.Line })));
 const BarChart = lazy(() => import('recharts').then(m => ({ default: m.BarChart })));
-const Bar = lazy(() => import('recharts').then(m => ({ default: m.Bar })));
 const PieChart = lazy(() => import('recharts').then(m => ({ default: m.PieChart })));
-const Pie = lazy(() => import('recharts').then(m => ({ default: m.Pie })));
 const Cell = lazy(() => import('recharts').then(m => ({ default: m.Cell })));
 const XAxis = lazy(() => import('recharts').then(m => ({ default: m.XAxis })));
 const YAxis = lazy(() => import('recharts').then(m => ({ default: m.YAxis })));
@@ -244,7 +245,7 @@ export default function DashboardCRM() {
                         tickMargin={8}
                       />
                       <Tooltip 
-                        formatter={(value: number) => formatCurrency(value)}
+                        formatter={(value: any) => formatCurrency(value as number)}
                         contentStyle={{ 
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
                           border: '1px solid #e5e7eb',
@@ -313,7 +314,7 @@ export default function DashboardCRM() {
                         cy="50%"
                         outerRadius={100}
                         innerRadius={40}
-                        label={(entry) => `${entry.count}`}
+                        label={(entry: any) => `${entry.count}`}
                         labelLine={true}
                         paddingAngle={2}
                         activeShape={(props: any) => (
@@ -331,13 +332,13 @@ export default function DashboardCRM() {
                         {pipelineDistribution.map((entry, index) => (
                           <Cell 
                             key={`cell-${index}`} 
-                            fill={STAGE_COLORS[entry.name.replace(/ /g, '_')] || '#94a3b8'} 
+                            fill={STAGE_COLORS[entry.name.replace(/ /g, '_') as ProjectStage] || '#94a3b8'} 
                             className="cursor-pointer transition-all duration-200"
                           />
                         ))}
                       </Pie>
                       <Tooltip 
-                        formatter={(value: number) => formatCurrency(value)}
+                        formatter={(value: any) => formatCurrency(value as number)}
                         contentStyle={{ 
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
                           border: '1px solid #e5e7eb',
@@ -402,7 +403,7 @@ export default function DashboardCRM() {
                         tickMargin={8}
                       />
                       <Tooltip 
-                        formatter={(value: number) => `${value}%`}
+                        formatter={(value: any) => `${value as number}%`}
                         contentStyle={{ 
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
                           border: '1px solid #e5e7eb',

@@ -2,10 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Contact } from '@/types/crm';
 import { useAuth } from '@/hooks/useAuth';
+import { usePagination } from '@/hooks/usePagination';
 
 interface UseContactsParams {
-  page?: number;
-  pageSize?: number;
   search?: string;
   companyId?: string;
   isPrimary?: boolean;
@@ -14,13 +13,10 @@ interface UseContactsParams {
 
 export function useContacts(params: UseContactsParams = {}) {
   const { role } = useAuth();
+  const pagination = usePagination({ initialPageSize: 25 });
 
-  // Set defaults for pagination
-  const page = params.page || 1;
-  const pageSize = params.pageSize || 50;
-
-  return useQuery({
-    queryKey: ['contacts', params, role],
+  const query = useQuery({
+    queryKey: ['contacts', params, pagination.page, pagination.pageSize, role],
     queryFn: async () => {
       let query = supabase
         .from('contacts')
@@ -55,9 +51,7 @@ export function useContacts(params: UseContactsParams = {}) {
       }
 
       // Apply pagination
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
+      query = query.range(pagination.offset, pagination.offset + pagination.pageSize - 1);
 
       // Sort by last name
       query = query.order('last_name', { ascending: true });
@@ -68,13 +62,20 @@ export function useContacts(params: UseContactsParams = {}) {
 
       return {
         contacts: data as Contact[],
-        count: count || 0,
-        page: page,
-        pageSize: pageSize,
-        hasMore: (count || 0) > page * pageSize
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pagination.pageSize),
       };
     },
   });
+
+  return {
+    contacts: query.data?.contacts || [],
+    totalCount: query.data?.totalCount || 0,
+    totalPages: query.data?.totalPages || 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    pagination,
+  };
 }
 
 export function useContact(id: string) {

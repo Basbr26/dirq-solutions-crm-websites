@@ -41,10 +41,10 @@ import { ContactCreateData } from "@/types/crm";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CSVImportDialog } from '@/components/CSVImportDialog';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export function ContactsPage() {
   const [searchParams] = useSearchParams();
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [filterCompanyId, setFilterCompanyId] = useState<string | undefined>();
   const [filterIsPrimary, setFilterIsPrimary] = useState<boolean | undefined>();
@@ -64,24 +64,32 @@ export function ContactsPage() {
       setShowCreateDialog(true);
     }
   }, [searchParams]);
-
-  const pageSize = 20;
   
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, isLoading, error } = useContacts({
-    page,
-    pageSize,
+  const {
+    contacts,
+    totalCount,
+    totalPages,
+    isLoading,
+    error,
+    pagination,
+  } = useContacts({
     search: debouncedSearch || undefined,
     companyId: filterCompanyId,
     isPrimary: filterIsPrimary,
     isDecisionMaker: filterIsDecisionMaker,
   });
 
-  const { data: companiesData } = useCompanies();
+  const { companies } = useCompanies();
 
   const { createContact } = useContactMutations();
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    pagination.resetPage();
+  };
 
   const handleCreateContact = (formData: ContactCreateData) => {
     // Handle "none" value from company dropdown
@@ -230,14 +238,12 @@ export function ContactsPage() {
     return { success: successCount, errors: errorCount };
   };
 
-  const totalPages = data ? Math.ceil(data.count / pageSize) : 0;
-
   // Calculate stats
   const stats = {
-    total: data?.count || 0,
-    primary: data?.contacts.filter((c) => c.is_primary).length || 0,
-    decisionMakers: data?.contacts.filter((c) => c.is_decision_maker).length || 0,
-    withCompany: data?.contacts.filter((c) => c.company_id).length || 0,
+    total: totalCount || 0,
+    primary: contacts.filter((c) => c.is_primary).length || 0,
+    decisionMakers: contacts.filter((c) => c.is_decision_maker).length || 0,
+    withCompany: contacts.filter((c) => c.company_id).length || 0,
   };
 
   return (
@@ -311,10 +317,7 @@ export function ContactsPage() {
           <Input
             placeholder="Zoek op naam, email of functie..."
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -348,7 +351,7 @@ export function ContactsPage() {
                   value={filterCompanyId || "all"}
                   onValueChange={(value) => {
                     setFilterCompanyId(value === "all" ? undefined : value);
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                 >
                   <SelectTrigger>
@@ -356,7 +359,7 @@ export function ContactsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Alle bedrijven</SelectItem>
-                    {companiesData?.companies.map((company) => (
+                    {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.name}
                       </SelectItem>
@@ -381,7 +384,7 @@ export function ContactsPage() {
                         ? undefined
                         : value === "true"
                     );
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                 >
                   <SelectTrigger>
@@ -411,7 +414,7 @@ export function ContactsPage() {
                         ? undefined
                         : value === "true"
                     );
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                 >
                   <SelectTrigger>
@@ -435,7 +438,7 @@ export function ContactsPage() {
                     setFilterCompanyId(undefined);
                     setFilterIsPrimary(undefined);
                     setFilterIsDecisionMaker(undefined);
-                    setPage(1);
+                    pagination.resetPage();
                   }}
                 >
                   Wis alle filters
@@ -460,7 +463,7 @@ export function ContactsPage() {
             </div>
           </CardContent>
         </Card>
-      ) : data?.contacts.length === 0 ? (
+      ) : contacts.length === 0 ? (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground py-12">
@@ -478,35 +481,22 @@ export function ContactsPage() {
         <>
           {/* Contacts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {data?.contacts.map((contact) => (
+            {contacts.map((contact) => (
               <ContactCard key={contact.id} contact={contact} />
             ))}
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-              >
-                Vorige
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                Pagina {page} van {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-              >
-                Volgende
-              </Button>
-            </div>
-          )}
+          <PaginationControls
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalCount={totalCount}
+            totalPages={totalPages}
+            pageSizeOptions={pagination.pageSizeOptions}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+            isLoading={isLoading}
+          />
         </>
       )}
 

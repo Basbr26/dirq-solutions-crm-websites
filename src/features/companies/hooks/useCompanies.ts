@@ -1,16 +1,15 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Company, CompanyFilters } from '@/types/crm';
 import { useAuth } from '@/hooks/useAuth';
+import { usePagination } from '@/hooks/usePagination';
 
 export function useCompanies(filters?: CompanyFilters) {
   const { role } = useAuth();
-  const [page, setPage] = useState(1);
-  const pageSize = 20;
+  const pagination = usePagination({ initialPageSize: 25 });
 
   const query = useQuery({
-    queryKey: ['companies', filters, page, role],
+    queryKey: ['companies', filters, pagination.page, pagination.pageSize, role],
     queryFn: async () => {
       let query = supabase
         .from('companies')
@@ -40,9 +39,7 @@ export function useCompanies(filters?: CompanyFilters) {
       }
 
       // Pagination
-      const from = (page - 1) * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
+      query = query.range(pagination.offset, pagination.offset + pagination.pageSize - 1);
 
       // Sorting
       query = query.order('updated_at', { ascending: false });
@@ -53,19 +50,19 @@ export function useCompanies(filters?: CompanyFilters) {
 
       return {
         companies: data as Company[],
-        count: count || 0,
-        page,
-        pageSize,
-        hasMore: (count || 0) > page * pageSize
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pagination.pageSize),
       };
     },
   });
 
   return {
-    ...query,
-    page,
-    setPage,
-    pageSize
+    companies: query.data?.companies || [],
+    totalCount: query.data?.totalCount || 0,
+    totalPages: query.data?.totalPages || 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    pagination,
   };
 }
 

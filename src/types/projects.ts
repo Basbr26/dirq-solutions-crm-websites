@@ -39,6 +39,9 @@ export interface Project {
   dns_status?: 'pending' | 'active' | 'failed' | 'propagated';
   hosting_provider?: string;
   
+  // v2.0.3 Upsell tracking
+  upsell_opportunities?: string[]; // e.g., ['SEO pakket', 'Logo design', 'Extra pagina']
+  
   // Ownership
   owner_id: string;
   
@@ -76,7 +79,8 @@ export type ProjectType =
   | 'web_app'
   | 'blog'
   | 'portfolio'
-  | 'custom';
+  | 'custom'
+  | 'ai_automation'; // n8n workflows, Zapier, AI assistenten
 
 export type ProjectStage = 
   | 'lead'              // Initial interest
@@ -137,6 +141,7 @@ export interface UpdateProjectInput {
   probability?: number;
   expected_close_date?: string;
   notes?: string;
+  upsell_opportunities?: string[];
 }
 
 export interface ProjectFilters {

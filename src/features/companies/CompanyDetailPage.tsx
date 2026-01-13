@@ -96,12 +96,12 @@ export default function CompanyDetailPage() {
   const { createContact } = useContactMutations();
   
   // Fetch contacts for this company
-  const { data: contactsData, isLoading: isLoadingContacts } = useContacts({
+  const { contacts: contactsData, isLoading: isLoadingContacts } = useContacts({
     companyId: id,
   });
   
   // Fetch projects/leads for this company
-  const { data: projectsData, isLoading: isLoadingProjects } = useProjects({
+  const { projects: projectsData, isLoading: isLoadingProjects } = useProjects({
     company_id: id,
   });
 
@@ -527,7 +527,7 @@ export default function CompanyDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Contactpersonen ({contactsData?.count || 0})
+                Contactpersonen ({contactsData?.length || 0})
               </CardTitle>
               {canEdit && (
                 <Button size="sm" onClick={() => setCreateContactDialogOpen(true)}>
@@ -543,9 +543,9 @@ export default function CompanyDetailPage() {
                     <div key={i} className="h-32 bg-muted animate-pulse rounded-lg" />
                   ))}
                 </div>
-              ) : contactsData && contactsData.contacts.length > 0 ? (
+              ) : contactsData && contactsData.length > 0 ? (
                 <div className="space-y-3">
-                  {contactsData.contacts.map((contact) => (
+                  {contactsData.map((contact: any) => (
                     <Link key={contact.id} to={`/contacts/${contact.id}`}>
                       <ContactCard contact={contact} />
                     </Link>
@@ -590,7 +590,7 @@ export default function CompanyDetailPage() {
                 </div>
               ) : projectsData && projectsData.length > 0 ? (
                 <div className="space-y-3">
-                  {projectsData.map((project) => (
+                  {projectsData.map((project: any) => (
                     <Link key={project.id} to={`/pipeline/${project.id}`}>
                       <ProjectCard project={project} />
                     </Link>

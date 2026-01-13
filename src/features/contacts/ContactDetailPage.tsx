@@ -106,7 +106,7 @@ export default function ContactDetailPage() {
     const updateData: Partial<ContactFormData> = {
       ...formData,
       company_id:
-        formData.company_id === "none" ? null : formData.company_id,
+        formData.company_id === "none" ? undefined : formData.company_id,
     };
 
     updateContact.mutate(

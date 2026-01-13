@@ -72,7 +72,7 @@ interface QuoteFormProps {
 }
 
 export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: QuoteFormProps) {
-  const { data: companiesData } = useCompanies();
+  const { companies: companiesData } = useCompanies();
   
   const form = useForm<QuoteFormData>({
     resolver: zodResolver(quoteFormSchema),
@@ -105,7 +105,7 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
 
   const selectedCompanyId = form.watch('company_id');
   
-  const { data: contactsData } = useContacts({
+  const { contacts: contactsData } = useContacts({
     companyId: selectedCompanyId || undefined,
   });
 
@@ -173,7 +173,7 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {companiesData?.companies.map((company) => (
+                          {companiesData.map((company: any) => (
                             <SelectItem key={company.id} value={company.id}>
                               {company.name}
                             </SelectItem>
@@ -202,7 +202,7 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {contactsData?.contacts.map((contact) => (
+                          {contactsData.map((contact: any) => (
                             <SelectItem key={contact.id} value={contact.id}>
                               {contact.first_name} {contact.last_name}
                             </SelectItem>

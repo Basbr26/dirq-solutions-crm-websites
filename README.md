@@ -215,6 +215,25 @@ dirq-solutions-crm/
 - SQL injection protected (prepared statements)
 - XSS protected (React escape by default)
 
+### Audit Logging
+- All CRM actions logged to `crm_audit_log`
+- Viewable by all team members (read-only)
+- Immutable: No UPDATE or DELETE allowed
+- Tracks: user, action, entity, old/new values, IP, timestamp
+- Indexed for fast queries
+
+### Rate Limiting
+- API endpoints protected with rate limiting
+- Default: 100 requests per 60 seconds per client
+- Returns 429 Too Many Requests when exceeded
+- Headers: X-RateLimit-Limit, Remaining, Reset, Retry-After
+- Auto-cleanup old tracking data (hourly)
+
+### SECURITY DEFINER Functions
+- All functions have explicit `SET search_path = public, pg_catalog`
+- Prevents SQL injection via search_path manipulation
+- Compliant with Supabase security best practices
+
 ---
 
 ## 🤖 AI Agent Integration
@@ -367,11 +386,21 @@ Zie [STATUS.md](STATUS.md) voor details.
 5. Open Pull Request
 
 ### Code Style
-- TypeScript strict mode
+- **TypeScript strict mode** enabled (zero type errors)
 - ESLint + Prettier configured
 - Conventional Commits
 - Component naming: PascalCase
 - Hook naming: useCamelCase
+
+### TypeScript Configuration
+This project uses TypeScript in **strict mode**:
+- `strict: true` - All strict type-checking options enabled
+- `noImplicitAny: true` - Explicit types required
+- `strictNullChecks: true` - Null safety enforced
+- Zero implicit any types in codebase
+- Complete null safety with optional chaining
+
+**Run type check:** `npm run type-check` or `npx tsc --noEmit`
 
 ---
 

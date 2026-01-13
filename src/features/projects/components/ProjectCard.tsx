@@ -35,8 +35,7 @@ const projectTypeLabels = {
   web_app: 'Web Applicatie',
   blog: 'Blog',
   portfolio: 'Portfolio',
-  custom: 'Op Maat',
-};
+  custom: 'Op Maat',  ai_automation: 'AI Automatisering',};
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const stageStyle = stageConfig[project.stage];

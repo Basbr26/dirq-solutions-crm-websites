@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CSVImportDialog } from '@/components/CSVImportDialog';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export default function CompaniesPage() {
   const { role } = useAuth();
@@ -39,14 +40,26 @@ export default function CompaniesPage() {
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);
 
-  // Apply search after debounce
+  // Apply search after debounce - reset to page 1 when search changes
   const activeFilters: CompanyFiltersType = {
     ...filters,
     search: debouncedSearch || undefined,
   };
 
-  const { data, isLoading, page, setPage, pageSize } = useCompanies(activeFilters);
+  const {
+    companies,
+    totalCount,
+    totalPages,
+    isLoading,
+    pagination,
+  } = useCompanies(activeFilters);
   const { data: stats } = useCompanyStats();
+
+  // Reset to page 1 when search or filters change
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    pagination.resetPage();
+  };
 
   const canCreateCompany = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
 
@@ -69,17 +82,17 @@ export default function CompaniesPage() {
         query = query.or(`name.ilike.%${activeFilters.search}%,email.ilike.%${activeFilters.search}%`);
       }
 
-      const { data: companies, error } = await query;
+      const { data: exportCompanies, error } = await query;
       
       if (error) throw error;
-      if (!companies || companies.length === 0) {
+      if (!exportCompanies || exportCompanies.length === 0) {
         toast.warning('Geen bedrijven om te exporteren');
         return;
       }
 
       // Convert to CSV
       const headers = ['Naam', 'Email', 'Telefoon', 'Website', 'Status', 'Prioriteit', 'Grootte', 'Industrie', 'Aangemaakt'];
-      const rows = companies.map(c => [
+      const rows = exportCompanies.map(c => [
         c.name || '',
         c.email || '',
         c.phone || '',
@@ -105,7 +118,7 @@ export default function CompaniesPage() {
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`${companies.length} bedrijven geëxporteerd`);
+      toast.success(`${exportCompanies.length} bedrijven geëxporteerd`);
     } catch (error: any) {
       console.error('Export error:', error);
       toast.error('Fout bij exporteren: ' + error.message);
@@ -223,7 +236,7 @@ export default function CompaniesPage() {
           <Input
             placeholder="Zoek bedrijven op naam, email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
           />
         </div>
@@ -357,39 +370,25 @@ export default function CompaniesPage() {
             </Card>
           ))}
         </div>
-      ) : data && data.companies.length > 0 ? (
+      ) : companies && companies.length > 0 ? (
         <>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {data.companies.map((company) => (
+            {companies.map((company) => (
               <CompanyCard key={company.id} company={company} />
             ))}
           </div>
 
           {/* Pagination */}
-          {data.count > pageSize && (
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Toont {(page - 1) * pageSize + 1} tot {Math.min(page * pageSize, data.count)} van{' '}
-                {data.count} bedrijven
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Vorige
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={!data.hasMore}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Volgende
-                </Button>
-              </div>
-            </div>
-          )}
+          <PaginationControls
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalCount={totalCount}
+            totalPages={totalPages}
+            pageSizeOptions={pagination.pageSizeOptions}
+            onPageChange={pagination.setPage}
+            onPageSizeChange={pagination.setPageSize}
+            isLoading={isLoading}
+          />
         </>
       ) : (
         <Card>

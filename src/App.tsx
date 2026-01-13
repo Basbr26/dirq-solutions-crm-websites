@@ -477,7 +477,7 @@ const App = () => (
         attribute="class" 
         defaultTheme="light" 
         enableSystem={false}
-        disableTransitionOnChange={false}
+        disableTransitionOnChange={true}
       >
         <TooltipProvider>
           <Toaster />

@@ -20,31 +20,43 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Interaction } from '../hooks/useInteractions';
 
-const interactionIcons = {
+const interactionIcons: Record<string, typeof Phone> = {
   call: Phone,
   email: Mail,
   meeting: Users,
   note: FileText,
   task: CheckSquare,
   demo: Calendar,
+  requirement_discussion: MessageSquare,
+  quote_presentation: FileText,
+  physical_mail: Mail,
+  linkedin_video_audit: MessageSquare,
 };
 
-const interactionColors = {
+const interactionColors: Record<string, string> = {
   call: 'text-blue-500',
   email: 'text-purple-500',
   meeting: 'text-green-500',
   note: 'text-orange-500',
   task: 'text-red-500',
   demo: 'text-indigo-500',
+  requirement_discussion: 'text-cyan-500',
+  quote_presentation: 'text-pink-500',
+  physical_mail: 'text-amber-500',
+  linkedin_video_audit: 'text-rose-500',
 };
 
-const interactionLabels = {
+const interactionLabels: Record<string, string> = {
   call: 'Telefoongesprek',
   email: 'Email',
   meeting: 'Meeting',
   note: 'Notitie',
   task: 'Taak',
   demo: 'Demo',
+  requirement_discussion: 'Requirements Bespreking',
+  quote_presentation: 'Quote Presentatie',
+  physical_mail: 'Fysiek Kaartje',
+  linkedin_video_audit: 'LinkedIn Video Audit',
 };
 
 interface InteractionItemProps {
@@ -53,9 +65,9 @@ interface InteractionItemProps {
 }
 
 export function InteractionItem({ interaction, compact = false }: InteractionItemProps) {
-  const Icon = interactionIcons[interaction.type];
-  const color = interactionColors[interaction.type];
-  const label = interactionLabels[interaction.type];
+  const Icon = interactionIcons[interaction.type] || FileText;
+  const color = interactionColors[interaction.type] || 'text-gray-500';
+  const label = interactionLabels[interaction.type] || interaction.type;
 
   return (
     <Card className="hover:shadow-md transition-shadow">

@@ -43,6 +43,7 @@ interface AddInteractionDialogProps {
   onOpenChange: (open: boolean) => void;
   companyId?: string;
   contactId?: string;
+  projectId?: string; // NEW: Support for project-specific interactions
   defaultType?: 'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo' | 'physical_mail' | 'linkedin_video_audit';
 }
 
@@ -62,11 +63,12 @@ export function AddInteractionDialog({
   onOpenChange,
   companyId,
   contactId,
+  projectId, // NEW
   defaultType = 'note',
 }: AddInteractionDialogProps) {
   const [isTask, setIsTask] = useState(defaultType === 'task');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(companyId);
-  const { data: companiesData } = useCompanies({});
+  const { companies: companiesData } = useCompanies({});
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       type: defaultType,
@@ -102,6 +104,7 @@ export function AddInteractionDialog({
     const interactionData: CreateInteractionData = {
       company_id: finalCompanyId,
       contact_id: contactId,
+      project_id: projectId, // NEW: Include project_id if provided
       type: data.type,
       subject: data.subject,
       description: data.description || undefined,
@@ -173,7 +176,7 @@ export function AddInteractionDialog({
                   <SelectValue placeholder="Selecteer een bedrijf..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {companiesData?.companies?.map((company) => (
+                  {companiesData?.map((company: any) => (
                     <SelectItem key={company.id} value={company.id}>
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />

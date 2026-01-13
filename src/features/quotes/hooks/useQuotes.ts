@@ -5,11 +5,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { usePagination } from '@/hooks/usePagination';
 import type { Quote, QuoteStats, QuoteFilters } from '@/types/quotes';
 
 export function useQuotes(filters?: QuoteFilters) {
-  return useQuery({
-    queryKey: ['quotes', filters],
+  const pagination = usePagination({ initialPageSize: 25 });
+
+  const query = useQuery({
+    queryKey: ['quotes', filters, pagination.page, pagination.pageSize],
     queryFn: async () => {
       let query = supabase
         .from('quotes')
@@ -18,7 +21,7 @@ export function useQuotes(filters?: QuoteFilters) {
           company:companies!quotes_company_id_fkey (id, name, email, phone),
           project:projects!quotes_project_id_fkey (id, title),
           owner:profiles!quotes_owner_id_fkey (id, voornaam, achternaam, email)
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
       if (filters?.status) {
@@ -34,11 +37,28 @@ export function useQuotes(filters?: QuoteFilters) {
         query = query.or(`title.ilike.%${filters.search}%,quote_number.ilike.%${filters.search}%`);
       }
 
-      const { data, error } = await query;
+      // Pagination
+      query = query.range(pagination.offset, pagination.offset + pagination.pageSize - 1);
+
+      const { data, error, count } = await query;
       if (error) throw error;
-      return data as Quote[];
+      
+      return {
+        quotes: data as Quote[],
+        totalCount: count || 0,
+        totalPages: Math.ceil((count || 0) / pagination.pageSize),
+      };
     },
   });
+
+  return {
+    quotes: query.data?.quotes || [],
+    totalCount: query.data?.totalCount || 0,
+    totalPages: query.data?.totalPages || 0,
+    isLoading: query.isLoading,
+    error: query.error,
+    pagination,
+  };
 }
 
 export function useQuote(id: string) {
