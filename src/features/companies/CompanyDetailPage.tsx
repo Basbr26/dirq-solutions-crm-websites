@@ -559,12 +559,10 @@ export default function CompanyDetailPage() {
                     Dit bedrijf heeft nog geen contactpersonen.
                   </p>
                   {canEdit && (
-                    <Link to={`/contacts/new?company_id=${id}`}>
-                      <Button>
-                        <Users className="h-4 w-4 mr-2" />
-                        Eerste contact toevoegen
-                      </Button>
-                    </Link>
+                    <Button onClick={() => setCreateContactDialogOpen(true)}>
+                      <Users className="h-4 w-4 mr-2" />
+                      Eerste contact toevoegen
+                    </Button>
                   )}
                 </div>
               )}
