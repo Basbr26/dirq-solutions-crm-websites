@@ -103,7 +103,7 @@ BEGIN
       user_id, type, title, message, related_entity_type, related_entity_id
     ) VALUES (
       NEW.assigned_to,
-      'lead_stage_change',
+      'update',
       'Lead Status Updated',
       'Lead stage changed from ' || OLD.stage || ' to ' || NEW.stage,
       'lead',
@@ -127,7 +127,7 @@ BEGIN
       user_id, type, title, message, related_entity_type, related_entity_id
     ) VALUES (
       NEW.created_by,
-      'quote_status_change',
+      'update',
       'Quote Status Updated',
       'Quote status changed to ' || NEW.status,
       'quote',
@@ -151,7 +151,7 @@ BEGIN
       user_id, type, title, message, related_entity_type, related_entity_id
     ) VALUES (
       NEW.owner_id,
-      'project_stage_change',
+      'update',
       'Project Stage Updated',
       'Project stage changed to ' || NEW.stage,
       'project',
