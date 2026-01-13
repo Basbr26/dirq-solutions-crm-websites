@@ -1,3 +1,11 @@
+# 2026-01-13
+
+## Belangrijkste wijzigingen
+
+- **project_id fix**: De kolom project_id in interactions wordt nu altijd correct toegevoegd via de migratie (idempotent). Hierdoor werkt activiteiten toevoegen weer zonder errors.
+- **Index migratie**: Alle CREATE INDEX statements in 20260103_website_sales_crm.sql zijn nu IF NOT EXISTS, zodat je veilig opnieuw kunt migreren.
+- **Bedrijf verwijderen**: Zowel RLS als frontend logica staan nu toe dat ADMIN, MANAGER en de eigenaar bedrijven kunnen verwijderen.
+- **Favicon**: Nieuw Dirq-logo als favicon toegevoegd.
 # 🚀 Dirq Solutions CRM
 
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**

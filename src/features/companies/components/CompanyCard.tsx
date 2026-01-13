@@ -59,8 +59,10 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
   
+  const user = useAuth().user;
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
-  const canDelete = role === 'ADMIN';
+  // Allow ADMIN, MANAGER, or owner to delete
+  const canDelete = (role === 'ADMIN' || role === 'MANAGER' || (user && company.owner_id === user.id));
   
   const statusStyle = statusConfig[company.status];
   const priorityStyle = priorityConfig[company.priority];

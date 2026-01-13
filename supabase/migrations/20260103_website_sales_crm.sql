@@ -93,19 +93,20 @@ BEGIN
 END $$;
 
 -- Rename indexes
+
 DROP INDEX IF EXISTS idx_leads_company_id;
 DROP INDEX IF EXISTS idx_leads_contact_id;
 DROP INDEX IF EXISTS idx_leads_owner_id;
 DROP INDEX IF EXISTS idx_leads_stage;
 DROP INDEX IF EXISTS idx_leads_expected_close_date;
 
-CREATE INDEX idx_projects_company_id ON projects(company_id);
-CREATE INDEX idx_projects_contact_id ON projects(contact_id);
-CREATE INDEX idx_projects_owner_id ON projects(owner_id);
-CREATE INDEX idx_projects_stage ON projects(stage);
-CREATE INDEX idx_projects_expected_close_date ON projects(expected_close_date);
-CREATE INDEX idx_projects_project_type ON projects(project_type);
-CREATE INDEX idx_projects_launch_date ON projects(launch_date);
+CREATE INDEX IF NOT EXISTS idx_projects_company_id ON projects(company_id);
+CREATE INDEX IF NOT EXISTS idx_projects_contact_id ON projects(contact_id);
+CREATE INDEX IF NOT EXISTS idx_projects_owner_id ON projects(owner_id);
+CREATE INDEX IF NOT EXISTS idx_projects_stage ON projects(stage);
+CREATE INDEX IF NOT EXISTS idx_projects_expected_close_date ON projects(expected_close_date);
+CREATE INDEX IF NOT EXISTS idx_projects_project_type ON projects(project_type);
+CREATE INDEX IF NOT EXISTS idx_projects_launch_date ON projects(launch_date);
 
 -- Update triggers
 DROP TRIGGER IF EXISTS update_leads_updated_at ON projects;

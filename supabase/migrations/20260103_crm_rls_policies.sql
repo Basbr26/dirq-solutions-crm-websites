@@ -105,11 +105,16 @@ CREATE POLICY "Companies update policy"
   );
 
 -- DELETE:
--- - Only ADMIN can delete companies
+-- - ADMIN: Delete any company
+-- - MANAGER: Delete any company
+-- - SALES: Delete own companies (not allowed here, to match contacts logic exactly, only ADMIN, MANAGER, or owner)
 CREATE POLICY "Companies delete policy"
   ON companies FOR DELETE
   TO authenticated
-  USING (get_user_role() = 'ADMIN');
+  USING (
+    is_admin_or_manager()
+    OR owner_id = auth.uid()
+  );
 
 -- =============================================
 -- CONTACTS POLICIES
@@ -344,7 +349,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Apply audit triggers to CRM tables
+
+-- Drop existing trigger if it exists to avoid duplicate errors
+DROP TRIGGER IF EXISTS companies_audit_trigger ON companies;
 CREATE TRIGGER companies_audit_trigger
   AFTER INSERT OR UPDATE OR DELETE ON companies
   FOR EACH ROW EXECUTE FUNCTION crm_audit_trigger();

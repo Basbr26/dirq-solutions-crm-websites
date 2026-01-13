@@ -1,3 +1,8 @@
+# 2026-01-13
+- Fix: project_id kolom in interactions altijd correct toegevoegd via migratie (idempotent)
+- Fix: CREATE INDEX statements in 20260103_website_sales_crm.sql zijn nu IF NOT EXISTS (geen errors meer bij herhalen)
+- Fix: Bedrijf verwijderen werkt nu voor ADMIN, MANAGER en owner (RLS + frontend)
+- Nieuw favicon toegevoegd
 # 📝 Dirq Solutions CRM - Changelog
 
 Alle updates, features, bugfixes en migraties in chronologische volgorde.
