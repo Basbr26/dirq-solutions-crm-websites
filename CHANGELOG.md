@@ -10,6 +10,41 @@ Alle updates, features, bugfixes en migraties in chronologische volgorde.
 
 ---
 
+## [2.0.2] - 2026-01-13 - RLS Policy Simplification & FK Fixes
+
+### 🐛 Fixed
+- **RLS Policy Issues**
+  - Simplified all RLS policies from role-based checks to `auth.uid() IS NOT NULL`
+  - Fixed 403 Forbidden errors on contact/project creation
+  - Fixed 403 Forbidden on project detail page JOIN queries
+  - Moved role checking to application layer (ProtectedRoute components)
+  - Resolved circular dependency with `get_user_role()` function
+
+- **Foreign Key Ambiguity**
+  - Fixed ProjectDetailPage query PGRST201 error
+  - Explicitly specified FK relationship: `companies!projects_company_id_fkey`
+  - Resolved multiple FK relationship confusion
+
+- **Notification Column Names**
+  - Fixed project stage change notifications
+  - Updated `entity_type` → `related_entity_type`
+  - Updated `entity_id` → `related_entity_id`
+
+### 📦 Migrations
+- `20260113_fix_contacts_insert_policy.sql`
+- `20260113_fix_projects_insert_policy.sql`
+- `20260113_fix_projects_select_policy.sql`
+- `20260113_fix_projects_update_delete_policies.sql`
+- `20260113_fix_companies_select_policy.sql`
+- `20260113_fix_contacts_select_policy.sql`
+
+### 📝 Changed
+- Updated STATUS.md to v2.0.2
+- Updated README.md version badge
+- All RLS policies now use simplified authentication check
+
+---
+
 ## [2.0.0] - 2026-01-09 - Project Velocity Complete (Database + API Gateway)
 
 ### 🎯 Added - Fase 1 (Database Foundation)

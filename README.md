@@ -3,7 +3,7 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-2.0.1-blue)]()
+[![Version](https://img.shields.io/badge/version-2.0.2-blue)]()
 [![Completion](https://img.shields.io/badge/completion-99%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()

@@ -1,7 +1,7 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 9 Januari 2026  
-**Version:** 2.0.1 - Project Velocity Complete (Phase 1 + 2)  
+**Last Updated:** 13 Januari 2026  
+**Version:** 2.0.2 - RLS Policy Simplification + FK Disambiguation  
 **Production Status:** ✅ Production Ready + Enterprise Architecture + API Gateway
 
 ---
@@ -124,8 +124,56 @@
 - [x] `20260109_velocity_phase1_up.sql` (156 lines) - Database schema
 - [x] `20260109_velocity_phase1_down.sql` (paired rollback)
 - [x] `20260109_system_user.sql` (76 lines) - System user + role constraint
+- [x] `20260113_fix_contacts_insert_policy.sql` - Simplified RLS for contact creation
+- [x] `20260113_fix_projects_insert_policy.sql` - Simplified RLS for project creation
+- [x] `20260113_fix_projects_select_policy.sql` - Simplified RLS for project reads
+- [x] `20260113_fix_projects_update_delete_policies.sql` - Simplified RLS for project updates/deletes
+- [x] `20260113_fix_companies_select_policy.sql` - Simplified RLS for company reads
+- [x] `20260113_fix_contacts_select_policy.sql` - Simplified RLS for contact reads
 - [x] Comments for all new columns/triggers/functions
 - [x] Verification queries included
+
+---
+
+## 🔧 RECENT FIXES (v2.0.2 - 13 Jan 2026)
+
+### **RLS Policy Simplification** ✅
+**Problem:** `get_user_role()` and `is_admin_or_manager()` functions failing in RLS policy context, causing:
+- 403 Forbidden on contact/project creation
+- 403 Forbidden on project detail page (JOIN queries blocked)
+- Complex circular dependencies with profiles table
+
+**Solution:** Simplified all RLS policies to `auth.uid() IS NOT NULL`
+- Role checking moved to application layer (ProtectedRoute components)
+- 6 tables fixed: contacts, projects, companies (INSERT + SELECT policies)
+- All authenticated users can now read/write with app-level role validation
+
+**Files Changed:**
+- 6 SQL migrations created and executed in Supabase
+- All policies now use simple auth check instead of role function calls
+
+### **Foreign Key Ambiguity Fix** ✅
+**Problem:** ProjectDetailPage query failing with PGRST201 error
+- Multiple FK relationships between projects↔companies tables
+- Supabase couldn't determine which FK to use for JOIN
+
+**Solution:** Explicitly specify FK in Supabase query
+```typescript
+companies:companies!projects_company_id_fkey(id, name, email, phone, website)
+```
+
+**Files Changed:**
+- `src/features/projects/ProjectDetailPage.tsx`
+
+### **Notification Column Names Fix** ✅
+**Problem:** Project stage changes failing with "entity type does not exist"
+- Code using `entity_type` and `entity_id`
+- Database columns named `related_entity_type` and `related_entity_id`
+
+**Solution:** Updated notification insert to use correct column names
+
+**Files Changed:**
+- `src/lib/crmNotifications.ts`
 
 ---
 
