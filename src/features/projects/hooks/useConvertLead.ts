@@ -8,7 +8,7 @@
  * critical happy-path endpoint in the sales funnel.
  * 
  * BUSINESS LOGIC:
- * 1. Company status: 'prospect' → 'customer'
+ * 1. Company status: 'prospect' → 'active' (paying customer)
  * 2. Project stage: 'negotiation'/'quote_sent' → 'quote_signed'
  * 3. Project probability: → 90%
  * 4. Notification: deal_won to owner
@@ -79,11 +79,11 @@ export function useConvertLead() {
   return useMutation({
     mutationFn: async ({ projectId, companyId, projectTitle, companyName, ownerId, projectValue }: ConvertLeadParams) => {
       // ─────────────────────────────────────────────────────────────────────
-      // Step 1: Update Company status to 'customer'
+      // Step 1: Update Company status to 'active' (paying customer)
       // ─────────────────────────────────────────────────────────────────────
       const { error: companyError } = await supabase
         .from('companies')
-        .update({ status: 'customer' })
+        .update({ status: 'active' })
         .eq('id', companyId);
 
       if (companyError) throw companyError;

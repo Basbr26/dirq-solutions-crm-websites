@@ -278,7 +278,7 @@ export default function ProjectDetailPage() {
               <Button 
                 onClick={handleConvertToCustomer}
                 disabled={convertLead.isPending}
-                className="relative bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse"
+                className="relative bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {convertLead.isPending ? (
                   <>
@@ -287,7 +287,7 @@ export default function ProjectDetailPage() {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 mr-2 animate-pulse" />
+                    <Sparkles className="h-4 w-4 mr-2" />
                     🎉 Converteer naar Klant
                   </>
                 )}
