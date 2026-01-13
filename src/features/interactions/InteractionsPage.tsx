@@ -87,6 +87,7 @@ export default function InteractionsPage() {
     <AppLayout
       title="Activiteiten"
       subtitle="Overzicht van alle interacties en taken"
+      onPrimaryAction={() => setAddDialogOpen(true)}
       actions={
         <Button size="lg" onClick={() => setAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />

@@ -1,6 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Shield, Users, BarChart3 } from 'lucide-react';
 import { DirqLogo } from './DirqLogo';
 import { NotificationBell } from './NotificationBell';
@@ -71,11 +72,12 @@ export function DashboardHeader({ title, children }: DashboardHeaderProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2 px-2 sm:px-4">
-                  <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-xs sm:text-sm font-semibold text-primary">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
+                    <AvatarImage src={profile?.avatar_url || undefined} alt={`${profile?.voornaam} ${profile?.achternaam}`} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs sm:text-sm font-semibold">
                       {profile?.voornaam?.[0]}{profile?.achternaam?.[0]}
-                    </span>
-                  </div>
+                    </AvatarFallback>
+                  </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">

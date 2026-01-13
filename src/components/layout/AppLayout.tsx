@@ -4,6 +4,8 @@ import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { QuickActionSheet } from './QuickActionSheet';
 import { CommandBar } from '@/components/CommandBar';
+import { FloatingActionButton } from '@/components/ui/floating-action-button';
+import { Plus } from 'lucide-react';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -11,9 +13,17 @@ interface AppLayoutProps {
   subtitle?: string;
   actions?: ReactNode;
   hideQuickAction?: boolean; // Hide the quick action button on specific pages
+  onPrimaryAction?: () => void; // Primary action for mobile FAB
 }
 
-export function AppLayout({ children, title, subtitle, actions, hideQuickAction = false }: AppLayoutProps) {
+export function AppLayout({ 
+  children, 
+  title, 
+  subtitle, 
+  actions, 
+  hideQuickAction = false,
+  onPrimaryAction,
+}: AppLayoutProps) {
   const [showQuickActions, setShowQuickActions] = useState(false)
   
   return (
@@ -41,6 +51,14 @@ export function AppLayout({ children, title, subtitle, actions, hideQuickAction 
       
       {/* Mobile bottom nav */}
       <MobileBottomNav />
+      
+      {/* Mobile FAB - show when onPrimaryAction is provided */}
+      {onPrimaryAction && (
+        <FloatingActionButton
+          onClick={onPrimaryAction}
+          icon={<Plus className="h-6 w-6" />}
+        />
+      )}
       
       {/* Quick actions sheet */}
       {!hideQuickAction && (

@@ -250,6 +250,7 @@ export function ContactsPage() {
     <AppLayout
       title="Contacten"
       subtitle="Beheer uw contactpersonen en relaties"
+      onPrimaryAction={() => setShowCreateDialog(true)}
       actions={
         <Button onClick={() => setShowCreateDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />

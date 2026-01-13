@@ -58,6 +58,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Project, ProjectStage } from '@/types/projects';
 import { projectStageConfig } from '@/types/projects';
+import { QuoteForm } from '@/features/quotes/components/QuoteForm';
+import { useCreateQuote } from '@/features/quotes/hooks/useQuoteMutations';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const projectTypeLabels = {
   landing_page: 'Landing Page',
@@ -79,10 +82,12 @@ export default function ProjectDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
+  const [createQuoteDialogOpen, setCreateQuoteDialogOpen] = useState(false);
 
   const updateProject = useUpdateProject(id!);
   const deleteProject = useDeleteProject();
   const convertLead = useConvertLead();
+  const createQuote = useCreateQuote();
 
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   const canDelete = role === 'ADMIN';
@@ -639,11 +644,13 @@ export default function ProjectDetailPage() {
                     <div className="text-center py-8 text-muted-foreground">
                       <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
                       <p>Geen offertes gekoppeld</p>
-                      <Button variant="outline" className="mt-4" asChild>
-                        <Link to="/quotes">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Offerte Aanmaken
-                        </Link>
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={() => setCreateQuoteDialogOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Offerte Aanmaken
                       </Button>
                     </div>
                   )}
@@ -900,6 +907,31 @@ export default function ProjectDetailPage() {
           companyId={project.company_id}
           contactId={project.contact_id}
           projectId={id}
+        />
+      )}
+
+      {/* Create Quote Dialog */}
+      {project && (
+        <QuoteForm
+          open={createQuoteDialogOpen}
+          onOpenChange={setCreateQuoteDialogOpen}
+          defaultCompanyId={project.company_id}
+          defaultContactId={project.contact_id || undefined}
+          onSubmit={async (quoteData) => {
+            try {
+              await createQuote.mutateAsync({
+                ...quoteData,
+                company_id: project.company_id,
+                contact_id: project.contact_id || quoteData.contact_id,
+                project_id: id,
+              });
+              setCreateQuoteDialogOpen(false);
+              queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+            } catch (error: any) {
+              toast.error(`Fout bij aanmaken offerte: ${error.message}`);
+            }
+          }}
+          isLoading={createQuote.isPending}
         />
       )}
     </AppLayout>

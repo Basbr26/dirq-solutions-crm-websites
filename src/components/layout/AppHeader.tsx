@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Menu, X } from 'lucide-react';
 import {
   DropdownMenu,
@@ -133,7 +134,10 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
 
         {/* Actions & Profile */}
         <div className="flex items-center gap-2 md:gap-4">
-          {actions}
+          {/* Hide actions on mobile - they'll show in FAB instead */}
+          <div className="hidden md:flex items-center gap-2">
+            {actions}
+          </div>
           
           <ThemeToggle />
           <NotificationBell />
@@ -141,11 +145,12 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-2 px-2">
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-primary">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={`${profile?.voornaam} ${profile?.achternaam}`} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                     {profile?.voornaam?.[0]}{profile?.achternaam?.[0]}
-                  </span>
-                </div>
+                  </AvatarFallback>
+                </Avatar>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium">{profile?.voornaam} {profile?.achternaam}</p>
                   <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>

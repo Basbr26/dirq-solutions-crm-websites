@@ -156,15 +156,18 @@ export function AppSidebar() {
     >
       {/* Header */}
       <div className={cn(
-        'flex items-center h-16 border-b border-border px-4 bg-card',
+        'flex items-center h-16 border-b border-border px-4 bg-card cursor-pointer hover:bg-muted/50 transition-colors',
         collapsed ? 'justify-center' : 'justify-between'
-      )}>
+      )}
+      onClick={() => navigate(role === 'super_admin' ? '/dashboard/super-admin' 
+               : role === 'ADMIN' ? '/dashboard/executive'
+               : '/dashboard/crm')}
+      >
         {!collapsed && (
           <div className="flex items-center gap-3">
             <DirqLogo size="sm" />
             <div className="flex flex-col">
-              <span className="font-semibold text-sm">Dirq CRM</span>
-              <span className="text-xs text-muted-foreground">Website Sales</span>
+              <span className="font-semibold text-sm">CRM</span>
             </div>
           </div>
         )}

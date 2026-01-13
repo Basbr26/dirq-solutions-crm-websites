@@ -3,7 +3,7 @@
  * Reusable form for creating/editing quotes
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -37,8 +37,12 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
 import { useContacts } from '@/features/contacts/hooks/useContacts';
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { ContactForm } from '@/features/contacts/components/ContactForm';
+import { Loader2, Plus, Trash2, UserPlus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const quoteItemSchema = z.object({
   title: z.string().min(1, 'Titel is verplicht'),
@@ -69,16 +73,28 @@ interface QuoteFormProps {
   quote?: Quote;
   onSubmit: (data: CreateQuoteInput) => void;
   isLoading?: boolean;
+  defaultCompanyId?: string;
+  defaultContactId?: string;
 }
 
-export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: QuoteFormProps) {
+export function QuoteForm({ 
+  open, 
+  onOpenChange, 
+  quote, 
+  onSubmit, 
+  isLoading,
+  defaultCompanyId,
+  defaultContactId,
+}: QuoteFormProps) {
   const { companies: companiesData } = useCompanies();
+  const queryClient = useQueryClient();
+  const [createContactDialogOpen, setCreateContactDialogOpen] = useState(false);
   
   const form = useForm<QuoteFormData>({
     resolver: zodResolver(quoteFormSchema),
     defaultValues: {
-      company_id: '',
-      contact_id: '',
+      company_id: defaultCompanyId || '',
+      contact_id: defaultContactId || '',
       title: '',
       description: '',
       tax_rate: 21,
@@ -109,6 +125,37 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
     companyId: selectedCompanyId || undefined,
   });
 
+  // Create contact mutation
+  const createContact = useMutation({
+    mutationFn: async (contactData: any) => {
+      const { data, error } = await supabase
+        .from('contacts')
+        .insert([contactData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (newContact) => {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      toast.success('Contact succesvol aangemaakt');
+      setCreateContactDialogOpen(false);
+      // Set the newly created contact as selected
+      form.setValue('contact_id', newContact.id);
+    },
+    onError: (error: any) => {
+      toast.error(`Fout bij aanmaken contact: ${error.message}`);
+    },
+  });
+
+  const handleCreateContact = async (contactData: any) => {
+    await createContact.mutateAsync({
+      ...contactData,
+      company_id: selectedCompanyId,
+    });
+  };
+
   // Calculate totals
   const items = form.watch('items');
   const taxRate = form.watch('tax_rate') || 21;
@@ -119,8 +166,12 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
   useEffect(() => {
     if (!open) {
       form.reset();
+    } else if (defaultCompanyId || defaultContactId) {
+      // Pre-fill company and contact when opening with defaults
+      if (defaultCompanyId) form.setValue('company_id', defaultCompanyId);
+      if (defaultContactId) form.setValue('contact_id', defaultContactId);
     }
-  }, [open, form]);
+  }, [open, form, defaultCompanyId, defaultContactId]);
 
   const handleSubmit = (data: QuoteFormData) => {
     const submitData: CreateQuoteInput = {
@@ -144,6 +195,7 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-4xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -190,7 +242,20 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
                   name="contact_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contactpersoon</FormLabel>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Contactpersoon</FormLabel>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCreateContactDialogOpen(true)}
+                          disabled={!selectedCompanyId}
+                          className="h-auto p-1 text-xs"
+                        >
+                          <UserPlus className="h-3 w-3 mr-1" />
+                          Nieuw
+                        </Button>
+                      </div>
                       <Select 
                         onValueChange={field.onChange} 
                         value={field.value}
@@ -506,5 +571,24 @@ export function QuoteForm({ open, onOpenChange, quote, onSubmit, isLoading }: Qu
         </Form>
       </DialogContent>
     </Dialog>
+    
+    {/* Create Contact Dialog */}
+    <Dialog open={createContactDialogOpen} onOpenChange={setCreateContactDialogOpen}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Nieuw contactpersoon toevoegen</DialogTitle>
+          <DialogDescription>
+            Voeg een nieuwe contactpersoon toe voor de geselecteerde organisatie
+          </DialogDescription>
+        </DialogHeader>
+        <ContactForm
+          defaultCompanyId={selectedCompanyId}
+          onSubmit={handleCreateContact}
+          onCancel={() => setCreateContactDialogOpen(false)}
+          isSubmitting={createContact.isPending}
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

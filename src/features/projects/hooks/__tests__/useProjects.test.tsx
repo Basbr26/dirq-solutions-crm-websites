@@ -199,9 +199,10 @@ describe('useProjects', () => {
       ({ filters }: { filters?: AdvancedProjectFilters }) => useProjects(filters),
       {
         wrapper: createWrapper(),
-        initialProps: { filters: { stage: 'lead' as const } },
       }
     );
+
+    rerender({ filters: { stage: 'lead' } });
 
     await waitFor(() => {
       expect(mockEq).toHaveBeenCalledWith('stage', 'lead');
@@ -209,7 +210,7 @@ describe('useProjects', () => {
 
     vi.clearAllMocks();
     
-    rerender({ filters: { stages: ['negotiation'] } });
+    rerender({ filters: { stage: 'negotiation' } });
 
     await waitFor(() => {
       expect(mockEq).toHaveBeenCalledWith('stage', 'negotiation');

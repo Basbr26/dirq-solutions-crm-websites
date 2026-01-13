@@ -171,6 +171,7 @@ export default function CompaniesPage() {
     <AppLayout
       title="Bedrijven"
       subtitle="Beheer en volg al je zakelijke relaties"
+      onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
         <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />

@@ -144,6 +144,7 @@ export default function ProjectsPage() {
     <AppLayout
       title="Projecten"
       subtitle="Overzicht van alle website ontwikkel projecten"
+      onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>

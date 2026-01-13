@@ -104,7 +104,6 @@ export function AddInteractionDialog({
     const interactionData: CreateInteractionData = {
       company_id: finalCompanyId,
       contact_id: contactId,
-      project_id: projectId, // NEW: Include project_id if provided
       type: data.type,
       subject: data.subject,
       description: data.description || undefined,

@@ -59,7 +59,6 @@ export interface CreateInteractionData {
   company_id: string;
   contact_id?: string;
   lead_id?: string;
-  project_id?: string; // NEW: Support for project interactions
   type: InteractionType;
   direction?: InteractionDirection;
   subject: string;

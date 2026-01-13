@@ -290,6 +290,32 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lead Bron</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecteer bron" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Manual">Handmatig</SelectItem>
+                        <SelectItem value="Apollo">Apollo.io</SelectItem>
+                        <SelectItem value="KVK">KVK API</SelectItem>
+                        <SelectItem value="Website">Website Formulier</SelectItem>
+                        <SelectItem value="Manus">Manus AI</SelectItem>
+                        <SelectItem value="n8n_automation">n8n Automatisering</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Contact Information */}
@@ -382,49 +408,23 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
                 <FormField
                   control={form.control}
-                  name="source"
+                  name="linkedin_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bron</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Manual">Handmatig</SelectItem>
-                          <SelectItem value="Apollo">Apollo.io</SelectItem>
-                          <SelectItem value="KVK">KVK API</SelectItem>
-                          <SelectItem value="Website">Website Form</SelectItem>
-                          <SelectItem value="Manus">Manus AI</SelectItem>
-                          <SelectItem value="n8n_automation">n8n Automation</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>LinkedIn URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://www.linkedin.com/company/..." 
+                          inputMode="url"
+                          type="url"
+                          {...field} 
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="linkedin_url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>LinkedIn URL</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://www.linkedin.com/company/..." 
-                        inputMode="url"
-                        type="url"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {/* Address */}

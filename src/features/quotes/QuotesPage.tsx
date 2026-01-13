@@ -121,6 +121,7 @@ export default function QuotesPage() {
     <AppLayout
       title="Offertes"
       subtitle="Beheer en volg al je sales offertes"
+      onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
