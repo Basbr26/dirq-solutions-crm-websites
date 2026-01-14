@@ -35,7 +35,6 @@ import { Loader2, Sparkles, FileText, Search } from 'lucide-react';
 import { parseDrimbleText, parseCompanySize, cleanPhoneNumber, formatKVKNumber } from '@/lib/companyDataParser';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
-import { CompanySearchDialog } from './CompanySearchDialog';
 
 const companyFormSchema = z.object({
   name: z.string().min(2, 'Naam moet minimaal 2 karakters bevatten'),
@@ -71,8 +70,7 @@ interface CompanyFormProps {
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
-  const [showSearchDialog, setShowSearchDialog] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [kvkPopup, setKvkPopup] = useState<Window | null>(null);
   
   const { data: industries } = useQuery({
     queryKey: ['industries'],
@@ -198,16 +196,34 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   };
 
   const handleKVKLookup = async () => {
-    const kvkNumber = form.getValues('kvk_number');
-    if (!kvkNumber || kvkNumber.length !== 8) {
-      toast.error('Voer eerst een geldig 8-cijferig KVK nummer in');
-      return;
-    }
+    // Get company name from form if already filled
+    const companyName = form.getValues('name') || '';
+    const query = encodeURIComponent(companyName);
+    const url = `https://www.kvk.nl/zoeken/?q=${query}`;
     
-    // TODO: Implement KVK API lookup
-    toast.info('KVK API integratie komt binnenkort!', {
-      description: 'Voor nu kun je de paste functie gebruiken',
-    });
+    // Open popup positioned on the right side
+    const width = 800;
+    const height = 900;
+    const left = window.screen.width - width - 50;
+    const top = 50;
+    
+    const popup = window.open(
+      url,
+      'kvk-search',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+    
+    setKvkPopup(popup);
+    
+    // Check when popup closes
+    if (popup) {
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          setKvkPopup(null);
+        }
+      }, 500);
+    }
   };
 
   const handleSubmit = (data: CompanyFormData) => {
@@ -219,7 +235,10 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto transition-all duration-300 ${isPopupOpen ? 'translate-x-[-200px]' : 'translate-x-0'}`}>
+      <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto" style={{
+        transform: kvkPopup && !kvkPopup.closed ? 'translateX(-200px)' : 'translateX(0)',
+        transition: 'transform 300ms ease-in-out'
+      }}>
         <DialogHeader>
           <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
           <DialogDescription>
@@ -256,11 +275,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowSearchDialog(true)}
+                    onClick={handleKVKLookup}
                     className="shrink-0"
                   >
                     <Search className="h-4 w-4 mr-2" />
-                    Opzoeken
+                    KVK Zoeken
                   </Button>
                   <Textarea
                     placeholder="Of plak hier direct de gegevens..."
@@ -692,13 +711,6 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
           </form>
         </Form>
       </DialogContent>
-      
-      {/* Company Search Dialog */}
-      <CompanySearchDialog
-        open={showSearchDialog}
-        onOpenChange={setShowSearchDialog}
-        onPopupOpenChange={setIsPopupOpen}
-      />
     </Dialog>
   );
 }
