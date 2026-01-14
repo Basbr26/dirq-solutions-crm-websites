@@ -180,6 +180,22 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
     onSubmit(submitData);
   };
 
+  const applyTemplate = (templateType: 'starter' | 'growth') => {
+    if (templateType === 'starter') {
+      form.setValue('value', 799.99);
+      form.setValue('package_id', 'finance_starter');
+      form.setValue('monthly_recurring_revenue', 99);
+      form.setValue('project_type', 'corporate_website');
+      form.setValue('title', 'Finance Starter Website');
+    } else if (templateType === 'growth') {
+      form.setValue('value', 1299.99);
+      form.setValue('package_id', 'finance_growth');
+      form.setValue('monthly_recurring_revenue', 149);
+      form.setValue('project_type', 'corporate_website');
+      form.setValue('title', 'Finance Growth Website');
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
@@ -189,6 +205,33 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
             Vul de gegevens in voor het project
           </DialogDescription>
         </DialogHeader>
+
+        {/* Project Templates */}
+        {!project && (
+          <div className="space-y-3 pb-4 border-b">
+            <h4 className="text-sm font-medium text-muted-foreground">Snel starten met een template:</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto flex flex-col items-start p-4 hover:bg-accent"
+                onClick={() => applyTemplate('starter')}
+              >
+                <div className="font-semibold text-base mb-1">Finance Starter</div>
+                <div className="text-sm text-muted-foreground">€799,99 + €99/maand</div>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto flex flex-col items-start p-4 hover:bg-accent"
+                onClick={() => applyTemplate('growth')}
+              >
+                <div className="font-semibold text-base mb-1">Finance Growth</div>
+                <div className="text-sm text-muted-foreground">€1.299,99 + €149/maand</div>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
