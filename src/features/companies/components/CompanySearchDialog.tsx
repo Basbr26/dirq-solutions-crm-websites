@@ -28,7 +28,7 @@ export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogP
     if (!searchQuery.trim()) return;
 
     const query = encodeURIComponent(searchQuery.trim());
-    const url = `https://companyinfo.nl/zoeken?query=${query}`;
+    const url = `https://www.kvk.nl/zoeken/?q=${query}`;
     
     window.open(url, '_blank', 'noopener,noreferrer');
   };
@@ -39,7 +39,7 @@ export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogP
         <DialogHeader>
           <DialogTitle>Bedrijf Opzoeken</DialogTitle>
           <DialogDescription>
-            Zoek bedrijfsinformatie op CompanyInfo.nl
+            Zoek bedrijfsinformatie op KVK.nl
           </DialogDescription>
         </DialogHeader>
 
@@ -66,7 +66,7 @@ export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogP
             </Button>
           </div>
 
-          {/* CompanyInfo.nl Info */}
+          {/* KVK.nl Info */}
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
@@ -74,9 +74,9 @@ export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogP
                   <Building2 className="h-5 w-5 text-orange-500" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium">CompanyInfo.nl</h4>
+                  <h4 className="font-medium">KVK.nl</h4>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Complete Nederlandse bedrijfsprofielen met KVK, adres, telefoon en contactgegevens
+                    Officiële Nederlandse bedrijfsgegevens van de Kamer van Koophandel
                   </p>
                 </div>
               </div>
@@ -87,8 +87,8 @@ export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogP
           <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-2">
             <p className="font-medium">💡 Tip:</p>
             <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-              <li>Klik "Zoeken" om CompanyInfo.nl te openen</li>
-              <li>Kopieer de bedrijfsgegevens van de pagina</li>
+              <li>Klik "Zoeken" om KVK.nl te openen</li>
+              <li>Kopieer de bedrijfsgegevens van het profiel</li>
               <li>Plak in het "Quick Fill" veld hieronder</li>
               <li>Klik "Gegevens Invullen" voor auto-fill</li>
             </ol>
