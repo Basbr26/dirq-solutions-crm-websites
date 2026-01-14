@@ -609,7 +609,7 @@ export default function CompanyDetailPage() {
               ) : projectsData && projectsData.length > 0 ? (
                 <div className="space-y-3">
                   {projectsData.map((project: any) => (
-                    <Link key={project.id} to={`/pipeline/${project.id}`}>
+                    <Link key={project.id} to={`/projects/${project.id}`}>
                       <ProjectCard project={project} />
                     </Link>
                   ))}
