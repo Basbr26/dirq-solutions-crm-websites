@@ -84,11 +84,12 @@ interface ProjectFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   project?: Project;
+  defaultCompanyId?: string;
   onSubmit: (data: CreateProjectInput) => void;
   isLoading?: boolean;
 }
 
-export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }: ProjectFormProps) {
+export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onSubmit, isLoading }: ProjectFormProps) {
   const { companies: companiesData } = useCompanies();
   const { toast } = useToast();
   
@@ -134,8 +135,23 @@ export function ProjectForm({ open, onOpenChange, project, onSubmit, isLoading }
         selected_addons: project.selected_addons || [],
         monthly_recurring_revenue: project.monthly_recurring_revenue,
       });
+    } else if (defaultCompanyId) {
+      // Pre-fill company_id when creating a new project
+      form.reset({
+        company_id: defaultCompanyId,
+        contact_id: '',
+        title: '',
+        description: '',
+        project_type: undefined,
+        value: 0,
+        expected_close_date: '',
+        notes: '',
+        package_id: undefined,
+        selected_addons: [],
+        monthly_recurring_revenue: undefined,
+      });
     }
-  }, [open, project, form]);
+  }, [open, project, defaultCompanyId, form]);
 
   const handleSubmit = (data: ProjectFormData) => {
     if (!data.company_id) {

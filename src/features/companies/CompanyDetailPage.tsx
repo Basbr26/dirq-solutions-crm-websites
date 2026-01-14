@@ -11,6 +11,8 @@ import { ContactCard } from '@/features/contacts/components/ContactCard';
 import { ContactForm } from '@/features/contacts/components/ContactForm';
 import { useProjects } from '@/features/projects/hooks/useProjects';
 import { ProjectCard } from '@/features/projects/components/ProjectCard';
+import { ProjectForm } from '@/features/projects/components/ProjectForm';
+import { useCreateProject } from '@/features/projects/hooks/useProjectMutations';
 import { useInteractions } from '@/features/interactions/hooks/useInteractions';
 import { InteractionItem } from '@/features/interactions/components/InteractionItem';
 import { InteractionTimeline } from '@/features/interactions/components/InteractionTimeline';
@@ -88,12 +90,14 @@ export default function CompanyDetailPage() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
   const [createContactDialogOpen, setCreateContactDialogOpen] = useState(false);
+  const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false);
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
   const { data: company, isLoading } = useCompany(id!);
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
   const { createContact } = useContactMutations();
+  const createProject = useCreateProject();
   
   // Fetch contacts for this company
   const { contacts: contactsData, isLoading: isLoadingContacts } = useContacts({
@@ -160,7 +164,23 @@ export default function CompanyDetailPage() {
       },
     });
   };
-
+  const handleCreateProject = (projectData: any) => {
+    createProject.mutate(
+      {
+        ...projectData,
+        company_id: id,
+      },
+      {
+        onSuccess: () => {
+          setCreateProjectDialogOpen(false);
+          toast.success('Project succesvol aangemaakt');
+        },
+        onError: (error: any) => {
+          toast.error(`Fout bij aanmaken project: ${error.message}`);
+        },
+      }
+    );
+  };
   if (isLoading) {
     return (
       <AppLayout title="Bedrijf" subtitle="Details laden...">
@@ -573,12 +593,10 @@ export default function CompanyDetailPage() {
                 Website Projecten ({projectsData?.length || 0})
               </CardTitle>
               {canEdit && (
-                <Link to={`/projects/new?company_id=${id}`}>
-                  <Button size="sm">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Nieuw project
-                  </Button>
-                </Link>
+                <Button size="sm" onClick={() => setCreateProjectDialogOpen(true)}>
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Nieuw project
+                </Button>
               )}
             </CardHeader>
             <CardContent>
@@ -604,12 +622,10 @@ export default function CompanyDetailPage() {
                     Dit bedrijf heeft nog geen website projecten of leads.
                   </p>
                   {canEdit && (
-                    <Link to={`/projects/new?company_id=${id}`}>
-                      <Button>
-                        <TrendingUp className="h-4 w-4 mr-2" />
-                        Eerste project aanmaken
-                      </Button>
-                    </Link>
+                    <Button onClick={() => setCreateProjectDialogOpen(true)}>
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Eerste project aanmaken
+                    </Button>
                   )}
                 </div>
               )}
@@ -780,6 +796,15 @@ export default function CompanyDetailPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Create Project Dialog */}
+      <ProjectForm
+        open={createProjectDialogOpen}
+        onOpenChange={setCreateProjectDialogOpen}
+        defaultCompanyId={id}
+        onSubmit={handleCreateProject}
+        isLoading={createProject.isPending}
+      />
 
       {/* Mobile Sticky Action Bar */}
       {isMobile && (canEdit || canDelete) && (
