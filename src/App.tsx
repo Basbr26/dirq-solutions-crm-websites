@@ -158,6 +158,20 @@ function AnimatedRoutes() {
           } 
         />
         
+        {/* Alias for /dashboard -> /dashboard/crm */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'SALES', 'MANAGER']}>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <DashboardCRM />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        
         <Route 
           path="/documents/processing" 
           element={

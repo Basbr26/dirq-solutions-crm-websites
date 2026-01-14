@@ -85,10 +85,10 @@ export default function QuoteDetailPage() {
         .from('quotes')
         .select(`
           *,
-          companies:companies!quotes_company_id_fkey(id, name, email, phone),
-          contacts:contacts!quotes_contact_id_fkey(id, first_name, last_name, email, phone),
-          projects:projects!quotes_project_id_fkey(id, title, stage),
-          profiles:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
+          companies:company_id(id, name, email, phone),
+          contacts:contact_id(id, first_name, last_name, email, phone),
+          projects:project_id(id, title, stage),
+          profiles:owner_id(id, voornaam, achternaam, email)
         `)
         .eq('id', id!)
         .single();
