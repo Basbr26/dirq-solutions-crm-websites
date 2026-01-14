@@ -8,6 +8,12 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Quote, CreateQuoteInput } from '@/types/quotes';
+import { 
+  generateFinanceStarterQuote, 
+  generateFinanceGrowthQuote,
+  type QuoteTemplateData 
+} from '@/features/quotes/templates/financeQuoteTemplates';
+import { format, addDays } from 'date-fns';
 import {
   Dialog,
   DialogContent,
@@ -156,6 +162,66 @@ export function QuoteForm({
     });
   };
 
+  // Apply Finance template
+  const applyFinanceTemplate = async (templateType: 'starter' | 'growth') => {
+    if (!selectedCompanyId) {
+      toast.error('Selecteer eerst een bedrijf');
+      return;
+    }
+
+    // Get company data
+    const company = companiesData.find((c: any) => c.id === selectedCompanyId);
+    if (!company) return;
+
+    // Get contact data if selected
+    const selectedContactId = form.watch('contact_id');
+    const contact = selectedContactId 
+      ? contactsData.find((c: any) => c.id === selectedContactId)
+      : undefined;
+
+    // Prepare template data
+    const templateData: QuoteTemplateData = {
+      companyName: company.name,
+      companyAddress: company.address?.street,
+      companyCity: company.address?.city,
+      companyPostalCode: company.address?.postal_code,
+      companyKvk: company.kvk_number,
+      companyVat: undefined, // Not in Company type yet
+      contactFirstName: contact?.first_name || '',
+      contactLastName: contact?.last_name || '',
+      contactEmail: contact?.email,
+      contactPhone: contact?.phone,
+      quoteNumber: `OFF-${Date.now()}`,
+      quoteDate: format(new Date(), 'yyyy-MM-dd'),
+      validUntil: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
+    };
+
+    // Generate template
+    const template = templateType === 'starter' 
+      ? generateFinanceStarterQuote(templateData)
+      : generateFinanceGrowthQuote(templateData);
+
+    // Apply to form
+    form.setValue('title', template.title);
+    form.setValue('description', template.description);
+    form.setValue('tax_rate', template.tax_rate);
+    form.setValue('valid_until', templateData.validUntil);
+    form.setValue('payment_terms', template.payment_terms);
+    form.setValue('delivery_time', template.delivery_time);
+    form.setValue('notes', template.notes);
+    
+    // Set items
+    form.setValue('items', template.items.map(item => ({
+      title: item.title,
+      description: item.description,
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      category: item.category,
+    })));
+
+    toast.success(`${templateType === 'starter' ? 'Finance Starter' : 'Finance Growth'} template toegepast! 🎉`);
+  };
+
   // Calculate totals
   const items = form.watch('items');
   const taxRate = form.watch('tax_rate') || 21;
@@ -204,6 +270,41 @@ export function QuoteForm({
             Vul de gegevens in voor de offerte
           </DialogDescription>
         </DialogHeader>
+
+        {/* Finance Templates */}
+        {!quote && selectedCompanyId && (
+          <div className="space-y-3 pb-4 border-b">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Snel starten met een Finance template:
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto flex flex-col items-start p-4 hover:bg-accent"
+                onClick={() => applyFinanceTemplate('starter')}
+              >
+                <div className="font-semibold text-base mb-1">Finance Starter Offerte</div>
+                <div className="text-sm text-muted-foreground">€799,99 + €99/maand</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Complete offerte met juridische voorwaarden
+                </div>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-auto flex flex-col items-start p-4 hover:bg-accent"
+                onClick={() => applyFinanceTemplate('growth')}
+              >
+                <div className="font-semibold text-base mb-1">Finance Growth Offerte</div>
+                <div className="text-sm text-muted-foreground">€1.299,99 + €149/maand</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Premium offerte met SLA en uitgebreide voorwaarden
+                </div>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">

@@ -89,7 +89,6 @@ export const generateQuoteFromProject = async (
   const quoteInput: CreateQuoteInput = {
     company_id: company.id,
     contact_id: contact?.id,
-    quote_number: finalQuoteNumber,
     title: template.title,
     description: template.description,
     subtotal: template.subtotal,
