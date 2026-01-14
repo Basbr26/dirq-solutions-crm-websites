@@ -56,7 +56,7 @@ const companyFormSchema = z.object({
   // v2.0 External Data Integration
   kvk_number: z.string().regex(/^\d{8}$/, 'KVK nummer moet 8 cijfers zijn').optional().or(z.literal('')),
   linkedin_url: z.string().url('Voer een geldige LinkedIn URL in').optional().or(z.literal('')),
-  source: z.enum(['Manual', 'Apollo', 'KVK', 'Website', 'Manus', 'n8n_automation']).optional(),
+  source: z.enum(['Manual', 'Apollo', 'KVK', 'Website', 'Manus', 'Referral', 'n8n_automation']).optional(),
 });
 
 interface CompanyFormProps {
@@ -470,6 +470,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                         <SelectItem value="KVK">KVK API</SelectItem>
                         <SelectItem value="Website">Website Formulier</SelectItem>
                         <SelectItem value="Manus">Manus AI</SelectItem>
+                        <SelectItem value="Referral">Referral</SelectItem>
                         <SelectItem value="n8n_automation">n8n Automatisering</SelectItem>
                       </SelectContent>
                     </Select>
