@@ -196,10 +196,8 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   };
 
   const handleKVKLookup = async () => {
-    // Get company name from form if already filled
-    const companyName = form.getValues('name') || '';
-    const query = encodeURIComponent(companyName);
-    const url = `https://www.kvk.nl/zoeken/?q=${query}`;
+    // Empty search - user types in KVK window
+    const url = `https://www.kvk.nl/zoeken/`;
     
     // Open popup positioned on the right side
     const width = 800;
@@ -236,8 +234,18 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <div className={isKvkPopupOpen ? 'dialog-kvk-shifted' : ''}>
-        <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent 
+        className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto"
+        style={isKvkPopupOpen ? {
+          position: 'fixed',
+          left: '50px',
+          right: 'auto',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          margin: 0,
+          transition: 'all 300ms ease-in-out'
+        } : undefined}
+      >
         <DialogHeader>
           <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
           <DialogDescription>
@@ -710,7 +718,6 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
           </form>
         </Form>
       </DialogContent>
-      </div>
     </Dialog>
   );
 }
