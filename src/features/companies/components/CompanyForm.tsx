@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,7 +31,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles, FileText, Search } from 'lucide-react';
+import { parseDrimbleText, parseCompanySize, cleanPhoneNumber, formatKVKNumber } from '@/lib/companyDataParser';
+import { toast } from 'sonner';
+import { Card } from '@/components/ui/card';
+import { CompanySearchDialog } from './CompanySearchDialog';
 
 const companyFormSchema = z.object({
   name: z.string().min(2, 'Naam moet minimaal 2 karakters bevatten'),
@@ -65,6 +69,10 @@ interface CompanyFormProps {
 }
 
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
+  const [pasteText, setPasteText] = useState('');
+  const [showQuickFill, setShowQuickFill] = useState(!company);
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
+  
   const { data: industries } = useQuery({
     queryKey: ['industries'],
     queryFn: async () => {
@@ -151,6 +159,56 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     }
   }, [company, open, form]);
 
+  const handleParsePaste = () => {
+    if (!pasteText.trim()) {
+      toast.error('Plak eerst bedrijfsgegevens in het tekstveld');
+      return;
+    }
+
+    const parsed = parseDrimbleText(pasteText);
+    
+    // Fill form with parsed data
+    if (parsed.name) form.setValue('name', parsed.name);
+    if (parsed.website) form.setValue('website', parsed.website);
+    if (parsed.email) form.setValue('email', parsed.email);
+    if (parsed.phone) form.setValue('phone', cleanPhoneNumber(parsed.phone));
+    if (parsed.kvk_number) form.setValue('kvk_number', formatKVKNumber(parsed.kvk_number));
+    if (parsed.linkedin_url) form.setValue('linkedin_url', parsed.linkedin_url);
+    if (parsed.address) {
+      form.setValue('address', {
+        street: parsed.address.street || '',
+        city: parsed.address.city || '',
+        postal_code: parsed.address.postal_code || '',
+        country: parsed.address.country || 'Nederland',
+      });
+    }
+    
+    const companySize = parseCompanySize(pasteText);
+    if (companySize) {
+      form.setValue('company_size', companySize as any);
+    }
+    
+    // Set source to Manual for paste
+    form.setValue('source', 'Manual');
+    
+    toast.success('Bedrijfsgegevens ingevuld!');
+    setPasteText('');
+    setShowQuickFill(false);
+  };
+
+  const handleKVKLookup = async () => {
+    const kvkNumber = form.getValues('kvk_number');
+    if (!kvkNumber || kvkNumber.length !== 8) {
+      toast.error('Voer eerst een geldig 8-cijferig KVK nummer in');
+      return;
+    }
+    
+    // TODO: Implement KVK API lookup
+    toast.info('KVK API integratie komt binnenkort!', {
+      description: 'Voor nu kun je de paste functie gebruiken',
+    });
+  };
+
   const handleSubmit = (data: CompanyFormData) => {
     onSubmit(data);
     if (!company) {
@@ -169,6 +227,108 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
               : 'Voeg een nieuw bedrijf toe aan je CRM'}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Quick Fill Section - Only show when creating new company */}
+        {!company && showQuickFill && (
+          <Card className="p-4 bg-primary/5 border-primary/20">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span>Quick Fill</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-6 text-xs"
+                  onClick={() => setShowQuickFill(false)}
+                >
+                  Sluiten
+                </Button>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">
+                  Plak bedrijfsgegevens van Drimble of andere bron
+                </label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSearchDialog(true)}
+                    className="shrink-0"
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Opzoeken
+                  </Button>
+                  <Textarea
+                    placeholder="Of plak hier direct de gegevens..."
+                    value={pasteText}
+                    onChange={(e) => setPasteText(e.target.value)}
+                    className="min-h-[80px] text-sm flex-1"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleParsePaste}
+                  disabled={!pasteText.trim()}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Gegevens Invullen
+                </Button>
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">Of</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-xs text-muted-foreground">
+                  KVK nummer opzoeken (binnenkort beschikbaar)
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="12345678"
+                    maxLength={8}
+                    value={form.watch('kvk_number') || ''}
+                    onChange={(e) => form.setValue('kvk_number', e.target.value.replace(/\D/g, ''))}
+                    className="text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleKVKLookup}
+                    disabled={!form.watch('kvk_number') || form.watch('kvk_number')?.length !== 8}
+                  >
+                    Opzoeken
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {!company && !showQuickFill && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setShowQuickFill(true)}
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Quick Fill tonen
+          </Button>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
@@ -531,6 +691,12 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
           </form>
         </Form>
       </DialogContent>
+      
+      {/* Company Search Dialog */}
+      <CompanySearchDialog
+        open={showSearchDialog}
+        onOpenChange={setShowSearchDialog}
+      />
     </Dialog>
   );
 }

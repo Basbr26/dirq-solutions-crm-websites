@@ -107,6 +107,26 @@ BEGIN
   END IF;
 END $$;
 
+-- 5a. Add missing FK constraint for contact_id
+DO $$ 
+BEGIN
+  -- Check if the FK constraint exists
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'quotes_contact_id_fkey'
+  ) THEN
+    -- Add the FK constraint
+    ALTER TABLE quotes 
+    ADD CONSTRAINT quotes_contact_id_fkey 
+    FOREIGN KEY (contact_id) 
+    REFERENCES contacts(id) 
+    ON DELETE SET NULL;
+    RAISE NOTICE '✅ Added quotes_contact_id_fkey constraint';
+  ELSE
+    RAISE NOTICE 'ℹ️  quotes_contact_id_fkey constraint already exists';
+  END IF;
+END $$;
+
 -- 6. Add currency column if missing
 DO $$ 
 BEGIN
