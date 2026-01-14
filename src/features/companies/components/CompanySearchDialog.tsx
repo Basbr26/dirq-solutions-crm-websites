@@ -19,9 +19,10 @@ import { Card, CardContent } from '@/components/ui/card';
 interface CompanySearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPopupOpenChange?: (isOpen: boolean) => void;
 }
 
-export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogProps) {
+export function CompanySearchDialog({ open, onOpenChange, onPopupOpenChange }: CompanySearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearch = () => {
@@ -30,7 +31,33 @@ export function CompanySearchDialog({ open, onOpenChange }: CompanySearchDialogP
     const query = encodeURIComponent(searchQuery.trim());
     const url = `https://www.kvk.nl/zoeken/?q=${query}`;
     
-    window.open(url, '_blank', 'noopener,noreferrer');
+    // Open in smaller popup window positioned on the right
+    const width = 800;
+    const height = 900;
+    const left = window.screen.width - width - 50; // 50px from right edge
+    const top = 50;
+    
+    const popup = window.open(
+      url,
+      'kvk-search',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+    );
+
+    // Notify parent that popup is open
+    if (popup && onPopupOpenChange) {
+      onPopupOpenChange(true);
+      
+      // Poll to detect when popup closes
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          onPopupOpenChange(false);
+        }
+      }, 500);
+    }
+
+    // Close the dialog
+    onOpenChange(false);
   };
 
   return (

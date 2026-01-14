@@ -72,6 +72,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
   const [showSearchDialog, setShowSearchDialog] = useState(false);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   
   const { data: industries } = useQuery({
     queryKey: ['industries'],
@@ -218,7 +219,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto transition-all duration-300 ${isPopupOpen ? 'translate-x-[-200px]' : 'translate-x-0'}`}>
         <DialogHeader>
           <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
           <DialogDescription>
@@ -696,6 +697,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
       <CompanySearchDialog
         open={showSearchDialog}
         onOpenChange={setShowSearchDialog}
+        onPopupOpenChange={setIsPopupOpen}
       />
     </Dialog>
   );
