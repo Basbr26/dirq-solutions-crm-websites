@@ -85,9 +85,9 @@ export default function QuoteDetailPage() {
         .from('quotes')
         .select(`
           *,
-          companies:companies(id, name, email, phone),
-          contacts:contacts(id, first_name, last_name, email, phone),
-          projects:projects(id, title, stage),
+          companies:companies!quotes_company_id_fkey(id, name, email, phone),
+          contacts:contacts!quotes_contact_id_fkey(id, first_name, last_name, email, phone),
+          projects:projects!quotes_project_id_fkey(id, title, stage),
           profiles:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id!)

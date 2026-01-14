@@ -172,4 +172,171 @@ COMMENT ON COLUMN quotes.delivery_time IS 'Estimated delivery time (e.g., "6-8 w
 COMMENT ON COLUMN quotes.client_notes IS 'Internal notes about client feedback';
 COMMENT ON COLUMN quotes.owner_id IS 'User who created/owns the quote';
 
+-- =============================================
+-- 9. FIX QUOTE ITEMS TABLE NAME
+-- =============================================
+-- The code expects 'quote_items' but INIT database has 'quote_line_items'
+
+DO $$ 
+BEGIN
+  -- Check if quote_line_items exists but quote_items doesn't
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_name = 'quote_line_items'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_name = 'quote_items'
+  ) THEN
+    -- Rename the table
+    ALTER TABLE quote_line_items RENAME TO quote_items;
+    RAISE NOTICE '✅ Renamed quote_line_items to quote_items';
+    
+    -- Rename the index
+    IF EXISTS (
+      SELECT 1 FROM pg_indexes 
+      WHERE indexname = 'idx_quote_line_items_quote_id'
+    ) THEN
+      ALTER INDEX idx_quote_line_items_quote_id RENAME TO idx_quote_items_quote_id;
+      RAISE NOTICE '✅ Renamed index idx_quote_line_items_quote_id to idx_quote_items_quote_id';
+    END IF;
+  ELSIF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_name = 'quote_items'
+  ) THEN
+    RAISE NOTICE '✅ quote_items table already exists';
+  ELSE
+    RAISE WARNING '❌ Neither quote_items nor quote_line_items table exists!';
+  END IF;
+END $$;
+
+-- =============================================
+-- 10. ADD MISSING COLUMNS TO QUOTE_ITEMS
+-- =============================================
+
+-- Add title column if it doesn't exist (INIT schema only has description)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'quote_items' 
+    AND column_name = 'title'
+  ) THEN
+    ALTER TABLE quote_items ADD COLUMN title TEXT;
+    RAISE NOTICE '✅ Added title column to quote_items table';
+    
+    -- Migrate description to title if title is empty
+    UPDATE quote_items SET title = description WHERE title IS NULL OR title = '';
+    
+    -- Make title NOT NULL after migration
+    ALTER TABLE quote_items ALTER COLUMN title SET NOT NULL;
+    RAISE NOTICE '✅ Migrated description to title and made title NOT NULL';
+  ELSE
+    RAISE NOTICE 'ℹ️  title column already exists in quote_items';
+  END IF;
+END $$;
+
+-- Ensure description can be NULL (it's optional in the code)
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'quote_items' 
+    AND column_name = 'description'
+    AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE quote_items ALTER COLUMN description DROP NOT NULL;
+    RAISE NOTICE '✅ Made description column nullable in quote_items';
+  ELSE
+    RAISE NOTICE 'ℹ️  description column already nullable or doesn''t exist';
+  END IF;
+END $$;
+
+-- Add item_order column if it doesn't exist (INIT schema has sort_order)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'quote_items' 
+    AND column_name = 'item_order'
+  ) THEN
+    -- Check if we have sort_order to migrate from
+    IF EXISTS (
+      SELECT 1 
+      FROM information_schema.columns 
+      WHERE table_name = 'quote_items' 
+      AND column_name = 'sort_order'
+    ) THEN
+      ALTER TABLE quote_items RENAME COLUMN sort_order TO item_order;
+      RAISE NOTICE '✅ Renamed sort_order to item_order in quote_items';
+    ELSE
+      ALTER TABLE quote_items ADD COLUMN item_order INTEGER NOT NULL DEFAULT 0;
+      RAISE NOTICE '✅ Added item_order column to quote_items table';
+    END IF;
+  ELSE
+    RAISE NOTICE 'ℹ️  item_order column already exists in quote_items';
+  END IF;
+END $$;
+
+-- Add category column if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'quote_items' 
+    AND column_name = 'category'
+  ) THEN
+    ALTER TABLE quote_items ADD COLUMN category TEXT;
+    RAISE NOTICE '✅ Added category column to quote_items table';
+  ELSE
+    RAISE NOTICE 'ℹ️  category column already exists in quote_items';
+  END IF;
+END $$;
+
+-- Add index on item_order if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes 
+    WHERE indexname = 'idx_quote_items_order'
+  ) THEN
+    CREATE INDEX idx_quote_items_order ON quote_items(quote_id, item_order);
+    RAISE NOTICE '✅ Created index idx_quote_items_order';
+  ELSE
+    RAISE NOTICE 'ℹ️  Index idx_quote_items_order already exists';
+  END IF;
+END $$;
+
+-- =============================================
+-- 11. VERIFICATION - QUOTE_ITEMS
+-- =============================================
+DO $$
+DECLARE
+  missing_columns TEXT[] := ARRAY[]::TEXT[];
+  expected_columns TEXT[] := ARRAY[
+    'id', 'quote_id', 'item_order', 'title', 'description',
+    'quantity', 'unit_price', 'total_price', 'category', 'created_at'
+  ];
+  col TEXT;
+BEGIN
+  FOREACH col IN ARRAY expected_columns
+  LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns 
+      WHERE table_name = 'quote_items' AND column_name = col
+    ) THEN
+      missing_columns := array_append(missing_columns, col);
+    END IF;
+  END LOOP;
+  
+  IF array_length(missing_columns, 1) > 0 THEN
+    RAISE WARNING '❌ Missing columns in quote_items table: %', array_to_string(missing_columns, ', ');
+  ELSE
+    RAISE NOTICE '✅ All expected quote_items columns present';
+  END IF;
+END $$;
+
 COMMIT;
