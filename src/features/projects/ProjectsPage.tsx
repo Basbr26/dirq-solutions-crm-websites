@@ -73,7 +73,7 @@ export default function ProjectsPage() {
       
       let query = supabase
         .from('projects')
-        .select('title, companies(name), contacts(first_name, last_name), stage, project_type, value, probability, expected_close_date, actual_close_date, hosting_included, maintenance_contract, created_at');
+        .select('title, companies(name), contacts(first_name, last_name), stage, project_type, value, probability, expected_close_date, hosting_included, maintenance_contract, created_at');
 
       // Apply same filters as current view
       if (stageFilter) {
@@ -95,7 +95,7 @@ export default function ProjectsPage() {
       }
 
       // Convert to CSV
-      const headers = ['Titel', 'Bedrijf', 'Contact', 'Fase', 'Type', 'Waarde', 'Kans %', 'Verwachte afsluiting', 'Daadwerkelijke afsluiting', 'Hosting', 'Onderhoud', 'Aangemaakt'];
+      const headers = ['Titel', 'Bedrijf', 'Contact', 'Fase', 'Type', 'Waarde', 'Kans %', 'Verwachte afsluiting', 'Hosting', 'Onderhoud', 'Aangemaakt'];
       const rows = projectsData.map((p: any) => [
         p.title || '',
         p.companies?.name || '',
@@ -105,7 +105,6 @@ export default function ProjectsPage() {
         p.value?.toString() || '',
         p.probability?.toString() || '',
         p.expected_close_date ? format(new Date(p.expected_close_date), 'yyyy-MM-dd') : '',
-        p.actual_close_date ? format(new Date(p.actual_close_date), 'yyyy-MM-dd') : '',
         p.hosting_included ? 'Ja' : 'Nee',
         p.maintenance_contract ? 'Ja' : 'Nee',
         p.created_at ? format(new Date(p.created_at), 'yyyy-MM-dd') : ''

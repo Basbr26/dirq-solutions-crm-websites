@@ -43,8 +43,8 @@ export function useMonthlyRevenue() {
           .from('projects')
           .select('value')
           .eq('stage', 'live')
-          .gte('actual_close_date', startDate)
-          .lt('actual_close_date', endDate);
+          .gte('updated_at', startDate)
+          .lt('updated_at', endDate);
 
         if (error) throw error;
 
@@ -241,8 +241,8 @@ export function useDealsThisWeek() {
         .from('projects')
         .select('id, title, value')
         .eq('stage', 'live')
-        .gte('actual_close_date', weekStart)
-        .lte('actual_close_date', weekEnd);
+        .gte('updated_at', weekStart)
+        .lte('updated_at', weekEnd);
 
       if (error) throw error;
 
