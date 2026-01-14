@@ -12,6 +12,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
   Form,
   FormControl,
   FormField,
@@ -70,7 +77,7 @@ interface CompanyFormProps {
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
-  const [isKvkPopupOpen, setIsKvkPopupOpen] = useState(false);
+  const [isKvkSheetOpen, setIsKvkSheetOpen] = useState(false);
   
   const { data: industries } = useQuery({
     queryKey: ['industries'],
@@ -195,34 +202,8 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     setShowQuickFill(false);
   };
 
-  const handleKVKLookup = async () => {
-    // Empty search - user types in KVK window
-    const url = `https://www.kvk.nl/zoeken/`;
-    
-    // Open popup positioned on the right side
-    const width = 800;
-    const height = 900;
-    const left = window.screen.width - width - 50;
-    const top = 50;
-    
-    const popup = window.open(
-      url,
-      'kvk-search',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    );
-    
-    // Track popup state
-    if (popup) {
-      setIsKvkPopupOpen(true);
-      
-      // Check when popup closes
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed);
-          setIsKvkPopupOpen(false);
-        }
-      }, 500);
-    }
+  const handleKVKLookup = () => {
+    setIsKvkSheetOpen(true);
   };
 
   const handleSubmit = (data: CompanyFormData) => {
@@ -233,20 +214,10 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto"
-        style={isKvkPopupOpen ? {
-          position: 'fixed',
-          left: '50px',
-          right: 'auto',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          margin: 0,
-          transition: 'all 300ms ease-in-out'
-        } : undefined}
-      >
-        <DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
           <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
           <DialogDescription>
             {company
@@ -717,7 +688,28 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             </DialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      {/* KVK Search Sheet */}
+      <Sheet open={isKvkSheetOpen} onOpenChange={setIsKvkSheetOpen}>
+        <SheetContent side="right" className="w-[800px] sm:w-[800px] sm:max-w-[90vw]">
+          <SheetHeader>
+            <SheetTitle>KVK Zoeken</SheetTitle>
+            <SheetDescription>
+              Zoek bedrijfsgegevens via de KVK website. Kopieer de gevonden gegevens en plak deze in het Quick Fill veld.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 h-[calc(100vh-120px)]">
+            <iframe
+              src="https://www.kvk.nl/zoeken/"
+              className="w-full h-full border rounded-lg"
+              title="KVK Zoeken"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
