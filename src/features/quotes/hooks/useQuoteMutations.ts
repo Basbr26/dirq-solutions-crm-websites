@@ -32,17 +32,20 @@ export function useCreateQuote() {
       const tax_amount = (subtotal * tax_rate) / 100;
       const total_amount = subtotal + tax_amount;
 
+      // Prepare quote data (exclude items as they go to quote_items table)
+      const { items, ...quoteData } = input;
+
       // Create quote
       const { data: quote, error: quoteError } = await supabase
         .from('quotes')
         .insert({
-          ...input,
+          ...quoteData,
           quote_number: quoteNumber,
           subtotal,
           tax_rate,
           tax_amount,
           total_amount,
-          owner_id: user.id,
+          created_by: user.id,
           status: 'draft',
         })
         .select()
@@ -51,7 +54,7 @@ export function useCreateQuote() {
       if (quoteError) throw quoteError;
 
       // Create quote items
-      const items = input.items.map((item, index) => ({
+      const quoteItems = items.map((item, index) => ({
         quote_id: quote.id,
         ...item,
         item_order: item.item_order ?? index,
@@ -60,7 +63,7 @@ export function useCreateQuote() {
 
       const { error: itemsError } = await supabase
         .from('quote_items')
-        .insert(items);
+        .insert(quoteItems);
 
       if (itemsError) throw itemsError;
 
