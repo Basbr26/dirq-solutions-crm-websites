@@ -70,7 +70,7 @@ interface CompanyFormProps {
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
-  const [kvkPopup, setKvkPopup] = useState<Window | null>(null);
+  const [isKvkPopupOpen, setIsKvkPopupOpen] = useState(false);
   
   const { data: industries } = useQuery({
     queryKey: ['industries'],
@@ -213,14 +213,15 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
       `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
     );
     
-    setKvkPopup(popup);
-    
-    // Check when popup closes
+    // Track popup state
     if (popup) {
+      setIsKvkPopupOpen(true);
+      
+      // Check when popup closes
       const checkClosed = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkClosed);
-          setKvkPopup(null);
+          setIsKvkPopupOpen(false);
         }
       }, 500);
     }
@@ -236,7 +237,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto" style={{
-        transform: kvkPopup && !kvkPopup.closed ? 'translateX(-200px)' : 'translateX(0)',
+        transform: isKvkPopupOpen ? 'translateX(-200px)' : 'translateX(0)',
         transition: 'transform 300ms ease-in-out'
       }}>
         <DialogHeader>
