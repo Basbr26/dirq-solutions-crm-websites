@@ -41,10 +41,11 @@ const DialogContent = React.forwardRef<
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         // Mobile: Full screen dialog with safe padding
-        "inset-4 rounded-lg p-4 overflow-y-auto",
-        // Desktop: Centered modal
-        "sm:left-[50%] sm:top-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%]",
-        "sm:inset-auto sm:w-full sm:max-w-lg sm:p-6 sm:rounded-lg",
+        "inset-4 rounded-lg p-4 overflow-y-auto max-h-[calc(100vh-2rem)]",
+        // Desktop: Centered modal - override mobile positioning
+        "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:max-h-[85vh]",
+        "sm:translate-x-[-50%] sm:translate-y-[-50%]",
+        "sm:w-full sm:max-w-lg sm:p-6 sm:rounded-lg",
         "sm:data-[state=closed]:slide-out-to-left-1/2 sm:data-[state=closed]:slide-out-to-top-[48%]",
         "sm:data-[state=open]:slide-in-from-left-1/2 sm:data-[state=open]:slide-in-from-top-[48%]",
         className,
