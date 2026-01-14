@@ -48,6 +48,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 const statusConfig: Record<QuoteStatus, { 
   label: string; 
@@ -216,27 +217,28 @@ export default function QuoteDetailPage() {
   const StatusIcon = statusConfig[quote.status].icon;
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4">
-        <Link to="/quotes">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug naar overzicht
-          </Button>
-        </Link>
+    <AppLayout>
+      <div className="flex-1 space-y-6 p-4 md:p-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4">
+          <Link to="/quotes">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Terug naar overzicht
+            </Button>
+          </Link>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold">{quote.title}</h1>
-              <Badge className={statusConfig[quote.status].color} variant="outline">
-                <StatusIcon className="h-3 w-3 mr-1" />
-                {statusConfig[quote.status].label}
-              </Badge>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold">{quote.title}</h1>
+                <Badge className={statusConfig[quote.status].color} variant="outline">
+                  <StatusIcon className="h-3 w-3 mr-1" />
+                  {statusConfig[quote.status].label}
+                </Badge>
+              </div>
+              <p className="text-muted-foreground">Offerte {quote.quote_number}</p>
             </div>
-            <p className="text-muted-foreground">Offerte {quote.quote_number}</p>
-          </div>
 
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={exportToPDF}>
@@ -603,6 +605,7 @@ export default function QuoteDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+      </div>
+    </AppLayout>
   );
 }
