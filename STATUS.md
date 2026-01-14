@@ -1,7 +1,7 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
 **Last Updated:** 14 Januari 2026  
-**Version:** 2.0.4 - Quick Wins: UX & Code Quality Improvements  
+**Version:** 2.0.5 - Google Calendar Debug + Quotes Fix  
 **Production Status:** ✅ Production Ready + Enterprise Architecture + API Gateway
 
 ---
@@ -25,7 +25,89 @@
 
 ---
 
-## 🎯 RECENT UPDATES (v2.0.4 - 14 Jan 2026)
+## 🎯 RECENT UPDATES (v2.0.5 - 14 Jan 2026)
+
+### **🔍 Google Calendar Sync: Debug & Troubleshooting System** ✅
+**Impact:** Volledig zichtbaar maken van sync problemen + uitgebreide diagnostics
+
+**Problem Analysis:**
+- Silent failures: Database errors werden niet getoond aan gebruikers
+- Token desync: Geen zichtbaarheid over token status/expiry
+- Implicit OAuth flow: Geen refresh_token, sessies verlopen na 1 uur
+- Geen feedback: Gebruikers wisten niet waarom sync niet werkte
+
+**Solution - Debug Systeem:**
+- ✅ Real-time debug log panel in UI met emoji indicators (🚀 ✅ ❌ ⚠️)
+- ✅ Connection error alerts met specifieke foutmeldingen
+- ✅ Token expiry monitoring met countdown in minuten
+- ✅ Refresh token detectie + waarschuwing bij ontbreken
+- ✅ Enhanced error handling in alle async operaties
+- ✅ Timestamp logging voor alle belangrijke events
+
+**Debug Features:**
+| Feature | Beschrijving |
+|---------|-------------|
+| Debug Log Panel | Laatste 10 operaties met timestamps |
+| Connection Status | Real-time status met error details |
+| Token Countdown | Minuten tot expiry zichtbaar |
+| Error Alerts | Rode alert box bij problemen |
+| Refresh Detection | Waarschuwt als geen refresh token |
+
+**Documentation:**
+- ✅ `GOOGLE_CALENDAR_TROUBLESHOOTING.md` - Uitgebreide troubleshooting guide
+  - Bekende oorzaken van desynchronisatie
+  - Edge Function secrets checklist
+  - Database query voorbeelden
+  - Authorization Code Flow migratie guide
+  - Debug log interpretatie
+- ✅ `check_google_calendar_tokens.sql` - 8 SQL diagnostic queries
+  - Token status checking
+  - Expired tokens vinden
+  - Webhook status monitoring
+  - Summary statistics
+
+**TypeScript Improvements:**
+- ✅ Added `refresh_token?: string` to OAuth response type
+- ✅ Fixed useEffect dependencies met useCallback
+- ✅ Proper error typing met Error interface
+
+**Next Steps (Recommended):**
+- 🔄 Migreer naar Authorization Code Flow voor permanente refresh tokens
+- 📊 Monitor Edge Function logs: `supabase functions logs google-calendar-refresh`
+- 🔔 Setup alerts voor failed token refreshes
+
+### **🐛 Quotes: owner_id vs created_by Fix** ✅
+**Impact:** Quotes aanmaken werkt nu correct zonder schema cache errors
+
+**Problem:**
+```typescript
+// Code gebruikte:
+created_by: user.id
+profiles!quotes_created_by_fkey
+
+// Database had:
+owner_id UUID REFERENCES profiles(id)
+```
+
+**Solution:**
+- ✅ `useQuoteMutations.ts`: `created_by` → `owner_id` in insert
+- ✅ `QuoteDetailPage.tsx`: `quotes_created_by_fkey` → `quotes_owner_id_fkey`
+- ✅ Consistent met `INIT_SUPABASE_DATABASE.sql` schema
+- ✅ Foreign key names aligned
+
+**Files Modified:**
+- `src/features/quotes/hooks/useQuoteMutations.ts`
+- `src/features/quotes/QuoteDetailPage.tsx`
+- `src/components/calendar/GoogleCalendarSync.tsx`
+- `src/lib/googleCalendar.ts`
+
+**New Files:**
+- `GOOGLE_CALENDAR_TROUBLESHOOTING.md`
+- `check_google_calendar_tokens.sql`
+
+---
+
+## 🎯 PREVIOUS UPDATES (v2.0.4 - 14 Jan 2026)
 
 ### **⚡ Quick Wins: UX & Code Quality** ✅
 **Impact:** Verbeterde gebruikerservaring en code maintainability in ~2 uur

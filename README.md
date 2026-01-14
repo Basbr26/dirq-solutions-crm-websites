@@ -1,11 +1,13 @@
-# 2026-01-13
+# 2026-01-14
 
 ## Belangrijkste wijzigingen
 
-- **project_id fix**: De kolom project_id in interactions wordt nu altijd correct toegevoegd via de migratie (idempotent). Hierdoor werkt activiteiten toevoegen weer zonder errors.
-- **Index migratie**: Alle CREATE INDEX statements in 20260103_website_sales_crm.sql zijn nu IF NOT EXISTS, zodat je veilig opnieuw kunt migreren.
-- **Bedrijf verwijderen**: Zowel RLS als frontend logica staan nu toe dat ADMIN, MANAGER en de eigenaar bedrijven kunnen verwijderen.
-- **Favicon**: Nieuw Dirq-logo als favicon toegevoegd.
+- **Google Calendar Debug System**: Uitgebreide debug logging met real-time log panel, connection error alerts, en token expiry monitoring voor diagnose van sync problemen
+- **Quotes owner_id Fix**: Opgelost: `created_by` vs `owner_id` inconsistentie - offerte aanmaken werkt nu correct
+- **Token Status Monitoring**: Detecteert ontbrekende refresh tokens en waarschuwt gebruikers over sessie expiry
+- **Troubleshooting Guide**: Nieuwe comprehensive guide voor Google Calendar sync issues (`GOOGLE_CALENDAR_TROUBLESHOOTING.md`)
+- **SQL Diagnostics**: Script voor token status checking (`check_google_calendar_tokens.sql`)
+
 # 🚀 Dirq Solutions CRM
 
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
