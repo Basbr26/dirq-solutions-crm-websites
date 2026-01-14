@@ -320,6 +320,8 @@ export interface Interaction {
   contact?: Contact; // Joined data
   project_id?: string;
   project?: Project; // Joined data
+  quote_id?: string;
+  quote?: any; // Joined data - use Quote type when available
   type: InteractionType;
   direction?: InteractionDirection;
   subject: string;
@@ -497,6 +499,7 @@ export interface InteractionFormData {
   company_id?: string;
   contact_id?: string;
   project_id?: string;
+  quote_id?: string;
   type: InteractionType;
   direction?: InteractionDirection;
   subject: string;

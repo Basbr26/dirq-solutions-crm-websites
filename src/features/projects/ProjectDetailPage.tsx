@@ -929,14 +929,22 @@ export default function ProjectDetailPage() {
           defaultContactId={project.contact_id || undefined}
           onSubmit={async (quoteData) => {
             try {
-              await createQuote.mutateAsync({
+              const newQuote = await createQuote.mutateAsync({
                 ...quoteData,
                 company_id: project.company_id,
                 contact_id: project.contact_id || quoteData.contact_id,
                 project_id: id,
               });
               setCreateQuoteDialogOpen(false);
-              queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+              
+              // Refresh project data to show new quote
+              queryClient.invalidateQueries({ queryKey: ['project', id] });
+              queryClient.invalidateQueries({ queryKey: ['quotes'] });
+              
+              // Navigate to the new quote
+              navigate(`/quotes/${newQuote.id}`);
+              
+              toast.success('Offerte aangemaakt en gekoppeld aan project');
             } catch (error: any) {
               toast.error(`Fout bij aanmaken offerte: ${error.message}`);
             }
