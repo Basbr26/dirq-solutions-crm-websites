@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { CreateQuoteInput, UpdateQuoteInput, QuoteStatus } from '@/types/quotes';
 import { notifyQuoteStatusChange } from '@/lib/crmNotifications';
+import { haptics } from '@/lib/haptics';
 
 export function useCreateQuote() {
   const queryClient = useQueryClient();
@@ -45,7 +46,7 @@ export function useCreateQuote() {
           tax_rate,
           tax_amount,
           total_amount,
-          created_by: user.id,
+          owner_id: user.id,
           status: 'draft',
         })
         .select()
@@ -72,9 +73,11 @@ export function useCreateQuote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote-stats'] });
+      haptics.success();
       toast.success('Offerte aangemaakt');
     },
     onError: (error: Error) => {
+      haptics.error();
       toast.error(`Fout bij aanmaken offerte: ${error.message}`);
     },
   });

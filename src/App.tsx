@@ -8,9 +8,11 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AnimatePresence, motion } from "framer-motion";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
 import { SuspenseFallback } from "@/components/SuspenseFallback";
+import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
+import { ShortcutsHelp } from "@/components/ShortcutsHelp";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -88,10 +90,18 @@ function AnimatedRoute({ children }: { children: React.ReactNode }) {
 // Routes wrapper with AnimatePresence
 function AnimatedRoutes() {
   const location = useLocation();
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
+  // Initialize global keyboard shortcuts
+  useGlobalShortcuts({
+    onShowHelp: () => setShowShortcuts(true),
+    // onOpenSearch can be implemented when global search is added
+  });
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <Routes location={location} key={location.pathname}>
+    <>
+      <AnimatePresence mode="wait" initial={false}>
+        <Routes location={location} key={location.pathname}>
         <Route path="/" element={<AnimatedRoute><RoleBasedRedirect /></AnimatedRoute>} />
         <Route path="/auth" element={<AnimatedRoute><Auth /></AnimatedRoute>} />
         <Route path="/forgot-password" element={<AnimatedRoute><ForgotPassword /></AnimatedRoute>} />
@@ -433,6 +443,10 @@ function AnimatedRoutes() {
         <Route path="*" element={<AnimatedRoute><Suspense fallback={<SuspenseFallback />}><NotFound /></Suspense></AnimatedRoute>} />
       </Routes>
     </AnimatePresence>
+    
+    {/* Global Keyboard Shortcuts Help Dialog */}
+    <ShortcutsHelp open={showShortcuts} onOpenChange={setShowShortcuts} />
+    </>
   );
 }
 

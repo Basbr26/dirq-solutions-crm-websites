@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion'
 import { Check, X } from 'lucide-react'
+import { haptics } from '@/lib/haptics'
 
 interface SwipeableCardProps {
   onSwipeLeft?: () => void
@@ -55,9 +56,11 @@ export const SwipeableCard = ({
     // Strong swipe or drag past threshold
     if (Math.abs(velocity) > 500 || Math.abs(offset) > SWIPE_THRESHOLD) {
       if (offset > 0 && onSwipeRight) {
+        haptics.success()
         setExitX(1000)
         setTimeout(() => onSwipeRight(), 200)
       } else if (offset < 0 && onSwipeLeft) {
+        haptics.warning()
         setExitX(-1000)
         setTimeout(() => onSwipeLeft(), 200)
       }

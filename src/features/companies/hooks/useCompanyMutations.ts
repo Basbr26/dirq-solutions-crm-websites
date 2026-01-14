@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CompanyFormData, Company } from '@/types/crm';
 import { toast } from 'sonner';
+import { haptics } from '@/lib/haptics';
 
 export function useCreateCompany() {
   const queryClient = useQueryClient();
@@ -30,9 +31,11 @@ export function useCreateCompany() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
+      haptics.success();
       toast.success('Bedrijf succesvol aangemaakt');
     },
     onError: (error: Error) => {
+      haptics.error();
       toast.error('Fout bij aanmaken bedrijf', {
         description: error.message,
       });

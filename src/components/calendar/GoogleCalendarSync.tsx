@@ -31,34 +31,88 @@ export function GoogleCalendarSync() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [autoSync, setAutoSync] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  // Debug logging helper
+  const addDebugLog = useCallback((message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugInfo(prev => [...prev.slice(-9), `[${timestamp}] ${message}`]);
+    console.log(`[GoogleCalendarSync] ${message}`);
+  }, []);
+
+  const initializeGoogle = useCallback(async () => {
+    setIsLoading(true);
+    addDebugLog('🚀 Initializing Google Calendar API...');
+    try {
+      const initialized = await initGoogleCalendar();
+      setIsInitialized(initialized);
+      if (initialized) {
+        addDebugLog('✅ Google Calendar API initialized');
+        setIsSignedIn(isGoogleSignedIn());
+        setConnectionError(null);
+      } else {
+        addDebugLog('❌ Google Calendar API initialization failed');
+        setConnectionError('Google API kon niet worden geïnitialiseerd');
+      }
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      addDebugLog(`❌ Error during initialization: ${errorMsg}`);
+      setConnectionError(`Initialisatie fout: ${errorMsg}`);
+      console.error('Failed to initialize Google Calendar:', error);
+      toast.error('Google Calendar kon niet worden geïnitialiseerd');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [addDebugLog]);
 
   useEffect(() => {
     initializeGoogle();
-  }, []);
+  }, [initializeGoogle]);
 
   const loadSyncSettings = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      addDebugLog('❌ No user found, skipping settings load');
+      return;
+    }
 
-    const { data } = await supabase
+    addDebugLog('🔍 Loading sync settings from database...');
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
 
+    if (error) {
+      addDebugLog(`❌ Database error: ${error.message}`);
+      setConnectionError(`Database fout: ${error.message}`);
+      toast.error('Kon synchronisatie-instellingen niet laden');
+      return;
+    }
+
     if (data) {
+      addDebugLog('✅ Settings loaded successfully');
       setAutoSync(data.google_calendar_sync || false);
       setLastSyncTime(data.last_calendar_sync ? new Date(data.last_calendar_sync) : null);
       
       // Check if user has valid token
       if (data.google_access_token && data.google_token_expires_at) {
+        addDebugLog('🔑 Found stored access token');
         const expiresAt = new Date(data.google_token_expires_at);
         const isExpired = expiresAt < new Date();
+        const minutesUntilExpiry = Math.floor((expiresAt.getTime() - Date.now()) / 60000);
+        
+        addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
+        addDebugLog(`⏱️ Minutes until expiry: ${minutesUntilExpiry}`);
         
         if (!isExpired) {
+          addDebugLog('✅ Token is still valid, restoring session...');
           // Token is valid, restore session in gapi client
           try {
+            let gapiCheckAttempts = 0;
             // Wait for gapi to be initialized
             const checkGapi = setInterval(() => {
+              gapiCheckAttempts++;
               if (window.gapi?.client) {
                 clearInterval(checkGapi);
                 // Restore token in gapi client
@@ -67,28 +121,50 @@ export function GoogleCalendarSync() {
                   expires_in: Math.floor((expiresAt.getTime() - Date.now()) / 1000),
                 });
                 setIsSignedIn(true);
-                console.log('Google Calendar sessie hersteld uit database');
+                setConnectionError(null);
+                addDebugLog('✅ Google Calendar sessie hersteld uit database');
+                toast.success('Google Calendar verbinding hersteld');
+              } else if (gapiCheckAttempts > 50) {
+                clearInterval(checkGapi);
+                addDebugLog('❌ Timeout: gapi.client niet beschikbaar na 5 seconden');
+                setConnectionError('Google API kon niet worden geladen');
               }
             }, 100);
             
             // Timeout after 5 seconds
             setTimeout(() => clearInterval(checkGapi), 5000);
           } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            addDebugLog(`❌ Error restoring session: ${errorMsg}`);
+            setConnectionError(`Sessie herstel fout: ${errorMsg}`);
             console.error('Error restoring Google session:', error);
           }
         } else {
+          addDebugLog('⚠️ Token expired, clearing from database...');
           // Token expired, clear from database
-          await supabase
+          const { error: clearError } = await supabase
             .from('profiles')
             .update({
               google_access_token: null,
               google_token_expires_at: null,
             })
             .eq('id', user.id);
+          
+          if (clearError) {
+            addDebugLog(`❌ Error clearing expired token: ${clearError.message}`);
+          } else {
+            addDebugLog('✅ Expired token cleared');
+          }
+          setConnectionError('Google token verlopen - log opnieuw in');
+          toast.warning('Google Calendar sessie verlopen, log opnieuw in');
         }
+      } else {
+        addDebugLog('ℹ️ No stored tokens found');
       }
+    } else {
+      addDebugLog('❌ No profile data found');
     }
-  }, [user]);
+  }, [user, addDebugLog]);
 
   useEffect(() => {
     // Load sync settings from database
@@ -97,25 +173,10 @@ export function GoogleCalendarSync() {
     }
   }, [user, loadSyncSettings]);
 
-  const initializeGoogle = async () => {
-    setIsLoading(true);
-    try {
-      const initialized = await initGoogleCalendar();
-      setIsInitialized(initialized);
-      if (initialized) {
-        setIsSignedIn(isGoogleSignedIn());
-      }
-    } catch (error) {
-      console.error('Failed to initialize Google Calendar:', error);
-      toast.error('Google Calendar kon niet worden geïnitialiseerd');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const saveSyncSettings = async (enabled: boolean) => {
     if (!user) return;
 
+    addDebugLog(`💾 Saving sync settings: ${enabled}`);
     const { error } = await supabase
       .from('profiles')
       .update({
@@ -125,23 +186,30 @@ export function GoogleCalendarSync() {
       .eq('id', user.id);
 
     if (error) {
+      addDebugLog(`❌ Error saving settings: ${error.message}`);
       console.error('Error saving sync settings:', error);
       toast.error('Kon instellingen niet opslaan');
+    } else {
+      addDebugLog('✅ Settings saved successfully');
     }
   };
 
   const handleSignIn = async () => {
     setIsLoading(true);
+    addDebugLog('🔐 Starting Google sign-in flow...');
     try {
       const tokenResponse = await signInToGoogle();
       if (tokenResponse && user) {
+        addDebugLog('✅ Sign-in successful, received token');
         // Calculate token expiry time
         const expiresAt = new Date();
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
+        addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
         // Store tokens securely in Supabase profiles table
         // NOTE: Current OAuth flow (implicit) doesn't return refresh_token
         // For persistent auth, need to switch to authorization_code flow
+        addDebugLog('💾 Storing token in database...');
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
@@ -153,13 +221,25 @@ export function GoogleCalendarSync() {
           .eq('id', user.id);
 
         if (updateError) {
+          addDebugLog(`❌ Database error: ${updateError.message}`);
+          setConnectionError(`Token opslaan mislukt: ${updateError.message}`);
           console.error('Error storing Google tokens:', updateError);
           toast.error('Kon tokens niet opslaan in database');
           return;
         }
 
+        addDebugLog('✅ Token stored in database');
         setIsSignedIn(true);
-        toast.success('Verbonden met Google Calendar - Tokens veilig opgeslagen');
+        setConnectionError(null);
+        
+        // Check if we have refresh token (we likely don't with implicit flow)
+        if (!tokenResponse.refresh_token) {
+          addDebugLog('⚠️ No refresh_token received (using implicit flow)');
+          setConnectionError('Let op: geen refresh token - sessie verloopt na 1 uur');
+          toast.warning('Verbonden - Maar sessie verloopt na 1 uur (geen refresh token)', { duration: 5000 });
+        } else {
+          toast.success('Verbonden met Google Calendar - Tokens veilig opgeslagen');
+        }
         
         // Register webhook for real-time sync
         try {
@@ -373,28 +453,44 @@ export function GoogleCalendarSync() {
   useEffect(() => {
     if (!user || !isSignedIn) return;
 
+    addDebugLog('🔄 Setting up auto-refresh interval (every 5 minutes)');
+
     const refreshInterval = setInterval(async () => {
-      const { data } = await supabase
+      addDebugLog('🔍 Checking if token needs refresh...');
+      const { data, error } = await supabase
         .from('profiles')
         .select('google_refresh_token, google_token_expires_at')
         .eq('id', user.id)
         .single();
 
+      if (error) {
+        addDebugLog(`❌ Error fetching token data: ${error.message}`);
+        return;
+      }
+
       if (!data?.google_refresh_token || !data?.google_token_expires_at) {
-        console.log('No refresh token available');
+        addDebugLog('⚠️ No refresh token available - user needs to re-authenticate');
+        setConnectionError('Geen refresh token - log opnieuw in voor blijvende toegang');
+        toast.warning('Google Calendar: log opnieuw in voor automatische vernieuwing');
         return;
       }
 
       // Check if token needs refresh (expires binnen 10 minuten)
       if (isTokenExpired(data.google_token_expires_at)) {
-        console.log('Token expiring soon, refreshing...');
+        addDebugLog('⏰ Token expiring soon, attempting refresh...');
         
         const newToken = await refreshAccessToken(data.google_refresh_token);
+        
+        if (!newToken) {
+          addDebugLog('❌ Token refresh returned null');
+        }
         
         if (newToken) {
           // Calculate new expiry
           const expiresAt = new Date();
           expiresAt.setSeconds(expiresAt.getSeconds() + newToken.expires_in);
+
+          addDebugLog(`✅ New token received, expires at: ${expiresAt.toLocaleString()}`);
 
           // Update database
           const { error } = await supabase
@@ -406,6 +502,8 @@ export function GoogleCalendarSync() {
             .eq('id', user.id);
 
           if (error) {
+            addDebugLog(`❌ Error updating refreshed token in DB: ${error.message}`);
+            setConnectionError(`Token update fout: ${error.message}`);
             console.error('Error updating refreshed token:', error);
           } else {
             // Update gapi client
@@ -413,18 +511,24 @@ export function GoogleCalendarSync() {
               access_token: newToken.access_token,
               expires_in: newToken.expires_in,
             });
-            console.log('Token automatically refreshed');
+            addDebugLog('✅ Token automatically refreshed and stored');
+            setConnectionError(null);
           }
         } else {
+          addDebugLog('❌ Token refresh failed - refresh token may be revoked');
+          setConnectionError('Token refresh gefaald - mogelijk ingetrokken door Google');
           console.error('Token refresh failed, user needs to re-authenticate');
           toast.error('Google Calendar sessie verlopen, log opnieuw in');
           setIsSignedIn(false);
         }
+      } else {
+        const minutesRemaining = Math.floor((new Date(data.google_token_expires_at).getTime() - Date.now()) / 60000);
+        addDebugLog(`✅ Token still valid (${minutesRemaining} minutes remaining)`);
       }
     }, 5 * 60 * 1000); // Check every 5 minutes
 
     return () => clearInterval(refreshInterval);
-  }, [user, isSignedIn]);
+  }, [user, isSignedIn, addDebugLog]);
 
   // Automatic sync interval (elke 15 minuten als autoSync enabled)
   useEffect(() => {
@@ -614,6 +718,41 @@ export function GoogleCalendarSync() {
                 <li>• Dubbele gebeurtenissen worden voorkomen</li>
               </ul>
             </div>
+
+            {/* Debug Info Panel */}
+            {debugInfo.length > 0 && (
+              <div className="rounded-lg bg-muted/50 p-3 space-y-2 border border-border">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-medium text-muted-foreground">Debug Log</h4>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDebugInfo([])}
+                    className="h-6 px-2 text-xs"
+                  >
+                    Wissen
+                  </Button>
+                </div>
+                <div className="space-y-0.5 max-h-32 overflow-y-auto font-mono text-xs">
+                  {debugInfo.map((log, i) => (
+                    <div key={i} className="text-muted-foreground">{log}</div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Connection Error Alert */}
+            {connectionError && (
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+                  <div className="space-y-1 flex-1">
+                    <h4 className="text-sm font-medium text-destructive">Verbindingsprobleem</h4>
+                    <p className="text-xs text-destructive/80">{connectionError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </CardContent>

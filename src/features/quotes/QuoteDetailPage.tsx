@@ -88,7 +88,7 @@ export default function QuoteDetailPage() {
           companies:companies(id, name, email, phone),
           contacts:contacts(id, first_name, last_name, email, phone),
           projects:projects(id, title, stage),
-          profiles:profiles!quotes_created_by_fkey(id, voornaam, achternaam, email)
+          profiles:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id!)
         .single();

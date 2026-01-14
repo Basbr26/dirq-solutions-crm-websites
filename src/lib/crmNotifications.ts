@@ -5,6 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { NotificationType } from '@/types/crm';
+import { logger } from './logger';
 
 interface NotificationData {
   recipient_id: string;
@@ -35,13 +36,13 @@ export async function sendCRMNotification(data: NotificationData) {
       }]);
 
     if (error) {
-      console.error('Failed to send notification:', error);
+      logger.error(error, { context: 'Failed to send notification' });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error sending CRM notification:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error sending CRM notification' });
     return false;
   }
 }

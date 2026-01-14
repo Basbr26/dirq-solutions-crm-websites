@@ -37,6 +37,8 @@ import {
   Download,
   Upload,
 } from "lucide-react";
+import { SkeletonList } from "@/components/ui/skeleton-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ContactCreateData } from "@/types/crm";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
@@ -452,9 +454,7 @@ export function ContactsPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
+        <SkeletonList count={8} />
       ) : error ? (
         <Card>
           <CardContent className="pt-6">
@@ -465,19 +465,20 @@ export function ContactsPage() {
           </CardContent>
         </Card>
       ) : contacts.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center text-muted-foreground py-12">
-              <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">Geen contacten gevonden</p>
-              <p className="text-sm mt-2">
-                {search || filterCompanyId || filterIsPrimary !== undefined || filterIsDecisionMaker !== undefined
-                  ? "Probeer andere zoek- of filterinstellingen"
-                  : "Voeg uw eerste contact toe om te beginnen"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Users}
+          title="Geen contacten gevonden"
+          description={
+            search || filterCompanyId || filterIsPrimary !== undefined || filterIsDecisionMaker !== undefined
+              ? "Probeer andere zoek- of filterinstellingen"
+              : "Voeg uw eerste contact toe om te beginnen"
+          }
+          action={{
+            label: "Contact Toevoegen",
+            onClick: () => setShowCreateDialog(true),
+            icon: UserPlus,
+          }}
+        />
       ) : (
         <>
           {/* Contacts Grid */}

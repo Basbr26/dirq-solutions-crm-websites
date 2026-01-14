@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ContactFormData, Contact } from '@/types/crm';
 import { toast } from 'sonner';
+import { haptics } from '@/lib/haptics';
 
 // Combined hook for all contact mutations
 export function useContactMutations() {
@@ -43,9 +44,11 @@ export function useCreateContact() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
+      haptics.success();
       toast.success('Contact succesvol aangemaakt');
     },
     onError: (error: Error) => {
+      haptics.error();
       toast.error('Fout bij aanmaken contact', {
         description: error.message,
       });
@@ -109,9 +112,11 @@ export function useDeleteContact() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
+      haptics.success();
       toast.success('Contact succesvol verwijderd');
     },
     onError: (error: Error) => {
+      haptics.error();
       toast.error('Fout bij verwijderen contact', {
         description: error.message,
       });

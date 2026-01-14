@@ -15,6 +15,64 @@ Alle updates, features, bugfixes en migraties in chronologische volgorde.
 
 ---
 
+## [2.0.4] - 2026-01-14 - Quick Wins: UX & Code Quality
+
+### 🧹 Code Quality
+- **Structured Logging System**
+  - Nieuw: `src/lib/logger.ts` met debug/info/warn/error levels
+  - Vervangen: 40+ console.log/error statements door logger calls
+  - Files updated: `crmNotifications.ts`, `googleCalendar.ts`, mutation hooks
+  - Dev only: Debug en info logs alleen in development
+  - Production ready: Error logging klaar voor Sentry integratie
+  - Type-safe: Proper Error object handling met context
+
+### ✨ UX Improvements
+- **Loading Skeleton Components**
+  - Nieuw: `src/components/ui/skeleton-card.tsx` (SkeletonCard, SkeletonList, SkeletonTable)
+  - Gebruikt in: CompaniesPage, ContactsPage, ProjectsPage
+  - Animate-pulse animatie voor perceived performance
+  - Vervangen: "Loading..." teksten en spinners door skeleton states
+
+- **Empty State Components**
+  - Nieuw: `src/components/ui/empty-state.tsx` - Herbruikbare empty state
+  - Features: Icon, title, description, optional CTA button
+  - Gebruikt in: Companies, Contacts, Projects (geen resultaten)
+  - Context-aware messaging: Verschillende teksten voor filters vs lege database
+
+- **Keyboard Shortcuts**
+  - Nieuw: `src/hooks/useGlobalShortcuts.ts` - Global shortcut handler
+  - Nieuw: `src/components/ShortcutsHelp.tsx` - Help dialog met alle shortcuts
+  - Navigation: `g+h` Dashboard, `g+c` Companies, `g+n` Contacts, `g+p` Projects, `g+q` Quotes, `g+a` Calendar
+  - Actions: `/` Focus search, `n` New item, `?` Show shortcuts, `Esc` Close
+  - Gebruikt: `react-hotkeys-hook` (al geïnstalleerd)
+  - Geïntegreerd in: App.tsx - Werkt op alle pagina's
+
+- **Dutch Validation Messages**
+  - Nieuw: `src/lib/validation-messages.ts` - Complete Dutch Zod error map
+  - Alle validation types: email, URL, min/max length, required, date, enum, etc.
+  - Auto-initialized: In `main.tsx` bij app start
+  - Consistent: Nederlands in alle formulieren door hele app
+
+### 🎨 Branding
+- **Favicon & Meta Tags**
+  - Nieuw: `public/favicon.svg` - SVG favicon met brand color (#06BDC7)
+  - Toegevoegd: Apple-touch-icon support in index.html
+  - Meta tags: OG en Twitter cards reeds compleet
+  - SEO: Description en title geoptimaliseerd
+
+### 📊 Quick Wins Statistieken
+| Category | Items | Time |
+|----------|-------|------|
+| Console cleanup | 40+ statements | 15 min |
+| Loading skeletons | 3 components | 30 min |
+| Empty states | 3 pages | 20 min |
+| Favicon | SVG + meta | 15 min |
+| Keyboard shortcuts | 10+ shortcuts | 30 min |
+| Dutch validation | All Zod types | 20 min |
+| **Total** | **50+ improvements** | **~2 uur** |
+
+---
+
 ## [2.0.3] - 2026-01-13 - Dark Mode Performance Fix + Project Enhancements
 
 ### 🚀 Performance - CRITICAL FIX

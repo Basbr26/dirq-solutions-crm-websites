@@ -3,6 +3,8 @@
  * Handles OAuth and sync with Google Calendar
  */
 
+import { logger } from './logger';
+
 // Declare global types for Google APIs
 declare global {
   interface Window {
@@ -57,7 +59,7 @@ export async function initGoogleCalendar(): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error initializing Google Calendar:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error initializing Google Calendar' });
     return false;
   }
 }
@@ -83,11 +85,12 @@ export async function signInToGoogle(): Promise<{
   access_token: string;
   expires_in: number;
   scope: string;
+  refresh_token?: string; // Only present in authorization_code flow, not implicit flow
 } | null> {
   return new Promise((resolve) => {
     tokenClient.callback = (response: any) => {
       if (response.error) {
-        console.error('Google sign-in error:', response.error);
+        logger.error(new Error(response.error), { context: 'Google sign-in error' });
         resolve(null);
         return;
       }
@@ -97,6 +100,7 @@ export async function signInToGoogle(): Promise<{
         access_token: response.access_token,
         expires_in: response.expires_in || 3600, // Default 1 hour
         scope: response.scope,
+        refresh_token: response.refresh_token, // Will be undefined for implicit flow
       });
     };
 
@@ -150,7 +154,7 @@ export async function fetchGoogleCalendarEvents(
     const response = await gapi.client.calendar.events.list(request);
     return response.result.items || [];
   } catch (error) {
-    console.error('Error fetching Google Calendar events:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error fetching Google Calendar events' });
     throw error;
   }
 }
@@ -177,7 +181,7 @@ export async function createGoogleCalendarEvent(event: {
     });
     return response.result;
   } catch (error) {
-    console.error('Error creating Google Calendar event:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error creating Google Calendar event' });
     throw error;
   }
 }
@@ -197,7 +201,7 @@ export async function updateGoogleCalendarEvent(
     });
     return response.result;
   } catch (error) {
-    console.error('Error updating Google Calendar event:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error updating Google Calendar event' });
     throw error;
   }
 }
@@ -212,7 +216,7 @@ export async function deleteGoogleCalendarEvent(eventId: string): Promise<void> 
       eventId,
     });
   } catch (error) {
-    console.error('Error deleting Google Calendar event:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error deleting Google Calendar event' });
     throw error;
   }
 }
@@ -262,7 +266,7 @@ export async function syncToGoogleCalendar(localEvents: any[]): Promise<{
         synced++;
       }
     } catch (error) {
-      console.error(`Error syncing event ${event.id}:`, error);
+      logger.error(error instanceof Error ? error : new Error(String(error)), { context: `Error syncing event ${event.id}` });
       errors++;
     }
   }
@@ -372,7 +376,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
     // Get Supabase URL from environment
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     if (!supabaseUrl) {
-      console.error('VITE_SUPABASE_URL not configured');
+      logger.warn('VITE_SUPABASE_URL not configured');
       return null;
     }
 
@@ -391,7 +395,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Token refresh error:', error);
+      logger.error(new Error(JSON.stringify(error)), { context: 'Token refresh error' });
       return null;
     }
 
@@ -401,7 +405,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
       expires_in: data.expires_in || 3600,
     };
   } catch (error) {
-    console.error('Error refreshing access token:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error refreshing access token' });
     return null;
   }
 }
@@ -442,7 +446,7 @@ export async function registerGoogleCalendarWebhook(
     const channelId = `user_${userId}_${Date.now()}`;
     const channelToken = channelId; // Use same value for simplicity
 
-    console.log('Registering Google Calendar webhook:', {
+    logger.debug('Registering Google Calendar webhook:', {
       channelId,
       url,
     });
@@ -463,7 +467,7 @@ export async function registerGoogleCalendarWebhook(
       },
     });
 
-    console.log('Webhook registered successfully:', response.result);
+    logger.debug('Webhook registered successfully:', response.result);
 
     return {
       channelId: response.result.id,
@@ -471,7 +475,7 @@ export async function registerGoogleCalendarWebhook(
       expiration: response.result.expiration,
     };
   } catch (error) {
-    console.error('Error registering webhook:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error registering webhook' });
     return null;
   }
 }
@@ -488,7 +492,7 @@ export async function stopGoogleCalendarWebhook(
   resourceId: string
 ): Promise<boolean> {
   try {
-    console.log('Stopping Google Calendar webhook:', {
+    logger.debug('Stopping Google Calendar webhook:', {
       channelId,
       resourceId,
     });
@@ -500,10 +504,10 @@ export async function stopGoogleCalendarWebhook(
       },
     });
 
-    console.log('Webhook stopped successfully');
+    logger.debug('Webhook stopped successfully');
     return true;
   } catch (error) {
-    console.error('Error stopping webhook:', error);
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error stopping webhook' });
     return false;
   }
 }

@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { CreateProjectInput, UpdateProjectInput, ProjectStage } from '@/types/projects';
 import { notifyDealClosed, notifyProjectStageChanged, createDealWonNotification } from '@/lib/crmNotifications';
+import { haptics } from '@/lib/haptics';
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
@@ -36,9 +37,11 @@ export function useCreateProject() {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
       queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
+      haptics.success();
       toast.success('Project aangemaakt');
     },
     onError: (error: Error) => {
+      haptics.error();
       toast.error(`Fout bij aanmaken project: ${error.message}`);
     },
   });

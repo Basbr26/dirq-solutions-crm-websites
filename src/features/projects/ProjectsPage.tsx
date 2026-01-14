@@ -21,6 +21,8 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonList } from '@/components/ui/skeleton-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { projectStageConfig, type ProjectStage, type ProjectType } from '@/types/projects';
 import { format } from 'date-fns';
@@ -317,11 +319,7 @@ export default function ProjectsPage() {
 
       {/* Projects List */}
       {isLoading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, idx) => (
-            <Skeleton key={idx} className="h-64" />
-          ))}
-        </div>
+        <SkeletonList count={6} />
       ) : projects && projects.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((project: any) => {
@@ -400,19 +398,20 @@ export default function ProjectsPage() {
           })}
         </div>
       ) : (
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center space-y-2">
-              <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground" />
-              <h3 className="font-semibold text-lg">Geen projecten gevonden</h3>
-              <p className="text-sm text-muted-foreground">
-                {search || stageFilter || typeFilter
-                  ? 'Probeer andere filters of zoekterm'
-                  : 'Begin met het toevoegen van je eerste project'}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FolderKanban}
+          title="Geen projecten gevonden"
+          description={
+            search || stageFilter || typeFilter
+              ? 'Probeer andere filters of zoekterm'
+              : 'Begin met het toevoegen van je eerste project'
+          }
+          action={{
+            label: 'Project Toevoegen',
+            onClick: () => setCreateDialogOpen(true),
+            icon: Plus,
+          }}
+        />
       )}
 
       {/* Create Project Dialog */}

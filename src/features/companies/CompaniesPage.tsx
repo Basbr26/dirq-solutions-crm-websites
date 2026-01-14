@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SkeletonCard, SkeletonList } from '@/components/ui/skeleton-card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Building2, TrendingUp, Users, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -357,20 +359,7 @@ export default function CompaniesPage() {
 
       {/* Companies Grid */}
       {isLoading ? (
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <Skeleton className="h-4 w-3/4 mt-2" />
-                <Skeleton className="h-3 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-20 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <SkeletonList count={6} />
       ) : companies && companies.length > 0 ? (
         <>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -392,23 +381,24 @@ export default function CompaniesPage() {
           />
         </>
       ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Geen bedrijven gevonden</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              {search || Object.values(filters).filter(Boolean).length > 0
-                ? 'Pas je filters aan of probeer een andere zoekopdracht.'
-                : 'Begin met het toevoegen van je eerste bedrijf.'}
-            </p>
-            {canCreateCompany && !search && Object.values(filters).filter(Boolean).length === 0 && (
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nieuw Bedrijf
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Building2}
+          title="Geen bedrijven gevonden"
+          description={
+            search || Object.values(filters).filter(Boolean).length > 0
+              ? 'Pas je filters aan of probeer een andere zoekopdracht.'
+              : 'Begin met het toevoegen van je eerste bedrijf.'
+          }
+          action={
+            canCreateCompany && !search && Object.values(filters).filter(Boolean).length === 0
+              ? {
+                  label: 'Nieuw Bedrijf',
+                  onClick: () => setCreateDialogOpen(true),
+                  icon: Plus,
+                }
+              : undefined
+          }
+        />
       )}
 
       {/* Create Company Dialog */}

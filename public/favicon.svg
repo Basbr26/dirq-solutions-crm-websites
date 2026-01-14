@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0F172A"/>
+  
+  <!-- Magnifying glass circle (outer) -->
+  <circle cx="230" cy="220" r="140" fill="none" stroke="#06BDC7" stroke-width="28"/>
+  
+  <!-- Magnifying glass handle -->
+  <line x1="330" y1="320" x2="420" y2="410" stroke="#06BDC7" stroke-width="28" stroke-linecap="round"/>
+  
+  <!-- "dirq" text inside magnifying glass -->
+  <text 
+    x="230" 
+    y="240" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
+    font-size="90" 
+    font-weight="700"
+    fill="#06BDC7"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >dirq</text>
+</svg>
