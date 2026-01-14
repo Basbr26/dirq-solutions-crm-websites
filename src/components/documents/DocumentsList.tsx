@@ -179,6 +179,10 @@ export const DocumentsList = ({
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
+      // Get document details for email
+      const doc = documents.find(d => d.id === docId);
+      if (!doc) throw new Error('Document niet gevonden');
+
       // Update document with sign token
       const { error } = await supabase
         .from('documents')
@@ -192,6 +196,30 @@ export const DocumentsList = ({
 
       if (error) throw error;
 
+      // Send email via Edge Function
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-sign-email', {
+          body: {
+            to: email,
+            documentTitle: doc.title || doc.file_name,
+            documentId: docId,
+            signToken: token,
+            companyName: companyId ? undefined : undefined, // Will be enhanced later
+            expiresAt: expiresAt.toISOString(),
+            senderName: user?.email || 'Dirq Solutions',
+          },
+        });
+
+        if (emailError) {
+          console.error('Email send error:', emailError);
+          // Don't fail the entire operation if email fails
+          toast.warning('Link gegenereerd, maar email kon niet worden verzonden');
+        }
+      } catch (emailError) {
+        console.error('Email send error:', emailError);
+        toast.warning('Link gegenereerd, maar email kon niet worden verzonden');
+      }
+
       // Return the full sign link
       const baseUrl = window.location.origin;
       return `${baseUrl}/sign/${token}`;
@@ -199,7 +227,7 @@ export const DocumentsList = ({
     onSuccess: (link) => {
       setGeneratedLink(link);
       queryClient.invalidateQueries({ queryKey: ['documents'] });
-      toast.success('Sign link gegenereerd');
+      toast.success('Sign link gegenereerd en email verzonden! 📧');
     },
     onError: (error: Error) => {
       toast.error(`Genereren mislukt: ${error.message}`);
@@ -482,7 +510,7 @@ export const DocumentsList = ({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                De ondertekenaar ontvangt geen automatische e-mail. Stuur de link handmatig of via je eigen mailclient.
+                De ondertekenaar ontvangt automatisch een professionele email met de sign link. Je kunt de link ook handmatig delen via de kopieer-knop.
               </p>
             </div>
           )}
