@@ -236,10 +236,13 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto" style={{
-        transform: isKvkPopupOpen ? 'translateX(-200px)' : 'translateX(0)',
-        transition: 'transform 300ms ease-in-out'
-      }}>
+      <DialogContent 
+        className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto"
+        style={isKvkPopupOpen ? {
+          transform: 'translateX(-200px)',
+          transition: 'transform 300ms ease-in-out'
+        } : undefined}
+      >
         <DialogHeader>
           <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
           <DialogDescription>
