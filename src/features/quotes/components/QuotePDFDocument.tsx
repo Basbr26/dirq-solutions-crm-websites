@@ -227,18 +227,18 @@ export const QuotePDFDocument = ({ quote, items = [] }: QuotePDFDocumentProps) =
             <Text style={styles.value}>{quote.title}</Text>
           </View>
 
-          {quote.companies && (
+          {(quote.company || quote.companies) && (
             <View style={styles.row}>
               <Text style={styles.label}>Bedrijf:</Text>
-              <Text style={styles.value}>{quote.companies.name}</Text>
+              <Text style={styles.value}>{quote.company?.name || quote.companies?.name}</Text>
             </View>
           )}
 
-          {quote.contacts && (
+          {(quote.contact || quote.contacts) && (
             <View style={styles.row}>
               <Text style={styles.label}>Contactpersoon:</Text>
               <Text style={styles.value}>
-                {quote.contacts.first_name} {quote.contacts.last_name}
+                {quote.contact?.first_name || quote.contacts?.first_name} {quote.contact?.last_name || quote.contacts?.last_name}
               </Text>
             </View>
           )}

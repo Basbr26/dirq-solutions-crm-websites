@@ -85,10 +85,10 @@ export default function QuoteDetailPage() {
         .from('quotes')
         .select(`
           *,
-          companies:company_id(id, name, email, phone),
-          contacts:contact_id(id, first_name, last_name, email, phone),
-          projects:project_id(id, title, stage),
-          profiles:owner_id(id, voornaam, achternaam, email)
+          company:companies!quotes_company_id_fkey(id, name, email, phone),
+          contact:contacts!quotes_contact_id_fkey(id, first_name, last_name, email, phone, position),
+          project:projects!quotes_project_id_fkey(id, title, stage),
+          owner:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id!)
         .single();
@@ -274,24 +274,24 @@ export default function QuoteDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Bedrijf</p>
                     <Link 
-                      to={`/companies/${quote.companies?.id}`}
+                      to={`/companies/${quote.company?.id}`}
                       className="font-medium hover:underline"
                     >
-                      {quote.companies?.name}
+                      {quote.company?.name}
                     </Link>
                   </div>
                 </div>
 
-                {quote.contacts && (
+                {quote.contact && (
                   <div className="flex items-start gap-3">
                     <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="text-sm text-muted-foreground">Contactpersoon</p>
                       <Link 
-                        to={`/contacts/${quote.contacts.id}`}
+                        to={`/contacts/${quote.contact.id}`}
                         className="font-medium hover:underline"
                       >
-                        {quote.contacts.first_name} {quote.contacts.last_name}
+                        {quote.contact.first_name} {quote.contact.last_name}
                       </Link>
                     </div>
                   </div>
@@ -547,7 +547,7 @@ export default function QuoteDetailPage() {
           </Card>
 
           {/* Created By */}
-          {quote.profiles && (
+          {quote.owner && (
             <Card>
               <CardHeader>
                 <CardTitle>Gemaakt door</CardTitle>
@@ -559,7 +559,7 @@ export default function QuoteDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {quote.profiles.voornaam} {quote.profiles.achternaam}
+                      {quote.owner.voornaam} {quote.owner.achternaam}
                     </p>
                     <p className="text-sm text-muted-foreground">Aangemaakt door</p>
                   </div>

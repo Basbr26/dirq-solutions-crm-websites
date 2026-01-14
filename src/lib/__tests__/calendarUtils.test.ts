@@ -57,7 +57,11 @@ describe('calendarUtils', () => {
 
       expect(ics).toContain('DTSTART;VALUE=DATE:20260115');
       expect(ics).toContain('DTEND;VALUE=DATE:');
-      expect(ics).not.toContain('T'); // Time component should not be present for all-day
+      // Check that DTSTART/DTEND don't have time component (no T after date)
+      const dtstartLine = ics.split('\n').find(line => line.startsWith('DTSTART;VALUE=DATE:'));
+      const dtendLine = ics.split('\n').find(line => line.startsWith('DTEND;VALUE=DATE:'));
+      expect(dtstartLine).toMatch(/^DTSTART;VALUE=DATE:\d{8}$/);
+      expect(dtendLine).toMatch(/^DTEND;VALUE=DATE:\d{8}$/);
     });
 
     it('should default to 1 hour duration when no end date provided', () => {
@@ -141,11 +145,15 @@ describe('calendarUtils', () => {
       global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
       global.URL.revokeObjectURL = vi.fn();
 
-      // Mock Blob
-      global.Blob = vi.fn((content, options) => ({
-        content,
-        options,
-      })) as any;
+      // Mock Blob as a class constructor
+      global.Blob = class MockBlob {
+        content: any;
+        options: any;
+        constructor(content: any, options: any) {
+          this.content = content;
+          this.options = options;
+        }
+      } as any;
     });
 
     afterEach(() => {

@@ -36,6 +36,33 @@ export interface Quote {
   updated_at: string;
   
   // Relations (from joins)
+  company?: {
+    id: string;
+    name: string;
+    email?: string;
+    phone?: string;
+  };
+  contact?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email?: string;
+    phone?: string;
+    position?: string;
+  };
+  project?: {
+    id: string;
+    title: string;
+    stage?: string;
+  };
+  owner?: {
+    id: string;
+    voornaam: string;
+    achternaam: string;
+    email?: string;
+  };
+  
+  // Legacy aliases for backward compatibility
   companies?: {
     id: string;
     name: string;

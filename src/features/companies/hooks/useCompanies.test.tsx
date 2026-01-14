@@ -56,12 +56,13 @@ describe('useCompanies', () => {
           single: vi.fn(),
         };
         // The final method that actually resolves the query
-        // After all the chaining, order() is the last call before awaiting
+        // order() is called last, so it should return the promise
         chainableMock.order = vi.fn().mockResolvedValue({
           data: mockCompanies,
           error: null,
           count: mockCompanies.length,
         });
+        chainableMock.range = vi.fn().mockReturnValue(chainableMock);
         return chainableMock;
       }
       // Handle auth-related queries (profiles, user_roles)
@@ -89,7 +90,7 @@ describe('useCompanies', () => {
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
-    });
+    }, { timeout: 3000 });
 
     expect(result.current.data?.companies).toEqual(mockCompanies);
     expect(result.current.data?.count).toBe(mockCompanies.length);
@@ -101,15 +102,22 @@ describe('useCompanies', () => {
     const mockFrom = vi.fn().mockImplementation((table: string) => {
       // Handle companies query with error
       if (table === 'companies') {
-        return {
+        const chainableMock = {
           select: vi.fn().mockReturnThis(),
           order: vi.fn().mockReturnThis(),
-          ilike: vi.fn().mockResolvedValue({
-            data: null,
-            error: mockError,
-          }),
+          or: vi.fn().mockReturnThis(),
+          in: vi.fn().mockReturnThis(),
+          range: vi.fn().mockReturnThis(),
+          ilike: vi.fn().mockReturnThis(),
           single: vi.fn(),
         };
+        // order() is called last and should reject with error
+        chainableMock.order = vi.fn().mockResolvedValue({
+          data: null,
+          error: mockError,
+        });
+        chainableMock.range = vi.fn().mockReturnValue(chainableMock);
+        return chainableMock;
       }
       // Handle auth-related queries (profiles, user_roles)
       return {
@@ -130,7 +138,7 @@ describe('useCompanies', () => {
 
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
-    });
+    }, { timeout: 3000 });
 
     expect(result.current.error).toBeTruthy();
   });

@@ -2,16 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendCRMNotification, notifyQuoteStatusChange } from '../crmNotifications';
 
 // Mock Supabase
-const mockInsert = vi.fn();
-const mockFrom = vi.fn(() => ({
-  insert: mockInsert,
-}));
+vi.mock('@/integrations/supabase/client', () => {
+  const mockInsertFn = vi.fn();
+  const mockFromFn = vi.fn(() => ({
+    insert: mockInsertFn,
+  }));
+  
+  return {
+    supabase: {
+      from: mockFromFn,
+    },
+    __mockInsert: mockInsertFn,
+    __mockFrom: mockFromFn,
+  };
+});
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: mockFrom,
-  },
-}));
+// Import mocks after vi.mock
+const { __mockInsert: mockInsert, __mockFrom: mockFrom } = await import('@/integrations/supabase/client') as any;
 
 describe('crmNotifications', () => {
   beforeEach(() => {

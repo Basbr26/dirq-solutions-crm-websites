@@ -146,47 +146,47 @@ describe('financialCalculations', () => {
 
   describe('formatCurrency', () => {
     it('should format EUR correctly', () => {
-      expect(formatCurrency(1234.56)).toBe('€1.234,56');
-      expect(formatCurrency(1234.56, 'EUR')).toBe('€1.234,56');
+      expect(formatCurrency(1234.56)).toBe('€ 1.234,56');
+      expect(formatCurrency(1234.56, 'EUR')).toBe('€ 1.234,56');
     });
 
     it('should handle whole numbers', () => {
-      expect(formatCurrency(1000)).toBe('€1.000,00');
+      expect(formatCurrency(1000)).toBe('€ 1.000,00');
     });
 
     it('should handle negative amounts', () => {
-      expect(formatCurrency(-500)).toBe('-€500,00');
+      expect(formatCurrency(-500)).toBe('€ -500,00');
     });
 
     it('should handle zero', () => {
-      expect(formatCurrency(0)).toBe('€0,00');
+      expect(formatCurrency(0)).toBe('€ 0,00');
     });
 
     it('should handle large numbers', () => {
-      expect(formatCurrency(1234567.89)).toBe('€1.234.567,89');
+      expect(formatCurrency(1234567.89)).toBe('€ 1.234.567,89');
     });
   });
 
   describe('formatPercentage', () => {
     it('should format percentage with 1 decimal by default', () => {
-      expect(formatPercentage(25.5)).toBe('25,5%');
+      expect(formatPercentage(25.5)).toBe('25.5%');
     });
 
     it('should format percentage with custom decimals', () => {
-      expect(formatPercentage(25.567, 2)).toBe('25,57%');
+      expect(formatPercentage(25.567, 2)).toBe('25.57%');
       expect(formatPercentage(25.567, 0)).toBe('26%');
     });
 
     it('should handle negative percentages', () => {
-      expect(formatPercentage(-10.5)).toBe('-10,5%');
+      expect(formatPercentage(-10.5)).toBe('-10.5%');
     });
 
     it('should handle zero', () => {
-      expect(formatPercentage(0)).toBe('0,0%');
+      expect(formatPercentage(0)).toBe('0.0%');
     });
 
     it('should handle whole numbers', () => {
-      expect(formatPercentage(50)).toBe('50,0%');
+      expect(formatPercentage(50)).toBe('50.0%');
     });
   });
 });

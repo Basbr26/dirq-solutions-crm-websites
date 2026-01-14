@@ -18,9 +18,10 @@ export function useQuotes(filters?: QuoteFilters) {
         .from('quotes')
         .select(`
           *,
-          company:company_id (id, name, email, phone),
-          project:project_id (id, title),
-          owner:owner_id (id, voornaam, achternaam, email)
+          company:companies!quotes_company_id_fkey(id, name, email, phone),
+          contact:contacts!quotes_contact_id_fkey(id, first_name, last_name, email),
+          project:projects!quotes_project_id_fkey(id, title),
+          owner:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
         `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
@@ -69,20 +70,10 @@ export function useQuote(id: string) {
         .from('quotes')
         .select(`
           *,
-          company:company_id (id, name, email, phone),
-          project:project_id (
-            id, 
-            title, 
-            contact:contact_id (
-              id, 
-              first_name, 
-              last_name, 
-              email, 
-              phone, 
-              position
-            )
-          ),
-          owner:owner_id (id, voornaam, achternaam, email)
+          company:companies!quotes_company_id_fkey(id, name, email, phone),
+          contact:contacts!quotes_contact_id_fkey(id, first_name, last_name, email, phone, position),
+          project:projects!quotes_project_id_fkey(id, title, stage),
+          owner:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id)
         .single();

@@ -5,20 +5,42 @@ import { useProjects, usePipelineStats } from '../useProjects';
 import type { AdvancedProjectFilters } from '@/types/projects';
 
 // Mock Supabase
-const mockSelect = vi.fn();
-const mockEq = vi.fn();
-const mockIn = vi.fn();
-const mockGte = vi.fn();
-const mockLte = vi.fn();
-const mockOr = vi.fn();
-const mockOrder = vi.fn();
-const mockFrom = vi.fn();
+vi.mock('@/integrations/supabase/client', () => {
+  const mockSelectFn = vi.fn();
+  const mockEqFn = vi.fn();
+  const mockInFn = vi.fn();
+  const mockGteFn = vi.fn();
+  const mockLteFn = vi.fn();
+  const mockOrFn = vi.fn();
+  const mockOrderFn = vi.fn();
+  const mockFromFn = vi.fn();
+  
+  return {
+    supabase: {
+      from: mockFromFn,
+    },
+    __mockFrom: mockFromFn,
+    __mockSelect: mockSelectFn,
+    __mockEq: mockEqFn,
+    __mockIn: mockInFn,
+    __mockGte: mockGteFn,
+    __mockLte: mockLteFn,
+    __mockOr: mockOrFn,
+    __mockOrder: mockOrderFn,
+  };
+});
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: mockFrom,
-  },
-}));
+// Import mocks after vi.mock
+const { 
+  __mockFrom: mockFrom, 
+  __mockSelect: mockSelect,
+  __mockEq: mockEq,
+  __mockIn: mockIn,
+  __mockGte: mockGte,
+  __mockLte: mockLte,
+  __mockOr: mockOr,
+  __mockOrder: mockOrder
+} = await import('@/integrations/supabase/client') as any;
 
 const createWrapper = () => {
   const queryClient = new QueryClient({

@@ -53,7 +53,7 @@ export default function QuotesPage() {
       
       let query = supabase
         .from('quotes')
-        .select('quote_number, title, companies(name), contacts(first_name, last_name), status, total_amount, valid_until, sent_at, accepted_at, rejected_at, created_at');
+        .select('quote_number, title, company:companies!quotes_company_id_fkey(name), contact:contacts!quotes_contact_id_fkey(first_name, last_name), status, total_amount, valid_until, sent_at, accepted_at, rejected_at, created_at');
 
       // Apply same filters as current view
       if (statusFilter && statusFilter !== 'all') {
@@ -76,8 +76,8 @@ export default function QuotesPage() {
       const rows = quotesData.map((q: any) => [
         q.quote_number || '',
         q.title || '',
-        q.companies?.name || '',
-        q.contacts ? `${q.contacts.first_name} ${q.contacts.last_name}` : '',
+        q.company?.name || '',
+        q.contact ? `${q.contact.first_name} ${q.contact.last_name}` : '',
         q.status || '',
         q.total_amount?.toString() || '',
         q.valid_until ? format(new Date(q.valid_until), 'yyyy-MM-dd') : '',
@@ -221,9 +221,9 @@ export default function QuotesPage() {
                             <div className="space-y-1 text-sm text-muted-foreground">
                               <div>{quote.quote_number}</div>
                               <div className="flex items-center gap-4">
-                                <span>{quote.companies?.name}</span>
-                                {quote.contacts && (
-                                  <span>• {quote.contacts.first_name} {quote.contacts.last_name}</span>
+                                <span>{quote.company?.name || quote.companies?.name}</span>
+                                {(quote.contact || quote.contacts) && (
+                                  <span>• {quote.contact?.first_name || quote.contacts?.first_name} {quote.contact?.last_name || quote.contacts?.last_name}</span>
                                 )}
                                 <span>• {format(new Date(quote.created_at), 'dd MMM yyyy', { locale: nl })}</span>
                               </div>
