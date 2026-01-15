@@ -207,6 +207,16 @@ serve(async (req) => {
 </html>
     `
 
+    // Check API key
+    if (!RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY not found in environment')
+      throw new Error('Email service not configured')
+    }
+
+    console.log('📧 Sending email to:', to)
+    console.log('🔑 API Key present:', RESEND_API_KEY ? 'Yes' : 'No')
+    console.log('🔑 API Key starts with:', RESEND_API_KEY.substring(0, 10))
+
     // Send email via Resend
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -224,8 +234,9 @@ serve(async (req) => {
 
     if (!resendResponse.ok) {
       const errorText = await resendResponse.text()
-      console.error('Resend error:', errorText)
-      throw new Error(`Resend API error: ${errorText}`)
+      console.error('❌ Resend error:', errorText)
+      console.error('❌ Status:', resendResponse.status)
+      throw new Error(`Resend API error (${resendResponse.status}): ${errorText}`)
     }
 
     const resendData = await resendResponse.json()
