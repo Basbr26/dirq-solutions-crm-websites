@@ -155,8 +155,60 @@ export default function QuoteDetailPage() {
     }
 
     updateQuote.mutate(updates, {
-      onSuccess: () => {
+      onSuccess: async () => {
         toast.success(`Status gewijzigd naar ${statusConfig[newStatus].label}`);
+        
+        // Send email when quote is sent
+        if (newStatus === 'sent') {
+          try {
+            toast.loading('Offerte email versturen...');
+            
+            // Determine recipient email
+            const recipientEmail = quote?.contact?.email || quote?.company?.email;
+            const recipientName = quote?.contact?.first_name 
+              ? `${quote.contact.first_name} ${quote.contact.last_name || ''}`
+              : quote?.company?.name || 'Klant';
+            
+            if (!recipientEmail) {
+              toast.dismiss();
+              toast.error('Geen email adres gevonden voor klant');
+              return;
+            }
+            
+            // Generate view link
+            const baseUrl = window.location.origin;
+            const viewLink = `${baseUrl}/quotes/${id}`;
+            
+            // Send email via Edge Function
+            const { error: emailError } = await supabase.functions.invoke('send-quote-email', {
+              body: {
+                to: recipientEmail,
+                customerName: recipientName,
+                companyName: quote?.company?.name,
+                quoteNumber: quote?.quote_number || '',
+                quoteTitle: quote?.title || 'Offerte',
+                totalAmount: quote?.total_amount || 0,
+                validUntil: quote?.valid_until,
+                viewLink,
+                senderName: quote?.owner?.voornaam || 'Dirq Solutions',
+                senderEmail: quote?.owner?.email || 'offerte@dirq.nl',
+              },
+            });
+            
+            toast.dismiss();
+            
+            if (emailError) {
+              console.error('Email error:', emailError);
+              toast.warning('Offerte status gewijzigd, maar email verzending mislukt');
+            } else {
+              toast.success('✅ Offerte verzonden en email verstuurd!');
+            }
+          } catch (emailError) {
+            toast.dismiss();
+            console.error('Email exception:', emailError);
+            toast.warning('Offerte status gewijzigd, maar email verzending mislukt');
+          }
+        }
       },
     });
   };
