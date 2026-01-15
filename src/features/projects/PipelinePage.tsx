@@ -1,11 +1,11 @@
 /**
- * Pipeline Page - Kanban Board View
- * Visual pipeline for website development projects
+ * Pipeline Page - Kanban Board View (Redesigned)
+ * Clean, sectioned pipeline for website development projects
  */
 
 import { useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, TrendingUp, DollarSign, MoreVertical } from 'lucide-react';
+import { Plus, TrendingUp, DollarSign, MoreVertical, Target, Briefcase, Code } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -29,24 +29,29 @@ import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
-const activeStages: ProjectStage[] = [
-  'lead',
-  'quote_requested',
-  'quote_sent',
-  'negotiation',
-  'quote_signed',
-  'in_development',
-  'review',
-  'live',
-];
+// Pipeline sections
+const PIPELINE_SECTIONS = {
+  sales: {
+    title: '💼 Sales Pipeline',
+    subtitle: 'Van lead tot getekende deal',
+    stages: ['lead', 'quote_requested', 'quote_sent', 'negotiation', 'quote_signed'] as ProjectStage[],
+  },
+  development: {
+    title: '⚙️ Development Pipeline',
+    subtitle: 'Van ontwikkeling tot live',
+    stages: ['in_development', 'review', 'live'] as ProjectStage[],
+  },
+};
 
 export default function PipelinePage() {
   const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(max-width: 1024px)');
   const { data: projectsByStage, isLoading } = useProjectsByStage();
   const { data: stats } = usePipelineStats();
   const queryClient = useQueryClient();
   const [draggedProject, setDraggedProject] = useState<Project | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [focusedStage, setFocusedStage] = useState<ProjectStage | null>(null);
   
   const createProject = useCreateProject();
 
@@ -150,6 +155,177 @@ export default function PipelinePage() {
     }
   }, [queryClient]);
 
+  // Render a pipeline section
+  const renderPipelineSection = (
+    sectionKey: keyof typeof PIPELINE_SECTIONS,
+    stages: ProjectStage[]
+  ) => {
+    const section = PIPELINE_SECTIONS[sectionKey];
+    
+    return (
+      <div key={sectionKey} className="space-y-4">
+        {/* Section Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">{section.title}</h2>
+            <p className="text-sm text-muted-foreground">{section.subtitle}</p>
+          </div>
+        </div>
+
+        {/* Stages Grid */}
+        <div 
+          className={isMobile ? "flex gap-3 overflow-x-auto pb-4" : "grid gap-4"}
+          style={isMobile ? {
+            scrollSnapType: 'x mandatory',
+            scrollPadding: '0 16px',
+            WebkitOverflowScrolling: 'touch',
+          } : {
+            gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {/* Flow indicator line (desktop only) */}
+          {!isTablet && stages.length > 1 && (
+            <div className="absolute top-12 left-8 right-8 h-0.5 bg-gradient-to-r from-slate-200 via-primary/10 to-slate-200 z-0" 
+              style={{ pointerEvents: 'none' }} 
+            />
+          )}
+
+          {stages.map((stage, index) => {
+            const config = projectStageConfig[stage];
+            const projects = projectsByStage?.[stage] || [];
+            const stageValue = projects.reduce((sum, p) => sum + (p.value || 0), 0);
+            const isFocused = focusedStage === stage;
+
+            return (
+              <div
+                key={stage}
+                className={isMobile ? "flex-shrink-0" : "relative"}
+                style={isMobile ? {
+                  width: '85vw',
+                  scrollSnapAlign: 'center',
+                } : undefined}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(stage)}
+                onClick={() => setFocusedStage(isFocused ? null : stage)}
+              >
+                <Card 
+                  className={`h-full flex flex-col transition-all duration-200 cursor-pointer
+                    ${isFocused ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'}
+                    bg-white border-l-4`}
+                  style={{ borderLeftColor: config.color }}
+                >
+                  <div className="p-4 border-b bg-slate-50/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">{config.icon}</span>
+                        <h3 className="font-semibold text-sm">{config.label}</h3>
+                      </div>
+                      <Badge variant="secondary" className="font-semibold">
+                        {projects.length}
+                      </Badge>
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">
+                      {formatCurrency(stageValue)}
+                    </div>
+                    
+                    {/* Flow arrow (desktop only, not on last stage) */}
+                    {!isTablet && index < stages.length - 1 && (
+                      <div className="absolute top-12 -right-4 text-slate-300 text-2xl z-10">
+                        →
+                      </div>
+                    )}
+                  </div>
+
+                  <ScrollArea className="flex-1 p-3">
+                    <div className="space-y-2">
+                      {projects.length === 0 ? (
+                        <div className="text-center py-12 text-sm text-muted-foreground">
+                          <div className="text-3xl mb-2 opacity-20">{config.icon}</div>
+                          <div>Geen projecten</div>
+                        </div>
+                      ) : (
+                        projects.map(project => (
+                          <div key={project.id} className="relative group">
+                            <Link
+                              to={`/projects/${project.id}`}
+                              draggable={!isMobile}
+                              onDragStart={() => handleDragStart(project)}
+                              className="block"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Card className={`p-3 transition-all duration-150
+                                ${isMobile ? 'active:scale-[0.98]' : 'hover:shadow-md hover:scale-[1.02] cursor-move'}
+                                bg-white border border-slate-200`}>
+                                <div className="flex items-start justify-between gap-2 mb-2">
+                                  <h4 className="font-medium text-sm line-clamp-2 flex-1">
+                                    {project.title}
+                                  </h4>
+                                  {isMobile && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger 
+                                        asChild 
+                                        onClick={(e) => e.preventDefault()}
+                                      >
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          className="h-7 w-7 p-0 flex-shrink-0"
+                                        >
+                                          <MoreVertical className="h-3.5 w-3.5" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuLabel>Verplaats naar</DropdownMenuLabel>
+                                        {[...PIPELINE_SECTIONS.sales.stages, ...PIPELINE_SECTIONS.development.stages]
+                                          .filter(s => s !== project.stage)
+                                          .map(targetStage => {
+                                            const config = projectStageConfig[targetStage];
+                                            return (
+                                              <DropdownMenuItem
+                                                key={targetStage}
+                                                onClick={(e) => {
+                                                  e.preventDefault();
+                                                  handleMoveToStage(project, targetStage);
+                                                }}
+                                              >
+                                                <span className="mr-2">{config.icon}</span>
+                                                {config.label}
+                                              </DropdownMenuItem>
+                                            );
+                                          })}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground mb-2 truncate">
+                                  {project.companies?.name}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-semibold text-primary text-sm">
+                                    {formatCurrency(project.value || 0)}
+                                  </span>
+                                  {project.expected_close_date && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {format(new Date(project.expected_close_date), 'dd MMM', { locale: nl })}
+                                    </span>
+                                  )}
+                                </div>
+                              </Card>
+                            </Link>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <AppLayout
       title="Sales Pipeline"
@@ -161,186 +337,86 @@ export default function PipelinePage() {
         </Button>
       }
     >
-      <div className="p-4 md:p-6 space-y-6">
-        {/* Stats Cards */}
+      <div className="p-4 md:p-6 space-y-8">
+        {/* Enhanced Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <TrendingUp className="h-4 w-4" />
-                Pipeline Waarde
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="p-6 bg-gradient-to-br from-primary/5 to-white border-l-4 border-l-primary">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Pipeline Waarde
+                </div>
               </div>
-              <div className="text-2xl font-bold">{formatCurrency(stats.total_value)}</div>
-            </Card>
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground mb-1">Gewogen Waarde</div>
-              <div className="text-2xl font-bold">{formatCurrency(stats.weighted_value)}</div>
-            </Card>
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground mb-1">Actieve Projecten</div>
-              <div className="text-2xl font-bold">{stats.total_projects}</div>
-            </Card>
-            <Card className="p-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <DollarSign className="h-4 w-4" />
-                Gem. Deal Size
+              <div className="text-3xl font-bold">{formatCurrency(stats.total_value)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Totale waarde van alle actieve deals
               </div>
-              <div className="text-2xl font-bold">{formatCurrency(stats.avg_deal_size)}</div>
+            </Card>
+            
+            <Card className="p-6 bg-gradient-to-br from-green-50 to-white border-l-4 border-l-green-500">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Target className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Gewogen Waarde
+                </div>
+              </div>
+              <div className="text-3xl font-bold">{formatCurrency(stats.weighted_value)}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Gebaseerd op sluitingskans per fase
+              </div>
+            </Card>
+            
+            <Card className="p-6 bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Briefcase className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Actieve Projecten
+                </div>
+              </div>
+              <div className="text-3xl font-bold">{stats.total_projects}</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Gem. deal size: {formatCurrency(stats.avg_deal_size)}
+              </div>
             </Card>
           </div>
         )}
 
-        {/* Kanban Board */}
-        <div 
-          className={isMobile ? "flex gap-4 overflow-x-auto pb-4" : "grid gap-4"}
-          style={isMobile ? {
-            scrollSnapType: 'x mandatory',
-            scrollPadding: '0 16px',
-            WebkitOverflowScrolling: 'touch',
-          } : {
-            gridTemplateColumns: `repeat(${activeStages.length}, minmax(0, 1fr))`,
-          }}
-        >
-          {isLoading ? (
-            <div className={isMobile ? "flex gap-4" : "contents"}>
-              {activeStages.map(stage => (
-                <div 
-                  key={stage} 
-                  className={isMobile ? "flex-shrink-0" : ""}
-                  style={isMobile ? {
-                    width: '85vw',
-                    scrollSnapAlign: 'center',
-                  } : undefined}
-                >
-                  <Card className="p-4 animate-pulse h-full">
-                    <div className="h-6 bg-muted rounded w-1/2 mb-4" />
-                    <div className="space-y-2">
-                      {[1, 2].map(i => (
-                        <div key={i} className="h-24 bg-muted rounded" />
-                      ))}
-                    </div>
-                  </Card>
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="space-y-8">
+            {Object.keys(PIPELINE_SECTIONS).map(section => (
+              <div key={section} className="space-y-4">
+                <div className="h-8 bg-slate-100 rounded w-64 animate-pulse" />
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <Card key={i} className="p-4 animate-pulse h-64">
+                      <div className="h-6 bg-slate-100 rounded w-1/2 mb-4" />
+                      <div className="space-y-2">
+                        <div className="h-20 bg-slate-100 rounded" />
+                        <div className="h-20 bg-slate-100 rounded" />
+                      </div>
+                    </Card>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            activeStages.map(stage => {
-              const config = projectStageConfig[stage];
-              const projects = projectsByStage?.[stage] || [];
-              const stageValue = projects.reduce((sum, p) => sum + (p.value || 0), 0);
-
-              return (
-                <div
-                  key={stage}
-                  className={isMobile ? "flex-shrink-0" : ""}
-                  style={isMobile ? {
-                    width: '85vw',
-                    scrollSnapAlign: 'center',
-                  } : undefined}
-                  onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(stage)}
-                >
-                  <Card 
-                    className="h-full flex flex-col"
-                    style={{ borderTopColor: config.color, borderTopWidth: 3 }}
-                  >
-                    <div className="p-4 border-b">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{config.icon}</span>
-                          <h3 className="font-semibold">{config.label}</h3>
-                        </div>
-                        <Badge variant="secondary">{projects.length}</Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatCurrency(stageValue)}
-                      </div>
-                    </div>
-
-                    <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-3">
-                        {projects.length === 0 ? (
-                          <div className="text-center py-8 text-sm text-muted-foreground">
-                            Geen projecten
-                          </div>
-                        ) : (
-                          projects.map(project => (
-                            <div key={project.id} className="relative group">
-                              <Link
-                                to={`/projects/${project.id}`}
-                                draggable={!isMobile}
-                                onDragStart={() => handleDragStart(project)}
-                                className="block"
-                              >
-                                <Card className={`p-3 transition-shadow ${isMobile ? 'active:scale-[0.98]' : 'hover:shadow-md cursor-move'}`}>
-                                  <div className="flex items-start justify-between gap-2 mb-1">
-                                    <h4 className="font-medium line-clamp-2 flex-1">
-                                      {project.title}
-                                    </h4>
-                                    {/* Mobile: Show move menu button */}
-                                    {isMobile && (
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger 
-                                          asChild 
-                                          onClick={(e) => e.preventDefault()}
-                                        >
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-8 w-8 p-0 flex-shrink-0"
-                                          >
-                                            <MoreVertical className="h-4 w-4" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-48">
-                                          <DropdownMenuLabel>Verplaats naar</DropdownMenuLabel>
-                                          {activeStages
-                                            .filter(s => s !== project.stage)
-                                            .map(targetStage => {
-                                              const config = projectStageConfig[targetStage];
-                                              return (
-                                                <DropdownMenuItem
-                                                  key={targetStage}
-                                                  onClick={(e) => {
-                                                    e.preventDefault();
-                                                    handleMoveToStage(project, targetStage);
-                                                  }}
-                                                >
-                                                  <span className="mr-2">{config.icon}</span>
-                                                  {config.label}
-                                                </DropdownMenuItem>
-                                              );
-                                            })}
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    )}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground mb-2 truncate">
-                                    {project.companies?.name}
-                                  </div>
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-semibold text-green-600 text-sm">
-                                      {formatCurrency(project.value || 0)}
-                                    </span>
-                                    {project.expected_close_date && (
-                                      <span className="text-xs text-muted-foreground">
-                                        {format(new Date(project.expected_close_date), 'dd MMM', { locale: nl })}
-                                      </span>
-                                    )}
-                                  </div>
-                                </Card>
-                              </Link>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </Card>
-                </div>
-              );
-            })
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Sales Pipeline Section */}
+            {renderPipelineSection('sales', PIPELINE_SECTIONS.sales.stages)}
+            
+            {/* Development Pipeline Section */}
+            {renderPipelineSection('development', PIPELINE_SECTIONS.development.stages)}
+          </>
+        )}
       </div>
 
       {/* Create Project Dialog */}
