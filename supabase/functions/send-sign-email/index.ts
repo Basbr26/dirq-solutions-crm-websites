@@ -215,7 +215,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: `${senderName} <noreply@dirqsolutions.nl>`,
+        from: `Dirq Solutions <bas@dirqsolutions.nl>`,
         to: [to],
         subject: `📝 Document ter ondertekening: ${documentTitle}`,
         html: emailHtml,

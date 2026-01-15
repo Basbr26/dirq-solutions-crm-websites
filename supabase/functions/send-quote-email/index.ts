@@ -322,7 +322,7 @@ ${quoteData.senderName || 'Dirq Solutions'}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: quoteData.senderEmail || 'offerte@dirq.nl',
+        from: 'Dirq Solutions <bas@dirqsolutions.nl>',
         to: quoteData.to,
         subject: `Offerte ${quoteData.quoteNumber} - ${quoteData.quoteTitle}`,
         html,
