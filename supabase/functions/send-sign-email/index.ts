@@ -56,7 +56,7 @@ serve(async (req) => {
 
     // Get app URL from request origin
     const origin = req.headers.get('origin') || 'https://your-app.com'
-    const signUrl = `${origin}/sign/${signToken}`
+    const signUrl = `${origin}/sign-quote/${signToken}`
     
     // Format expiry date
     const expiryDate = new Date(expiresAt).toLocaleDateString('nl-NL', {
@@ -230,16 +230,21 @@ serve(async (req) => {
 
     const resendData = await resendResponse.json()
 
-    // Log email send in database
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-    await supabase.from('email_logs').insert({
-      document_id: documentId,
-      recipient: to,
-      subject: `Document ter ondertekening: ${documentTitle}`,
-      sent_at: new Date().toISOString(),
-      provider: 'resend',
-      external_id: resendData.id,
-    })
+    // Optionally log email send in database (only if email_logs table exists)
+    try {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+      await supabase.from('email_logs').insert({
+        document_id: documentId,
+        recipient: to,
+        subject: `Document ter ondertekening: ${documentTitle}`,
+        sent_at: new Date().toISOString(),
+        provider: 'resend',
+        external_id: resendData.id,
+      })
+    } catch (logError) {
+      // Ignore logging errors - email was still sent successfully
+      console.warn('Could not log email to database:', logError)
+    }
 
     return new Response(
       JSON.stringify({ 
