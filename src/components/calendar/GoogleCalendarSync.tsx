@@ -9,6 +9,7 @@ import {
   syncToGoogleCalendar,
   syncFromGoogleCalendar,
   refreshAccessToken,
+  refreshGoogleAccessToken,
   isTokenExpired,
   registerGoogleCalendarWebhook,
   stopGoogleCalendarWebhook,
@@ -207,15 +208,13 @@ export function GoogleCalendarSync() {
         addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
         // Store tokens securely in Supabase profiles table
-        // NOTE: Current OAuth flow (implicit) doesn't return refresh_token
-        // For persistent auth, need to switch to authorization_code flow
         addDebugLog('💾 Storing token in database...');
         const { error: updateError } = await supabase
           .from('profiles')
           .update({
             google_access_token: tokenResponse.access_token,
             google_token_expires_at: expiresAt.toISOString(),
-            // google_refresh_token: tokenResponse.refresh_token, // TODO: Add when switching to auth code flow
+            google_refresh_token: tokenResponse.refresh_token || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
@@ -232,13 +231,17 @@ export function GoogleCalendarSync() {
         setIsSignedIn(true);
         setConnectionError(null);
         
-        // Check if we have refresh token (we likely don't with implicit flow)
+        // Check if we have refresh token
         if (!tokenResponse.refresh_token) {
-          addDebugLog('⚠️ No refresh_token received (using implicit flow)');
+          addDebugLog('⚠️ No refresh_token received');
           setConnectionError('Let op: geen refresh token - sessie verloopt na 1 uur');
           toast.warning('Verbonden - Maar sessie verloopt na 1 uur (geen refresh token)', { duration: 5000 });
         } else {
-          toast.success('Verbonden met Google Calendar - Tokens veilig opgeslagen');
+          addDebugLog('✅ Refresh token ontvangen - persistente authenticatie actief');
+          toast.success('Verbonden met Google Calendar met persistente authenticatie');
+          
+          // Setup automatic token refresh
+          setupTokenRefresh(tokenResponse.refresh_token, expiresAt);
         }
         
         // Register webhook for real-time sync
@@ -276,6 +279,57 @@ export function GoogleCalendarSync() {
       setIsLoading(false);
     }
   };
+
+  // Setup automatic token refresh before expiry
+  const setupTokenRefresh = useCallback((refreshToken: string, expiresAt: Date) => {
+    if (!user) return;
+
+    // Calculate time until token expires (refresh 5 minutes before)
+    const now = new Date();
+    const timeUntilExpiry = expiresAt.getTime() - now.getTime();
+    const refreshTime = Math.max(timeUntilExpiry - (5 * 60 * 1000), 60000); // Min 1 minute
+
+    addDebugLog(`🔄 Setting up auto-refresh in ${Math.round(refreshTime / 1000 / 60)} minutes`);
+
+    const timeoutId = setTimeout(async () => {
+      addDebugLog('🔄 Auto-refreshing access token...');
+      try {
+        const newTokenData = await refreshGoogleAccessToken(refreshToken);
+        
+        if (newTokenData) {
+          const newExpiresAt = new Date();
+          newExpiresAt.setSeconds(newExpiresAt.getSeconds() + newTokenData.expires_in);
+          
+          // Update database with new access token
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              google_access_token: newTokenData.access_token,
+              google_token_expires_at: newExpiresAt.toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', user.id);
+
+          if (updateError) {
+            addDebugLog(`❌ Failed to update token: ${updateError.message}`);
+            console.error('Error updating refreshed token:', updateError);
+          } else {
+            addDebugLog('✅ Token auto-refreshed successfully');
+            // Schedule next refresh
+            setupTokenRefresh(refreshToken, newExpiresAt);
+          }
+        } else {
+          addDebugLog('❌ Token refresh failed');
+          setConnectionError('Token vernieuwen mislukt - herverbind alsjeblieft');
+        }
+      } catch (error) {
+        console.error('Error auto-refreshing token:', error);
+        addDebugLog('❌ Auto-refresh error');
+      }
+    }, refreshTime);
+
+    return () => clearTimeout(timeoutId);
+  }, [user, addDebugLog]);
 
   const handleSignOut = async () => {
     if (!user) return;

@@ -49,10 +49,11 @@ export async function initGoogleCalendar(): Promise<boolean> {
       });
     });
 
-    // Initialize token client for OAuth
-    tokenClient = window.google.accounts.oauth2.initTokenClient({
+    // Initialize token client for OAuth with authorization code flow
+    tokenClient = window.google.accounts.oauth2.initCodeClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
+      ux_mode: 'popup',
       callback: '', // Will be set during sign-in
       redirect_uri: GOOGLE_REDIRECT_URI, // Explicitly set redirect URI
     });
@@ -85,33 +86,113 @@ export async function signInToGoogle(): Promise<{
   access_token: string;
   expires_in: number;
   scope: string;
-  refresh_token?: string; // Only present in authorization_code flow, not implicit flow
+  refresh_token?: string;
 } | null> {
   return new Promise((resolve) => {
-    tokenClient.callback = (response: any) => {
+    tokenClient.callback = async (response: any) => {
       if (response.error) {
         logger.error(new Error(response.error), { context: 'Google sign-in error' });
         resolve(null);
         return;
       }
       
-      // Return full response for token storage
-      resolve({
-        access_token: response.access_token,
-        expires_in: response.expires_in || 3600, // Default 1 hour
-        scope: response.scope,
-        refresh_token: response.refresh_token, // Will be undefined for implicit flow
-      });
+      // With authorization code flow, we receive a 'code' that needs to be exchanged
+      // The code exchange happens via a backend endpoint
+      if (response.code) {
+        try {
+          // Exchange authorization code for tokens via backend
+          const tokenResponse = await exchangeCodeForTokens(response.code);
+          resolve(tokenResponse);
+        } catch (error) {
+          logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Token exchange error' });
+          resolve(null);
+        }
+      } else {
+        // Fallback for implicit flow (shouldn't happen with initCodeClient)
+        resolve({
+          access_token: response.access_token,
+          expires_in: response.expires_in || 3600,
+          scope: response.scope,
+          refresh_token: response.refresh_token,
+        });
+      }
     };
 
-    if (gapi.client.getToken() === null) {
-      // Prompt the user to select a Google Account and ask for consent
-      tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      // Skip display of account chooser and consent dialog
-      tokenClient.requestAccessToken({ prompt: '' });
-    }
+    // Always request consent to ensure refresh token is included
+    tokenClient.requestCode();
   });
+}
+
+/**
+ * Exchange authorization code for access and refresh tokens
+ * This should be done server-side for security
+ */
+async function exchangeCodeForTokens(code: string): Promise<{
+  access_token: string;
+  expires_in: number;
+  scope: string;
+  refresh_token?: string;
+} | null> {
+  try {
+    // Call Supabase Edge Function to exchange code for tokens
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-oauth-exchange`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ code }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Token exchange failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return {
+      access_token: data.access_token,
+      expires_in: data.expires_in || 3600,
+      scope: data.scope,
+      refresh_token: data.refresh_token,
+    };
+  } catch (error) {
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error exchanging code for tokens' });
+    return null;
+  }
+}
+
+/**
+ * Refresh access token using refresh token
+ */
+export async function refreshGoogleAccessToken(refreshToken: string): Promise<{
+  access_token: string;
+  expires_in: number;
+} | null> {
+  try {
+    // Call Supabase Edge Function to refresh token
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Token refresh failed: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return {
+      access_token: data.access_token,
+      expires_in: data.expires_in || 3600,
+    };
+  } catch (error) {
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error refreshing access token' });
+    return null;
+  }
 }
 
 /**
