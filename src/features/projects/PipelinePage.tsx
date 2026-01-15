@@ -192,25 +192,27 @@ export default function PipelinePage() {
 
         {/* Kanban Board */}
         <div 
-          className="flex gap-4 overflow-x-auto pb-4"
-          style={{
-            scrollSnapType: isMobile ? 'x mandatory' : 'none',
+          className={isMobile ? "flex gap-4 overflow-x-auto pb-4" : "grid gap-4"}
+          style={isMobile ? {
+            scrollSnapType: 'x mandatory',
             scrollPadding: '0 16px',
             WebkitOverflowScrolling: 'touch',
+          } : {
+            gridTemplateColumns: `repeat(${activeStages.length}, minmax(0, 1fr))`,
           }}
         >
           {isLoading ? (
-            <div className="flex gap-4">
+            <div className={isMobile ? "flex gap-4" : "contents"}>
               {activeStages.map(stage => (
                 <div 
                   key={stage} 
-                  className="flex-shrink-0"
-                  style={{
-                    width: isMobile ? '85vw' : '320px',
-                    scrollSnapAlign: isMobile ? 'center' : 'none',
-                  }}
+                  className={isMobile ? "flex-shrink-0" : ""}
+                  style={isMobile ? {
+                    width: '85vw',
+                    scrollSnapAlign: 'center',
+                  } : undefined}
                 >
-                  <Card className="p-4 animate-pulse">
+                  <Card className="p-4 animate-pulse h-full">
                     <div className="h-6 bg-muted rounded w-1/2 mb-4" />
                     <div className="space-y-2">
                       {[1, 2].map(i => (
@@ -230,11 +232,11 @@ export default function PipelinePage() {
               return (
                 <div
                   key={stage}
-                  className="flex-shrink-0"
-                  style={{
-                    width: isMobile ? '85vw' : '320px',
-                    scrollSnapAlign: isMobile ? 'center' : 'none',
-                  }}
+                  className={isMobile ? "flex-shrink-0" : ""}
+                  style={isMobile ? {
+                    width: '85vw',
+                    scrollSnapAlign: 'center',
+                  } : undefined}
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(stage)}
                 >
