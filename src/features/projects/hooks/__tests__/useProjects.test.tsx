@@ -59,15 +59,30 @@ describe('useProjects', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Setup mock chain
-    mockOrder.mockReturnValue(mockOrder);
-    mockSelect.mockReturnValue(mockOrder);
-    mockEq.mockReturnValue(mockOrder);
-    mockIn.mockReturnValue(mockOrder);
-    mockGte.mockReturnValue(mockOrder);
-    mockLte.mockReturnValue(mockOrder);
-    mockOr.mockReturnValue(mockOrder);
-    mockFrom.mockReturnValue({ select: mockSelect });
+    // Create a chainable mock that tracks all method calls
+    const chainableMock = {
+      select: mockSelect,
+      eq: mockEq,
+      in: mockIn,
+      gte: mockGte,
+      lte: mockLte,
+      or: mockOr,
+      order: mockOrder,
+    };
+    
+    // Each method returns the chainable mock
+    mockSelect.mockReturnValue(chainableMock);
+    mockEq.mockReturnValue(chainableMock);
+    mockIn.mockReturnValue(chainableMock);
+    mockGte.mockReturnValue(chainableMock);
+    mockLte.mockReturnValue(chainableMock);
+    mockOr.mockReturnValue(chainableMock);
+    
+    // order() is the final method that resolves
+    mockOrder.mockResolvedValue({ data: [], error: null, count: 0 });
+    
+    // from() returns the chain
+    mockFrom.mockReturnValue(chainableMock);
   });
 
   it('should fetch projects without filters', async () => {
@@ -217,10 +232,13 @@ describe('useProjects', () => {
   it('should refetch when filters change', async () => {
     mockOrder.mockResolvedValue({ data: [], error: null });
 
-    const { rerender } = renderHook(
-      ({ filters }: { filters?: AdvancedProjectFilters }) => useProjects(filters),
+    type RenderProps = { filters?: AdvancedProjectFilters };
+    
+    const { rerender, result } = renderHook(
+      ({ filters }: RenderProps) => useProjects(filters),
       {
         wrapper: createWrapper(),
+        initialProps: {} as RenderProps,
       }
     );
 

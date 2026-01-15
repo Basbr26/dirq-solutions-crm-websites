@@ -53,16 +53,17 @@ describe('useCompanies', () => {
           in: vi.fn().mockReturnThis(),
           range: vi.fn().mockReturnThis(),
           ilike: vi.fn().mockReturnThis(),
-          single: vi.fn(),
         };
-        // The final method that actually resolves the query
-        // order() is called last, so it should return the promise
+        
+        // Setup chain: select -> range -> order (final)
+        chainableMock.select = vi.fn().mockReturnValue(chainableMock);
+        chainableMock.range = vi.fn().mockReturnValue(chainableMock);
         chainableMock.order = vi.fn().mockResolvedValue({
           data: mockCompanies,
           error: null,
           count: mockCompanies.length,
         });
-        chainableMock.range = vi.fn().mockReturnValue(chainableMock);
+        
         return chainableMock;
       }
       // Handle auth-related queries (profiles, user_roles)
@@ -89,11 +90,10 @@ describe('useCompanies', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
+      expect(result.current.companies).toEqual(mockCompanies);
     }, { timeout: 3000 });
 
-    expect(result.current.data?.companies).toEqual(mockCompanies);
-    expect(result.current.data?.count).toBe(mockCompanies.length);
+    expect(result.current.totalCount).toBe(mockCompanies.length);
   });
 
   it('should handle fetch errors', async () => {
@@ -109,14 +109,16 @@ describe('useCompanies', () => {
           in: vi.fn().mockReturnThis(),
           range: vi.fn().mockReturnThis(),
           ilike: vi.fn().mockReturnThis(),
-          single: vi.fn(),
         };
-        // order() is called last and should reject with error
+        
+        // Setup chain to throw error
+        chainableMock.select = vi.fn().mockReturnValue(chainableMock);
+        chainableMock.range = vi.fn().mockReturnValue(chainableMock);
         chainableMock.order = vi.fn().mockResolvedValue({
           data: null,
           error: mockError,
         });
-        chainableMock.range = vi.fn().mockReturnValue(chainableMock);
+        
         return chainableMock;
       }
       // Handle auth-related queries (profiles, user_roles)
@@ -137,10 +139,8 @@ describe('useCompanies', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toBeTruthy();
     }, { timeout: 3000 });
-
-    expect(result.current.error).toBeTruthy();
   });
 
   it('should apply filters correctly', async () => {

@@ -58,8 +58,8 @@ describe('calendarUtils', () => {
       expect(ics).toContain('DTSTART;VALUE=DATE:20260115');
       expect(ics).toContain('DTEND;VALUE=DATE:');
       // Check that DTSTART/DTEND don't have time component (no T after date)
-      const dtstartLine = ics.split('\n').find(line => line.startsWith('DTSTART;VALUE=DATE:'));
-      const dtendLine = ics.split('\n').find(line => line.startsWith('DTEND;VALUE=DATE:'));
+      const dtstartLine = ics.split('\n').find(line => line.startsWith('DTSTART;VALUE=DATE:'))?.trim();
+      const dtendLine = ics.split('\n').find(line => line.startsWith('DTEND;VALUE=DATE:'))?.trim();
       expect(dtstartLine).toMatch(/^DTSTART;VALUE=DATE:\d{8}$/);
       expect(dtendLine).toMatch(/^DTEND;VALUE=DATE:\d{8}$/);
     });
@@ -128,6 +128,7 @@ describe('calendarUtils', () => {
     let appendChildSpy: any;
     let removeChildSpy: any;
     let mockLink: any;
+    let blobSpy: any;
 
     beforeEach(() => {
       // Mock document methods
@@ -145,15 +146,13 @@ describe('calendarUtils', () => {
       global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
       global.URL.revokeObjectURL = vi.fn();
 
-      // Mock Blob as a class constructor
-      global.Blob = class MockBlob {
-        content: any;
-        options: any;
-        constructor(content: any, options: any) {
-          this.content = content;
-          this.options = options;
-        }
-      } as any;
+      // Mock Blob as a spied class constructor
+      const MockBlob = vi.fn().mockImplementation(function(this: any, content: any, options: any) {
+        this.content = content;
+        this.options = options;
+      });
+      blobSpy = MockBlob;
+      global.Blob = MockBlob as any;
     });
 
     afterEach(() => {
@@ -205,7 +204,7 @@ describe('calendarUtils', () => {
 
       downloadICSFile(event);
 
-      expect(global.Blob).toHaveBeenCalledWith(
+      expect(blobSpy).toHaveBeenCalledWith(
         expect.any(Array),
         { type: 'text/calendar;charset=utf-8' }
       );

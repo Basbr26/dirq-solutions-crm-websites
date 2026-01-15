@@ -1,7 +1,10 @@
 /**
- * Resend Email Service
- * Handles sending notifications via email with templates
+ * Resend Email Service (SECURE VERSION)
+ * ⚠️ SECURITY: All email sending MUST go through Supabase Edge Functions
+ * NEVER expose API keys in frontend code!
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmailTemplate {
   subject: string;
@@ -172,41 +175,37 @@ export const generateActionEmailTemplate = (
 };
 
 /**
- * Send email via Resend API
+ * 🔒 SECURE: Send email via Supabase Edge Function
+ * This keeps the API key server-side where it belongs!
  */
 export const sendEmailViaResend = async (params: SendEmailParams): Promise<boolean> => {
   try {
-    const apiKey = process.env.REACT_APP_RESEND_API_KEY;
-    if (!apiKey) {
-      console.error('REACT_APP_RESEND_API_KEY not configured');
-      return false;
-    }
-
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: params.from || 'notifications@dirq.app',
+    // Call the Supabase Edge Function instead of direct API call
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: {
         to: params.to,
         subject: params.subject,
         html: params.html,
         text: params.text,
-        reply_to: params.replyTo
-      })
+        replyTo: params.replyTo,
+        from: params.from || 'notifications@dirq.app'
+      }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Resend API error:', error);
+    if (error) {
+      console.error('[Email] Edge Function error:', error);
       return false;
     }
 
+    if (!data?.success) {
+      console.error('[Email] Failed to send:', data?.error);
+      return false;
+    }
+
+    console.log('[Email] Sent successfully:', data);
     return true;
-  } catch (error) {
-    console.error('Error sending email via Resend:', error);
+  } catch (err) {
+    console.error('[Email] Exception:', err);
     return false;
   }
 };

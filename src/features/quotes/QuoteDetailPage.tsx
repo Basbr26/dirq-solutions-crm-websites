@@ -24,11 +24,24 @@ import {
   Euro,
   Clock,
   Plus,
+  Pen,
+  Copy,
+  Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,6 +84,10 @@ export default function QuoteDetailPage() {
   const { role } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [signDialogOpen, setSignDialogOpen] = useState(false);
+  const [signerEmail, setSignerEmail] = useState('');
+  const [generatedSignLink, setGeneratedSignLink] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const updateQuote = useUpdateQuote(id!);
   const deleteQuote = useDeleteQuote();
@@ -142,6 +159,92 @@ export default function QuoteDetailPage() {
         toast.success(`Status gewijzigd naar ${statusConfig[newStatus].label}`);
       },
     });
+  };
+
+  const handleGenerateSignLink = async () => {
+    if (!id || !signerEmail) {
+      toast.error('Email adres is verplicht');
+      return;
+    }
+
+    try {
+      toast.loading('Sign link genereren...');
+
+      // Generate unique token
+      const token = crypto.randomUUID();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiry
+
+      // Update quote with sign token
+      const { error: updateError } = await supabase
+        .from('quotes')
+        .update({
+          sign_token: token,
+          sign_status: 'sent',
+          sign_link_expires_at: expiresAt.toISOString(),
+          signer_email: signerEmail,
+        })
+        .eq('id', id);
+
+      if (updateError) throw updateError;
+
+      // Send email via Edge Function
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-sign-email', {
+          body: {
+            to: signerEmail,
+            documentTitle: quote?.title || `Offerte ${quote?.quote_number}`,
+            documentId: id,
+            signToken: token,
+            companyName: quote?.company?.name,
+            expiresAt: expiresAt.toISOString(),
+            senderName: quote?.owner?.voornaam || 'Dirq Solutions',
+          },
+        });
+
+        if (emailError) {
+          console.error('Email error:', emailError);
+          toast.warning('Link gegenereerd, maar email verzending mislukt');
+        }
+      } catch (emailError) {
+        console.error('Email exception:', emailError);
+        toast.warning('Link gegenereerd, maar email verzending mislukt');
+      }
+
+      // Generate full link
+      const baseUrl = window.location.origin;
+      const signLink = `${baseUrl}/sign/${token}`;
+      setGeneratedSignLink(signLink);
+
+      toast.dismiss();
+      toast.success('Sign link gegenereerd en email verzonden! 📧✨');
+
+      queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Sign link genereren mislukt');
+      console.error('Generate sign link error:', error);
+    }
+  };
+
+  const handleCopySignLink = async () => {
+    if (!generatedSignLink) return;
+    await navigator.clipboard.writeText(generatedSignLink);
+    setLinkCopied(true);
+    toast.success('Link gekopieerd! 📋');
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
+  const handleOpenSignDialog = () => {
+    // Pre-fill email if contact exists
+    if (quote?.contact?.email) {
+      setSignerEmail(quote.contact.email);
+    } else if (quote?.company?.email) {
+      setSignerEmail(quote.company.email);
+    }
+    setSignDialogOpen(true);
+    setGeneratedSignLink('');
+    setLinkCopied(false);
   };
 
   const exportToPDF = async () => {
@@ -245,6 +348,12 @@ export default function QuoteDetailPage() {
               <Download className="h-4 w-4 mr-2" />
               PDF Exporteren
             </Button>
+            {canEdit && quote.status === 'sent' && (
+              <Button variant="default" onClick={handleOpenSignDialog}>
+                <Pen className="h-4 w-4 mr-2" />
+                Verstuur voor Ondertekening
+              </Button>
+            )}
             {canEdit && (
               <Button onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" />
@@ -605,6 +714,95 @@ export default function QuoteDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Sign Link Dialog */}
+      <Dialog open={signDialogOpen} onOpenChange={setSignDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pen className="h-5 w-5" />
+              Verstuur Offerte voor Ondertekening
+            </DialogTitle>
+            <DialogDescription>
+              Genereer een veilige link voor digitale handtekening. De link is 7 dagen geldig.
+            </DialogDescription>
+          </DialogHeader>
+
+          {!generatedSignLink ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signer-email">Email Ondertekenaar *</Label>
+                <Input
+                  id="signer-email"
+                  type="email"
+                  placeholder="naam@bedrijf.nl"
+                  value={signerEmail}
+                  onChange={(e) => setSignerEmail(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Er wordt een email verzonden met de ondertekeningslink
+                </p>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSignDialogOpen(false)}>
+                  Annuleren
+                </Button>
+                <Button onClick={handleGenerateSignLink} disabled={!signerEmail}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Verstuur Link
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-medium text-green-900">Link Verzonden!</p>
+                    <p className="text-sm text-green-700 mt-1">
+                      Email verzonden naar <strong>{signerEmail}</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Ondertekeningslink</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={generatedSignLink}
+                    readOnly
+                    className="font-mono text-xs"
+                  />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={handleCopySignLink}
+                  >
+                    {linkCopied ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Link is 7 dagen geldig en kan maar één keer gebruikt worden
+                </p>
+              </div>
+
+              <DialogFooter>
+                <Button onClick={() => setSignDialogOpen(false)}>
+                  Sluiten
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </div>
     </AppLayout>
   );
