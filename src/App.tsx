@@ -52,6 +52,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Public pages (no auth required)
 const PublicSignPage = lazy(() => import("./pages/PublicSignPage"));
+const PublicSignQuotePage = lazy(() => import("./pages/PublicSignQuotePage"));
 
 const queryClient = new QueryClient();
 
@@ -114,6 +115,18 @@ function AnimatedRoutes() {
             <AnimatedRoute>
               <Suspense fallback={<SuspenseFallback />}>
                 <PublicSignPage />
+              </Suspense>
+            </AnimatedRoute>
+          } 
+        />
+        
+        {/* Public Quote Signing page - no authentication required */}
+        <Route 
+          path="/sign-quote/:token" 
+          element={
+            <AnimatedRoute>
+              <Suspense fallback={<SuspenseFallback />}>
+                <PublicSignQuotePage />
               </Suspense>
             </AnimatedRoute>
           } 

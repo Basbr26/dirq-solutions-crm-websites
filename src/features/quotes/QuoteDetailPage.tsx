@@ -265,7 +265,7 @@ export default function QuoteDetailPage() {
 
       // Generate full link
       const baseUrl = window.location.origin;
-      const signLink = `${baseUrl}/sign/${token}`;
+      const signLink = `${baseUrl}/sign-quote/${token}`;
       setGeneratedSignLink(signLink);
 
       toast.dismiss();
