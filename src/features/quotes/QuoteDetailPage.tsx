@@ -63,7 +63,7 @@ import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
 
-const statusConfig: Record<QuoteStatus, { 
+const statusConfig: Record<QuoteStatus | 'signed', { 
   label: string; 
   variant: 'default' | 'secondary' | 'destructive' | 'outline'; 
   icon: React.ElementType;
@@ -75,6 +75,7 @@ const statusConfig: Record<QuoteStatus, {
   accepted: { label: 'Geaccepteerd', variant: 'default', icon: CheckCircle2, color: 'bg-green-500/10 text-green-500' },
   rejected: { label: 'Afgewezen', variant: 'destructive', icon: XCircle, color: 'bg-red-500/10 text-red-500' },
   expired: { label: 'Verlopen', variant: 'outline', icon: Clock, color: 'bg-orange-500/10 text-orange-500' },
+  signed: { label: 'Getekend', variant: 'default', icon: CheckCircle2, color: 'bg-emerald-500/10 text-emerald-600' },
 };
 
 export default function QuoteDetailPage() {
@@ -115,6 +116,7 @@ export default function QuoteDetailPage() {
       return data as Quote;
     },
     enabled: !!id,
+    refetchInterval: quote?.sign_status === 'sent' || quote?.sign_status === 'viewed' ? 5000 : false, // Poll every 5s if waiting for signature
   });
 
   // Fetch quote items
@@ -369,7 +371,8 @@ export default function QuoteDetailPage() {
     );
   }
 
-  const StatusIcon = statusConfig[quote.status].icon;
+  const StatusIcon = statusConfig[quote.sign_status === 'signed' ? 'signed' : quote.status].icon;
+  const displayStatus = quote.sign_status === 'signed' ? 'signed' : quote.status;
 
   return (
     <AppLayout>
@@ -387,9 +390,9 @@ export default function QuoteDetailPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-3xl font-bold">{quote.title}</h1>
-                <Badge className={statusConfig[quote.status].color} variant="outline">
+                <Badge className={statusConfig[displayStatus].color} variant="outline">
                   <StatusIcon className="h-3 w-3 mr-1" />
-                  {statusConfig[quote.status].label}
+                  {statusConfig[displayStatus].label}
                 </Badge>
               </div>
               <p className="text-muted-foreground">Offerte {quote.quote_number}</p>
@@ -586,6 +589,61 @@ export default function QuoteDetailPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Signature Information */}
+          {quote.sign_status === 'signed' && quote.signature_data && (
+            <Card className="border-green-200 bg-green-50/50">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-green-900">Digitaal Ondertekend</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Signature Image */}
+                <div className="bg-white p-4 rounded-lg border border-green-200">
+                  <p className="text-sm text-muted-foreground mb-2">Handtekening</p>
+                  <img 
+                    src={quote.signature_data} 
+                    alt="Handtekening" 
+                    className="max-w-full h-24 border border-gray-200 rounded"
+                  />
+                </div>
+
+                {/* Signature Details */}
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Ondertekend door</span>
+                    <span className="font-medium">{quote.signed_by_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Datum & Tijd</span>
+                    <span className="font-medium">
+                      {quote.signed_at && format(new Date(quote.signed_at), 'dd MMM yyyy HH:mm', { locale: nl })}
+                    </span>
+                  </div>
+                  {quote.signer_email && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Email</span>
+                      <span className="font-medium">{quote.signer_email}</span>
+                    </div>
+                  )}
+                  {quote.signer_ip_address && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">IP Adres</span>
+                      <span className="font-mono text-xs">{quote.signer_ip_address}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-green-100/50 p-3 rounded-lg border border-green-200">
+                  <p className="text-xs text-green-800">
+                    ✅ Deze digitale handtekening is juridisch geldig en bevat een audit trail met IP-adres en tijdstempel.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           )}

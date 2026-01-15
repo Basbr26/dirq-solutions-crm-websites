@@ -17,11 +17,24 @@ import SignatureCanvas from '@/components/SignatureCanvas';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
+interface QuoteItem {
+  id: string;
+  product_name: string;
+  description: string | null;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+}
+
 interface Quote {
   id: string;
   quote_number: string;
   title: string;
+  description: string | null;
   total_amount: number;
+  subtotal: number;
+  tax_amount: number;
+  tax_percentage: number;
   sign_token: string;
   sign_status: string;
   sign_link_expires_at: string;
@@ -31,6 +44,7 @@ interface Quote {
   company?: {
     name: string;
   };
+  quote_items: QuoteItem[];
 }
 
 export default function PublicSignQuotePage() {
@@ -62,14 +76,26 @@ export default function PublicSignQuotePage() {
           id,
           quote_number,
           title,
+          description,
           total_amount,
+          subtotal,
+          tax_amount,
+          tax_percentage,
           sign_token,
           sign_status,
           sign_link_expires_at,
           signer_email,
           signed_at,
           signed_by_name,
-          company:companies!quotes_company_id_fkey(name)
+          company:companies!quotes_company_id_fkey(name),
+          quote_items(
+            id,
+            product_name,
+            description,
+            quantity,
+            unit_price,
+            total_price
+          )
         `)
         .eq('sign_token', token)
         .single();
@@ -270,17 +296,17 @@ export default function PublicSignQuotePage() {
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-lg border border-purple-200">
               <h3 className="font-semibold text-lg mb-4 text-purple-900">{quote.title}</h3>
               
+              {quote.description && (
+                <p className="text-sm text-muted-foreground mb-4">{quote.description}</p>
+              )}
+              
               <div className="space-y-3">
                 <div className="flex justify-between items-center pb-2 border-b border-purple-200">
                   <span className="text-sm text-muted-foreground">Offertenummer</span>
                   <span className="font-semibold">{quote.quote_number}</span>
                 </div>
-                <div className="flex justify-between items-center pb-2 border-b border-purple-200">
-                  <span className="text-sm text-muted-foreground">Totaalbedrag</span>
-                  <span className="font-bold text-xl text-purple-700">{formatCurrency(quote.total_amount)}</span>
-                </div>
                 {quote.sign_link_expires_at && (
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center pb-2 border-b border-purple-200">
                     <span className="text-sm text-muted-foreground">Geldig tot</span>
                     <span className="font-medium flex items-center gap-1">
                       <Clock className="h-4 w-4" />
@@ -290,6 +316,51 @@ export default function PublicSignQuotePage() {
                 )}
               </div>
             </div>
+
+            {/* Quote Items */}
+            {quote.quote_items && quote.quote_items.length > 0 && (
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                  <h4 className="font-semibold text-gray-900">Producten & Diensten</h4>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {quote.quote_items.map((item) => (
+                    <div key={item.id} className="px-6 py-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h5 className="font-medium text-gray-900">{item.product_name}</h5>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                          )}
+                        </div>
+                        <div className="text-right ml-4">
+                          <p className="font-semibold text-gray-900">{formatCurrency(item.total_price)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>{item.quantity}x {formatCurrency(item.unit_price)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Totals */}
+                <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotaal</span>
+                    <span className="font-medium">{formatCurrency(quote.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">BTW ({quote.tax_percentage}%)</span>
+                    <span className="font-medium">{formatCurrency(quote.tax_amount)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
+                    <span className="text-purple-900">Totaal</span>
+                    <span className="text-purple-700">{formatCurrency(quote.total_amount)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Signature Section */}
             {!showSignatureCanvas ? (
