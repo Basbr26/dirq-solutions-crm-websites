@@ -34,7 +34,7 @@ interface Quote {
   total_amount: number;
   subtotal: number;
   tax_amount: number;
-  tax_percentage: number;
+  tax_rate: number;
   sign_token: string;
   sign_status: string;
   sign_link_expires_at: string;
@@ -81,7 +81,7 @@ export default function PublicSignQuotePage() {
           total_amount,
           subtotal,
           tax_amount,
-          tax_percentage,
+          tax_rate,
           sign_token,
           sign_status,
           sign_link_expires_at,
@@ -352,7 +352,7 @@ export default function PublicSignQuotePage() {
                     <span className="font-medium">{formatCurrency(quote.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">BTW ({quote.tax_percentage}%)</span>
+                    <span className="text-muted-foreground">BTW ({quote.tax_rate}%)</span>
                     <span className="font-medium">{formatCurrency(quote.tax_amount)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2">
