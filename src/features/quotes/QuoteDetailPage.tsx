@@ -27,6 +27,8 @@ import {
   Pen,
   Copy,
   Mail,
+  MessageSquare,
+  Phone,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +59,8 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { QuoteForm } from './components/QuoteForm';
 import { QuotePDFDocument } from './components/QuotePDFDocument';
+import { InteractionTimeline } from '@/features/interactions/components/InteractionTimeline';
+import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Quote, QuoteStatus } from '@/types/quotes';
@@ -89,6 +93,8 @@ export default function QuoteDetailPage() {
   const [signerEmail, setSignerEmail] = useState('');
   const [generatedSignLink, setGeneratedSignLink] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
+  const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
   const updateQuote = useUpdateQuote(id!);
   const deleteQuote = useDeleteQuote();
@@ -542,6 +548,53 @@ export default function QuoteDetailPage() {
             </Card>
           )}
 
+          {/* Interactions/Activities */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Activiteiten
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setAddInteractionDialogOpen(true);
+                    setInteractionDefaultType('call');
+                  }}
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Gesprek
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setAddInteractionDialogOpen(true);
+                    setInteractionDefaultType('email');
+                  }}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  E-mail
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setAddInteractionDialogOpen(true);
+                    setInteractionDefaultType('note');
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Activiteit
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <InteractionTimeline quoteId={id!} limit={20} />
+            </CardContent>
+          </Card>
+
           {/* Signature Information */}
           {quote.sign_status === 'signed' && quote.signature_data && (
             <Card className="border-green-200 bg-green-50/50">
@@ -862,6 +915,16 @@ export default function QuoteDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Add Interaction Dialog */}
+      <AddInteractionDialog
+        open={addInteractionDialogOpen}
+        onOpenChange={setAddInteractionDialogOpen}
+        companyId={quote?.company_id}
+        contactId={quote?.contact_id ?? undefined}
+        quoteId={id}
+        defaultType={interactionDefaultType}
+      />
       </div>
     </AppLayout>
   );

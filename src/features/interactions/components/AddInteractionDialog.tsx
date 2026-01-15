@@ -43,7 +43,8 @@ interface AddInteractionDialogProps {
   onOpenChange: (open: boolean) => void;
   companyId?: string;
   contactId?: string;
-  projectId?: string; // NEW: Support for project-specific interactions
+  projectId?: string; // Support for project-specific interactions
+  quoteId?: string; // Support for quote-specific interactions
   defaultType?: 'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo' | 'physical_mail' | 'linkedin_video_audit';
 }
 
@@ -63,7 +64,8 @@ export function AddInteractionDialog({
   onOpenChange,
   companyId,
   contactId,
-  projectId, // NEW
+  projectId,
+  quoteId,
   defaultType = 'note',
 }: AddInteractionDialogProps) {
   const [isTask, setIsTask] = useState(defaultType === 'task');
@@ -104,6 +106,8 @@ export function AddInteractionDialog({
     const interactionData: CreateInteractionData = {
       company_id: finalCompanyId,
       contact_id: contactId,
+      lead_id: projectId, // Link to project if provided
+      quote_id: quoteId, // Link to quote if provided
       type: data.type,
       subject: data.subject,
       description: data.description || undefined,

@@ -10,6 +10,7 @@ export interface Interaction {
   company_id: string;
   contact_id: string | null;
   lead_id: string | null;
+  quote_id: string | null;
   type: InteractionType;
   direction: InteractionDirection | null;
   subject: string;
@@ -51,6 +52,7 @@ export interface InteractionFilters {
   companyId?: string;
   contactId?: string;
   leadId?: string; // For filtering by project/lead
+  quoteId?: string; // For filtering by quote
   isTask?: boolean;
   taskStatus?: string;
 }
@@ -59,6 +61,7 @@ export interface CreateInteractionData {
   company_id: string;
   contact_id?: string;
   lead_id?: string;
+  quote_id?: string;
   type: InteractionType;
   direction?: InteractionDirection;
   subject: string;
@@ -114,6 +117,10 @@ export function useInteractions(filters: InteractionFilters = {}) {
 
       if (filters.leadId && filters.leadId !== 'new') {
         query = query.eq('lead_id', filters.leadId);
+      }
+
+      if (filters.quoteId && filters.quoteId !== 'new') {
+        query = query.eq('quote_id', filters.quoteId);
       }
 
       if (filters.isTask !== undefined) {

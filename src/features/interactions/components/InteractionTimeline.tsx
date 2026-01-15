@@ -47,6 +47,7 @@ import { cn } from '@/lib/utils';
 interface InteractionTimelineProps {
   companyId?: string;
   contactId?: string;
+  quoteId?: string;
   limit?: number;
   className?: string;
 }
@@ -63,6 +64,7 @@ const typeConfig = {
 export function InteractionTimeline({ 
   companyId, 
   contactId, 
+  quoteId,
   limit = 10,
   className 
 }: InteractionTimelineProps) {
@@ -72,6 +74,7 @@ export function InteractionTimeline({
   const { data, isLoading } = useInteractions({
     companyId,
     contactId,
+    quoteId,
     pageSize: limit,
   });
 
