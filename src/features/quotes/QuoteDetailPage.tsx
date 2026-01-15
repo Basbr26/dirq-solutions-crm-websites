@@ -161,22 +161,6 @@ export default function QuoteDetailPage() {
       },
     });
   };
-            
-            if (emailError) {
-              console.error('Email error:', emailError);
-              toast.warning('Offerte status gewijzigd, maar email verzending mislukt');
-            } else {
-              toast.success('✅ Offerte verzonden en email verstuurd!');
-            }
-          } catch (emailError) {
-            toast.dismiss();
-            console.error('Email exception:', emailError);
-            toast.warning('Offerte status gewijzigd, maar email verzending mislukt');
-          }
-        }
-      },
-    });
-  };
 
   const handleGenerateSignLink = async () => {
     if (!id || !signerEmail) {
