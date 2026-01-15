@@ -19,7 +19,7 @@ import { nl } from 'date-fns/locale';
 
 interface QuoteItem {
   id: string;
-  product_name: string;
+  title: string;
   description: string | null;
   quantity: number;
   unit_price: number;
@@ -91,7 +91,7 @@ export default function PublicSignQuotePage() {
           company:companies!quotes_company_id_fkey(name),
           quote_items(
             id,
-            product_name,
+            title,
             description,
             quantity,
             unit_price,
@@ -329,7 +329,7 @@ export default function PublicSignQuotePage() {
                     <div key={item.id} className="px-6 py-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <h5 className="font-medium text-gray-900">{item.product_name}</h5>
+                          <h5 className="font-medium text-gray-900">{item.title}</h5>
                           {item.description && (
                             <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                           )}
