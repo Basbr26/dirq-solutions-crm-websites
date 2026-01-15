@@ -118,19 +118,6 @@ export default function QuoteDetailPage() {
     enabled: !!id,
   });
 
-  // Auto-refresh every 5s if waiting for signature
-  useQuery({
-    queryKey: ['quotes', id, 'poll'],
-    queryFn: async () => {
-      if (quote?.sign_status === 'sent' || quote?.sign_status === 'viewed') {
-        queryClient.invalidateQueries({ queryKey: ['quotes', id] });
-      }
-      return null;
-    },
-    enabled: !!(quote?.sign_status === 'sent' || quote?.sign_status === 'viewed'),
-    refetchInterval: 5000,
-  });
-
   // Fetch quote items
   const { data: items } = useQuery({
     queryKey: ['quote-items', id],
