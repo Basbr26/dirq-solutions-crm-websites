@@ -35,6 +35,17 @@ export interface Quote {
   created_at: string;
   updated_at: string;
   
+  // E-Sign fields
+  sign_token?: string;
+  sign_status?: string;
+  sign_link_expires_at?: string;
+  signer_email?: string;
+  signature_data?: string;
+  signed_at?: string;
+  signed_by_name?: string;
+  signer_ip_address?: string;
+  signer_user_agent?: string;
+  
   // Relations (from joins)
   company?: {
     id: string;

@@ -61,6 +61,7 @@ export default function PublicSignQuotePage() {
     if (token) {
       loadQuote();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   const loadQuote = async () => {

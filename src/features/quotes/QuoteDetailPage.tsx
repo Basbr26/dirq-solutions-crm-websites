@@ -116,7 +116,19 @@ export default function QuoteDetailPage() {
       return data as Quote;
     },
     enabled: !!id,
-    refetchInterval: quote?.sign_status === 'sent' || quote?.sign_status === 'viewed' ? 5000 : false, // Poll every 5s if waiting for signature
+  });
+
+  // Auto-refresh every 5s if waiting for signature
+  useQuery({
+    queryKey: ['quotes', id, 'poll'],
+    queryFn: async () => {
+      if (quote?.sign_status === 'sent' || quote?.sign_status === 'viewed') {
+        queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+      }
+      return null;
+    },
+    enabled: !!(quote?.sign_status === 'sent' || quote?.sign_status === 'viewed'),
+    refetchInterval: 5000,
   });
 
   // Fetch quote items
