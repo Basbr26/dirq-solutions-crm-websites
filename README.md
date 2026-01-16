@@ -39,6 +39,7 @@
 - **📊 [Current Status](STATUS.md)** - Features, bugs, production readiness
 - **📝 [Changelog](CHANGELOG.md)** - Alle updates chronologisch
 - **🏗️ [Setup Guides](./docs/)** - Google Calendar, Supabase, deployment
+- **🤖 [n8n Workflows](N8N_WORKFLOWS.md)** - 28 automation workflows
 - **📦 [Archived Audits](./archive/)** - Historische audit documenten
 
 ---
@@ -76,6 +77,7 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **System User** - Enterprise ownership tracking voor automation  
 ✅ **MRR Tracking** - Auto-calculated ARR via database triggers  
 ✅ **External Data** - KVK, LinkedIn, AI audit fields  
+✅ **28 n8n Workflows** - Complete automation suite voor sales, marketing & support  
 
 ---
 

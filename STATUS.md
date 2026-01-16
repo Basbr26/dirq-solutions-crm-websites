@@ -1,8 +1,8 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
 **Last Updated:** 16 Januari 2026  
-**Version:** 2.0.6 - Quote Automation + Interactions Integration  
-**Production Status:** ✅ Production Ready + Enterprise Architecture + API Gateway
+**Version:** 2.0.7 - n8n Automation Suite  
+**Production Status:** ✅ Production Ready + Enterprise Architecture + n8n Automation
 
 ---
 
@@ -25,7 +25,76 @@
 
 ---
 
-## 🎯 RECENT UPDATES (v2.0.6 - 16 Jan 2026)
+## 🎯 RECENT UPDATES (v2.0.7 - 16 Jan 2026)
+
+### **🤖 n8n Automation Suite - 28 Workflows** ✅
+**Impact:** Complete workflow automation voor sales, marketing, en customer success
+
+**Workflow Categories:**
+
+**Fase 1 - Basis Automatisering (10 workflows):**
+- ✅ Daily Pipeline Health Check - AI-powered deal analysis
+- ✅ Quote Expiration Alerts - Automatische follow-ups
+- ✅ Stale Lead Revival - Re-engagement campaigns
+- ✅ Google Calendar ↔ CRM Sync - Bi-directional sync
+- ✅ Pre-Meeting Reminders - 24h meeting prep
+- ✅ Project Onboarding Sequence - 7 automatische taken
+- ✅ Daily Task Reminders - Dagelijkse notificaties
+- ✅ AI Quote Builder - Gemini-powered offerte generatie
+- ✅ Company Data Enrichment - KVK + logo's ophalen
+
+**Fase 2 - Advanced Automation (18 workflows):**
+- 🎯 **Lead & Sales:** Video audit reminders, discovery call no-shows, lead scoring, hot lead alerts
+- 💰 **Deal Management:** Win/loss automation, probability alerts, revenue forecasting
+- 💳 **Subscription:** Payment reminders, past due alerts, churn prevention, MRR tracking
+- 🚀 **Project & Website:** Milestone checks, launch sequences, maintenance reminders
+- 😊 **Customer Success:** Anniversary emails, NPS surveys, referral requests
+
+**Database Extensions:**
+```sql
+- tasks tabel met automation tracking
+- email_drafts voor AI-gegenereerde emails
+- notifications systeem
+- lead_score veld voor scoring algoritme
+- NPS tracking in websites tabel
+- Enrichment fields (logo_url, kvk_number, enrichment_data)
+```
+
+**Webhook Endpoints (9 triggers):**
+- `/webhook/crm-to-calendar` - Calendar sync
+- `/webhook/project-won` - Onboarding trigger
+- `/webhook/generate-quote` - AI quote builder
+- `/webhook/company-created` - Enrichment trigger
+- `/webhook/calculate-lead-score` - Score update
+- `/webhook/deal-won` / `/webhook/deal-lost` - Deal lifecycle
+- `/webhook/website-launched` - Launch automation
+- `/webhook/nps-received` - NPS follow-up
+
+**Features:**
+- ✅ 28 production-ready workflows
+- ✅ AI email generation via Gemini
+- ✅ Automated lead scoring (0-100)
+- ✅ Revenue forecasting & MRR tracking
+- ✅ Churn prevention automation
+- ✅ Complete onboarding sequences
+- ✅ NPS-driven referral requests
+
+**Documentation:**
+- ✅ `N8N_WORKFLOWS.md` - Complete workflow guide met setup instructies
+- ✅ Credential setup voor Supabase, Gemini, Resend, Google Calendar, KVK
+- ✅ Database migrations voor nieuwe tabellen/kolommen
+- ✅ Troubleshooting guide
+
+**Status:** Alle workflows geïmporteerd in n8n instance (https://dirqsolutions.app.n8n.cloud/)
+
+**Next Steps:**
+- Week 1-2: Credentials configureren + workflows testen
+- Week 3-4: AI prompts fine-tunen
+- Maand 2: Workflows activeren in production
+
+---
+
+## 🎯 PREVIOUS UPDATES (v2.0.6 - 16 Jan 2026)
 
 ### **🤖 Quote-to-Project Automation + Interactions Integration** ✅
 **Impact:** Automatische status synchronisatie + volledige notities integratie bij offertes
