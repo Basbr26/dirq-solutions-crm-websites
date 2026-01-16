@@ -15,7 +15,9 @@ dist-ssr
 .env.ai
 .env.local
 .env.*.local
+.env.webhook
 SETUP_API_KEYS.md
+API_KEYS_PRIVATE.md
 
 # Editor directories and files
 .vscode/*
