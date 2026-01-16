@@ -1,3 +1,13 @@
+# 2026-01-16
+
+## Belangrijkste wijzigingen
+
+- **Quote-to-Project Automation**: Database trigger voor automatische project stage updates bij quote send/sign/reject
+- **Quote Interactions Integration**: Volledige notities/activiteiten support op offerte detail pagina met InteractionTimeline
+- **Mobile Login Animation Fix**: prefers-reduced-motion detectie voor betere mobile UX (0.1s vs 1.2s)
+- **Google OAuth Refresh Tokens**: Authorization Code Flow met server-side exchange voor permanente sessies
+- **Auto-refresh Mechanism**: Tokens refreshen automatisch 5 minuten voor expiry
+
 # 2026-01-14
 
 ## Belangrijkste wijzigingen
@@ -13,7 +23,7 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-2.0.2-blue)]()
+[![Version](https://img.shields.io/badge/version-2.0.6-blue)]()
 [![Completion](https://img.shields.io/badge/completion-99%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
@@ -42,10 +52,12 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Sales Pipeline** - 10-stage Kanban board (Lead → Live)  
 ✅ **Company Management** - Volledige klantendatabase  
 ✅ **Contact Management** - Met interaction history  
-✅ **Quote Generator** - PDF export met BTW berekeningen  
+✅ **Quote Generator** - PDF export met BTW berekeningen + Digital E-Sign  
+✅ **Quote Automation** - Auto-update project stage bij send/sign/reject  
+✅ **Quote Interactions** - Volledige notities/activiteiten integratie  
 ✅ **Project Tracking** - Hosting, pages, features specifiek voor websites  
 ✅ **Task Management** - Met calendar integration en CASCADE delete  
-✅ **Google Calendar Sync** - Bi-directional auto-sync met real-time webhooks  
+✅ **Google Calendar Sync** - Bi-directional auto-sync met real-time webhooks + refresh tokens  
 ✅ **Real-time Updates** - Google Calendar webhook push notifications (binnen seconden)  
 ✅ **Token Encryption** - AES-256 encrypted OAuth tokens via pgcrypto  
 ✅ **Performance Optimized** - Database indexes (94% sneller task queries)  

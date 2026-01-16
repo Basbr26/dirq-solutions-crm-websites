@@ -1,7 +1,7 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 14 Januari 2026  
-**Version:** 2.0.5 - Google Calendar Debug + Quotes Fix  
+**Last Updated:** 16 Januari 2026  
+**Version:** 2.0.6 - Quote Automation + Interactions Integration  
 **Production Status:** ✅ Production Ready + Enterprise Architecture + API Gateway
 
 ---
@@ -25,7 +25,82 @@
 
 ---
 
-## 🎯 RECENT UPDATES (v2.0.5 - 14 Jan 2026)
+## 🎯 RECENT UPDATES (v2.0.6 - 16 Jan 2026)
+
+### **🤖 Quote-to-Project Automation + Interactions Integration** ✅
+**Impact:** Automatische status synchronisatie + volledige notities integratie bij offertes
+
+**1. Mobile Login Animation Fix**
+- ✅ Probleem: Mobile browsers hebben `prefers-reduced-motion: reduce` standaard aan → animaties werden geskipped
+- ✅ Oplossing: `LoadingScreen.tsx` detecteert nu prefers-reduced-motion via `window.matchMedia`
+- ✅ Gedrag: Desktop krijgt volle 1.2s animatie, mobile krijgt snelle 0.1s fade-in
+- ✅ UX verbetering: Betere native app feel op mobiel
+
+**2. Google OAuth Refresh Token Implementation**
+- ✅ Probleem: Implicit OAuth flow geeft geen `refresh_token` → sessies verlopen na 1 uur
+- ✅ Oplossing: Migratie naar Authorization Code Flow met server-side token exchange
+- ✅ Code changes:
+  - `googleCalendar.ts`: `initTokenClient` → `initCodeClient` met PKCE
+  - `exchangeCodeForTokens()` functie roept Edge Function aan
+  - `refreshGoogleAccessToken()` met automatische refresh 5 min voor expiry
+- ✅ Edge Function: `supabase/functions/google-oauth-exchange/index.ts` (nieuw)
+  - Server-side exchange houdt `GOOGLE_CLIENT_SECRET` veilig
+  - Returns access_token + refresh_token + expiry
+- ✅ Auto-refresh: Timer setup in `GoogleCalendarSync.tsx`
+- ✅ Resultaat: Maanden-lange sessies zonder re-authenticatie 🎉
+
+**3. Automatic Project Status Updates on Quote Lifecycle** 🚀
+- ✅ Probleem: Handmatige pipeline updates nodig bij quote send/sign/reject
+- ✅ Database Trigger: `supabase/migrations/20260115_auto_update_project_on_quote_signed.sql`
+- ✅ Logic:
+  ```sql
+  quote.status = 'sent' → project.stage = 'quote_sent' (40%)
+  quote.sign_status = 'signed' → project.stage = 'quote_signed' (90%)
+  quote.status = 'rejected' → project.stage = 'lost' (0%)
+  ```
+- ✅ Protection: Won't downgrade projects already in advanced stages
+- ✅ Impact: Zero manual work, altijd synchroon tussen quote en project
+
+**4. Quote Interactions/Notes Integration** 📝
+- ✅ Probleem: Notities bij offertes kwamen niet terecht op quote detail page
+- ✅ Database: Migration `20260115_add_quote_id_to_interactions.sql` bestond al
+  - `quote_id UUID REFERENCES quotes(id) ON DELETE CASCADE`
+  - Index op `quote_id` voor performance
+  - Updated entity check constraint
+- ✅ Backend Updates:
+  - `useInteractions.ts`: Added `quote_id` to Interaction type
+  - `InteractionFilters`: Added `quoteId` parameter
+  - `CreateInteractionData`: Added `quote_id` field
+  - Query builder: Filter op `quote_id`
+- ✅ UI Components:
+  - `InteractionTimeline.tsx`: Accept `quoteId` prop
+  - `AddInteractionDialog.tsx`: Support `quoteId` + `projectId` (lead_id)
+  - `QuoteDetailPage.tsx`: Volledig geïntegreerde "Activiteiten" sectie
+    - InteractionTimeline toont alle quote-gekoppelde activiteiten
+    - Quick action buttons: Gesprek, E-mail, Activiteit
+    - Notities direct gekoppeld aan quote + company + contact
+- ✅ Resultaat: Complete interaction history per offerte, teamleden zien alle communicatie
+
+**Files Modified:**
+- `src/components/LoadingScreen.tsx`
+- `src/lib/googleCalendar.ts`
+- `src/components/calendar/GoogleCalendarSync.tsx`
+- `src/features/interactions/hooks/useInteractions.ts`
+- `src/features/interactions/components/InteractionTimeline.tsx`
+- `src/features/interactions/components/AddInteractionDialog.tsx`
+- `src/features/quotes/QuoteDetailPage.tsx`
+
+**New Files:**
+- `supabase/functions/google-oauth-exchange/index.ts`
+- `supabase/migrations/20260115_auto_update_project_on_quote_signed.sql`
+- `supabase/migrations/20260115_add_quote_id_to_interactions.sql` (al aanwezig)
+
+**Documentation:**
+- ✅ `QUOTE_PROJECT_SYNC_GUIDE.md` - Guide voor quote→project automatisering
+
+---
+
+## 🎯 PREVIOUS UPDATES (v2.0.5 - 14 Jan 2026)
 
 ### **🔍 Google Calendar Sync: Debug & Troubleshooting System** ✅
 **Impact:** Volledig zichtbaar maken van sync problemen + uitgebreide diagnostics
