@@ -126,7 +126,29 @@
     "topDeals": "Top deals",
     "highestDealValues": "Highest deal values",
     "noActiveDeals": "No active deals",
-    "noRecentActivity": "No recent activity"
+    "noRecentActivity": "No recent activity",
+    "quotesValue": "Quotes Value",
+    "basedOnProbability": "Based on probability",
+    "acceptanceRatio": "Acceptance Ratio",
+    "accepted": "accepted",
+    "revenueDevelopment": "Revenue Development",
+    "lastSixMonths": "Last 6 months",
+    "target": "Target",
+    "revenueDataSoon": "Revenue data will be available soon",
+    "distributionValue": "Distribution project value",
+    "noPipelineData": "No pipeline data available",
+    "quoteAcceptance": "Quote acceptance",
+    "trendOverTime": "Trend over time",
+    "acceptancePercent": "Acceptance %",
+    "acceptanceDataCollecting": "Acceptance data is being collected",
+    "yourCrmOverview": "Your CRM overview",
+    "companies": "Companies",
+    "contacts": "Contacts",
+    "averageDealSize": "Average Deal Size",
+    "closedThisWeek": "Closed this week",
+    "deals": "deals",
+    "quotes": "quotes",
+    "activeProjectsCount": "{{count}} active projects"
   },
   "companies": {
     "title": "Companies",
@@ -801,5 +823,23 @@
     "amount": "Amount",
     "price": "Price",
     "value": "Value"
+  },
+  "calendar": {
+    "today": "Today",
+    "month": "Month",
+    "week": "Week",
+    "day": "Day",
+    "agenda": "Agenda",
+    "date": "Date",
+    "time": "Time",
+    "event": "Event",
+    "noEventsInRange": "No events in this period",
+    "more": "more"
+  },
+  "activities": {
+    "title": "Activity Log",
+    "description": "Overview of all changes and actions",
+    "noActivities": "No activities found",
+    "by": "by"
   }
 }

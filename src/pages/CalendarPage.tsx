@@ -384,18 +384,18 @@ export default function CalendarPage() {
                     popup
                     toolbar={false}
                     messages={{
-                      next: 'Volgende',
-                      previous: 'Vorige',
-                      today: 'Vandaag',
-                      month: 'Maand',
-                      week: 'Week',
-                      day: 'Dag',
-                      agenda: 'Agenda',
-                      date: 'Datum',
-                      time: 'Tijd',
-                      event: 'Event',
-                      noEventsInRange: 'Geen events in deze periode',
-                      showMore: (total) => `+${total} meer`
+                      next: t('common.next'),
+                      previous: t('common.previous'),
+                      today: t('calendar.today'),
+                      month: t('calendar.month'),
+                      week: t('calendar.week'),
+                      day: t('calendar.day'),
+                      agenda: t('calendar.agenda'),
+                      date: t('calendar.date'),
+                      time: t('calendar.time'),
+                      event: t('calendar.event'),
+                      noEventsInRange: t('calendar.noEventsInRange'),
+                      showMore: (total) => `+${total} ${t('calendar.more')}`
                     }}
                   />
                 </div>

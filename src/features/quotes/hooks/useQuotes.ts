@@ -21,7 +21,7 @@ export function useQuotes(filters?: QuoteFilters) {
           company:companies!quotes_company_id_fkey(id, name, email, phone),
           contact:contacts!quotes_contact_id_fkey(id, first_name, last_name, email),
           project:projects!quotes_project_id_fkey(id, title),
-          owner:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
+          owner:profiles!quotes_owner_id_fkey(id, first_name, last_name, email)
         `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
@@ -73,7 +73,7 @@ export function useQuote(id: string) {
           company:companies!quotes_company_id_fkey(id, name, email, phone),
           contact:contacts!quotes_contact_id_fkey(id, first_name, last_name, email, phone, position),
           project:projects!quotes_project_id_fkey(id, title, stage),
-          owner:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
+          owner:profiles!quotes_owner_id_fkey(id, first_name, last_name, email)
         `)
         .eq('id', id)
         .single();

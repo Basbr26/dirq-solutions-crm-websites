@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Home, Building2, Workflow, CheckSquare, BarChart3, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ interface MobileBottomNavProps {
 }
 
 export function MobileBottomNav({ onPrimaryAction }: MobileBottomNavProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -123,7 +125,7 @@ export function MobileBottomNav({ onPrimaryAction }: MobileBottomNavProps) {
           <button
             onClick={onPrimaryAction}
             className="flex flex-col items-center justify-center flex-1 h-full gap-1 active:scale-95 touch-manipulation min-h-[44px]"
-            aria-label="Nieuwe actie"
+            aria-label={t('common.add')}
           >
             <div className="relative flex items-center justify-center">
               <div className="absolute inset-0 bg-primary rounded-full blur-md opacity-20" />
@@ -131,7 +133,7 @@ export function MobileBottomNav({ onPrimaryAction }: MobileBottomNavProps) {
                 <Plus className="h-6 w-6 text-primary-foreground" />
               </div>
             </div>
-            <span className="text-[11px] font-medium text-primary">Nieuw</span>
+            <span className="text-[11px] font-medium text-primary">{t('common.add')}</span>
           </button>
         )}
         

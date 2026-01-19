@@ -119,7 +119,7 @@ export class TeamAnalyticsService {
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, voornaam, achternaam, functie')
+        .select('id, first_name, last_name, functie')
         .eq('id', memberId)
         .single();
 

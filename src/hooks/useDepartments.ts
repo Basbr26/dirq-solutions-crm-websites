@@ -207,7 +207,7 @@ export function useManagers() {
       // Get profiles for these users
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, voornaam, achternaam, functie, email')
+        .select('id, first_name, last_name, functie, email')
         .in('id', managerIds)
         .order('voornaam');
 

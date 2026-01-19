@@ -5,6 +5,7 @@
 
 import { useMemo, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ import {
   useEntityCounts,
 } from './hooks/useDashboardStats';
 import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
+import { nl, enUS } from 'date-fns/locale';
 
 // Lazy load Recharts to improve initial bundle size
 // Note: Bar and Pie components have complex generic types that don't work well with lazy()
@@ -63,6 +64,8 @@ interface KPICardProps {
 }
 
 function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardProps) {
+  const { t } = useTranslation();
+  
   const content = (
     <>
       {/* Reduced padding on mobile: p-3 vs p-6 on sm+ */}
@@ -87,10 +90,10 @@ function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardPro
                 <span className="text-red-500">{trend}%</span>
               </>
             ) : (
-              <span className="text-muted-foreground">Onveranderd</span>
+              <span className="text-muted-foreground">{t('dashboard.unchanged')}</span>
             )}
             {/* Hide "vs vorige maand" on mobile to save space */}
-            <span className="text-muted-foreground ml-1 hidden sm:inline">vs vorige maand</span>
+            <span className="text-muted-foreground ml-1 hidden sm:inline">{t('dashboard.vsPreviousMonth')}</span>
           </div>
         )}
       </CardContent>
@@ -124,6 +127,7 @@ const STAGE_COLORS: Record<ProjectStage, string> = {
 };
 
 export default function DashboardCRM() {
+  const { t, i18n } = useTranslation();
   const { data: pipelineStats } = usePipelineStats();
   const { data: quoteStats } = useQuoteStats();
   
@@ -139,6 +143,9 @@ export default function DashboardCRM() {
   // Quick stats
   const { data: dealsThisWeek } = useDealsThisWeek();
   const { data: entityCounts } = useEntityCounts();
+
+  // Get locale for date-fns
+  const dateLocale = i18n.language === 'nl' ? nl : enUS;
 
   // Memoize currency formatter
   const formatCurrency = useMemo(
@@ -173,38 +180,38 @@ export default function DashboardCRM() {
   return (
     <AppLayout 
       title="CRM Dashboard" 
-      subtitle={format(new Date(), 'EEEE d MMMM yyyy', { locale: nl })}
+      subtitle={format(new Date(), 'EEEE d MMMM yyyy', { locale: dateLocale })}
     >
       <div className="space-y-4 sm:space-y-6">
         {/* KPI Cards - 2 columns on mobile, 4 on desktop */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           <KPICard
-            title="Totale waarde"
+            title={t('dashboard.totalValue')}
             value={formatCurrency(pipelineStats?.total_value || 0)}
-            subtitle={`${pipelineStats?.total_projects || 0} actieve projecten`}
+            subtitle={t('dashboard.activeProjectsCount', { count: pipelineStats?.total_projects || 0 })}
             icon={FolderKanban}
             trend={pipelineTrend?.percentage}
             href="/pipeline"
           />
           <KPICard
-            title="Gewogen Waarde"
+            title={t('dashboard.weightedValue')}
             value={formatCurrency(pipelineStats?.weighted_value || 0)}
-            subtitle="Op basis van kans"
+            subtitle={t('dashboard.basedOnProbability')}
             icon={Target}
             trend={weightedTrend?.percentage}
             href="/pipeline"
           />
           <KPICard
-            title="Offertes Waarde"
+            title={t('dashboard.quotesValue')}
             value={formatCurrency(quoteStats?.total_value || 0)}
-            subtitle={`${quoteStats?.total || 0} offertes`}
+            subtitle={`${quoteStats?.total || 0} ${t('dashboard.quotes')}`}
             icon={FileText}
             href="/quotes"
           />
           <KPICard
-            title="Acceptatie Ratio"
+            title={t('dashboard.acceptanceRatio')}
             value={`${quoteAcceptanceRate}%`}
-            subtitle={`${quoteStats?.accepted || 0} geaccepteerd`}
+            subtitle={`${quoteStats?.accepted || 0} ${t('dashboard.accepted')}`}
             icon={TrendingUp}
             trend={acceptanceRateTrend?.percentage}
             href="/quotes"
@@ -216,8 +223,8 @@ export default function DashboardCRM() {
           {/* Revenue Trend */}
           <Card className="overflow-hidden">
             <CardHeader className="p-3 sm:p-6">
-              <CardTitle className="text-sm sm:text-base">Omzet Ontwikkeling</CardTitle>
-              <CardDescription className="text-xs">Afgelopen 6 maanden</CardDescription>
+              <CardTitle className="text-sm sm:text-base">{t('dashboard.revenueDevelopment')}</CardTitle>
+              <CardDescription className="text-xs">{t('dashboard.lastSixMonths')}</CardDescription>
             </CardHeader>
             <CardContent className="p-2 sm:p-6 pt-0">
               {revenueLoading ? (
@@ -266,7 +273,7 @@ export default function DashboardCRM() {
                         type="monotone" 
                         dataKey="revenue" 
                         stroke="#10b981" 
-                        name="Omzet"
+                        name={t('dashboard.revenue')}
                         strokeWidth={3}
                         dot={{ r: 5, strokeWidth: 2, fill: '#10b981' }}
                         activeDot={{ r: 8, strokeWidth: 3, fill: '#10b981' }}
@@ -276,7 +283,7 @@ export default function DashboardCRM() {
                         dataKey="target" 
                         stroke="#6366f1" 
                         strokeDasharray="5 5"
-                        name="Doel"
+                        name={t('dashboard.target')}
                         strokeWidth={2}
                         dot={{ r: 4, strokeWidth: 2, fill: '#6366f1' }}
                         activeDot={{ r: 7, strokeWidth: 3, fill: '#6366f1' }}
@@ -288,7 +295,7 @@ export default function DashboardCRM() {
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Omzetdata wordt binnenkort beschikbaar</p>
+                    <p>{t('dashboard.revenueDataSoon')}</p>
                   </div>
                 </div>
               )}
@@ -298,8 +305,8 @@ export default function DashboardCRM() {
           {/* Pipeline Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Verkoop per fase</CardTitle>
-              <CardDescription>Verdeling projectwaarde</CardDescription>
+              <CardTitle>{t('dashboard.salesByStage')}</CardTitle>
+              <CardDescription>{t('dashboard.distributionValue')}</CardDescription>
             </CardHeader>
             <CardContent>
               {pipelineDistribution.length > 0 ? (
@@ -362,7 +369,7 @@ export default function DashboardCRM() {
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <FolderKanban className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Geen pipelinedata beschikbaar</p>
+                    <p>{t('dashboard.noPipelineData')}</p>
                   </div>
                 </div>
               )}
@@ -375,8 +382,8 @@ export default function DashboardCRM() {
           {/* Quote Acceptance Rate */}
           <Card>
             <CardHeader>
-              <CardTitle>Offerte acceptatie</CardTitle>
-              <CardDescription>Trend over tijd</CardDescription>
+              <CardTitle>{t('dashboard.quoteAcceptance')}</CardTitle>
+              <CardDescription>{t('dashboard.trendOverTime')}</CardDescription>
             </CardHeader>
             <CardContent>
               {acceptanceLoading ? (
@@ -419,7 +426,7 @@ export default function DashboardCRM() {
                       <Bar 
                         dataKey="rate" 
                         fill="#10b981" 
-                        name="Acceptatie %"
+                        name={t('dashboard.acceptancePercent')}
                         radius={[8, 8, 0, 0]}
                         maxBarSize={60}
                         activeBar={{ fill: '#059669' }}
@@ -431,7 +438,7 @@ export default function DashboardCRM() {
                 <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   <div className="text-center">
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Acceptatiedata wordt verzameld</p>
+                    <p>{t('dashboard.acceptanceDataCollecting')}</p>
                   </div>
                 </div>
               )}
@@ -441,15 +448,15 @@ export default function DashboardCRM() {
           {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Snelle statistieken</CardTitle>
-              <CardDescription>Overzicht van je CRM</CardDescription>
+              <CardTitle>{t('dashboard.quickStats')}</CardTitle>
+              <CardDescription>{t('dashboard.yourCrmOverview')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Link to="/companies">
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <Building2 className="h-5 w-5 text-blue-500" />
-                    <span className="font-medium">Bedrijven</span>
+                    <span className="font-medium">{t('dashboard.companies')}</span>
                   </div>
                   <Badge variant="secondary">{entityCounts?.companies || 0}</Badge>
                 </div>
@@ -459,7 +466,7 @@ export default function DashboardCRM() {
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-purple-500" />
-                    <span className="font-medium">Contacten</span>
+                    <span className="font-medium">{t('dashboard.contacts')}</span>
                   </div>
                   <Badge variant="secondary">{entityCounts?.contacts || 0}</Badge>
                 </div>
@@ -468,7 +475,7 @@ export default function DashboardCRM() {
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-3">
                   <Activity className="h-5 w-5 text-orange-500" />
-                  <span className="font-medium">Gemiddelde Deal Size</span>
+                  <span className="font-medium">{t('dashboard.averageDealSize')}</span>
                 </div>
                 <span className="font-semibold">
                   {formatCurrency(pipelineStats?.avg_deal_size || 0)}
@@ -479,10 +486,10 @@ export default function DashboardCRM() {
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 text-green-500" />
-                    <span className="font-medium">Deze week gesloten</span>
+                    <span className="font-medium">{t('dashboard.closedThisWeek')}</span>
                   </div>
                   <Badge className="bg-green-500">
-                    {dealsThisWeek?.count || 0} deals
+                    {dealsThisWeek?.count || 0} {t('dashboard.deals')}
                   </Badge>
                 </div>
               </Link>

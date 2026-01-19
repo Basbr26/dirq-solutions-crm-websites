@@ -34,7 +34,7 @@ export function useCreateContact() {
         .select(`
           *,
           company:companies(*),
-          owner:profiles!contacts_owner_id_fkey(id, voornaam, achternaam, email)
+          owner:profiles!contacts_owner_id_fkey(id, first_name, last_name, email)
         `)
         .single();
 
@@ -68,7 +68,7 @@ export function useUpdateContact() {
         .select(`
           *,
           company:companies(*),
-          owner:profiles!contacts_owner_id_fkey(id, voornaam, achternaam, email)
+          owner:profiles!contacts_owner_id_fkey(id, first_name, last_name, email)
         `)
         .single();
 

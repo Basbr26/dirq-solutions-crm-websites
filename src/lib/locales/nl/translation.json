@@ -126,7 +126,29 @@
     "topDeals": "Top deals",
     "highestDealValues": "Hoogste deal waardes",
     "noActiveDeals": "Geen actieve deals",
-    "noRecentActivity": "Geen recente activiteit"
+    "noRecentActivity": "Geen recente activiteit",
+    "quotesValue": "Offertes Waarde",
+    "basedOnProbability": "Op basis van kans",
+    "acceptanceRatio": "Acceptatie Ratio",
+    "accepted": "geaccepteerd",
+    "revenueDevelopment": "Omzet Ontwikkeling",
+    "lastSixMonths": "Afgelopen 6 maanden",
+    "target": "Doel",
+    "revenueDataSoon": "Omzetdata wordt binnenkort beschikbaar",
+    "distributionValue": "Verdeling projectwaarde",
+    "noPipelineData": "Geen pipelinedata beschikbaar",
+    "quoteAcceptance": "Offerte acceptatie",
+    "trendOverTime": "Trend over tijd",
+    "acceptancePercent": "Acceptatie %",
+    "acceptanceDataCollecting": "Acceptatiedata wordt verzameld",
+    "yourCrmOverview": "Overzicht van je CRM",
+    "companies": "Bedrijven",
+    "contacts": "Contacten",
+    "averageDealSize": "Gemiddelde Deal Size",
+    "closedThisWeek": "Deze week gesloten",
+    "deals": "deals",
+    "quotes": "offertes",
+    "activeProjectsCount": "{{count}} actieve projecten"
   },
   "companies": {
     "title": "Bedrijven",
@@ -803,5 +825,23 @@
     "amount": "Bedrag",
     "price": "Prijs",
     "value": "Waarde"
+  },
+  "calendar": {
+    "today": "Vandaag",
+    "month": "Maand",
+    "week": "Week",
+    "day": "Dag",
+    "agenda": "Agenda",
+    "date": "Datum",
+    "time": "Tijd",
+    "event": "Event",
+    "noEventsInRange": "Geen events in deze periode",
+    "more": "meer"
+  },
+  "activities": {
+    "title": "Activiteiten Log",
+    "description": "Overzicht van alle wijzigingen en acties",
+    "noActivities": "Geen activiteiten gevonden",
+    "by": "door"
   }
 }

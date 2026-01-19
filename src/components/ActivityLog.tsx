@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
+import { nl, enUS } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,8 +32,8 @@ interface ActivityLogEntry {
   metadata: Record<string, unknown>;
   created_at: string;
   user?: {
-    voornaam: string;
-    achternaam: string;
+    first_name: string;
+    last_name: string;
   };
 }
 
@@ -69,8 +70,12 @@ const actionColors: Record<string, string> = {
 };
 
 export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityLogProps) {
+  const { t, i18n } = useTranslation();
   const [activities, setActivities] = useState<ActivityLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Get locale for date-fns
+  const dateLocale = i18n.language === 'nl' ? nl : enUS;
 
   useEffect(() => {
     loadActivities();
@@ -84,8 +89,8 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
         .select(`
           *,
           user:profiles!activity_logs_user_id_fkey (
-            voornaam,
-            achternaam
+            first_name,
+            last_name
           )
         `)
         .order('created_at', { ascending: false })
@@ -138,17 +143,17 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Clock className="h-5 w-5 text-primary" />
-            Activiteiten Log
+            {t('activities.title')}
           </CardTitle>
           <CardDescription>
-            Overzicht van alle wijzigingen en acties
+            {t('activities.description')}
           </CardDescription>
         </CardHeader>
       )}
       <CardContent>
         {activities.length === 0 ? (
           <p className="text-muted-foreground text-sm text-center py-4">
-            Geen activiteiten gevonden
+            {t('activities.noActivities')}
           </p>
         ) : (
           <ScrollArea className="h-[400px] pr-4">
@@ -156,8 +161,8 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
               {activities.map((activity) => {
                 const actionType = activity.action_type as ActionType;
                 const userName = activity.user 
-                  ? `${activity.user.voornaam} ${activity.user.achternaam}`
-                  : 'Onbekend';
+                  ? `${activity.user.first_name} ${activity.user.last_name}`
+                  : t('common.unknown');
 
                 return (
                   <div 
@@ -178,12 +183,12 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
                               {actionTypeLabels[actionType] || actionType}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
-                              door {userName}
+                              {t('activities.by')} {userName}
                             </span>
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground whitespace-nowrap">
-                          {format(new Date(activity.created_at), 'd MMM HH:mm', { locale: nl })}
+                          {format(new Date(activity.created_at), 'dd MMM HH:mm', { locale: dateLocale })}
                         </span>
                       </div>
                     </div>

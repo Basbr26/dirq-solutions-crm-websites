@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from 'react-i18next';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -20,10 +21,13 @@ interface FloatingActionButtonProps {
 export function FloatingActionButton({ 
   onClick, 
   icon = <Plus className="h-6 w-6" />,
-  label = "Nieuw",
+  label,
   className,
   showOnDesktop = false,
 }: FloatingActionButtonProps) {
+  const { t } = useTranslation();
+  const displayLabel = label || t('common.add');
+  
   return (
     <Button
       onClick={onClick}
@@ -44,7 +48,7 @@ export function FloatingActionButton({
       style={{
         bottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
       }}
-      aria-label={label}
+      aria-label={displayLabel}
     >
       {icon}
     </Button>
