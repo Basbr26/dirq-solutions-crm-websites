@@ -492,7 +492,7 @@ export function GoogleCalendarSync() {
     } finally {
       setIsSyncing(false);
     }
-  }, [user, isSignedIn]);
+  }, [user, isSignedIn, t]);
 
   const handleAutoSyncToggle = async (enabled: boolean) => {
     setAutoSync(enabled);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { 
@@ -68,6 +69,7 @@ export function InteractionTimeline({
   limit = 10,
   className 
 }: InteractionTimelineProps) {
+  const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [interactionToDelete, setInteractionToDelete] = useState<string | null>(null);
 

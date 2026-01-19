@@ -769,6 +769,7 @@
     "checkEmail": "Controleer je email",
     "passwordResetSent": "We hebben een wachtwoord reset link gestuurd naar je email"
   },
+  "dialogs": {
     "kvkToast": "KVK website wordt geopend. Kopieer de gegevens en plak ze in het tekstveld.",
     "addNewContactForCompany": "Voeg een nieuwe contactpersoon toe voor de geselecteerde organisatie",
     "deleteCalendarEventWarning": "Dit calendar event wordt permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
@@ -921,7 +922,6 @@
     "errorUpdating": "Fout bij bijwerken: {{message}}",
     "errorLoadingStats": "Fout bij laden van statistieken",
     "errorCreatingContact": "Fout bij aanmaken contact: {{message}}",
-    "errorMovingProject": "Fout bij verplaatsen project",
     "errorMovingProject": "Fout bij verplaatsen project",
     "errorUpdatingPhase": "Fout bij bijwerken project fase",
     "errorSavingSignature": "Kon handtekening niet opslaan",

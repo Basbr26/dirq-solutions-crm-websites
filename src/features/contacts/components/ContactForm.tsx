@@ -59,6 +59,7 @@ export function ContactForm({
   onCancel,
   isSubmitting = false,
 }: ContactFormProps) {
+  const { t } = useTranslation();
   const { companies: companiesData, isLoading: isLoadingCompanies } = useCompanies();
 
   const form = useForm<ContactFormValues>({

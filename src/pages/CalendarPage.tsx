@@ -508,6 +508,7 @@ export default function CalendarPage() {
 
 // Helper component for Event Detail Content (reusable in both SidePanel and Dialog)
 function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose: () => void }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 

@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -107,6 +108,7 @@ export const DocumentsList = ({
   projectId,
   quoteId,
 }: DocumentsListProps) => {
+  const { t } = useTranslation();
   const { role, user } = useAuth();
   const queryClient = useQueryClient();
   const [deleteId, setDeleteId] = useState<string | null>(null);

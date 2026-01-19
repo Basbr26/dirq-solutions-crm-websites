@@ -69,6 +69,7 @@ interface CompanyFormProps {
 }
 
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
+  const { t } = useTranslation();
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
   

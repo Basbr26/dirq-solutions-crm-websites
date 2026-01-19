@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ export function PaginationControls({
   onPageSizeChange,
   isLoading,
 }: PaginationControlsProps) {
+  const { t } = useTranslation();
   const from = Math.min((page - 1) * pageSize + 1, totalCount);
   const to = Math.min(page * pageSize, totalCount);
 
