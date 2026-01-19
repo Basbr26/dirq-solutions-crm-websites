@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -6,6 +7,7 @@ import { DirqLogo } from '@/components/DirqLogo';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +23,7 @@ import {
   Layers,
   Calendar,
   Workflow,
+  Mail,
 } from 'lucide-react';
 
 interface NavItem {
@@ -36,13 +39,13 @@ interface NavGroup {
   items: NavItem[];
 }
 
-const getNavGroups = (role: string | null): NavGroup[] => {
+const getNavGroups = (role: string | null, t: (key: string) => string, draftCount?: number): NavGroup[] => {
   const baseGroups: NavGroup[] = [
     {
-      title: 'Overzicht',
+      title: t('common.overview'),
       items: [
         { 
-          title: 'Dashboard', 
+          title: t('navigation.dashboard'), 
           icon: LayoutDashboard, 
           href: role === 'super_admin' ? '/dashboard/super-admin' 
                : role === 'ADMIN' ? '/dashboard/executive'
@@ -53,20 +56,21 @@ const getNavGroups = (role: string | null): NavGroup[] => {
     {
       title: 'CRM',
       items: [
-        { title: 'Bedrijven', icon: Building2, href: '/companies', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
-        { title: 'Contacten', icon: Users, href: '/contacts', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
-        { title: 'Projecten', icon: FolderKanban, href: '/projects', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
-        { title: 'Pipeline', icon: TrendingUp, href: '/pipeline', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
-        { title: 'Offertes', icon: FileText, href: '/quotes', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
-        { title: 'Activiteiten', icon: MessageSquare, href: '/interactions', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
-        { title: 'Agenda', icon: Calendar, href: '/calendar', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: t('navigation.companies'), icon: Building2, href: '/companies', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
+        { title: t('navigation.contacts'), icon: Users, href: '/contacts', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
+        { title: t('navigation.projects'), icon: FolderKanban, href: '/projects', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: t('navigation.salesOverview'), icon: TrendingUp, href: '/pipeline', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: t('navigation.quotes'), icon: FileText, href: '/quotes', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: t('navigation.activities'), icon: MessageSquare, href: '/interactions', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
+        { title: t('common.calendar') || 'Agenda', icon: Calendar, href: '/calendar', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
       ],
     },
     {
-      title: 'Automatisering',
+      title: t('common.automation') || 'Automatisering',
       items: [
-        { title: 'Workflows', icon: Workflow, href: '/workflows/templates', roles: ['ADMIN', 'MANAGER', 'super_admin'] },
-        { title: 'Documenten', icon: FileText, href: '/documents/templates', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'] },
+        { title: t('common.workflows') || 'Workflows', icon: Workflow, href: '/workflows/templates', roles: ['ADMIN', 'MANAGER', 'super_admin'] },
+        { title: t('navigation.emailDrafts'), icon: Mail, href: '/email-drafts', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'], badge: draftCount },
+        { title: t('common.documents') || 'Documenten', icon: FileText, href: '/documents/templates', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'] },
       ],
     },
   ];
@@ -74,10 +78,10 @@ const getNavGroups = (role: string | null): NavGroup[] => {
   // Admin-only section
   if (role === 'ADMIN' || role === 'super_admin') {
     baseGroups.push({
-      title: 'Administratie',
+      title: t('common.administration'),
       items: [
-        { title: 'Instellingen', icon: Settings, href: '/settings', roles: ['ADMIN', 'super_admin'] },
-        { title: 'Gebruikersbeheer', icon: Shield, href: '/admin/gebruikers', roles: ['ADMIN', 'super_admin'] },
+        { title: t('navigation.settings'), icon: Settings, href: '/settings', roles: ['ADMIN', 'super_admin'] },
+        { title: t('common.userManagement'), icon: Shield, href: '/admin/gebruikers', roles: ['ADMIN', 'super_admin'] },
       ],
     });
   }
@@ -90,12 +94,51 @@ const getNavGroups = (role: string | null): NavGroup[] => {
 };
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
+  const [draftCount, setDraftCount] = useState<number>(0);
   const location = useLocation();
   const navigate = useNavigate();
   const { role } = useAuth();
 
-  const navGroups = getNavGroups(role);
+  // Fetch draft count
+  useEffect(() => {
+    async function fetchDraftCount() {
+      const { count, error } = await supabase
+        .from('email_drafts')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'draft');
+      
+      if (!error && count !== null) {
+        setDraftCount(count);
+      }
+    }
+
+    fetchDraftCount();
+
+    // Set up realtime subscription for draft count updates
+    const channel = supabase
+      .channel('email_drafts_count')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'email_drafts',
+          filter: 'status=eq.draft'
+        },
+        () => {
+          fetchDraftCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const navGroups = getNavGroups(role, t, draftCount);
 
   const isActive = (href: string) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
@@ -210,7 +253,7 @@ export function AppSidebar() {
           ) : (
             <>
               <ChevronLeft className="h-4 w-4" />
-              <span>Inklappen</span>
+              <span>{t('common.collapse') || 'Inklappen'}</span>
             </>
           )}
         </Button>

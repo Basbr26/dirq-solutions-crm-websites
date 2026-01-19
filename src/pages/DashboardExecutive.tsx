@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,9 +71,9 @@ function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardPro
                 <span className="text-red-500">{trend}%</span>
               </>
             ) : (
-              <span className="text-muted-foreground">Onveranderd</span>
+              <span className="text-muted-foreground">{t('dashboard.unchanged')}</span>
             )}
-            <span className="text-muted-foreground ml-1">vs vorige maand</span>
+            <span className="text-muted-foreground ml-1">{t('dashboard.vsPreviousMonth')}</span>
           </div>
         )}
       </CardContent>
@@ -107,6 +108,7 @@ interface SourceDataPoint {
 }
 
 export default function DashboardExecutive() {
+  const { t } = useTranslation();
   const { user, role } = useAuth();
   const navigate = useNavigate();
 
@@ -319,7 +321,7 @@ export default function DashboardExecutive() {
 
     } catch (error) {
       console.error('Error loading executive data:', error);
-      toast.error('Fout bij laden van dashboard data');
+      toast.error(t('errors.loadingDashboard'));
     } finally {
       setLoading(false);
     }
@@ -382,7 +384,7 @@ export default function DashboardExecutive() {
       if (latestCompany) {
         recentActivities.push({
           type: 'company',
-          text: `Bedrijf toegevoegd: ${latestCompany.name}`,
+          text: `${t('dashboard.companyAdded')}: ${latestCompany.name}`,
           timestamp: latestCompany.created_at,
         });
       }
@@ -398,7 +400,7 @@ export default function DashboardExecutive() {
       if (latestQuote) {
         recentActivities.push({
           type: 'quote',
-          text: `Offerte verstuurd naar ${latestQuote.companies?.name || 'onbekend'}`,
+          text: `${t('dashboard.quoteSentTo')} ${latestQuote.companies?.name || t('common.unknown')}`,
           timestamp: latestQuote.created_at,
         });
       }
@@ -415,7 +417,7 @@ export default function DashboardExecutive() {
       if (latestWon) {
         recentActivities.push({
           type: 'won',
-          text: `Deal gewonnen: ${latestWon.companies?.name || latestWon.title}`,
+          text: `${t('dashboard.dealWon')}: ${latestWon.companies?.name || latestWon.title}`,
           timestamp: latestWon.created_at,
         });
       }
@@ -565,12 +567,12 @@ export default function DashboardExecutive() {
 
   return (
     <AppLayout
-      title="Executive Dashboard"
-      subtitle="Real-time business inzichten en sales analytics"
+      title={t('dashboard.executiveTitle')}
+      subtitle={t('dashboard.executiveSubtitle')}
       actions={
-        <Button className="gap-2" onClick={() => toast.info('Export functionaliteit komt binnenkort')}>
+        <Button className="gap-2" onClick={() => toast.info(t('dashboard.exportComingSoon'))}>
           <Download className="h-4 w-4" />
-          Export Rapport
+          {t('dashboard.exportReport')}
         </Button>
       }
     >
@@ -578,51 +580,51 @@ export default function DashboardExecutive() {
         {/* KPI Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <KPICard
-            title="Totale Omzet"
+            title={t('dashboard.totalRevenue')}
             value={formatCurrency(totalRevenue)}
             trend={revenueTrend}
             icon={DollarSign}
-            subtitle="Afgesloten deals"
+            subtitle={t('dashboard.closedDeals')}
             href="/pipeline"
           />
           <KPICard
-            title="Maandelijks Terugkerend"
+            title={t('dashboard.monthlyRecurring')}
             value={formatCurrency(totalMRR)}
             trend={mrrTrend}
             icon={RefreshCw}
-            subtitle="MRR van actieve klanten"
+            subtitle={t('dashboard.mrrActiveClients')}
             href="/companies"
           />
           <KPICard
-            title="Pipeline Waarde"
+            title={t('dashboard.totalValue')}
             value={formatCurrency(pipelineValue)}
             trend={pipelineTrend}
             icon={Target}
-            subtitle="Gewogen waarde"
+            subtitle={t('dashboard.weightedValue')}
             href="/pipeline"
           />
           <KPICard
-            title="Conversie Ratio"
+            title={t('dashboard.conversionRatio')}
             value={`${conversionRate}%`}
             trend={conversionTrend}
             icon={TrendingUp}
-            subtitle="Won vs totaal"
+            subtitle={t('dashboard.wonDeals')}
             href="/pipeline"
           />
           <KPICard
-            title="Actieve Deals"
+            title={t('dashboard.activeDeals')}
             value={activeDeals}
             trend={dealsTrend}
             icon={Briefcase}
-            subtitle="In pipeline"
+            subtitle={t('dashboard.active')}
             href="/pipeline"
           />
           <KPICard
-            title="Gem. Deal Grootte"
+            title={t('dashboard.avgDealSize')}
             value={formatCurrency(avgDealSize)}
             trend={avgDealTrend}
             icon={Building2}
-            subtitle="Per project"
+            subtitle={t('dashboard.perProject')}
             href="/pipeline"
           />
         </div>
@@ -634,9 +636,9 @@ export default function DashboardExecutive() {
             {/* Revenue Trend */}
             <Card>
               <CardHeader>
-                <CardTitle>Omzet Trend</CardTitle>
+                <CardTitle>{t('dashboard.revenueTrend')}</CardTitle>
                 <CardDescription>
-                  Maandelijkse omzet van afgesloten deals
+                  {t('dashboard.monthlyRevenue')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -683,7 +685,7 @@ export default function DashboardExecutive() {
                       strokeWidth={3}
                       dot={{ r: 5, strokeWidth: 2, fill: '#0088FE' }}
                       activeDot={{ r: 8, strokeWidth: 3, fill: '#0088FE' }}
-                      name="Omzet"
+                      name={t('dashboard.revenue')}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -693,9 +695,9 @@ export default function DashboardExecutive() {
             {/* Pipeline by Stage */}
             <Card>
               <CardHeader>
-                <CardTitle>Pipeline per Fase</CardTitle>
+                <CardTitle>{t('dashboard.salesByStage')}</CardTitle>
                 <CardDescription>
-                  Aantal deals en waarde per pipeline fase
+                  {t('dashboard.dealsCountAndValue')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -715,21 +717,21 @@ export default function DashboardExecutive() {
                     />
                     <YAxis 
                       yAxisId="left"
-                      label={{ value: 'Aantal', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
+                      label={{ value: t('dashboard.count'), angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                       tick={{ fontSize: 12 }}
                       tickMargin={8}
                     />
                     <YAxis 
                       yAxisId="right"
                       orientation="right"
-                      label={{ value: 'Waarde (€)', angle: 90, position: 'insideRight', style: { fontSize: 12 } }}
+                      label={{ value: t('dashboard.valueEuro'), angle: 90, position: 'insideRight', style: { fontSize: 12 } }}
                       tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
                       tick={{ fontSize: 12 }}
                       tickMargin={8}
                     />
                     <Tooltip 
                       formatter={(value: number, name: string) => {
-                        if (name === 'Waarde') return formatCurrency(value);
+                        if (name === t('dashboard.value')) return formatCurrency(value);
                         return value;
                       }}
                       contentStyle={{ 
@@ -752,7 +754,7 @@ export default function DashboardExecutive() {
                       yAxisId="left" 
                       dataKey="count" 
                       fill="#0088FE" 
-                      name="Aantal"
+                      name={t('dashboard.count')}
                       radius={[8, 8, 0, 0]}
                       maxBarSize={40}
                       activeBar={{ fill: '#0066CC' }}
@@ -761,7 +763,7 @@ export default function DashboardExecutive() {
                       yAxisId="right" 
                       dataKey="value" 
                       fill="#00C49F" 
-                      name="Waarde"
+                      name={t('dashboard.value')}
                       radius={[8, 8, 0, 0]}
                       maxBarSize={40}
                       activeBar={{ fill: '#00A080' }}
@@ -774,9 +776,9 @@ export default function DashboardExecutive() {
             {/* Lead Sources */}
             <Card>
               <CardHeader>
-                <CardTitle>Lead Bronnen</CardTitle>
+                <CardTitle>{t('dashboard.leadSources')}</CardTitle>
                 <CardDescription>
-                  Verdeling van deals per acquisitiekanaal
+                  {t('dashboard.dealsByChannel')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -841,29 +843,29 @@ export default function DashboardExecutive() {
             {/* Quick Stats */}
             <Card>
               <CardHeader>
-                <CardTitle>Snelle Statistieken</CardTitle>
+                <CardTitle>{t('dashboard.quickStats')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Actieve Bedrijven</span>
+                  <span className="text-sm text-muted-foreground">{t('dashboard.activeCompanies')}</span>
                   <Badge variant="secondary" className="text-lg">
                     {activeCompanies}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Nieuwe Contacten (deze maand)</span>
+                  <span className="text-sm text-muted-foreground">{t('dashboard.newContactsThisMonth')}</span>
                   <Badge variant="secondary" className="text-lg">
                     {newContacts}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Offertes Verstuurd</span>
+                  <span className="text-sm text-muted-foreground">{t('dashboard.quotesSent')}</span>
                   <Badge variant="secondary" className="text-lg">
                     {quotesSent}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Win Rate</span>
+                  <span className="text-sm text-muted-foreground">{t('dashboard.wonDeals')}</span>
                   <Badge variant="default" className="text-lg">
                     {conversionRate}%
                   </Badge>
@@ -874,8 +876,8 @@ export default function DashboardExecutive() {
             {/* Top Performers */}
             <Card>
               <CardHeader>
-                <CardTitle>Top Deals</CardTitle>
-                <CardDescription>Hoogste deal waardes</CardDescription>
+                <CardTitle>{t('dashboard.topDeals')}</CardTitle>
+                <CardDescription>{t('dashboard.highestDealValues')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {topDeals.length > 0 ? (
@@ -896,7 +898,7 @@ export default function DashboardExecutive() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Geen actieve deals
+                    {t('dashboard.noActiveDeals')}
                   </p>
                 )}
               </CardContent>
@@ -905,7 +907,7 @@ export default function DashboardExecutive() {
             {/* Recent Activity */}
             <Card>
               <CardHeader>
-                <CardTitle>Recente Activiteit</CardTitle>
+                <CardTitle>{t('dashboard.recentActivity')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {recentActivity.length > 0 ? (
@@ -931,7 +933,7 @@ export default function DashboardExecutive() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Geen recente activiteit
+                    {t('dashboard.noRecentActivity')}
                   </p>
                 )}
               </CardContent>

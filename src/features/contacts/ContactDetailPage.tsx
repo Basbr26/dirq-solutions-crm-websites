@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 import { useContact } from "./hooks/useContacts";
@@ -71,6 +72,7 @@ const getInitials = (firstName: string, lastName: string): string => {
 };
 
 export default function ContactDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -114,10 +116,10 @@ export default function ContactDetailPage() {
       {
         onSuccess: () => {
           setEditDialogOpen(false);
-          toast.success('Contact bijgewerkt');
+          toast.success(t('contacts.updated'));
         },
         onError: (error) => {
-          toast.error(`Fout bij bijwerken: ${error.message}`);
+          toast.error(`${t('contacts.updateFailed')}: ${error.message}`);
         },
       }
     );
@@ -127,18 +129,18 @@ export default function ContactDetailPage() {
     if (!contact) return;
     deleteContact.mutate(contact.id, {
       onSuccess: () => {
-        toast.success('Contact verwijderd');
+        toast.success(t('contacts.deleted'));
         navigate("/contacts");
       },
       onError: (error) => {
-        toast.error(`Fout bij verwijderen: ${error.message}`);
+        toast.error(`${t('contacts.deleteFailed')}: ${error.message}`);
       },
     });
   };
 
   if (isLoading) {
     return (
-      <AppLayout title="Contact" subtitle="Details laden...">
+      <AppLayout title={t('contacts.title')} subtitle={t('common.loading')}>
         <div className="space-y-6">
           <Skeleton className="h-12 w-64" />
           <Skeleton className="h-96 w-full" />
@@ -149,14 +151,14 @@ export default function ContactDetailPage() {
 
   if (!contact) {
     return (
-      <AppLayout title="Contact niet gevonden" subtitle="">
+      <AppLayout title={t('contacts.notFound')} subtitle="">
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-muted-foreground">
-              Contact niet gevonden
+              {t('contacts.notFound')}
             </p>
             <Link to="/contacts" className="mt-4 inline-block">
-              <Button>Terug naar overzicht</Button>
+              <Button>{t('common.backToOverview')}</Button>
             </Link>
           </CardContent>
         </Card>
@@ -177,13 +179,13 @@ export default function ContactDetailPage() {
             {canEdit && (
               <Button onClick={() => setEditDialogOpen(true)} variant="outline">
                 <Edit className="h-4 w-4 mr-2" />
-                Bewerken
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (
               <Button onClick={() => setDeleteDialogOpen(true)} variant="destructive">
                 <Trash2 className="h-4 w-4 mr-2" />
-                Verwijderen
+                {t('common.delete')}
               </Button>
             )}
           </div>
@@ -196,7 +198,7 @@ export default function ContactDetailPage() {
         <Link to="/contacts">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug naar overzicht
+            {t('common.backToOverview')}
           </Button>
         </Link>
       </div>
@@ -210,13 +212,13 @@ export default function ContactDetailPage() {
               {contact.is_primary && (
                 <Badge className="bg-blue-500">
                   <Star className="h-3 w-3 mr-1" />
-                  Primair Contact
+                  {t('contacts.primary')}
                 </Badge>
               )}
               {contact.is_decision_maker && (
-                <Badge className="bg-purple-500">
+                <Badge className="bg-amber-500 dark:bg-amber-600 text-white">
                   <Crown className="h-3 w-3 mr-1" />
-                  Beslisser
+                  {t('contacts.decisionMaker')}
                 </Badge>
               )}
             </div>
@@ -234,15 +236,15 @@ export default function ContactDetailPage() {
         )}>
           <TabsList className={isMobile ? "inline-flex w-auto" : ""}>
             <TabsTrigger value="overview" className={isMobile ? "flex-shrink-0" : ""}>
-              Overzicht
+              {t('contacts.tabs.overview')}
             </TabsTrigger>
             <TabsTrigger value="interactions" className={isMobile ? "flex-shrink-0" : ""}>
               <MessageSquare className="mr-2 h-4 w-4" />
-              Interacties
+              {t('contacts.tabs.interactions')}
             </TabsTrigger>
             <TabsTrigger value="documents" className={isMobile ? "flex-shrink-0" : ""}>
               <FileText className="mr-2 h-4 w-4" />
-              Documenten
+              {t('contacts.tabs.documents')}
             </TabsTrigger>
           </TabsList>
         </div>
@@ -254,7 +256,7 @@ export default function ContactDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="h-5 w-5" />
-                  Contactgegevens
+                  {t('contacts.contactInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -262,7 +264,7 @@ export default function ContactDetailPage() {
                   <div className="flex items-start gap-3">
                     <Mail className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
-                      <p className="text-sm text-muted-foreground">E-mail</p>
+                      <p className="text-sm text-muted-foreground">{t('contacts.email')}</p>
                       <a
                         href={`mailto:${contact.email}`}
                         className="text-sm font-medium hover:underline"
@@ -277,7 +279,7 @@ export default function ContactDetailPage() {
                   <div className="flex items-start gap-3">
                     <Phone className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Telefoon</p>
+                      <p className="text-sm text-muted-foreground">{t('contacts.phone')}</p>
                       <a
                         href={`tel:${contact.phone}`}
                         className="text-sm font-medium hover:underline"
@@ -292,7 +294,7 @@ export default function ContactDetailPage() {
                   <div className="flex items-start gap-3">
                     <Smartphone className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Mobiel</p>
+                      <p className="text-sm text-muted-foreground">{t('contacts.mobile')}</p>
                       <a
                         href={`tel:${contact.mobile}`}
                         className="text-sm font-medium hover:underline"
@@ -314,7 +316,7 @@ export default function ContactDetailPage() {
                         rel="noopener noreferrer"
                         className="text-sm font-medium hover:underline text-blue-600"
                       >
-                        Bekijk profiel
+                        {t('common.view')}
                       </a>
                     </div>
                   </div>
@@ -327,7 +329,7 @@ export default function ContactDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Briefcase className="h-5 w-5" />
-                  Professionele Details
+                  {t('contacts.position')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -335,7 +337,7 @@ export default function ContactDetailPage() {
                   <div className="flex items-start gap-3">
                     <Building2 className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Bedrijf</p>
+                      <p className="text-sm text-muted-foreground">{t('companies.title')}</p>
                       <Link
                         to={`/companies/${contact.company.id}`}
                         className="text-sm font-medium hover:underline"
@@ -350,7 +352,7 @@ export default function ContactDetailPage() {
                   <div className="flex items-start gap-3">
                     <Briefcase className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Functie</p>
+                      <p className="text-sm text-muted-foreground">{t('contacts.position')}</p>
                       <p className="text-sm font-medium">{contact.position}</p>
                     </div>
                   </div>
@@ -360,7 +362,7 @@ export default function ContactDetailPage() {
                   <div className="flex items-start gap-3">
                     <Building2 className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Afdeling</p>
+                      <p className="text-sm text-muted-foreground">{t('contacts.department')}</p>
                       <p className="text-sm font-medium">{contact.department}</p>
                     </div>
                   </div>
@@ -371,7 +373,7 @@ export default function ContactDetailPage() {
                     <Calendar className="h-4 w-4 text-muted-foreground mt-1" />
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Laatste contact
+                        {t('contacts.lastContact')}
                       </p>
                       <p className="text-sm font-medium">
                         {format(
@@ -391,7 +393,7 @@ export default function ContactDetailPage() {
           {contact.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notities</CardTitle>
+                <CardTitle>{t('contacts.notes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{contact.notes}</p>
@@ -402,11 +404,11 @@ export default function ContactDetailPage() {
           {/* Metadata */}
           <Card>
             <CardHeader>
-              <CardTitle>Metadata</CardTitle>
+              <CardTitle>{t('common.administration')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Aangemaakt op:</span>
+                <span className="text-muted-foreground">{t('common.created')}:</span>
                 <span>
                   {format(new Date(contact.created_at), "d MMMM yyyy HH:mm", {
                     locale: nl,
@@ -414,7 +416,7 @@ export default function ContactDetailPage() {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Laatst bijgewerkt:</span>
+                <span className="text-muted-foreground">{t('common.update')}:</span>
                 <span>
                   {format(new Date(contact.updated_at), "d MMMM yyyy HH:mm", {
                     locale: nl,
@@ -423,7 +425,7 @@ export default function ContactDetailPage() {
               </div>
               {contact.owner && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Eigenaar:</span>
+                  <span className="text-muted-foreground">{t('projects.owner')}:</span>
                   <span>{contact.owner.voornaam} {contact.owner.achternaam}</span>
                 </div>
               )}
@@ -436,7 +438,7 @@ export default function ContactDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Interacties ({interactionsData?.count || 0})
+                {t('contacts.tabs.interactions')} ({interactionsData?.count || 0})
               </CardTitle>
               {canEdit && (
                 <div className="flex gap-2 flex-wrap">
@@ -449,7 +451,7 @@ export default function ContactDetailPage() {
                     }}
                   >
                     <Phone className="h-4 w-4 mr-1" />
-                    Gesprek
+                    {t('interactions.call')}
                   </Button>
                   <Button 
                     size="sm" 
@@ -460,7 +462,7 @@ export default function ContactDetailPage() {
                     }}
                   >
                     <Mail className="h-4 w-4 mr-1" />
-                    E-mail
+                    {t('interactions.email')}
                   </Button>
                   <Button 
                     size="sm"
@@ -470,7 +472,7 @@ export default function ContactDetailPage() {
                     }}
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    Activiteit
+                    {t('interactions.addActivity')}
                   </Button>
                 </div>
               )}
@@ -486,11 +488,11 @@ export default function ContactDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                Documenten
+                {t('contacts.tabs.documents')}
               </CardTitle>
               <Button size="sm" onClick={() => setUploadDialogOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
-                Upload
+                {t('common.upload')}
               </Button>
             </CardHeader>
             <CardContent>
@@ -504,9 +506,9 @@ export default function ContactDetailPage() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Contact Bewerken</DialogTitle>
+            <DialogTitle>{t('contacts.editContact')}</DialogTitle>
             <DialogDescription>
-              Wijzig de gegevens van dit contact
+              {t('contacts.addNewContactDescription')}
             </DialogDescription>
           </DialogHeader>
           <ContactForm
@@ -522,19 +524,18 @@ export default function ContactDetailPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Weet u het zeker?</AlertDialogTitle>
+            <AlertDialogTitle>{t('common.confirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Dit contact wordt permanent verwijderd. Deze actie kan niet
-              ongedaan worden gemaakt.
+              {t('contacts.deleteConfirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Verwijderen
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -564,7 +565,7 @@ export default function ContactDetailPage() {
                 size="lg"
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Bewerken
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (

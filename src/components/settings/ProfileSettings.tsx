@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useUpdateProfile, useUploadAvatar, useDeleteAvatar } from '@/hooks/useProfile';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 import { Loader2, Upload, X } from 'lucide-react';
 
 export function ProfileSettings() {
+  const { t } = useTranslation();
   const { profile, user } = useAuth();
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
@@ -50,12 +52,12 @@ export function ProfileSettings() {
       },
       {
         onSuccess: () => {
-          toast.success('Profiel bijgewerkt', {
-            description: 'Je profielgegevens zijn succesvol opgeslagen.',
+          toast.success(t('success.profileUpdated'), {
+            description: t('success.profileUpdatedDescription'),
           });
         },
         onError: (error: Error) => {
-          toast.error('Fout bij opslaan', {
+          toast.error(t('errors.saveFailed'), {
             description: error.message,
           });
         },
@@ -86,8 +88,8 @@ export function ProfileSettings() {
       {
         onSuccess: (publicUrl) => {
           setFormData({ ...formData, avatar_url: publicUrl });
-          toast.success('Avatar bijgewerkt', {
-            description: 'Je profielfoto is succesvol geüpload.',
+          toast.success(t('success.avatarUpdated'), {
+            description: t('success.avatarUpdatedDescription'),
           });
           // Reset file input
           if (fileInputRef.current) {
@@ -95,7 +97,7 @@ export function ProfileSettings() {
           }
         },
         onError: (error: Error) => {
-          toast.error('Upload mislukt', {
+          toast.error(t('errors.uploadFailed'), {
             description: error.message,
           });
           // Reset file input
@@ -115,12 +117,12 @@ export function ProfileSettings() {
       {
         onSuccess: () => {
           setFormData({ ...formData, avatar_url: '' });
-          toast.success('Avatar verwijderd', {
-            description: 'Je profielfoto is verwijderd.',
+          toast.success(t('success.avatarRemoved'), {
+            description: t('success.avatarRemovedDescription'),
           });
         },
         onError: (error: Error) => {
-          toast.error('Fout bij verwijderen', {
+          toast.error(t('errors.deleteFailed'), {
             description: error.message,
           });
         },
@@ -131,9 +133,9 @@ export function ProfileSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Persoonlijke Gegevens</CardTitle>
+        <CardTitle>{t('settings.profile.title')}</CardTitle>
         <CardDescription>
-          Update je persoonlijke informatie en avatar
+          {t('settings.profile.description')}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -175,17 +177,17 @@ export function ProfileSettings() {
                 {uploadAvatar.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Uploaden...
+                    {t('common.uploading')}
                   </>
                 ) : (
                   <>
                     <Upload className="h-4 w-4 mr-2" />
-                    Upload foto
+                    {t('settings.profile.uploadPhoto')}
                   </>
                 )}
               </Button>
               <p className="text-xs text-muted-foreground">
-                JPG, PNG, GIF, WebP max 2MB
+                {t('settings.profile.photoRequirements')}
               </p>
             </div>
           </div>
@@ -193,7 +195,7 @@ export function ProfileSettings() {
           {/* Name Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="voornaam">Voornaam</Label>
+              <Label htmlFor="voornaam">{t('common.firstName')}</Label>
               <Input
                 id="voornaam"
                 value={formData.voornaam}
@@ -202,7 +204,7 @@ export function ProfileSettings() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="achternaam">Achternaam</Label>
+              <Label htmlFor="achternaam">{t('common.lastName')}</Label>
               <Input
                 id="achternaam"
                 value={formData.achternaam}
@@ -214,7 +216,7 @@ export function ProfileSettings() {
 
           {/* Email (Read-only) */}
           <div className="space-y-2">
-            <Label htmlFor="email">E-mailadres</Label>
+            <Label htmlFor="email">{t('common.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -223,13 +225,13 @@ export function ProfileSettings() {
               className="bg-muted"
             />
             <p className="text-xs text-muted-foreground">
-              E-mailadres kan niet worden gewijzigd. Neem contact op met een administrator.
+              {t('settings.profile.emailCannotChange')}
             </p>
           </div>
 
           {/* Phone */}
           <div className="space-y-2">
-            <Label htmlFor="phone">Telefoonnummer</Label>
+            <Label htmlFor="phone">{t('common.phone')}</Label>
             <Input
               id="phone"
               type="tel"
@@ -243,7 +245,7 @@ export function ProfileSettings() {
           <div className="flex justify-end">
             <Button type="submit" disabled={updateProfile.isPending}>
               {updateProfile.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Opslaan
+              {t('common.save')}
             </Button>
           </div>
         </form>

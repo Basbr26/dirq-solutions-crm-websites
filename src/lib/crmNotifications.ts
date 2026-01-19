@@ -193,7 +193,7 @@ export async function notifyCompanyCreated(
     recipient_id: ownerId,
     type: 'company_created',
     title: 'Nieuw bedrijf',
-    message: `Bedrijf "${companyName}" is toegevoegd aan je pipeline`,
+    message: `Bedrijf "${companyName}" is toegevoegd aan je overzicht`,
     entity_type: 'company',
     entity_id: companyId,
     deep_link: `/companies/${companyId}`,

@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, CheckCircle2, XCircle, AlertCircle, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
+import { useTranslation } from 'react-i18next';
 
 interface CSVImportDialogProps {
   open: boolean;
@@ -65,6 +66,7 @@ export function CSVImportDialog({
   onImport,
   exampleDownloadUrl,
 }: CSVImportDialogProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing' | 'complete'>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
@@ -78,7 +80,7 @@ export function CSVImportDialog({
     if (!selectedFile) return;
 
     if (!selectedFile.name.endsWith('.csv')) {
-      toast.error('Alleen CSV bestanden zijn toegestaan');
+      toast.error(t('errors.csvOnly'));
       return;
     }
 
@@ -133,7 +135,7 @@ export function CSVImportDialog({
 
   const handlePreview = () => {
     if (!validateMapping()) {
-      toast.error('Alle verplichte velden moeten gekoppeld worden');
+      toast.error(t('errors.requiredFieldsMapping'));
       return;
     }
     setStep('preview');
@@ -173,7 +175,7 @@ export function CSVImportDialog({
       setStep('complete');
     } catch (error: any) {
       console.error('Import error:', error);
-      toast.error('Import mislukt: ' + error.message);
+      toast.error(t('errors.importFailed') + ': ' + error.message);
       setStep('mapping');
     }
   };
@@ -213,10 +215,10 @@ export function CSVImportDialog({
               <div className="text-center">
                 <Label htmlFor="csv-upload" className="cursor-pointer">
                   <div className="text-sm font-medium mb-1">
-                    Klik om CSV bestand te selecteren
+                    {t('csv.selectFile')}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Of sleep bestand hier naartoe
+                    {t('csv.dragDropHint')}
                   </div>
                 </Label>
                 <Input
@@ -245,15 +247,15 @@ export function CSVImportDialog({
             {exampleDownloadUrl && (
               <Alert>
                 <AlertDescription>
-                  Download een{' '}
+                  {t('csv.downloadExample')}{' '}
                   <a
                     href={exampleDownloadUrl}
                     className="underline font-medium"
                     download
                   >
-                    voorbeeld CSV bestand
+                    {t('csv.exampleFile')}
                   </a>{' '}
-                  om de juiste format te zien.
+                  {t('csv.seeFormat')}
                 </AlertDescription>
               </Alert>
             )}
@@ -264,7 +266,7 @@ export function CSVImportDialog({
         {step === 'mapping' && parsedData && (
           <div className="space-y-4 py-4 flex-1 overflow-hidden">
             <div className="text-sm text-muted-foreground">
-              Koppel de kolommen uit je CSV bestand aan de juiste velden
+              {t('csv.mapColumns')}
             </div>
 
             <ScrollArea className="h-[400px] pr-4">
@@ -385,10 +387,10 @@ export function CSVImportDialog({
         {step === 'importing' && (
           <div className="space-y-4 py-8">
             <div className="text-center">
-              <div className="text-sm font-medium mb-4">Importeren...</div>
+              <div className="text-sm font-medium mb-4">{t('csv.importing')}</div>
               <Progress value={importProgress} className="w-full" />
               <div className="text-xs text-muted-foreground mt-2">
-                Even geduld, data wordt geïmporteerd
+                {t('csv.pleaseWait')}
               </div>
             </div>
           </div>
@@ -402,12 +404,12 @@ export function CSVImportDialog({
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
               )}
               <div className="text-center">
-                <div className="text-lg font-semibold mb-2">Import voltooid!</div>
+                <div className="text-lg font-semibold mb-2">{t('csv.importComplete')}</div>
                 <div className="space-y-1 text-sm text-muted-foreground">
-                  <div>Totaal: {importResult.total} rijen</div>
-                  <div className="text-green-600">Succesvol: {importResult.success}</div>
+                  <div>{t('csv.total')}: {importResult.total} {t('csv.rows')}</div>
+                  <div className="text-green-600">{t('csv.successful')}: {importResult.success}</div>
                   {importResult.errors > 0 && (
-                    <div className="text-red-600">Fouten: {importResult.errors}</div>
+                    <div className="text-red-600">{t('csv.errors')}: {importResult.errors}</div>
                   )}
                 </div>
               </div>
@@ -418,7 +420,7 @@ export function CSVImportDialog({
         <DialogFooter>
           {step === 'upload' && (
             <Button variant="outline" onClick={handleClose}>
-              Annuleren
+              {t('common.cancel')}
             </Button>
           )}
 
@@ -432,10 +434,10 @@ export function CSVImportDialog({
                   setFile(null);
                 }}
               >
-                Terug
+                {t('common.back')}
               </Button>
               <Button onClick={handlePreview} disabled={!validateMapping()}>
-                Volgende: Preview
+                {t('csv.nextPreview')}
               </Button>
             </>
           )}
@@ -443,14 +445,14 @@ export function CSVImportDialog({
           {step === 'preview' && (
             <>
               <Button variant="outline" onClick={() => setStep('mapping')}>
-                Terug
+                {t('common.back')}
               </Button>
-              <Button onClick={handleImport}>Importeren</Button>
+              <Button onClick={handleImport}>{t('csv.import')}</Button>
             </>
           )}
 
           {step === 'complete' && (
-            <Button onClick={handleClose}>Sluiten</Button>
+            <Button onClick={handleClose}>{t('common.close')}</Button>
           )}
         </DialogFooter>
       </DialogContent>

@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Clock, Zap, ChevronRight, X, Bell, Mail, Mes
 import type { Notification } from '@/lib/notifications/types';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface NotificationCardProps {
   notification: Notification;
@@ -16,35 +17,38 @@ interface NotificationCardProps {
   isSelected?: boolean;
 }
 
-const priorityConfig = {
-  critical: {
-    color: 'bg-red-500',
-    textColor: 'text-red-700',
-    bgLight: 'bg-red-50',
-    icon: <AlertCircle className="w-4 h-4" />,
-    label: 'Critical'
-  },
-  high: {
-    color: 'bg-orange-500',
-    textColor: 'text-orange-700',
-    bgLight: 'bg-orange-50',
-    icon: <Zap className="w-4 h-4" />,
-    label: 'High'
-  },
-  normal: {
-    color: 'bg-blue-500',
-    textColor: 'text-blue-700',
-    bgLight: 'bg-blue-50',
-    icon: <Bell className="w-4 h-4" />,
-    label: 'Normal'
-  },
-  low: {
-    color: 'bg-gray-500',
-    textColor: 'text-gray-700',
-    bgLight: 'bg-gray-50',
-    icon: <Clock className="w-4 h-4" />,
-    label: 'Low'
-  }
+const getPriorityConfig = (priority: string, t: any) => {
+  const configs = {
+    critical: {
+      color: 'bg-red-500',
+      textColor: 'text-red-700',
+      bgLight: 'bg-red-50',
+      icon: <AlertCircle className="w-4 h-4" />,
+      label: t('notifications.priority.critical')
+    },
+    high: {
+      color: 'bg-orange-500',
+      textColor: 'text-orange-700',
+      bgLight: 'bg-orange-50',
+      icon: <Zap className="w-4 h-4" />,
+      label: t('notifications.priority.high')
+    },
+    normal: {
+      color: 'bg-blue-500',
+      textColor: 'text-blue-700',
+      bgLight: 'bg-blue-50',
+      icon: <Bell className="w-4 h-4" />,
+      label: t('notifications.priority.normal')
+    },
+    low: {
+      color: 'bg-gray-500',
+      textColor: 'text-gray-700',
+      bgLight: 'bg-gray-50',
+      icon: <Clock className="w-4 h-4" />,
+      label: t('notifications.priority.low')
+    }
+  };
+  return configs[priority as keyof typeof configs] || configs.normal;
 };
 
 const channelIcons: Record<string, React.ReactNode> = {
@@ -62,8 +66,9 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   onSnooze,
   isSelected = false
 }) => {
+  const { t } = useTranslation();
   const priority = (notification.priority || 'normal') as keyof typeof priorityConfig;
-  const config = priorityConfig[priority];
+  const config = getPriorityConfig(priority, t);
 
   const handleCardClick = () => {
     if (!notification.read && onRead) {
@@ -167,7 +172,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
                 window.location.hash = notification.deep_link;
               }}
             >
-              View Details <ChevronRight className="w-3 h-3 ml-1" />
+              {t('notifications.viewDetails')} <ChevronRight className="w-3 h-3 ml-1" />
             </Button>
           )}
         </div>
@@ -175,7 +180,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         {/* Quick Actions */}
         <div className="flex-shrink-0 flex gap-1">
           {notification.actioned && (
-            <div className="text-green-600" title="Actioned">
+            <div className="text-green-600" title={t('notifications.actioned')}>
               <CheckCircle2 className="w-4 h-4" />
             </div>
           )}
@@ -184,7 +189,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0"
-            title="Snooze"
+            title={t('notifications.snooze')}
             onClick={(e) => {
               e.stopPropagation();
               if (onSnooze) onSnooze(notification.id);
@@ -197,7 +202,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0"
-            title="Delete"
+            title={t('common.delete')}
             onClick={(e) => {
               e.stopPropagation();
               if (onDelete) onDelete(notification.id);

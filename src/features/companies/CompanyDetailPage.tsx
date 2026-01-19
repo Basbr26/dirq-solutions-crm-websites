@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { cn } from '@/lib/utils';
 import { useCompany } from './hooks/useCompanies';
@@ -81,6 +82,7 @@ const priorityConfig = {
 };
 
 export default function CompanyDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { role } = useAuth();
@@ -125,10 +127,10 @@ export default function CompanyDetailPage() {
       {
         onSuccess: () => {
           setEditDialogOpen(false);
-          toast.success('Bedrijf bijgewerkt');
+          toast.success(t('companies.updated'));
         },
         onError: (error) => {
-          toast.error(`Fout bij bijwerken: ${error.message}`);
+          toast.error(`${t('companies.updateFailed')}: ${error.message}`);
         },
       }
     );
@@ -138,11 +140,11 @@ export default function CompanyDetailPage() {
     if (!id) return;
     deleteCompany.mutate(id, {
       onSuccess: () => {
-        toast.success('Bedrijf verwijderd');
+        toast.success(t('companies.deleted'));
         navigate('/companies');
       },
       onError: (error) => {
-        toast.error(`Fout bij verwijderen: ${error.message}`);
+        toast.error(`${t('companies.deleteFailed')}: ${error.message}`);
       },
     });
   };
@@ -157,10 +159,10 @@ export default function CompanyDetailPage() {
     createContact.mutate(contactData, {
       onSuccess: () => {
         setCreateContactDialogOpen(false);
-        toast.success('Contact aangemaakt');
+        toast.success(t('companies.contactCreated'));
       },
       onError: (error) => {
-        toast.error('Fout bij aanmaken contact: ' + error.message);
+        toast.error(`${t('companies.contactCreateFailed')}: ${error.message}`);
       },
     });
   };
@@ -173,17 +175,17 @@ export default function CompanyDetailPage() {
       {
         onSuccess: () => {
           setCreateProjectDialogOpen(false);
-          toast.success('Project succesvol aangemaakt');
+          toast.success(t('companies.projectCreated'));
         },
         onError: (error: any) => {
-          toast.error(`Fout bij aanmaken project: ${error.message}`);
+          toast.error(`${t('companies.projectCreateFailed')}: ${error.message}`);
         },
       }
     );
   };
   if (isLoading) {
     return (
-      <AppLayout title="Bedrijf" subtitle="Details laden...">
+      <AppLayout title={t('companies.title')} subtitle={t('companies.loadingDetails')}>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
           <Skeleton className="h-96 w-full" />
@@ -213,8 +215,27 @@ export default function CompanyDetailPage() {
     );
   }
 
-  const statusStyle = statusConfig[company.status];
-  const priorityStyle = priorityConfig[company.priority];
+  const statusConfig = (status: string) => {
+    const configs = {
+      prospect: { label: t('companies.statuses.prospect'), color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+      active: { label: t('companies.statuses.active'), color: 'bg-green-500/10 text-green-500 border-green-500/20' },
+      inactive: { label: t('companies.statuses.inactive'), color: 'bg-gray-500/10 text-gray-500 border-gray-500/20' },
+      churned: { label: t('companies.statuses.churned'), color: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    };
+    return configs[status as keyof typeof configs] || configs.prospect;
+  };
+  
+  const priorityConfig = (priority: string) => {
+    const configs = {
+      low: { label: t('companies.priorities.low'), color: 'bg-gray-500/10 text-gray-500' },
+      medium: { label: t('companies.priorities.medium'), color: 'bg-blue-500/10 text-blue-500' },
+      high: { label: t('companies.priorities.high'), color: 'bg-orange-500/10 text-orange-500' },
+    };
+    return configs[priority as keyof typeof configs] || configs.medium;
+  };
+
+  const statusStyle = statusConfig(company.status);
+  const priorityStyle = priorityConfig(company.priority);
 
   return (
     <AppLayout
@@ -226,13 +247,13 @@ export default function CompanyDetailPage() {
             {canEdit && (
               <Button onClick={() => setEditDialogOpen(true)} variant="outline">
                 <Edit className="h-4 w-4 mr-2" />
-                Bewerken
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (
               <Button onClick={() => setDeleteDialogOpen(true)} variant="destructive">
                 <Trash2 className="h-4 w-4 mr-2" />
-                Verwijderen
+                {t('common.delete')}
               </Button>
             )}
           </div>
@@ -245,7 +266,7 @@ export default function CompanyDetailPage() {
         <Link to="/companies">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Terug naar overzicht
+            {t('common.backToOverview')}
           </Button>
         </Link>
 
@@ -745,11 +766,9 @@ export default function CompanyDetailPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Bedrijf verwijderen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('companies.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je <strong>{company.name}</strong> wilt verwijderen? Deze actie kan
-              niet ongedaan worden gemaakt. Alle gekoppelde contacten, leads en activiteiten worden
-              ook verwijderd.
+              {t('companies.deleteDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

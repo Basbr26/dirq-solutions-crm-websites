@@ -1,14 +1,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleCalendarSync } from '@/components/calendar/GoogleCalendarSync';
+import { useTranslation } from 'react-i18next';
 
 export function IntegrationsSettings() {
+  const { t } = useTranslation();
+  
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Google Calendar</CardTitle>
+          <CardTitle>{t('settings.integrations.googleCalendar')}</CardTitle>
           <CardDescription>
-            Synchroniseer uw CRM agenda automatisch met Google Calendar
+            {t('settings.integrations.googleCalendarDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>

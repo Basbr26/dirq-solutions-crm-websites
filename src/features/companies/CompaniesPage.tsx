@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, Download, Upload } from 'lucide-react';
 import { useCompanies, useCompanyStats } from './hooks/useCompanies';
 import { useCreateCompany } from './hooks/useCompanyMutations';
@@ -30,6 +31,7 @@ import { CSVImportDialog } from '@/components/CSVImportDialog';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export default function CompaniesPage() {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<CompanyFiltersType>({});
@@ -67,7 +69,7 @@ export default function CompaniesPage() {
 
   const handleExportCSV = async () => {
     try {
-      toast.info('Bedrijven exporteren...');
+      toast.info(t('companies.exporting'));
       
       let query = supabase
         .from('companies')
@@ -88,12 +90,12 @@ export default function CompaniesPage() {
       
       if (error) throw error;
       if (!exportCompanies || exportCompanies.length === 0) {
-        toast.warning('Geen bedrijven om te exporteren');
+        toast.warning(t('companies.noCompaniesToExport'));
         return;
       }
 
       // Convert to CSV
-      const headers = ['Naam', 'Email', 'Telefoon', 'Website', 'Status', 'Prioriteit', 'Grootte', 'Industrie', 'Aangemaakt'];
+      const headers = [t('companies.name'), t('common.email'), t('common.phone'), t('companies.website'), t('companies.status'), t('companies.priority'), t('companies.size'), t('companies.industry'), t('common.created')];
       const rows = exportCompanies.map(c => [
         c.name || '',
         c.email || '',
@@ -120,10 +122,10 @@ export default function CompaniesPage() {
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`${exportCompanies.length} bedrijven geëxporteerd`);
+      toast.success(t('companies.companiesExported', { count: exportCompanies.length }));
     } catch (error: any) {
       console.error('Export error:', error);
-      toast.error('Fout bij exporteren: ' + error.message);
+      toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
   };
 
@@ -171,13 +173,13 @@ export default function CompaniesPage() {
 
   return (
     <AppLayout
-      title="Bedrijven"
-      subtitle="Beheer en volg al je zakelijke relaties"
+      title={t('companies.title')}
+      subtitle={t('companies.subtitle')}
       onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
         <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nieuw Bedrijf
+          {t('companies.newCompany')}
         </Button>
       }
     >
@@ -188,7 +190,7 @@ export default function CompaniesPage() {
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Totaal</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common.total')}</CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -199,34 +201,34 @@ export default function CompaniesPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Actief</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('companies.active')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">{stats.active}</div>
-              <p className="text-xs text-muted-foreground hidden sm:block">actieve klanten</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">{t('companies.activeClients')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Prospects</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('companies.prospects')}</CardTitle>
               <Target className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-500">{stats.prospects}</div>
-              <p className="text-xs text-muted-foreground hidden sm:block">potentiële klanten</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">{t('companies.potentialClients')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Inactief</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('companies.inactive')}</CardTitle>
               <Users className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-500">{stats.inactive}</div>
-              <p className="text-xs text-muted-foreground hidden sm:block">niet-actieve bedrijven</p>
+              <p className="text-xs text-muted-foreground hidden sm:block">{t('companies.inactiveCompanies')}</p>
             </CardContent>
           </Card>
         </div>
@@ -237,7 +239,7 @@ export default function CompaniesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Zoek bedrijven op naam, email..."
+            placeholder={t('companies.searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
@@ -250,7 +252,7 @@ export default function CompaniesPage() {
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="h-4 w-4 mr-2" />
-            Filters
+            {t('common.filter')}
             {Object.values(filters).filter(Boolean).length > 0 && (
               <Badge className="ml-2" variant="secondary">
                 {Object.values(filters).filter(Boolean).length}
@@ -260,13 +262,13 @@ export default function CompaniesPage() {
 
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('common.export')}
           </Button>
           
           {canCreateCompany && (
             <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
               <Upload className="h-4 w-4 mr-2" />
-              Import
+              {t('common.import')}
             </Button>
           )}
         </div>
@@ -278,7 +280,7 @@ export default function CompaniesPage() {
           <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Status</label>
+                <label className="text-sm font-medium mb-2 block">{t('companies.status')}</label>
                 <Select
                   value={filters.status?.[0] || ''}
                   onValueChange={(value) =>
@@ -286,20 +288,20 @@ export default function CompaniesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle statussen" />
+                    <SelectValue placeholder={t('companies.allStatuses')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle statussen</SelectItem>
-                    <SelectItem value="prospect">Prospect</SelectItem>
-                    <SelectItem value="active">Actief</SelectItem>
-                    <SelectItem value="inactive">Inactief</SelectItem>
-                    <SelectItem value="churned">Verloren</SelectItem>
+                    <SelectItem value="">{t('companies.allStatuses')}</SelectItem>
+                    <SelectItem value="prospect">{t('companies.statuses.prospect')}</SelectItem>
+                    <SelectItem value="active">{t('companies.statuses.active')}</SelectItem>
+                    <SelectItem value="inactive">{t('companies.statuses.inactive')}</SelectItem>
+                    <SelectItem value="churned">{t('companies.statuses.churned')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Prioriteit</label>
+                <label className="text-sm font-medium mb-2 block">{t('companies.priority')}</label>
                 <Select
                   value={filters.priority?.[0] || ''}
                   onValueChange={(value) =>
@@ -307,19 +309,19 @@ export default function CompaniesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle prioriteiten" />
+                    <SelectValue placeholder={t('companies.allPriorities')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle prioriteiten</SelectItem>
-                    <SelectItem value="low">Laag</SelectItem>
-                    <SelectItem value="medium">Normaal</SelectItem>
-                    <SelectItem value="high">Hoog</SelectItem>
+                    <SelectItem value="">{t('companies.allPriorities')}</SelectItem>
+                    <SelectItem value="low">{t('companies.priorities.low')}</SelectItem>
+                    <SelectItem value="medium">{t('companies.priorities.medium')}</SelectItem>
+                    <SelectItem value="high">{t('companies.priorities.high')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Bron (v2.0)</label>
+                <label className="text-sm font-medium mb-2 block">{t('companies.source')} (v2.0)</label>
                 <Select
                   value={(filters as any).source || ''}
                   onValueChange={(value) =>
@@ -327,14 +329,14 @@ export default function CompaniesPage() {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle bronnen" />
+                    <SelectValue placeholder={t('companies.allSources')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle bronnen</SelectItem>
-                    <SelectItem value="Manual">Handmatig</SelectItem>
+                    <SelectItem value="">{t('companies.allSources')}</SelectItem>
+                    <SelectItem value="Manual">{t('companies.sources.manual')}</SelectItem>
                     <SelectItem value="Apollo">Apollo.io</SelectItem>
                     <SelectItem value="KVK">KVK API</SelectItem>
-                    <SelectItem value="Website">Website Form</SelectItem>
+                    <SelectItem value="Website">{t('companies.sources.website')}</SelectItem>
                     <SelectItem value="Manus">Manus AI</SelectItem>
                     <SelectItem value="n8n_automation">n8n Automation</SelectItem>
                   </SelectContent>
@@ -349,7 +351,7 @@ export default function CompaniesPage() {
                     setSearch('');
                   }}
                 >
-                  Reset filters
+                  {t('companies.resetFilters')}
                 </Button>
               </div>
             </div>
@@ -383,16 +385,16 @@ export default function CompaniesPage() {
       ) : (
         <EmptyState
           icon={Building2}
-          title="Geen bedrijven gevonden"
+          title={t('companies.noCompaniesFound')}
           description={
             search || Object.values(filters).filter(Boolean).length > 0
-              ? 'Pas je filters aan of probeer een andere zoekopdracht.'
-              : 'Begin met het toevoegen van je eerste bedrijf.'
+              ? t('companies.adjustFilters')
+              : t('companies.addFirstCompany')
           }
           action={
             canCreateCompany && !search && Object.values(filters).filter(Boolean).length === 0
               ? {
-                  label: 'Nieuw Bedrijf',
+                  label: t('companies.newCompany'),
                   onClick: () => setCreateDialogOpen(true),
                   icon: Plus,
                 }
@@ -409,7 +411,7 @@ export default function CompaniesPage() {
           createCompany.mutate(data, {
             onSuccess: () => setCreateDialogOpen(false),
             onError: (error) => {
-              toast.error('Fout bij aanmaken bedrijf: ' + error.message);
+              toast.error(t('errors.createFailed') + ': ' + error.message);
             },
           });
         }}
@@ -420,8 +422,8 @@ export default function CompaniesPage() {
       <CSVImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        title="Bedrijven Importeren"
-        description="Importeer meerdere bedrijven tegelijk vanuit een CSV bestand"
+        title={t('companies.importTitle')}
+        description={t('companies.importDescription')}
         requiredFields={['name']}
         optionalFields={['email', 'phone', 'website', 'status', 'priority', 'company_size', 'notes']}
         onImport={handleImport}

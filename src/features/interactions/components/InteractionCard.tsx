@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Interaction } from '../hooks/useInteractions';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,25 +27,32 @@ interface InteractionCardProps {
   interaction: Interaction;
 }
 
-const typeConfig = {
-  call: { icon: Phone, label: 'Telefoongesprek', color: 'bg-blue-500' },
-  email: { icon: Mail, label: 'E-mail', color: 'bg-purple-500' },
-  meeting: { icon: Calendar, label: 'Vergadering', color: 'bg-green-500' },
-  note: { icon: FileText, label: 'Notitie', color: 'bg-gray-500' },
-  task: { icon: CheckSquare, label: 'Taak', color: 'bg-orange-500' },
-  demo: { icon: Presentation, label: 'Demo', color: 'bg-pink-500' },
+const getTypeConfig = (type: string, t: any) => {
+  const configs = {
+    call: { icon: Phone, label: t('interactions.types.call'), color: 'bg-blue-500' },
+    email: { icon: Mail, label: t('interactions.types.email'), color: 'bg-purple-500' },
+    meeting: { icon: Calendar, label: t('interactions.types.meeting'), color: 'bg-green-500' },
+    note: { icon: FileText, label: t('interactions.types.note'), color: 'bg-gray-500' },
+    task: { icon: CheckSquare, label: t('interactions.types.task'), color: 'bg-orange-500' },
+    demo: { icon: Presentation, label: t('interactions.types.demo'), color: 'bg-pink-500' },
+  };
+  return configs[type as keyof typeof configs] || configs.note;
 };
 
-const taskStatusConfig = {
-  pending: { label: 'Te doen', color: 'bg-yellow-500' },
-  completed: { label: 'Voltooid', color: 'bg-green-500' },
-  cancelled: { label: 'Geannuleerd', color: 'bg-gray-500' },
+const getTaskStatusConfig = (status: string, t: any) => {
+  const configs = {
+    pending: { label: t('interactions.taskStatus.pending'), color: 'bg-yellow-500' },
+    completed: { label: t('interactions.taskStatus.completed'), color: 'bg-green-500' },
+    cancelled: { label: t('interactions.taskStatus.cancelled'), color: 'bg-gray-500' },
+  };
+  return configs[status as keyof typeof configs];
 };
 
 export function InteractionCard({ interaction }: InteractionCardProps) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
-  const config = typeConfig[interaction.type as keyof typeof typeConfig] || typeConfig.note;
+  const config = getTypeConfig(interaction.type, t);
   const Icon = config.icon;
 
   const handleCompanyClick = (e: React.MouseEvent) => {
@@ -80,12 +88,12 @@ export function InteractionCard({ interaction }: InteractionCardProps) {
                       {interaction.direction === 'inbound' ? (
                         <>
                           <ArrowDownLeft className="h-3 w-3" />
-                          Inkomend
+                          {t('interactions.inbound')}
                         </>
                       ) : (
                         <>
                           <ArrowUpRight className="h-3 w-3" />
-                          Uitgaand
+                          {t('interactions.outbound')}
                         </>
                       )}
                     </Badge>
@@ -100,7 +108,7 @@ export function InteractionCard({ interaction }: InteractionCardProps) {
                     })}
                   </span>
                   {interaction.duration_minutes && (
-                    <span>{interaction.duration_minutes} min</span>
+                    <span>{interaction.duration_minutes} {t('common.minutes')}</span>
                   )}
                 </div>
               </div>
@@ -109,9 +117,9 @@ export function InteractionCard({ interaction }: InteractionCardProps) {
               <Badge variant="secondary">{config.label}</Badge>
               {interaction.is_task && interaction.task_status && (
                 <Badge
-                  className={`${taskStatusConfig[interaction.task_status].color} text-white`}
+                  className={`${getTaskStatusConfig(interaction.task_status, t).color} text-white`}
                 >
-                  {taskStatusConfig[interaction.task_status].label}
+                  {getTaskStatusConfig(interaction.task_status, t).label}
                 </Badge>
               )}
             </div>

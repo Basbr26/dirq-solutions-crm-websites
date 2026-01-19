@@ -220,7 +220,7 @@ export const QuotePDFDocument = ({ quote, items = [] }: QuotePDFDocumentProps) =
 
         {/* Quote Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Offerte Gegevens</Text>
+          <Text style={styles.sectionTitle}>Offerte gegevens</Text>
           
           <View style={styles.row}>
             <Text style={styles.label}>Titel:</Text>
@@ -285,7 +285,7 @@ export const QuotePDFDocument = ({ quote, items = [] }: QuotePDFDocumentProps) =
         {/* Line Items */}
         {items.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Regel Items</Text>
+            <Text style={styles.sectionTitle}>Regel items</Text>
             
             <View style={styles.table}>
               {/* Table Header */}
@@ -338,7 +338,7 @@ export const QuotePDFDocument = ({ quote, items = [] }: QuotePDFDocumentProps) =
         {/* Internal Notes (optional - only for internal use) */}
         {quote.notes && (
           <View style={styles.notes}>
-            <Text style={styles.notesTitle}>Interne Notities</Text>
+            <Text style={styles.notesTitle}>Interne notities</Text>
             <Text style={styles.notesText}>{quote.notes}</Text>
           </View>
         )}

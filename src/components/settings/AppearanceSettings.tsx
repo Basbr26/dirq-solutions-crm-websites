@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -6,29 +7,30 @@ import { Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 export function AppearanceSettings() {
+  const { t } = useTranslation();
   const { theme } = useTheme();
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Weergave Instellingen</CardTitle>
+        <CardTitle>{t('settings.appearance.title')}</CardTitle>
         <CardDescription>
-          Pas het uiterlijk van de applicatie aan naar jouw voorkeur
+          {t('settings.appearance.description')}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Theme Toggle */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <Label>Thema</Label>
+            <Label>{t('settings.appearance.theme')}</Label>
             <p className="text-sm text-muted-foreground">
-              Kies tussen lichte en donkere modus
+              {t('settings.appearance.themeDescription')}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Sun className="h-4 w-4" />
-              <span className="capitalize">{theme === 'dark' ? 'Donker' : 'Licht'}</span>
+              <span className="capitalize">{theme === 'dark' ? t('settings.appearance.dark') : t('settings.appearance.light')}</span>
               <Moon className="h-4 w-4" />
             </div>
             <ThemeToggle />
@@ -39,9 +41,9 @@ export function AppearanceSettings() {
 
         {/* Future: Compact Mode */}
         <div className="space-y-2 opacity-50">
-          <Label>Compacte weergave</Label>
+          <Label>{t('settings.appearance.compactMode')}</Label>
           <p className="text-sm text-muted-foreground">
-            Toon meer informatie in minder ruimte (Binnenkort beschikbaar)
+            {t('settings.appearance.compactModeDescription')}
           </p>
         </div>
 
@@ -49,9 +51,9 @@ export function AppearanceSettings() {
 
         {/* Future: Font Size */}
         <div className="space-y-2 opacity-50">
-          <Label>Lettergrootte</Label>
+          <Label>{t('settings.appearance.fontSize')}</Label>
           <p className="text-sm text-muted-foreground">
-            Pas de tekstgrootte aan voor betere leesbaarheid (Binnenkort beschikbaar)
+            {t('settings.appearance.fontSizeDescription')}
           </p>
         </div>
       </CardContent>

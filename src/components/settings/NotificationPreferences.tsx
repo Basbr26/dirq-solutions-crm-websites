@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { getNotificationPreferences, updateNotificationPreferences } from '@/lib/notifications/aiNotifications';
 import { Loader2, Bell, Mail, Smartphone, Clock, Bot, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface NotificationPrefs {
   channels: {
@@ -36,6 +37,7 @@ const NOTIFICATION_TYPES = [
 ];
 
 export function NotificationPreferences() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

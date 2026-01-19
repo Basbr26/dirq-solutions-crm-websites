@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { EditEventDialog } from './EditEventDialog';
 import { deleteGoogleCalendarEvent } from '@/lib/googleCalendar';
+import { useTranslation } from 'react-i18next';
 
 interface EventDetailDialogProps {
   event: any;
@@ -30,6 +31,7 @@ const eventTypeConfig = {
 };
 
 export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDialogProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -45,8 +47,8 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
           console.error('Error deleting from Google Calendar:', error);
           // Continue with local delete even if Google delete fails
           toast({ 
-            title: 'Waarschuwing', 
-            description: 'Event kon niet uit Google Calendar worden verwijderd, maar wordt wel lokaal verwijderd',
+            title: t('common.warning'), 
+            description: t('calendar.deleteGoogleWarning'),
             variant: 'destructive' 
           });
         }
@@ -62,14 +64,14 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
       const description = event.google_event_id 
-        ? 'Het event is verwijderd uit zowel de kalender als Google Calendar'
-        : 'Het event is verwijderd uit de kalender';
-      toast({ title: 'Event verwijderd', description });
+        ? t('calendar.eventDeletedWithGoogle')
+        : t('calendar.eventDeleted');
+      toast({ title: t('success.eventDeleted'), description });
       setShowDeleteDialog(false);
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast({ title: 'Fout', description: error.message, variant: 'destructive' });
+      toast({ title: t('errors.error'), description: error.message, variant: 'destructive' });
     },
   });
 
@@ -107,7 +109,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Datum</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('calendar.date')}</p>
                   <p className="text-base">
                     {format(new Date(event.start_time), 'EEEE d MMMM yyyy', { locale: nl })}
                   </p>
@@ -118,7 +120,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Tijd</p>
+                    <p className="text-sm font-medium text-muted-foreground">{t('calendar.time')}</p>
                     <p className="text-base">
                       {format(new Date(event.start_time), 'HH:mm', { locale: nl })}
                       {event.end_time && <> - {format(new Date(event.end_time), 'HH:mm', { locale: nl })}</>}
@@ -133,7 +135,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               <div className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Locatie</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('calendar.location')}</p>
                   <p className="text-base">{event.location}</p>
                 </div>
               </div>
@@ -144,14 +146,14 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               <div className="flex items-start gap-3">
                 <LinkIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Meeting Link</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('calendar.meetingLink')}</p>
                   <a 
                     href={event.meeting_url} 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-base text-primary hover:underline"
                   >
-                    Deelnemen aan meeting
+                    {t('calendar.joinMeeting')}
                   </a>
                 </div>
               </div>
@@ -162,8 +164,8 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               <div className="flex items-start gap-3">
                 <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Bedrijf</p>
-                  <p className="text-base">Gekoppeld bedrijf</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('common.company')}</p>
+                  <p className="text-base">{t('calendar.linkedCompany')}</p>
                 </div>
               </div>
             )}
@@ -173,8 +175,8 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               <div className="flex items-start gap-3">
                 <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Contact</p>
-                  <p className="text-base">Gekoppeld contact</p>
+                  <p className="text-sm font-medium text-muted-foreground">{t('common.contact')}</p>
+                  <p className="text-base">{t('calendar.linkedContact')}</p>
                 </div>
               </div>
             )}
@@ -182,7 +184,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
             {/* Description Section */}
             {event.description && (
               <div className="border-t pt-4">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Beschrijving</p>
+                <p className="text-sm font-medium text-muted-foreground mb-2">{t('common.description')}</p>
                 <p className="text-base whitespace-pre-wrap">{event.description}</p>
               </div>
             )}
@@ -192,7 +194,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               <div className="border-t pt-4">
                 <Badge variant="outline" className="gap-2">
                   <Calendar className="h-3 w-3" />
-                  Gesynchroniseerd met Google Calendar
+                  {t('calendar.syncedWithGoogle')}
                 </Badge>
               </div>
             )}
@@ -204,21 +206,21 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
               onClick={() => onOpenChange(false)}
             >
               <X className="h-4 w-4 mr-2" />
-              Sluiten
+              {t('common.close')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setShowEditDialog(true)}
             >
               <Pencil className="h-4 w-4 mr-2" />
-              Bewerken
+              {t('common.edit')}
             </Button>
             <Button
               variant="destructive"
               onClick={() => setShowDeleteDialog(true)}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Verwijderen
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -241,18 +243,18 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
+            <AlertDialogTitle>{t('calendar.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Dit calendar event wordt permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.
+              {t('calendar.deleteConfirmDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleteMutation.isPending ? 'Verwijderen...' : 'Verwijderen'}
+              {deleteMutation.isPending ? t('common.deleting') : t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

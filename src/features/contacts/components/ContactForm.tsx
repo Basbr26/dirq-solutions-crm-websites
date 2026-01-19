@@ -25,6 +25,7 @@ import {
 import { useCompanies } from "@/features/companies/hooks/useCompanies";
 import { Contact } from "@/types/crm";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const contactFormSchema = z.object({
   first_name: z.string().min(1, "Voornaam is verplicht"),
@@ -335,9 +336,9 @@ export function ContactForm({
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Beslisser</FormLabel>
+                  <FormLabel>Tekenbevoegd</FormLabel>
                   <FormDescription>
-                    Deze persoon neemt beslissingen over aankopen
+                    Deze persoon heeft beslissingsbevoegdheid en kan contracten ondertekenen
                   </FormDescription>
                 </div>
               </FormItem>

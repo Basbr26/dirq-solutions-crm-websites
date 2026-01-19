@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -265,7 +266,7 @@ export function QuoteForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-4xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{quote ? 'Offerte Bewerken' : 'Nieuwe Offerte'}</DialogTitle>
+          <DialogTitle>{quote ? 'Offerte bewerken' : 'Nieuwe offerte'}</DialogTitle>
           <DialogDescription>
             Vul de gegevens in voor de offerte
           </DialogDescription>

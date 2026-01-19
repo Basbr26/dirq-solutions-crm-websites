@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface CreateEventDialogProps {
   /** Display as a Floating Action Button */
@@ -17,6 +18,7 @@ interface CreateEventDialogProps {
 }
 
 export function CreateEventDialog({ variant = 'default' }: CreateEventDialogProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -90,84 +92,84 @@ export function CreateEventDialog({ variant = 'default' }: CreateEventDialogProp
               "flex items-center justify-center",
               "active:scale-95 transition-transform"
             )}
-            aria-label="Nieuwe activiteit"
+            aria-label={t('calendar.newActivity')}
           >
             <Plus className="h-6 w-6" />
           </Button>
         ) : (
           <Button>
             <Plus className="h-4 w-4 mr-2" />
-            Nieuwe Activiteit
+            {t('calendar.newActivity')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nieuwe Activiteit</DialogTitle>
+          <DialogTitle>{t('calendar.newActivity')}</DialogTitle>
           <DialogDescription>
-            Maak een nieuwe kalenderafspraak aan
+            {t('calendar.newActivityDescription')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Titel *</Label>
+            <Label htmlFor="title">{t('common.title')} *</Label>
             <Input id="title" name="title" required />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="event_type">Type *</Label>
+            <Label htmlFor="event_type">{t('common.type')} *</Label>
             <Select name="event_type" required>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="meeting">Vergadering</SelectItem>
-                <SelectItem value="call">Telefoongesprek</SelectItem>
-                <SelectItem value="task">Taak</SelectItem>
-                <SelectItem value="reminder">Herinnering</SelectItem>
-                <SelectItem value="other">Overig</SelectItem>
+                <SelectItem value="meeting">{t('calendar.types.meeting')}</SelectItem>
+                <SelectItem value="call">{t('calendar.types.call')}</SelectItem>
+                <SelectItem value="task">{t('calendar.types.task')}</SelectItem>
+                <SelectItem value="reminder">{t('calendar.types.reminder')}</SelectItem>
+                <SelectItem value="other">{t('calendar.types.other')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_date">Startdatum *</Label>
+              <Label htmlFor="start_date">{t('calendar.startDate')} *</Label>
               <Input id="start_date" name="start_date" type="date" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="start_time">Starttijd</Label>
+              <Label htmlFor="start_time">{t('calendar.startTime')}</Label>
               <Input id="start_time" name="start_time" type="time" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="end_date">Einddatum</Label>
+              <Label htmlFor="end_date">{t('calendar.endDate')}</Label>
               <Input id="end_date" name="end_date" type="date" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end_time">Eindtijd</Label>
+              <Label htmlFor="end_time">{t('calendar.endTime')}</Label>
               <Input id="end_time" name="end_time" type="time" />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Locatie</Label>
+            <Label htmlFor="location">{t('calendar.location')}</Label>
             <Input id="location" name="location" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Beschrijving</Label>
+            <Label htmlFor="description">{t('common.description')}</Label>
             <Textarea id="description" name="description" rows={3} />
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Annuleren
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Opslaan...' : 'Opslaan'}
+              {createMutation.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         </form>

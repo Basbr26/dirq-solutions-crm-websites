@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { DOCUMENT_TYPE_LABELS } from '@/types/verzuimDocumentTypes';
 import { DocumentSigningDialog } from './DocumentSigningDialog';
+import { useTranslation } from 'react-i18next';
 
 interface Document {
   id: string;
@@ -35,6 +36,7 @@ interface DocumentCardProps {
 }
 
 export function DocumentCard({ document, onDelete }: DocumentCardProps) {
+  const { t } = useTranslation();
   const handleDownload = async () => {
     try {
       // Use signed PDF if available, otherwise original
@@ -55,10 +57,10 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success('Document gedownload');
+      toast.success(t('success.documentDownloaded'));
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast.error('Fout bij downloaden document');
+      toast.error(t('errors.downloadFailed'));
     }
   };
 
@@ -73,17 +75,17 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
         .createSignedUrl(filePath, 3600); // 1 hour
 
       if (error) throw error;
-      if (!data?.signedUrl) throw new Error('Geen URL ontvangen');
+      if (!data?.signedUrl) throw new Error(t('errors.noUrlReceived'));
 
       window.open(data.signedUrl, '_blank');
     } catch (error) {
       console.error('Error viewing document:', error);
-      toast.error('Fout bij openen document');
+      toast.error(t('errors.openFailed'));
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('Weet je zeker dat je dit document wilt verwijderen?')) return;
+    if (!confirm(t('documents.deleteConfirmation'))) return;
 
     try {
       // Delete from storage
@@ -101,11 +103,11 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
 
       if (dbError) throw dbError;
 
-      toast.success('Document verwijderd');
+      toast.success(t('success.documentDeleted'));
       onDelete?.();
     } catch (error) {
       console.error('Error deleting document:', error);
-      toast.error('Fout bij verwijderen document');
+      toast.error(t('errors.deleteFailed'));
     }
   };
 
@@ -135,21 +137,21 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
         return (
           <Badge variant="default" className="bg-success text-success-foreground">
             <CheckCircle2 className="h-3 w-3 mr-1" />
-            Ondertekend
+            {t('documents.signed')}
           </Badge>
         );
       } else {
         return (
           <Badge variant="secondary">
             <Clock className="h-3 w-3 mr-1" />
-            Wacht op handtekening
+            {t('documents.awaitingSignature')}
           </Badge>
         );
       }
     }
     return (
       <Badge variant="outline">
-        {document.status === 'completed' ? 'Voltooid' : 'Concept'}
+        {document.status === 'completed' ? t('documents.completed') : t('documents.draft')}
       </Badge>
     );
   };
@@ -189,10 +191,10 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
               />
             )}
             
-            <Button variant="ghost" size="icon" onClick={handleView} title="Bekijken">
+            <Button variant="ghost" size="icon" onClick={handleView} title={t('documents.view')}>
               <Eye className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleDownload} title="Downloaden">
+            <Button variant="ghost" size="icon" onClick={handleDownload} title={t('documents.download')}>
               <Download className="h-4 w-4" />
             </Button>
             <DropdownMenu>
@@ -204,15 +206,15 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleView}>
                   <Eye className="h-4 w-4 mr-2" />
-                  Bekijken
+                  {t('documents.view')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownload}>
                   <Download className="h-4 w-4 mr-2" />
-                  Downloaden
+                  {t('documents.download')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Verwijderen
+                  {t('common.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

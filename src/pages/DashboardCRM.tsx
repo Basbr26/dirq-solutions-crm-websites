@@ -179,7 +179,7 @@ export default function DashboardCRM() {
         {/* KPI Cards - 2 columns on mobile, 4 on desktop */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           <KPICard
-            title="Pipeline Waarde"
+            title="Totale waarde"
             value={formatCurrency(pipelineStats?.total_value || 0)}
             subtitle={`${pipelineStats?.total_projects || 0} actieve projecten`}
             icon={FolderKanban}
@@ -298,7 +298,7 @@ export default function DashboardCRM() {
           {/* Pipeline Distribution */}
           <Card>
             <CardHeader>
-              <CardTitle>Pipeline per Fase</CardTitle>
+              <CardTitle>Verkoop per fase</CardTitle>
               <CardDescription>Verdeling projectwaarde</CardDescription>
             </CardHeader>
             <CardContent>
@@ -375,7 +375,7 @@ export default function DashboardCRM() {
           {/* Quote Acceptance Rate */}
           <Card>
             <CardHeader>
-              <CardTitle>Offerte Acceptatie</CardTitle>
+              <CardTitle>Offerte acceptatie</CardTitle>
               <CardDescription>Trend over tijd</CardDescription>
             </CardHeader>
             <CardContent>
@@ -441,7 +441,7 @@ export default function DashboardCRM() {
           {/* Quick Stats */}
           <Card>
             <CardHeader>
-              <CardTitle>Snelle Statistieken</CardTitle>
+              <CardTitle>Snelle statistieken</CardTitle>
               <CardDescription>Overzicht van je CRM</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

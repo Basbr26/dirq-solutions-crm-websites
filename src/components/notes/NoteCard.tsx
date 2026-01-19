@@ -34,6 +34,7 @@ import {
   getDaysOverdue,
 } from '@/lib/notes/helpers';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface NoteCardProps {
   note: HRNote;
@@ -67,7 +68,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
                 {isPinned && (
                   <Badge variant="outline" className="gap-1">
                     <Pin className="h-3 w-3" />
-                    Gepind
+                    {t('notes.pinned')}
                   </Badge>
                 )}
 
@@ -109,18 +110,18 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={onEdit}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Bewerken
+                  {t('common.edit')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onPin}>
                   {isPinned ? (
                     <>
                       <PinOff className="mr-2 h-4 w-4" />
-                      Losmaken
+                      {t('notes.unpin')}
                     </>
                   ) : (
                     <>
                       <Pin className="mr-2 h-4 w-4" />
-                      Vastpinnen
+                      {t('notes.pin')}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -130,7 +131,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
                   className="text-destructive"
                 >
                   <Trash className="mr-2 h-4 w-4" />
-                  Verwijderen
+                  {t('common.delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -163,22 +164,21 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
             >
               <Clock className="h-4 w-4" />
               <AlertTitle className="mb-2">
-                {note.follow_up_completed ? '✓ Follow-up afgerond' : 'Follow-up vereist'}
+                {note.follow_up_completed ? t('notes.followUpCompleted') : t('notes.followUpRequired')}
               </AlertTitle>
               <AlertDescription>
                 <div className="flex justify-between items-center gap-4">
                   <div className="flex-1">
                     {note.follow_up_date && (
                       <p className="text-sm">
-                        <strong>Deadline:</strong> {formatFollowUpDate(note.follow_up_date)}
+                        <strong>{t('notes.deadline')}:</strong> {formatFollowUpDate(note.follow_up_date)}
                       </p>
                     )}
                     {!note.follow_up_completed &&
                       note.follow_up_date &&
                       isOverdue(note.follow_up_date) && (
                         <p className="text-sm font-medium mt-1 text-destructive">
-                          ⚠️ Verlopen sinds {getDaysOverdue(note.follow_up_date)} dag
-                          {getDaysOverdue(note.follow_up_date) !== 1 ? 'en' : ''}
+                          ⚠️ {t('notes.overdueSince', { days: getDaysOverdue(note.follow_up_date) })}
                         </p>
                       )}
                   </div>
@@ -190,7 +190,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
                       className="shrink-0"
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Markeer als voltooid
+                      {t('notes.markAsCompleted')}
                     </Button>
                   )}
                 </div>
@@ -202,7 +202,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
         {note.updated_at !== note.created_at && (
           <CardFooter className="pt-0">
             <p className="text-xs text-muted-foreground">
-              Laatst bewerkt: {formatNoteDate(note.updated_at)}
+              {t('notes.lastEdited')}: {formatNoteDate(note.updated_at)}
             </p>
           </CardFooter>
         )}
@@ -212,14 +212,13 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Notitie verwijderen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('notes.deleteNote')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je deze notitie wilt verwijderen? Deze actie kan niet ongedaan
-              worden gemaakt.
+              {t('notes.deleteNoteConfirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
                 onDelete?.();
@@ -227,7 +226,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onFollowUpComplete }: 
               }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Verwijderen
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

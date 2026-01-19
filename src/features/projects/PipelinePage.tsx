@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Plus, TrendingUp, DollarSign, MoreVertical, Target, Briefcase, Code } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -29,21 +30,22 @@ import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 
-// Pipeline sections
-const PIPELINE_SECTIONS = {
-  sales: {
-    title: '💼 Sales Pipeline',
-    subtitle: 'Van lead tot getekende deal',
-    stages: ['lead', 'quote_requested', 'quote_sent', 'negotiation', 'quote_signed'] as ProjectStage[],
-  },
-  development: {
-    title: '⚙️ Development Pipeline',
-    subtitle: 'Van ontwikkeling tot live',
-    stages: ['in_development', 'review', 'live'] as ProjectStage[],
-  },
-};
-
 export default function PipelinePage() {
+  const { t } = useTranslation();
+  
+  // Pipeline sections with translations
+  const PIPELINE_SECTIONS = {
+    sales: {
+      title: `💼 ${t('pipeline.salesPipeline')}`,
+      subtitle: t('pipeline.salesSubtitle'),
+      stages: ['lead', 'quote_requested', 'quote_sent', 'negotiation', 'quote_signed'] as ProjectStage[],
+    },
+    development: {
+      title: `⚙️ ${t('pipeline.devPipeline')}`,
+      subtitle: t('pipeline.devSubtitle'),
+      stages: ['in_development', 'review', 'live'] as ProjectStage[],
+    },
+  };
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(max-width: 1024px)');
   const { data: projectsByStage, isLoading } = useProjectsByStage();
@@ -108,14 +110,14 @@ export default function PipelinePage() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
       await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
-      toast.success('Project fase bijgewerkt');
+      toast.success(t('success.projectStageUpdated'));
     } catch (error) {
       console.error('Failed to update stage:', error);
-      toast.error('Fout bij bijwerken project fase');
+      toast.error(t('errors.updateProjectStageFailed'));
     } finally {
       setDraggedProject(null);
     }
-  }, [draggedProject, queryClient]);
+  }, [draggedProject, queryClient, t]);
 
   // For mobile: move project to stage using dropdown
   const handleMoveToStage = useCallback(async (project: Project, newStage: ProjectStage) => {
@@ -148,12 +150,12 @@ export default function PipelinePage() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
       await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
-      toast.success(`Verplaatst naar ${projectStageConfig[newStage].label}`);
+      toast.success(t('success.movedToStage', { stage: projectStageConfig[newStage].label }));
     } catch (error) {
       console.error('Failed to move project:', error);
-      toast.error('Fout bij verplaatsen project');
+      toast.error(t('errors.moveProjectFailed'));
     }
-  }, [queryClient]);
+  }, [queryClient, t]);
 
   // Render a pipeline section
   const renderPipelineSection = (
@@ -241,7 +243,7 @@ export default function PipelinePage() {
                       {projects.length === 0 ? (
                         <div className="text-center py-12 text-sm text-muted-foreground">
                           <div className="text-3xl mb-2 opacity-20">{config.icon}</div>
-                          <div>Geen projecten</div>
+                          <div>{t('projects.noProjects')}</div>
                         </div>
                       ) : (
                         projects.map(project => (
@@ -275,7 +277,7 @@ export default function PipelinePage() {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end" className="w-48">
-                                        <DropdownMenuLabel>Verplaats naar</DropdownMenuLabel>
+                                        <DropdownMenuLabel>{t('projects.moveTo')}</DropdownMenuLabel>
                                         {[...PIPELINE_SECTIONS.sales.stages, ...PIPELINE_SECTIONS.development.stages]
                                           .filter(s => s !== project.stage)
                                           .map(targetStage => {
@@ -328,12 +330,12 @@ export default function PipelinePage() {
 
   return (
     <AppLayout
-      title="Sales Pipeline"
-      subtitle="Website development projecten en deals"
+      title={t('pipeline.title')}
+      subtitle={t('pipeline.subtitle')}
       actions={
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nieuw Project
+          {t('projects.newProject')}
         </Button>
       }
     >
@@ -347,12 +349,12 @@ export default function PipelinePage() {
                   <TrendingUp className="h-5 w-5 text-primary" />
                 </div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Pipeline Waarde
+                  {t('pipeline.stats.totalValue')}
                 </div>
               </div>
               <div className="text-3xl font-bold">{formatCurrency(stats.total_value)}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Totale waarde van alle actieve deals
+                {t('pipeline.stats.totalValueDescription')}
               </div>
             </Card>
             
@@ -362,12 +364,12 @@ export default function PipelinePage() {
                   <Target className="h-5 w-5 text-green-600" />
                 </div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Gewogen Waarde
+                  {t('pipeline.stats.weightedValue')}
                 </div>
               </div>
               <div className="text-3xl font-bold">{formatCurrency(stats.weighted_value)}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Gebaseerd op sluitingskans per fase
+                {t('pipeline.stats.weightedValueDescription')}
               </div>
             </Card>
             
@@ -377,12 +379,12 @@ export default function PipelinePage() {
                   <Briefcase className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="text-sm font-medium text-muted-foreground">
-                  Actieve Projecten
+                  {t('pipeline.stats.activeProjects')}
                 </div>
               </div>
               <div className="text-3xl font-bold">{stats.total_projects}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Gem. deal size: {formatCurrency(stats.avg_deal_size)}
+                {t('pipeline.stats.avgDealSize')}: {formatCurrency(stats.avg_deal_size)}
               </div>
             </Card>
           </div>
@@ -427,10 +429,10 @@ export default function PipelinePage() {
           createProject.mutate(data, {
             onSuccess: () => {
               setCreateDialogOpen(false);
-              toast.success('Project aangemaakt');
+              toast.success(t('success.projectCreated'));
             },
             onError: (error) => {
-              toast.error(`Fout bij aanmaken: ${error.message}`);
+              toast.error(t('errors.createProjectFailed', { message: error.message }));
             },
           });
         }}

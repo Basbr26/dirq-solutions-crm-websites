@@ -5,6 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, FolderKanban, TrendingUp, Euro, BarChart3, Download } from 'lucide-react';
 import { useProjects, usePipelineStats } from './hooks/useProjects';
 import { useCreateProject } from './hooks/useProjectMutations';
@@ -44,6 +45,7 @@ const projectTypeLabels: Record<ProjectType, string> = {
 };
 
 export default function ProjectsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { role } = useAuth();
   const [search, setSearch] = useState('');
@@ -69,7 +71,7 @@ export default function ProjectsPage() {
 
   const handleExportCSV = async () => {
     try {
-      toast.info('Projecten exporteren...');
+      toast.info(t('projects.exporting'));
       
       let query = supabase
         .from('projects')
@@ -90,12 +92,12 @@ export default function ProjectsPage() {
       
       if (error) throw error;
       if (!projectsData || projectsData.length === 0) {
-        toast.warning('Geen projecten om te exporteren');
+        toast.warning(t('projects.noProjectsToExport'));
         return;
       }
 
       // Convert to CSV
-      const headers = ['Titel', 'Bedrijf', 'Contact', 'Fase', 'Type', 'Waarde', 'Kans %', 'Verwachte afsluiting', 'Hosting', 'Onderhoud', 'Aangemaakt'];
+      const headers = [t('projects.title'), t('companies.title'), t('contacts.title'), t('projects.stage'), t('projects.type'), t('dashboard.value'), t('projects.probability'), t('projects.expectedClose'), t('projects.hosting'), t('projects.maintenance'), t('common.created')];
       const rows = projectsData.map((p: any) => [
         p.title || '',
         p.companies?.name || '',
@@ -105,8 +107,8 @@ export default function ProjectsPage() {
         p.value?.toString() || '',
         p.probability?.toString() || '',
         p.expected_close_date ? format(new Date(p.expected_close_date), 'yyyy-MM-dd') : '',
-        p.hosting_included ? 'Ja' : 'Nee',
-        p.maintenance_contract ? 'Ja' : 'Nee',
+        p.hosting_included ? t('common.yes') : t('common.no'),
+        p.maintenance_contract ? t('common.yes') : t('common.no'),
         p.created_at ? format(new Date(p.created_at), 'yyyy-MM-dd') : ''
       ]);
 
@@ -124,10 +126,10 @@ export default function ProjectsPage() {
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`${projectsData.length} projecten geëxporteerd`);
+      toast.success(t('projects.projectsExported', { count: projectsData.length }));
     } catch (error: any) {
       console.error('Export error:', error);
-      toast.error('Fout bij exporteren: ' + error.message);
+      toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
   };
 
@@ -143,14 +145,14 @@ export default function ProjectsPage() {
 
   return (
     <AppLayout
-      title="Projecten"
-      subtitle="Overzicht van alle website ontwikkel projecten"
+      title={t('projects.title')}
+      subtitle={t('projects.subtitle')}
       onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('common.export')}
           </Button>
           <Button 
             variant="outline" 
@@ -158,12 +160,12 @@ export default function ProjectsPage() {
             className="gap-2"
           >
             <BarChart3 className="h-4 w-4" />
-            Pipeline View
+            {t('projects.salesOverview')}
           </Button>
           {canCreateProject && (
             <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Nieuw Project
+              {t('projects.newProject')}
             </Button>
           )}
         </div>
@@ -176,51 +178,51 @@ export default function ProjectsPage() {
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Totaal</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('common.total')}</CardTitle>
               <FolderKanban className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total_projects}</div>
-              <p className="text-xs text-muted-foreground">actieve projecten</p>
+              <p className="text-xs text-muted-foreground">{t('projects.activeProjects')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pipeline Waarde</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('projects.totalValue')}</CardTitle>
               <Euro className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-500">
                 {formatCurrency(stats.total_value)}
               </div>
-              <p className="text-xs text-muted-foreground">totale waarde</p>
+              <p className="text-xs text-muted-foreground">{t('projects.totalValueDesc')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gewogen Waarde</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('projects.weightedValue')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-500">
                 {formatCurrency(stats.weighted_value)}
               </div>
-              <p className="text-xs text-muted-foreground">op basis van probability</p>
+              <p className="text-xs text-muted-foreground">{t('projects.basedOnProbability')}</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gem. Deal Size</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('projects.avgDealSize')}</CardTitle>
               <Euro className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-500">
                 {formatCurrency(stats.avg_deal_size)}
               </div>
-              <p className="text-xs text-muted-foreground">per project</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.perProject')}</p>
             </CardContent>
           </Card>
         </div>
@@ -231,7 +233,7 @@ export default function ProjectsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Zoek projecten..."
+            placeholder={t('projects.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -245,7 +247,7 @@ export default function ProjectsPage() {
             className="gap-2"
           >
             <Filter className="h-4 w-4" />
-            Filters
+            {t('common.filter')}
             {(stageFilter || typeFilter) && (
               <Badge variant="secondary" className="ml-1">
                 {[stageFilter, typeFilter].filter(Boolean).length}
@@ -261,16 +263,16 @@ export default function ProjectsPage() {
           <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Fase</label>
+                <label className="text-sm font-medium">{t('projects.stage')}</label>
                 <Select 
                   value={stageFilter || ''} 
                   onValueChange={(value) => setStageFilter(value ? value as ProjectStage : undefined)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle fases" />
+                    <SelectValue placeholder={t('projects.allStages')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle fases</SelectItem>
+                    <SelectItem value="">{t('projects.allStages')}</SelectItem>
                     {Object.entries(projectStageConfig).map(([key, config]) => (
                       <SelectItem key={key} value={key}>
                         {config.icon} {config.label}
@@ -281,16 +283,16 @@ export default function ProjectsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Project Type</label>
+                <label className="text-sm font-medium">{t('projects.projectType')}</label>
                 <Select 
                   value={typeFilter || ''} 
                   onValueChange={(value) => setTypeFilter(value ? value as ProjectType : undefined)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle types" />
+                    <SelectValue placeholder={t('projects.allTypes')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle types</SelectItem>
+                    <SelectItem value="">{t('projects.allTypes')}</SelectItem>
                     {Object.entries(projectTypeLabels).map(([key, label]) => (
                       <SelectItem key={key} value={key}>
                         {label}
@@ -309,7 +311,7 @@ export default function ProjectsPage() {
                   setTypeFilter(undefined);
                 }}
               >
-                Reset
+                {t('common.reset')}
               </Button>
             </div>
           </CardContent>
@@ -366,9 +368,9 @@ export default function ProjectsPage() {
                           </span>
                         </div>
                       )}
-                      {project.probability !== null && (
+                      {project.probability !== null && project.probability > 30 && (
                         <div className="text-xs text-muted-foreground">
-                          {project.probability}% kans
+                          {project.probability}% {t('projects.chance')}
                         </div>
                       )}
                     </div>
@@ -382,13 +384,13 @@ export default function ProjectsPage() {
 
                   {project.expected_close_date && (
                     <div className="text-xs text-muted-foreground">
-                      Verwacht: {format(new Date(project.expected_close_date), 'dd MMM yyyy', { locale: nl })}
+                      {t('projects.expected')}: {format(new Date(project.expected_close_date), 'dd MMM yyyy', { locale: nl })}
                     </div>
                   )}
 
                   {project.profiles && (
                     <div className="text-xs text-muted-foreground">
-                      Eigenaar: {project.profiles.voornaam} {project.profiles.achternaam}
+                      {t('projects.owner')}: {project.profiles.voornaam} {project.profiles.achternaam}
                     </div>
                   )}
                 </CardContent>
@@ -399,14 +401,14 @@ export default function ProjectsPage() {
       ) : (
         <EmptyState
           icon={FolderKanban}
-          title="Geen projecten gevonden"
+          title={t('projects.noProjectsFound')}
           description={
             search || stageFilter || typeFilter
-              ? 'Probeer andere filters of zoekterm'
-              : 'Begin met het toevoegen van je eerste project'
+              ? t('projects.tryDifferentFilters')
+              : t('projects.addFirstProject')
           }
           action={{
-            label: 'Project Toevoegen',
+            label: t('projects.addProject'),
             onClick: () => setCreateDialogOpen(true),
             icon: Plus,
           }}
@@ -423,7 +425,7 @@ export default function ProjectsPage() {
               setCreateDialogOpen(false);
             },
             onError: (error) => {
-              toast.error('Fout bij aanmaken project: ' + error.message);
+              toast.error(t('errors.createFailed') + ': ' + error.message);
             },
           });
         }}

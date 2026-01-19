@@ -37,6 +37,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useCreateInteraction, CreateInteractionData } from '../hooks/useInteractions';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
+import { useTranslation } from 'react-i18next';
 
 interface AddInteractionDialogProps {
   open: boolean;
@@ -68,6 +69,7 @@ export function AddInteractionDialog({
   quoteId,
   defaultType = 'note',
 }: AddInteractionDialogProps) {
+  const { t } = useTranslation();
   const [isTask, setIsTask] = useState(defaultType === 'task');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(companyId);
   const { companies: companiesData } = useCompanies({});
@@ -162,10 +164,10 @@ export function AddInteractionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon className={`h-5 w-5 ${selectedTypeConfig?.color}`} />
-            Nieuwe Activiteit
+            {t('interactions.newActivity')}
           </DialogTitle>
           <DialogDescription>
-            Registreer een interactie of maak een taak aan
+            {t('interactions.newActivityDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -173,10 +175,10 @@ export function AddInteractionDialog({
           {/* Company Selection (only if no companyId prop provided) */}
           {!companyId && (
             <div className="space-y-2">
-              <Label htmlFor="company">Bedrijf *</Label>
+              <Label htmlFor="company">{t('common.company')} *</Label>
               <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecteer een bedrijf..." />
+                  <SelectValue placeholder={t('companies.selectCompany')} />
                 </SelectTrigger>
                 <SelectContent>
                   {companiesData?.map((company: any) => (
@@ -194,7 +196,7 @@ export function AddInteractionDialog({
 
           {/* Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="type">Type *</Label>
+            <Label htmlFor="type">{t('common.type')} *</Label>
             <Select value={selectedType} onValueChange={handleTypeChange}>
               <SelectTrigger>
                 <SelectValue />
@@ -218,7 +220,7 @@ export function AddInteractionDialog({
           {/* Direction (for calls and emails) */}
           {(selectedType === 'call' || selectedType === 'email') && (
             <div className="space-y-2">
-              <Label htmlFor="direction">Richting</Label>
+              <Label htmlFor="direction">{t('interactions.direction')}</Label>
               <Select 
                 value={watch('direction')} 
                 onValueChange={(value) => setValue('direction', value as any)}
@@ -230,13 +232,13 @@ export function AddInteractionDialog({
                   <SelectItem value="outbound">
                     <div className="flex items-center gap-2">
                       <ArrowUpCircle className="h-4 w-4 text-green-500" />
-                      Uitgaand
+                      {t('interactions.outbound')}
                     </div>
                   </SelectItem>
                   <SelectItem value="inbound">
                     <div className="flex items-center gap-2">
                       <ArrowDownCircle className="h-4 w-4 text-blue-500" />
-                      Inkomend
+                      {t('interactions.inbound')}
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -246,11 +248,11 @@ export function AddInteractionDialog({
 
           {/* Subject */}
           <div className="space-y-2">
-            <Label htmlFor="subject">Onderwerp *</Label>
+            <Label htmlFor="subject">{t('common.subject')} *</Label>
             <Input
               id="subject"
-              placeholder="Korte beschrijving van de activiteit"
-              {...register('subject', { required: 'Onderwerp is verplicht' })}
+              placeholder={t('interactions.subjectPlaceholder')}
+              {...register('subject', { required: t('interactions.subjectRequired') })}
             />
             {errors.subject && (
               <p className="text-sm text-destructive">{errors.subject.message}</p>
@@ -259,10 +261,10 @@ export function AddInteractionDialog({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Beschrijving</Label>
+            <Label htmlFor="description">{t('common.description')}</Label>
             <Textarea
               id="description"
-              placeholder="Gedetailleerde notities..."
+              placeholder={t('interactions.descriptionPlaceholder')}
               rows={4}
               {...register('description')}
             />
@@ -273,7 +275,7 @@ export function AddInteractionDialog({
             <div className="space-y-2">
               <Label htmlFor="duration_minutes" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Duur (minuten)
+                {t('interactions.duration')}
               </Label>
               <Input
                 id="duration_minutes"
@@ -288,7 +290,7 @@ export function AddInteractionDialog({
           {/* Scheduled At (for meetings) */}
           {selectedType === 'meeting' && (
             <div className="space-y-2">
-              <Label htmlFor="scheduled_at">Gepland op</Label>
+              <Label htmlFor="scheduled_at">{t('interactions.scheduledAt')}</Label>
               <Input
                 id="scheduled_at"
                 type="datetime-local"
@@ -305,14 +307,14 @@ export function AddInteractionDialog({
               onCheckedChange={setIsTask}
             />
             <Label htmlFor="is-task" className="cursor-pointer">
-              Maak dit een taak (opvolging vereist)
+              {t('interactions.makeTask')}
             </Label>
           </div>
 
           {/* Due Date (for tasks) */}
           {isTask && (
             <div className="space-y-2">
-              <Label htmlFor="due_date">Vervaldatum</Label>
+              <Label htmlFor="due_date">{t('interactions.dueDate')}</Label>
               <Input
                 id="due_date"
                 type="date"
@@ -323,10 +325,10 @@ export function AddInteractionDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuleren
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={createInteraction.isPending}>
-              {createInteraction.isPending ? 'Opslaan...' : 'Opslaan'}
+              {createInteraction.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </form>

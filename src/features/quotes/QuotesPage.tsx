@@ -5,6 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Plus, FileText, CheckCircle2, XCircle, Clock, Send, Search, Download } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -22,20 +23,23 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 
-const statusConfig: Record<QuoteStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }> = {
-  draft: { label: 'Concept', variant: 'secondary', icon: FileText },
-  sent: { label: 'Verzonden', variant: 'default', icon: Send },
-  viewed: { label: 'Bekeken', variant: 'outline', icon: Clock },
-  accepted: { label: 'Geaccepteerd', variant: 'default', icon: CheckCircle2 },
-  rejected: { label: 'Afgewezen', variant: 'destructive', icon: XCircle },
-  expired: { label: 'Verlopen', variant: 'outline', icon: Clock },
-};
+const getStatusConfig = (t: any): Record<QuoteStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }> => ({
+  draft: { label: t('quotes.statuses.draft'), variant: 'secondary', icon: FileText },
+  sent: { label: t('quotes.statuses.sent'), variant: 'default', icon: Send },
+  viewed: { label: t('quotes.statuses.viewed'), variant: 'outline', icon: Clock },
+  accepted: { label: t('quotes.statuses.accepted'), variant: 'default', icon: CheckCircle2 },
+  rejected: { label: t('quotes.statuses.rejected'), variant: 'destructive', icon: XCircle },
+  expired: { label: t('quotes.statuses.expired'), variant: 'outline', icon: Clock },
+});
 
 export default function QuotesPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<QuoteStatus | 'all'>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  
+  const statusConfig = useMemo(() => getStatusConfig(t), [t]);
   
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);
@@ -49,7 +53,7 @@ export default function QuotesPage() {
 
   const handleExportCSV = async () => {
     try {
-      toast.info('Offertes exporteren...');
+      toast.info(t('quotes.exporting'));
       
       let query = supabase
         .from('quotes')
@@ -67,12 +71,12 @@ export default function QuotesPage() {
       
       if (error) throw error;
       if (!quotesData || quotesData.length === 0) {
-        toast.warning('Geen offertes om te exporteren');
+        toast.warning(t('quotes.noQuotesToExport'));
         return;
       }
 
       // Convert to CSV
-      const headers = ['Offertenummer', 'Titel', 'Bedrijf', 'Contact', 'Status', 'Bedrag', 'Geldig tot', 'Verzonden', 'Geaccepteerd', 'Afgewezen', 'Aangemaakt'];
+      const headers = [t('quotes.quoteNumber'), t('quotes.title'), t('companies.title'), t('contacts.title'), t('quotes.status'), t('quotes.amount'), t('quotes.validUntil'), t('quotes.sent'), t('quotes.accepted'), t('quotes.rejected'), t('common.created')];
       const rows = quotesData.map((q: any) => [
         q.quote_number || '',
         q.title || '',
@@ -101,10 +105,10 @@ export default function QuotesPage() {
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`${quotesData.length} offertes geëxporteerd`);
+      toast.success(t('quotes.quotesExported', { count: quotesData.length }));
     } catch (error: any) {
       console.error('Export error:', error);
-      toast.error('Fout bij exporteren: ' + error.message);
+      toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
   };
 
@@ -119,18 +123,18 @@ export default function QuotesPage() {
 
   return (
     <AppLayout
-      title="Offertes"
-      subtitle="Beheer en volg al je sales offertes"
+      title={t('quotes.title')}
+      subtitle={t('quotes.subtitle')}
       onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('common.export')}
           </Button>
           <Button onClick={() => setCreateDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Nieuwe Offerte
+            {t('quotes.newQuote')}
           </Button>
         </div>
       }
@@ -140,19 +144,19 @@ export default function QuotesPage() {
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Totaal Waarde</div>
+              <div className="text-sm text-muted-foreground">{t('quotes.totalValue')}</div>
               <div className="text-2xl font-bold">{formatCurrency(stats.total_value)}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Geaccepteerd</div>
+              <div className="text-sm text-muted-foreground">{t('quotes.accepted')}</div>
               <div className="text-2xl font-bold text-green-600">{stats.accepted}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Verzonden</div>
+              <div className="text-sm text-muted-foreground">{t('quotes.sent')}</div>
               <div className="text-2xl font-bold text-blue-600">{stats.sent}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Gem. Waarde</div>
+              <div className="text-sm text-muted-foreground">{t('quotes.avgValue')}</div>
               <div className="text-2xl font-bold">{formatCurrency(stats.avg_value)}</div>
             </Card>
           </div>
@@ -162,7 +166,7 @@ export default function QuotesPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Zoek offertes op titel of bedrijf..."
+            placeholder={t('quotes.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -172,10 +176,10 @@ export default function QuotesPage() {
         {/* Tabs Filter */}
         <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as QuoteStatus | 'all')}>
           <TabsList>
-            <TabsTrigger value="all">Alle</TabsTrigger>
-            <TabsTrigger value="draft">Concept</TabsTrigger>
-            <TabsTrigger value="sent">Verzonden</TabsTrigger>
-            <TabsTrigger value="accepted">Geaccepteerd</TabsTrigger>
+            <TabsTrigger value="all">{t('common.all')}</TabsTrigger>
+            <TabsTrigger value="draft">{t('quotes.statuses.draft')}</TabsTrigger>
+            <TabsTrigger value="sent">{t('quotes.statuses.sent')}</TabsTrigger>
+            <TabsTrigger value="accepted">{t('quotes.statuses.accepted')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value={statusFilter} className="mt-6">
@@ -191,15 +195,15 @@ export default function QuotesPage() {
             ) : !quotes || quotes.length === 0 ? (
               <Card className="p-12 text-center">
                 <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Geen offertes gevonden</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('quotes.noQuotesFound')}</h3>
                 <p className="text-muted-foreground mb-4">
                   {statusFilter === 'all' 
-                    ? 'Maak je eerste offerte aan' 
-                    : `Geen offertes met status "${statusConfig[statusFilter as QuoteStatus]?.label}"`}
+                    ? t('quotes.createFirstQuote') 
+                    : t('quotes.noQuotesWithStatus', { status: statusConfig[statusFilter as QuoteStatus]?.label })}
                 </p>
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Nieuwe Offerte
+                  {t('quotes.newQuote')}
                 </Button>
               </Card>
             ) : (
@@ -233,7 +237,7 @@ export default function QuotesPage() {
                             <div className="text-2xl font-bold">{formatCurrency(quote.total_amount)}</div>
                             {quote.valid_until && (
                               <div className="text-sm text-muted-foreground">
-                                Geldig tot {format(new Date(quote.valid_until), 'dd MMM', { locale: nl })}
+                                {t('quotes.validUntil')} {format(new Date(quote.valid_until), 'dd MMM', { locale: nl })}
                               </div>
                             )}
                           </div>
@@ -259,7 +263,7 @@ export default function QuotesPage() {
               navigate(`/quotes/${quote.id}`);
             },
             onError: (error) => {
-              toast.error('Fout bij aanmaken offerte: ' + error.message);
+              toast.error(t('errors.createFailed') + ': ' + error.message);
             },
           });
         }}

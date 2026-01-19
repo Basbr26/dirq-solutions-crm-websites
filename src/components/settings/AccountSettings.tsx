@@ -5,17 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 import { AlertTriangle, Shield, Key, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function AccountSettings() {
+  const { t } = useTranslation();
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   return (
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Account Beveiliging</CardTitle>
+          <CardTitle>{t('settings.account.security')}</CardTitle>
           <CardDescription>
-            Beheer je wachtwoord en beveiligingsinstellingen
+            {t('settings.account.securityDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -24,9 +26,9 @@ export function AccountSettings() {
             <div className="flex items-center gap-3">
               <Key className="h-5 w-5 text-muted-foreground" />
               <div>
-                <p className="font-medium">Wachtwoord</p>
+                <p className="font-medium">{t('settings.account.password')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Wijzig je wachtwoord om je account veilig te houden
+                  {t('settings.account.passwordDescription')}
                 </p>
               </div>
             </div>
@@ -34,7 +36,7 @@ export function AccountSettings() {
               variant="outline" 
               onClick={() => setShowPasswordDialog(true)}
             >
-              Wijzig wachtwoord
+              {t('settings.account.changePassword')}
             </Button>
           </div>
 
@@ -46,16 +48,16 @@ export function AccountSettings() {
               <Shield className="h-5 w-5 text-muted-foreground" />
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="font-medium">Twee-factor authenticatie</p>
-                  <Badge variant="outline" className="text-xs">Binnenkort</Badge>
+                  <p className="font-medium">{t('settings.account.twoFactor')}</p>
+                  <Badge variant="outline" className="text-xs">{t('common.comingSoon')}</Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Extra beveiligingslaag voor je account
+                  {t('settings.account.twoFactorDescription')}
                 </p>
               </div>
             </div>
             <Button variant="outline" disabled>
-              Inschakelen
+              {t('settings.account.enable')}
             </Button>
           </div>
         </CardContent>
@@ -66,10 +68,10 @@ export function AccountSettings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            Gevaarlijke Zone
+            {t('settings.account.dangerZone')}
           </CardTitle>
           <CardDescription>
-            Onomkeerbare acties voor je account
+            {t('settings.account.dangerZoneDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -77,19 +79,18 @@ export function AccountSettings() {
             <div className="flex items-center gap-3">
               <Trash2 className="h-5 w-5 text-destructive" />
               <div>
-                <p className="font-medium">Account verwijderen</p>
+                <p className="font-medium">{t('settings.account.deleteAccount')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Permanent verwijderen van je account en alle data
+                  {t('settings.account.deleteAccountDescription')}
                 </p>
               </div>
             </div>
             <Button variant="destructive" disabled>
-              Account verwijderen
+              {t('settings.account.deleteAccount')}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground bg-muted p-3 rounded-md">
-            <strong>Let op:</strong> Account verwijdering is momenteel uitgeschakeld. 
-            Neem contact op met een administrator als je je account wilt verwijderen.
+            <strong>{t('common.warning')}:</strong> {t('settings.account.deleteAccountWarning')}
           </p>
         </CardContent>
       </Card>

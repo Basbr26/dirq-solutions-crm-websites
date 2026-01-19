@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Project } from '@/types/projects';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +39,39 @@ const projectTypeLabels = {
   custom: 'Op Maat',  ai_automation: 'AI Automatisering',};
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const stageStyle = stageConfig[project.stage];
+  const { t } = useTranslation();
+  
+  const stageConfig = (stage: string) => {
+    const configs = {
+      lead: { label: t('projects.stages.lead'), color: 'bg-blue-500/10 text-blue-500' },
+      quote_requested: { label: t('projects.stages.quote_requested'), color: 'bg-purple-500/10 text-purple-500' },
+      quote_sent: { label: t('projects.stages.quote_sent'), color: 'bg-indigo-500/10 text-indigo-500' },
+      negotiation: { label: t('projects.stages.negotiation'), color: 'bg-amber-500/10 text-amber-500' },
+      quote_signed: { label: t('projects.stages.quote_signed'), color: 'bg-green-500/10 text-green-500' },
+      in_development: { label: t('projects.stages.in_development'), color: 'bg-cyan-500/10 text-cyan-500' },
+      review: { label: t('projects.stages.review'), color: 'bg-orange-500/10 text-orange-500' },
+      live: { label: t('projects.stages.live'), color: 'bg-emerald-500/10 text-emerald-500' },
+      maintenance: { label: t('projects.stages.maintenance'), color: 'bg-slate-500/10 text-slate-500' },
+      lost: { label: t('projects.stages.lost'), color: 'bg-red-500/10 text-red-500' },
+    };
+    return configs[stage as keyof typeof configs] || configs.lead;
+  };
+  
+  const projectTypeLabels = (type: string) => {
+    const labels = {
+      landing_page: t('projects.types.landingPage'),
+      corporate_website: t('projects.types.corporateWebsite'),
+      ecommerce: t('projects.types.ecommerce'),
+      web_app: t('projects.types.webApp'),
+      blog: t('projects.types.blog'),
+      portfolio: t('projects.types.portfolio'),
+      custom: t('projects.types.custom'),
+      ai_automation: t('projects.types.aiAutomation'),
+    };
+    return labels[type as keyof typeof labels] || labels.custom;
+  };
+  
+  const stageStyle = stageConfig(project.stage);
 
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -63,7 +96,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           {project.project_type && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Package className="h-4 w-4" />
-              <span>{projectTypeLabels[project.project_type]}</span>
+              <span>{projectTypeLabels(project.project_type)}</span>
             </div>
           )}
 
@@ -92,7 +125,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>
-                Verwacht: {format(new Date(project.expected_close_date), 'dd MMM yyyy', { locale: nl })}
+                {t('projects.expected')}: {format(new Date(project.expected_close_date), 'dd MMM yyyy', { locale: nl })}
               </span>
             </div>
           )}
@@ -102,7 +135,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>
-                Launch: {format(new Date(project.launch_date), 'dd MMM yyyy', { locale: nl })}
+                {t('projects.launch')}: {format(new Date(project.launch_date), 'dd MMM yyyy', { locale: nl })}
               </span>
             </div>
           )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, addMonths, subMonths, isSameDay } from 'date-fns';
@@ -56,6 +57,7 @@ interface BigCalendarEvent {
 }
 
 export default function CalendarPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());

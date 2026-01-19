@@ -8,12 +8,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 const createUserSchema = z.object({
-  email: z.string().email('Ongeldig e-mailadres'),
-  voornaam: z.string().min(2, 'Voornaam is verplicht'),
-  achternaam: z.string().min(2, 'Achternaam is verplicht'),
-  role: z.enum(['hr', 'manager', 'medewerker', 'super_admin'], { required_error: 'Rol is verplicht' }),
+  email: z.string().email('errors.invalidEmail'),
+  voornaam: z.string().min(2, 'errors.firstNameRequired'),
+  achternaam: z.string().min(2, 'errors.lastNameRequired'),
+  role: z.enum(['hr', 'manager', 'medewerker', 'super_admin'], { required_error: 'errors.roleRequired' }),
 });
 
 interface CreateUserDialogProps {
@@ -23,6 +24,7 @@ interface CreateUserDialogProps {
 }
 
 export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUserDialogProps) {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [voornaam, setVoornaam] = useState('');
@@ -45,8 +47,8 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
       if (error) {
         toast({
           variant: 'destructive',
-          title: 'Gebruiker aanmaken mislukt',
-          description: error.message || 'Er is een fout opgetreden',
+          title: t('errors.createUserFailed'),
+          description: error.message || t('errors.errorOccurred'),
         });
         return;
       }
@@ -54,15 +56,15 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
       if (data?.error) {
         toast({
           variant: 'destructive',
-          title: 'Gebruiker aanmaken mislukt',
+          title: t('errors.createUserFailed'),
           description: data.error,
         });
         return;
       }
 
       toast({
-        title: 'Gebruiker aangemaakt',
-        description: `${voornaam} ${achternaam} is aangemaakt met rol ${role}. Een e-mail met instructies is verstuurd.`,
+        title: t('success.userCreated'),
+        description: t('success.userCreatedDescription', { name: `${voornaam} ${achternaam}`, role }),
       });
 
       // Reset form
@@ -76,7 +78,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
       if (error instanceof z.ZodError) {
         toast({
           variant: 'destructive',
-          title: 'Validatiefout',
+          title: t('errors.validationError'),
           description: error.errors[0].message,
         });
       }
@@ -89,15 +91,15 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Nieuwe gebruiker aanmaken</DialogTitle>
+          <DialogTitle>{t('users.createUser')}</DialogTitle>
           <DialogDescription>
-            Maak een nieuwe gebruiker aan. De gebruiker ontvangt een e-mail om het wachtwoord in te stellen.
+            {t('users.createUserDescription')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="voornaam">Voornaam</Label>
+              <Label htmlFor="voornaam">{t('common.firstName')}</Label>
               <Input
                 id="voornaam"
                 type="text"
@@ -107,7 +109,7 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="achternaam">Achternaam</Label>
+              <Label htmlFor="achternaam">{t('common.lastName')}</Label>
               <Input
                 id="achternaam"
                 type="text"
@@ -118,37 +120,37 @@ export function CreateUserDialog({ open, onOpenChange, onUserCreated }: CreateUs
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">E-mailadres</Label>
+            <Label htmlFor="email">{t('common.email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="naam@bedrijf.nl"
+              placeholder={t('common.emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="role">Rol</Label>
+            <Label htmlFor="role">{t('common.role')}</Label>
             <Select value={role} onValueChange={(value: 'hr' | 'manager' | 'medewerker' | 'super_admin') => setRole(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecteer een rol" />
+                <SelectValue placeholder={t('users.selectRole')} />
               </SelectTrigger>
               <SelectContent className="bg-popover">
-                <SelectItem value="medewerker">Medewerker</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="hr">HR</SelectItem>
-                <SelectItem value="super_admin">Super Admin</SelectItem>
+                <SelectItem value="medewerker">{t('users.roles.employee')}</SelectItem>
+                <SelectItem value="manager">{t('users.roles.manager')}</SelectItem>
+                <SelectItem value="hr">{t('users.roles.hr')}</SelectItem>
+                <SelectItem value="super_admin">{t('users.roles.superAdmin')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t flex-shrink-0">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuleren
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Gebruiker aanmaken
+              {t('users.createUser')}
             </Button>
           </div>
         </form>

@@ -1,7 +1,9 @@
 import { ReactNode, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Menu, X } from 'lucide-react';
@@ -36,6 +38,7 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
+  const { t } = useTranslation();
   const { profile, signOut, role } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -46,16 +49,16 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
     if (role === 'SALES') return 'Sales';
     if (role === 'MANAGER') return 'Manager';
     if (role === 'SUPPORT') return 'Support';
-    return 'Gebruiker';
+    return t('common.user') || 'Gebruiker';
   };
 
   const getNavGroups = () => {
     const baseGroups = [
       {
-        title: 'Overzicht',
+        title: t('common.overview') || 'Overzicht',
         items: [
           { 
-            title: 'Dashboard', 
+            title: t('navigation.dashboard'), 
             icon: LayoutDashboard, 
             href: role === 'ADMIN' || role === 'super_admin' ? '/dashboard/super-admin' : '/companies'
           },
@@ -64,24 +67,24 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
       {
         title: 'CRM',
         items: [
-          { title: 'Bedrijven', icon: Building2, href: '/companies' },
-          { title: 'Contacten', icon: Users, href: '/contacts' },
+          { title: t('navigation.companies'), icon: Building2, href: '/companies' },
+          { title: t('navigation.contacts'), icon: Users, href: '/contacts' },
           ...(role === 'ADMIN' || role === 'SALES' || role === 'MANAGER' || role === 'super_admin' ? [
-            { title: 'Projecten', icon: FolderKanban, href: '/projects' },
-            { title: 'Pipeline', icon: TrendingUp, href: '/pipeline' },
-            { title: 'Offertes', icon: FileText, href: '/quotes' },
+            { title: t('navigation.projects'), icon: FolderKanban, href: '/projects' },
+            { title: t('navigation.salesOverview'), icon: TrendingUp, href: '/pipeline' },
+            { title: t('navigation.quotes'), icon: FileText, href: '/quotes' },
           ] : []),
-          { title: 'Activiteiten', icon: MessageSquare, href: '/interactions' },
+          { title: t('navigation.activities'), icon: MessageSquare, href: '/interactions' },
         ],
       },
     ];
 
     if (role === 'ADMIN' || role === 'super_admin') {
       baseGroups.push({
-        title: 'Administratie',
+        title: t('common.administration') || 'Administratie',
         items: [
-          { title: 'Instellingen', icon: Settings, href: '/settings' },
-          { title: 'Gebruikersbeheer', icon: Shield, href: '/admin/gebruikers' },
+          { title: t('navigation.settings'), icon: Settings, href: '/settings' },
+          { title: t('common.userManagement') || 'Gebruikersbeheer', icon: Shield, href: '/admin/gebruikers' },
         ],
       });
     }
@@ -139,6 +142,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
             {actions}
           </div>
           
+          <LanguageSwitcher />
           <ThemeToggle />
           <NotificationBell />
 
@@ -165,7 +169,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
-                Uitloggen
+                {t('auth.logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

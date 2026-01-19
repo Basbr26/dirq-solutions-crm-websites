@@ -40,6 +40,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
 import { useContacts } from '@/features/contacts/hooks/useContacts';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const projectFormSchema = z.object({
   company_id: z.string().uuid('Selecteer een bedrijf'),
@@ -200,7 +201,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{project ? 'Project Bewerken' : 'Nieuw Project'}</DialogTitle>
+          <DialogTitle>{project ? 'Project bewerken' : 'Nieuw project'}</DialogTitle>
           <DialogDescription>
             Vul de gegevens in voor het project
           </DialogDescription>

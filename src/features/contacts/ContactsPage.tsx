@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 import { useContacts } from "./hooks/useContacts";
 import { useContactMutations } from "./hooks/useContactMutations";
 import { ContactCard } from "./components/ContactCard";
@@ -46,6 +47,7 @@ import { CSVImportDialog } from '@/components/CSVImportDialog';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export function ContactsPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [filterCompanyId, setFilterCompanyId] = useState<string | undefined>();
@@ -106,14 +108,14 @@ export function ContactsPage() {
         setShowCreateDialog(false);
       },
       onError: (error) => {
-        toast.error('Fout bij aanmaken contact: ' + error.message);
+        toast.error(t('errors.createFailed') + ': ' + error.message);
       },
     });
   };
 
   const handleExportCSV = async () => {
     try {
-      toast.info('Contacten exporteren...');
+      toast.info(t('contacts.exporting'));
       
       let query = supabase
         .from('contacts')
@@ -137,12 +139,12 @@ export function ContactsPage() {
       
       if (error) throw error;
       if (!contacts || contacts.length === 0) {
-        toast.warning('Geen contacten om te exporteren');
+        toast.warning(t('contacts.noContactsToExport'));
         return;
       }
 
       // Convert to CSV
-      const headers = ['Voornaam', 'Achternaam', 'Email', 'Telefoon', 'Mobiel', 'Functie', 'Afdeling', 'Bedrijf', 'Primair', 'Beslisser', 'Aangemaakt'];
+      const headers = [t('contacts.firstName'), t('contacts.lastName'), t('common.email'), t('common.phone'), t('contacts.mobile'), t('contacts.position'), t('contacts.department'), t('companies.title'), t('contacts.primary'), t('contacts.decisionMaker'), t('common.created')];
       const rows = contacts.map((c: any) => [
         c.first_name || '',
         c.last_name || '',
@@ -152,8 +154,8 @@ export function ContactsPage() {
         c.position || '',
         c.department || '',
         c.companies?.name || '',
-        c.is_primary ? 'Ja' : 'Nee',
-        c.is_decision_maker ? 'Ja' : 'Nee',
+        c.is_primary ? t('common.yes') : t('common.no'),
+        c.is_decision_maker ? t('common.yes') : t('common.no'),
         c.created_at ? format(new Date(c.created_at), 'yyyy-MM-dd') : ''
       ]);
 
@@ -171,10 +173,10 @@ export function ContactsPage() {
       link.click();
       URL.revokeObjectURL(url);
 
-      toast.success(`${contacts.length} contacten geëxporteerd`);
+      toast.success(t('contacts.contactsExported', { count: contacts.length }));
     } catch (error: any) {
       console.error('Export error:', error);
-      toast.error('Fout bij exporteren: ' + error.message);
+      toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
   };
 
@@ -250,13 +252,13 @@ export function ContactsPage() {
 
   return (
     <AppLayout
-      title="Contacten"
-      subtitle="Beheer uw contactpersonen en relaties"
+      title={t('contacts.title')}
+      subtitle={t('contacts.subtitle')}
       onPrimaryAction={() => setShowCreateDialog(true)}
       actions={
         <Button onClick={() => setShowCreateDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
-          Nieuw Contact
+          {t('contacts.newContact')}
         </Button>
       }
     >
@@ -267,48 +269,48 @@ export function ContactsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Totaal
+              {t('common.total')}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-muted-foreground hidden sm:block">contacten</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t('contacts.contacts')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Primair
+              {t('contacts.primary')}
             </CardTitle>
             <Star className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.primary}</div>
-            <p className="text-xs text-muted-foreground hidden sm:block">primair contact</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t('contacts.primaryContact')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Beslissers</CardTitle>
-            <Crown className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm font-medium">{t('contacts.decisionMaker')}</CardTitle>
+            <Crown className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.decisionMakers}</div>
-            <p className="text-xs text-muted-foreground hidden sm:block">beslissingsbevoegd</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t('contacts.authorized')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Met Bedrijf</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('contacts.withCompany')}</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.withCompany}</div>
-            <p className="text-xs text-muted-foreground hidden sm:block">gekoppeld</p>
+            <p className="text-xs text-muted-foreground hidden sm:block">{t('contacts.linked')}</p>
           </CardContent>
         </Card>
       </div>
@@ -318,7 +320,7 @@ export function ContactsPage() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Zoek op naam, email of functie..."
+            placeholder={t('contacts.searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-10"
@@ -330,15 +332,15 @@ export function ContactsPage() {
             onClick={() => setShowFilters(!showFilters)}
           >
             <Filter className="mr-2 h-4 w-4" />
-            Filters
+            {t('common.filter')}
           </Button>
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t('common.export')}
           </Button>
           <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
-            Import
+            {t('common.import')}
           </Button>
         </div>
       </div>
@@ -349,7 +351,7 @@ export function ContactsPage() {
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Bedrijf</label>
+                <label className="text-sm font-medium">{t('companies.title')}</label>
                 <Select
                   value={filterCompanyId || "all"}
                   onValueChange={(value) => {
@@ -358,10 +360,10 @@ export function ContactsPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle bedrijven" />
+                    <SelectValue placeholder={t('contacts.allCompanies')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Alle bedrijven</SelectItem>
+                    <SelectItem value="all">{t('contacts.allCompanies')}</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.name}
@@ -372,7 +374,7 @@ export function ContactsPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Primair Contact</label>
+                <label className="text-sm font-medium">{t('contacts.primaryContact')}</label>
                 <Select
                   value={
                     filterIsPrimary === undefined
@@ -391,18 +393,18 @@ export function ContactsPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle contacten" />
+                    <SelectValue placeholder={t('contacts.allContacts')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Alle</SelectItem>
-                    <SelectItem value="true">Alleen primair</SelectItem>
-                    <SelectItem value="false">Niet primair</SelectItem>
+                    <SelectItem value="all">{t('common.all')}</SelectItem>
+                    <SelectItem value="true">{t('contacts.onlyPrimary')}</SelectItem>
+                    <SelectItem value="false">{t('contacts.notPrimary')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Beslisser</label>
+                <label className="text-sm font-medium">{t('contacts.decisionMaker')}</label>
                 <Select
                   value={
                     filterIsDecisionMaker === undefined
@@ -421,12 +423,12 @@ export function ContactsPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle contacten" />
+                    <SelectValue placeholder={t('contacts.allContacts')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Alle</SelectItem>
-                    <SelectItem value="true">Alleen beslissers</SelectItem>
-                    <SelectItem value="false">Niet beslisser</SelectItem>
+                    <SelectItem value="all">{t('common.all')}</SelectItem>
+                    <SelectItem value="true">{t('contacts.onlyDecisionMakers')}</SelectItem>
+                    <SelectItem value="false">{t('contacts.notDecisionMaker')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -444,7 +446,7 @@ export function ContactsPage() {
                     pagination.resetPage();
                   }}
                 >
-                  Wis alle filters
+                  {t('contacts.clearAllFilters')}
                 </Button>
               </div>
             )}
@@ -459,7 +461,7 @@ export function ContactsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="text-center text-destructive">
-              <p>Er is een fout opgetreden bij het laden van contacten</p>
+              <p>{t('contacts.errorLoading')}</p>
               <p className="text-sm mt-2">{error.message}</p>
             </div>
           </CardContent>
@@ -467,14 +469,14 @@ export function ContactsPage() {
       ) : contacts.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="Geen contacten gevonden"
+          title={t('contacts.noContactsFound')}
           description={
             search || filterCompanyId || filterIsPrimary !== undefined || filterIsDecisionMaker !== undefined
-              ? "Probeer andere zoek- of filterinstellingen"
-              : "Voeg uw eerste contact toe om te beginnen"
+              ? t('contacts.tryDifferentFilters')
+              : t('contacts.addFirstContact')
           }
           action={{
-            label: "Contact Toevoegen",
+            label: t('contacts.addContact'),
             onClick: () => setShowCreateDialog(true),
             icon: UserPlus,
           }}
@@ -506,9 +508,9 @@ export function ContactsPage() {
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nieuw Contact</DialogTitle>
+            <DialogTitle>{t('contacts.newContact')}</DialogTitle>
             <DialogDescription>
-              Voeg een nieuw contactpersoon toe aan uw CRM
+              {t('contacts.addNewContactDescription')}
             </DialogDescription>
           </DialogHeader>
           <ContactForm
@@ -527,8 +529,8 @@ export function ContactsPage() {
       <CSVImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        title="Contacten Importeren"
-        description="Importeer meerdere contactpersonen tegelijk vanuit een CSV bestand"
+        title={t('contacts.importTitle')}
+        description={t('contacts.importDescription')}
         requiredFields={['first_name', 'last_name']}
         optionalFields={['email', 'phone', 'mobile', 'position', 'department', 'company', 'is_primary', 'is_decision_maker', 'notes']}
         onImport={handleImport}

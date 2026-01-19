@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { User, Mail, Phone, Building2, Briefcase, Linkedin, Star, Crown, Clock, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Contact } from '@/types/crm';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -44,6 +45,7 @@ interface ContactCardProps {
 }
 
 export function ContactCard({ contact }: ContactCardProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -105,13 +107,13 @@ export function ContactCard({ contact }: ContactCardProps) {
                   {contact.is_primary && (
                     <Badge variant="default" className="bg-blue-500 text-[10px] sm:text-xs">
                       <Star className="h-3 w-3 mr-1" />
-                      {!isMobile && 'Primair'}
+                      {!isMobile && t('contacts.primary')}
                     </Badge>
                   )}
                   {contact.is_decision_maker && !isMobile && (
-                    <Badge variant="secondary" className="bg-purple-500/10 text-purple-500">
+                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:bg-amber-600/20 dark:text-amber-500">
                       <Crown className="h-3 w-3 mr-1" />
-                      Beslisser
+                      {t('contacts.decisionMaker')}
                     </Badge>
                   )}
                 </div>
@@ -132,13 +134,13 @@ export function ContactCard({ contact }: ContactCardProps) {
                   {canEdit && (
                     <DropdownMenuItem onClick={handleEdit}>
                       <Edit className="h-4 w-4 mr-2" />
-                      Bewerken
+                      {t('common.edit')}
                     </DropdownMenuItem>
                   )}
                   {canDelete && (
                     <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Verwijderen
+                      {t('common.delete')}
                     </DropdownMenuItem>
                   )}
                 </DropdownMenuContent>
@@ -266,12 +268,12 @@ export function ContactCard({ contact }: ContactCardProps) {
             onSwipeRight={handleCall}
             onSwipeLeft={() => handleEdit()}
             rightAction={{
-              label: 'Bel direct',
+              label: t('contacts.callDirect'),
               icon: <Phone className="h-6 w-6" />,
               color: 'bg-green-500 text-white'
             }}
             leftAction={{
-              label: 'Bewerken',
+              label: t('common.edit'),
               icon: <Edit className="h-6 w-6" />,
               color: 'bg-blue-500 text-white'
             }}
@@ -284,7 +286,7 @@ export function ContactCard({ contact }: ContactCardProps) {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Contact Bewerken</DialogTitle>
+          <DialogTitle>Contact bewerken</DialogTitle>
           <DialogDescription>
             Wijzig de gegevens van het contact
           </DialogDescription>
@@ -309,18 +311,18 @@ export function ContactCard({ contact }: ContactCardProps) {
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Contact verwijderen?</AlertDialogTitle>
+          <AlertDialogTitle>{t('contacts.deleteContact')}</AlertDialogTitle>
           <AlertDialogDescription>
-            Weet je zeker dat je "{fullName}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+            {t('contacts.deleteContactConfirmation', { name: fullName })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuleren</AlertDialogCancel>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={confirmDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            Verwijderen
+            {t('common.delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -365,18 +367,18 @@ export function ContactCard({ contact }: ContactCardProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Contact verwijderen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('contacts.deleteContact')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je "{fullName}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+              {t('contacts.deleteContactConfirmation', { name: fullName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Verwijderen
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

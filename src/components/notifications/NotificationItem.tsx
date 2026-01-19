@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Notification, NotificationPriority } from '@/types/notifications';
+import { getPriorityLabel, getTypeLabel, notificationText } from '@/lib/translations/notifications';
 
 interface NotificationItemProps {
   notification: Notification;
@@ -120,14 +121,14 @@ export function NotificationItem({
               variant="outline"
               className={cn('text-xs', getPriorityBadge(notification.priority))}
             >
-              {notification.priority}
+              {getPriorityLabel(notification.priority)}
             </Badge>
 
             {notification.type && (
               <Badge variant="secondary" className="text-xs">
-                {notification.type}
+                {getTypeLabel(notification.type)}
               </Badge>
-            )}
+            )}}
 
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="h-3 w-3" />
@@ -152,7 +153,7 @@ export function NotificationItem({
               ))}
               {notification.digest_items.length > 3 && (
                 <div className="text-xs text-muted-foreground pl-2">
-                  +{notification.digest_items.length - 3} meer
+                  {notificationText.digestMore(notification.digest_items.length - 3)}
                 </div>
               )}
             </div>
@@ -180,7 +181,7 @@ export function NotificationItem({
                   onClick={handleClick}
                   className="text-xs h-8 ml-auto"
                 >
-                  Bekijken
+                  {notificationText.view}
                   <ChevronRight className="h-3 w-3 ml-1" />
                 </Button>
               )}
@@ -191,7 +192,7 @@ export function NotificationItem({
           {notification.is_escalated && (
             <div className="flex items-center gap-1 text-xs text-orange-600 mt-2">
               <AlertTriangle className="h-3 w-3" />
-              Geëscaleerd (niveau {notification.escalation_level})
+              {notificationText.escalated} ({notificationText.level} {notification.escalation_level})
             </div>
           )}
 
@@ -199,7 +200,7 @@ export function NotificationItem({
           {notification.acted_at && (
             <div className="flex items-center gap-1 text-xs text-green-600 mt-2">
               <CheckCircle2 className="h-3 w-3" />
-              Actie ondernomen
+              {notificationText.acted}
             </div>
           )}
         </div>

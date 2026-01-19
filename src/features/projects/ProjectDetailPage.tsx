@@ -5,6 +5,7 @@
 
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUpdateProject, useDeleteProject } from './hooks/useProjectMutations';
@@ -62,18 +63,19 @@ import { QuoteForm } from '@/features/quotes/components/QuoteForm';
 import { useCreateQuote } from '@/features/quotes/hooks/useQuoteMutations';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const projectTypeLabels = {
-  landing_page: 'Landing Page',
-  corporate_website: 'Bedrijfswebsite',
-  ecommerce: 'Webshop',
-  web_app: 'Web Applicatie',
-  blog: 'Blog',
-  portfolio: 'Portfolio',
-  custom: 'Custom',
-  ai_automation: 'AI Automatisering',
-};
+const getProjectTypeLabels = (t: any) => ({
+  landing_page: t('projects.types.landingPage'),
+  corporate_website: t('projects.types.corporateWebsite'),
+  ecommerce: t('projects.types.ecommerce'),
+  web_app: t('projects.types.webApp'),
+  blog: t('projects.types.blog'),
+  portfolio: t('projects.types.portfolio'),
+  custom: t('projects.types.custom'),
+  ai_automation: t('projects.types.aiAutomation'),
+});
 
 export default function ProjectDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -91,6 +93,8 @@ export default function ProjectDetailPage() {
 
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   const canDelete = role === 'ADMIN';
+
+  const projectTypeLabels = useMemo(() => getProjectTypeLabels(t), [t]);
 
   // Fetch project data
   const { data: project, isLoading } = useQuery({
@@ -250,7 +254,7 @@ export default function ProjectDetailPage() {
                 Dit project bestaat niet of je hebt geen toegang.
               </p>
               <Link to="/pipeline">
-                <Button>Terug naar pipeline</Button>
+                <Button>Terug naar overzicht</Button>
               </Link>
             </CardContent>
           </Card>
@@ -272,7 +276,7 @@ export default function ProjectDetailPage() {
           <Link to="/pipeline">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Terug naar pipeline
+              {t('common.backToOverview')}
             </Button>
           </Link>
 
@@ -301,12 +305,12 @@ export default function ProjectDetailPage() {
                 {convertLead.isPending ? (
                   <>
                     <div className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    Converteren...
+                    {t('projects.converting')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    🎉 Converteer naar Klant
+                    {t('projects.convertToCustomer')}
                   </>
                 )}
               </Button>
@@ -314,13 +318,13 @@ export default function ProjectDetailPage() {
             {canEdit && (
               <Button onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Bewerken
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (
               <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
                 <Trash2 className="h-4 w-4 mr-2" />
-                Verwijderen
+                {t('common.delete')}
               </Button>
             )}
           </div>
@@ -333,14 +337,14 @@ export default function ProjectDetailPage() {
           {/* Project Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Project Gegevens</CardTitle>
+              <CardTitle>{t('projects.projectDetails')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-start gap-3">
                   <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Bedrijf</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.title')}</p>
                     <Link 
                       to={`/companies/${project.companies?.id}`}
                       className="font-medium hover:underline"
@@ -354,7 +358,7 @@ export default function ProjectDetailPage() {
                   <div className="flex items-start gap-3">
                     <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Contactpersoon</p>
+                    <p className="text-sm text-muted-foreground">{t('quotes.contactPerson')}</p>
                       <Link 
                         to={`/contacts/${project.contacts.id}`}
                         className="font-medium hover:underline"
@@ -368,24 +372,26 @@ export default function ProjectDetailPage() {
                 <div className="flex items-start gap-3">
                   <Euro className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Waarde</p>
+                    <p className="text-sm text-muted-foreground">{t('projects.value')}</p>
                     <p className="font-medium text-lg">{formatCurrency(project.value)}</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <Target className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Kans</p>
-                    <p className="font-medium">{project.probability}%</p>
+                {project.probability > 30 && (
+                  <div className="flex items-start gap-3">
+                    <Target className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">{t('projects.successChance')}</p>
+                      <p className="font-medium">{project.probability}%</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {project.expected_close_date && (
                   <div className="flex items-start gap-3">
                     <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Verwachte afsluiting</p>
+                      <p className="text-sm text-muted-foreground">{t('projects.expectedClosing')}</p>
                       <p className="font-medium">
                         {format(new Date(project.expected_close_date), 'dd MMMM yyyy', { locale: nl })}
                       </p>
@@ -624,7 +630,7 @@ export default function ProjectDetailPage() {
             <TabsContent value="quotes" className="mt-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Gekoppelde Offertes</CardTitle>
+                  <CardTitle>{t('projects.linkedQuotes')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {quotes && quotes.length > 0 ? (
@@ -728,7 +734,7 @@ export default function ProjectDetailPage() {
           {project.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Interne Notities</CardTitle>
+                <CardTitle>{t('quotes.internalNotes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{project.notes}</p>
@@ -743,7 +749,7 @@ export default function ProjectDetailPage() {
           {canEdit && (
             <Card>
               <CardHeader>
-                <CardTitle>Fase Wijzigen</CardTitle>
+                <CardTitle>{t('projects.changeStage')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -774,7 +780,7 @@ export default function ProjectDetailPage() {
           {project.profiles && (
             <Card>
               <CardHeader>
-                <CardTitle>Project Eigenaar</CardTitle>
+                <CardTitle>{t('projects.projectDetails')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-3">
@@ -795,7 +801,7 @@ export default function ProjectDetailPage() {
           {/* Weighted Value */}
           <Card>
             <CardHeader>
-              <CardTitle>Gewogen Waarde</CardTitle>
+              <CardTitle>{t('projects.weightedValue')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-center">
@@ -812,7 +818,7 @@ export default function ProjectDetailPage() {
           {/* Timeline */}
           <Card>
             <CardHeader>
-              <CardTitle>Tijdlijn</CardTitle>
+              <CardTitle>{t('projects.timeline')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -842,7 +848,7 @@ export default function ProjectDetailPage() {
           {project.tags && project.tags.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Tags</CardTitle>
+                <CardTitle>{t('projects.timeline')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -944,9 +950,9 @@ export default function ProjectDetailPage() {
               // Navigate to the new quote
               navigate(`/quotes/${newQuote.id}`);
               
-              toast.success('Offerte aangemaakt en gekoppeld aan project');
+              toast.success(t('success.quoteCreatedLinked'));
             } catch (error: any) {
-              toast.error(`Fout bij aanmaken offerte: ${error.message}`);
+              toast.error(t('errors.createFailed') + `: ${error.message}`);
             }
           }}
           isLoading={createQuote.isPending}

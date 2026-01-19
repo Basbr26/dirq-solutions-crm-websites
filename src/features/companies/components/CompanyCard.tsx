@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Building2, Phone, Mail, Globe, MapPin, TrendingUp, Clock, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Company } from '@/types/crm';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -50,6 +51,7 @@ const priorityConfig = {
 };
 
 export function CompanyCard({ company }: CompanyCardProps) {
+  const { t } = useTranslation();
   const { role } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -59,13 +61,32 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
   
+  const statusConfig = (status: string) => {
+    const configs = {
+      prospect: { label: t('companies.statuses.prospect'), color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+      active: { label: t('companies.statuses.active'), color: 'bg-green-500/10 text-green-500 border-green-500/20' },
+      inactive: { label: t('companies.statuses.inactive'), color: 'bg-gray-500/10 text-gray-500 border-gray-500/20' },
+      churned: { label: t('companies.statuses.churned'), color: 'bg-red-500/10 text-red-500 border-red-500/20' }
+    };
+    return configs[status as keyof typeof configs] || configs.prospect;
+  };
+  
+  const priorityConfig = (priority: string) => {
+    const configs = {
+      low: { label: t('companies.priorities.low'), color: 'bg-gray-500/10 text-gray-500' },
+      medium: { label: t('companies.priorities.medium'), color: 'bg-blue-500/10 text-blue-500' },
+      high: { label: t('companies.priorities.high'), color: 'bg-orange-500/10 text-orange-500' }
+    };
+    return configs[priority as keyof typeof configs] || configs.medium;
+  };
+  
   const user = useAuth().user;
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   // Allow ADMIN, MANAGER, or owner to delete
   const canDelete = (role === 'ADMIN' || role === 'MANAGER' || (user && company.owner_id === user.id));
   
-  const statusStyle = statusConfig[company.status];
-  const priorityStyle = priorityConfig[company.priority];
+  const statusStyle = statusConfig(company.status);
+  const priorityStyle = priorityConfig(company.priority);
 
   const handleEdit = (e?: React.MouseEvent) => {
     e?.preventDefault();
@@ -82,7 +103,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
   const handleCall = () => {
     if (company.phone) {
       window.location.href = `tel:${company.phone}`;
-      toast.success('Opening dialer...');
+      toast.success(t('common.openingDialer'));
     }
   };
 
@@ -141,13 +162,13 @@ export function CompanyCard({ company }: CompanyCardProps) {
                     {canEdit && (
                       <DropdownMenuItem onClick={handleEdit}>
                         <Edit className="h-4 w-4 mr-2" />
-                        Bewerken
+                        {t('common.edit')}
                       </DropdownMenuItem>
                     )}
                     {canDelete && (
                       <DropdownMenuItem onClick={handleDelete} className="text-destructive">
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Verwijderen
+                        {t('common.delete')}
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
@@ -260,12 +281,12 @@ export function CompanyCard({ company }: CompanyCardProps) {
             onSwipeRight={handleCall}
             onSwipeLeft={() => handleEdit()}
             rightAction={{
-              label: 'Bel direct',
+              label: t('companies.callDirect'),
               icon: <Phone className="h-6 w-6" />,
               color: 'bg-green-500 text-white'
             }}
             leftAction={{
-              label: 'Bewerken',
+              label: t('common.edit'),
               icon: <Edit className="h-6 w-6" />,
               color: 'bg-blue-500 text-white'
             }}

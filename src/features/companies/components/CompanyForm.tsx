@@ -35,6 +35,7 @@ import { Loader2, Sparkles, FileText, Search } from 'lucide-react';
 import { parseDrimbleText, parseCompanySize, cleanPhoneNumber, formatKVKNumber } from '@/lib/companyDataParser';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 const companyFormSchema = z.object({
   name: z.string().min(2, 'Naam moet minimaal 2 karakters bevatten'),
@@ -195,7 +196,22 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   };
 
   const handleKVKLookup = () => {
-    const url = 'https://www.kvk.nl/zoeken/';
+    // Check if we have a KVK number to search with
+    const kvkNumber = form.watch('kvk_number');
+    const companyName = form.watch('name');
+    
+    let url = 'https://www.kvk.nl/zoeken/';
+    
+    // Add search parameter if we have a KVK number or company name
+    if (kvkNumber && kvkNumber.length === 8) {
+      url += `?q=${kvkNumber}`;
+    } else if (companyName) {
+      url += `?q=${encodeURIComponent(companyName)}`;
+    }
+    
+    toast.info('KVK website wordt geopend. Kopieer de gegevens en plak ze in het tekstveld.', {
+      duration: 5000,
+    });
     
     // Open popup positioned on the right side
     const width = 900;
@@ -221,7 +237,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{company ? 'Bedrijf Bewerken' : 'Nieuw Bedrijf'}</DialogTitle>
+          <DialogTitle>{company ? 'Bedrijf bewerken' : 'Nieuw bedrijf'}</DialogTitle>
           <DialogDescription>
             {company
               ? 'Wijzig de gegevens van het bedrijf'
@@ -235,7 +251,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span>Quick Fill</span>
+                <span>Snel invullen</span>
                 <Button
                   type="button"
                   variant="ghost"
@@ -247,11 +263,35 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 </Button>
               </div>
               
+              <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
+                <p className="font-medium mb-1">💡 Zo werkt het:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Zoek het bedrijf op via de KVK knop</li>
+                  <li>Kopieer de gegevens (naam, adres, etc.)</li>
+                  <li>Plak ze in het tekstveld hieronder</li>
+                  <li>Klik op "Gegevens invullen" - formulier wordt automatisch gevuld</li>
+                </ol>
+              </div>
+              
               <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">
-                  Plak bedrijfsgegevens van Drimble of andere bron
+                <label className="text-xs text-muted-foreground font-medium">
+                  Stap 1: Zoek bedrijf op KVK
                 </label>
                 <div className="flex gap-2">
+                  <Input
+                    placeholder="KVK nummer of bedrijfsnaam"
+                    value={form.watch('kvk_number') || form.watch('name') || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // If it's numeric, treat as KVK number
+                      if (/^\d+$/.test(value)) {
+                        form.setValue('kvk_number', value.replace(/\D/g, '').slice(0, 8));
+                      } else {
+                        form.setValue('name', value);
+                      }
+                    }}
+                    className="text-sm flex-1"
+                  />
                   <Button
                     type="button"
                     variant="outline"
@@ -260,60 +300,34 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     className="shrink-0"
                   >
                     <Search className="h-4 w-4 mr-2" />
-                    KVK Zoeken
+                    Open KVK
                   </Button>
-                  <Textarea
-                    placeholder="Of plak hier direct de gegevens..."
-                    value={pasteText}
-                    onChange={(e) => setPasteText(e.target.value)}
-                    className="min-h-[80px] text-sm flex-1"
-                  />
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="w-full"
-                  onClick={handleParsePaste}
-                  disabled={!pasteText.trim()}
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Gegevens Invullen
-                </Button>
-              </div>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Of</span>
                 </div>
               </div>
               
               <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">
-                  KVK nummer opzoeken (binnenkort beschikbaar)
+                <label className="text-xs text-muted-foreground font-medium">
+                  Stap 2: Plak gekopieerde gegevens
                 </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="12345678"
-                    maxLength={8}
-                    value={form.watch('kvk_number') || ''}
-                    onChange={(e) => form.setValue('kvk_number', e.target.value.replace(/\D/g, ''))}
-                    className="text-sm"
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={handleKVKLookup}
-                    disabled={!form.watch('kvk_number') || form.watch('kvk_number')?.length !== 8}
-                  >
-                    Opzoeken
-                  </Button>
-                </div>
+                <Textarea
+                  placeholder="Plak hier de bedrijfsgegevens van KVK, Drimble, of andere bron..."
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  className="min-h-[100px] text-sm"
+                />
               </div>
+              
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="w-full"
+                onClick={handleParsePaste}
+                disabled={!pasteText.trim()}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Gegevens invullen
+              </Button>
             </div>
           </Card>
         )}
@@ -327,7 +341,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             onClick={() => setShowQuickFill(true)}
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            Quick Fill tonen
+            Snel invullen via KVK
           </Button>
         )}
 

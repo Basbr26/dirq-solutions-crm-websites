@@ -25,15 +25,15 @@ export function AppLayout({
   const [showQuickActions, setShowQuickActions] = useState(false)
   
   return (
-    // Added overflow-x-hidden to prevent horizontal scroll
-    <div className="min-h-screen flex w-full bg-background overflow-x-hidden">
+    // Layout with fixed sidebar and sticky header
+    <div className="min-h-screen flex w-full bg-background overflow-hidden">
       <AppSidebar />
       
-      {/* Added overflow-x-hidden and min-w-0 to prevent flex child from overflowing */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+      {/* Main content area with sticky header */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <AppHeader title={title} subtitle={subtitle} actions={actions} />
         
-        {/* Mobile: Add bottom padding for nav + safe area. Desktop: No padding */}
+        {/* Scrollable content area */}
         <main 
           className="flex-1 overflow-y-auto overflow-x-hidden md:pb-0"
           style={{

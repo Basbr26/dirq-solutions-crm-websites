@@ -26,6 +26,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Notification, NotificationStats } from '@/types/notifications';
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { NotificationPreferencesDialog } from '@/components/notifications/NotificationPreferencesDialog';
+import { notificationText } from '@/lib/translations/notifications';
 
 export function NotificationCenter() {
   const { user } = useAuth();
@@ -105,8 +106,8 @@ export function NotificationCenter() {
       );
       
       toast({
-        title: 'Gelezen',
-        description: 'Notificatie gemarkeerd als gelezen',
+        title: notificationText.markReadSuccess,
+        description: notificationText.markReadSuccess,
       });
     }
   };
@@ -142,8 +143,8 @@ export function NotificationCenter() {
       );
       
       toast({
-        title: 'Alle gelezen',
-        description: 'Alle notificaties gemarkeerd als gelezen',
+        title: notificationText.markAllReadSuccess,
+        description: notificationText.markAllReadSuccess,
       });
     }
   };
@@ -261,7 +262,7 @@ export function NotificationCenter() {
         <SheetContent className="w-full sm:max-w-lg">
           <SheetHeader>
             <div className="flex items-center justify-between">
-              <SheetTitle>Notificaties</SheetTitle>
+              <SheetTitle>{notificationText.notifications}</SheetTitle>
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -277,15 +278,15 @@ export function NotificationCenter() {
                     onClick={handleMarkAllAsRead}
                   >
                     <CheckCheck className="h-4 w-4 mr-2" />
-                    Alles gelezen
+                    {notificationText.markAllRead}
                   </Button>
                 )}
               </div>
             </div>
             <SheetDescription>
               {stats.unread > 0
-                ? `${stats.unread} ongelezen van ${stats.total}`
-                : 'Geen ongelezen notificaties'}
+                ? `${notificationText.unreadCount(stats.unread)} ${stats.total}`
+                : notificationText.noUnread}
             </SheetDescription>
           </SheetHeader>
 
@@ -293,7 +294,7 @@ export function NotificationCenter() {
             <Tabs value={filter} onValueChange={(v) => setFilter(v as never)}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="unread">
-                  Ongelezen
+                  {notificationText.unread}
                   {stats.unread > 0 && (
                     <Badge variant="secondary" className="ml-2">
                       {stats.unread}
@@ -301,14 +302,14 @@ export function NotificationCenter() {
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="priority">
-                  Belangrijk
+                  {notificationText.priority}
                   {(stats.by_priority.critical + stats.by_priority.urgent) > 0 && (
                     <Badge variant="destructive" className="ml-2">
                       {stats.by_priority.critical + stats.by_priority.urgent}
                     </Badge>
                   )}
                 </TabsTrigger>
-                <TabsTrigger value="all">Alle</TabsTrigger>
+                <TabsTrigger value="all">{notificationText.all}</TabsTrigger>
               </TabsList>
 
               <TabsContent value={filter} className="mt-4">
@@ -321,7 +322,7 @@ export function NotificationCenter() {
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <Bell className="h-12 w-12 text-muted-foreground mb-4" />
                       <p className="text-muted-foreground">
-                        Geen notificaties
+                        {notificationText.noNotifications}
                       </p>
                     </div>
                   ) : (

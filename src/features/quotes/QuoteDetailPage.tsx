@@ -4,6 +4,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,22 +68,23 @@ import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
 
-const statusConfig: Record<QuoteStatus | 'signed', { 
+const getStatusConfig = (t: any): Record<QuoteStatus | 'signed', { 
   label: string; 
   variant: 'default' | 'secondary' | 'destructive' | 'outline'; 
   icon: React.ElementType;
   color: string;
-}> = {
-  draft: { label: 'Concept', variant: 'secondary', icon: FileText, color: 'bg-gray-500/10 text-gray-500' },
-  sent: { label: 'Verzonden', variant: 'default', icon: Send, color: 'bg-blue-500/10 text-blue-500' },
-  viewed: { label: 'Bekeken', variant: 'outline', icon: Eye, color: 'bg-purple-500/10 text-purple-500' },
-  accepted: { label: 'Geaccepteerd', variant: 'default', icon: CheckCircle2, color: 'bg-green-500/10 text-green-500' },
-  rejected: { label: 'Afgewezen', variant: 'destructive', icon: XCircle, color: 'bg-red-500/10 text-red-500' },
-  expired: { label: 'Verlopen', variant: 'outline', icon: Clock, color: 'bg-orange-500/10 text-orange-500' },
-  signed: { label: 'Getekend', variant: 'default', icon: CheckCircle2, color: 'bg-emerald-500/10 text-emerald-600' },
-};
+}> => ({
+  draft: { label: t('quotes.statuses.draft'), variant: 'secondary', icon: FileText, color: 'bg-gray-500/10 text-gray-500' },
+  sent: { label: t('quotes.statuses.sent'), variant: 'default', icon: Send, color: 'bg-blue-500/10 text-blue-500' },
+  viewed: { label: t('quotes.statuses.viewed'), variant: 'outline', icon: Eye, color: 'bg-purple-500/10 text-purple-500' },
+  accepted: { label: t('quotes.statuses.accepted'), variant: 'default', icon: CheckCircle2, color: 'bg-green-500/10 text-green-500' },
+  rejected: { label: t('quotes.statuses.rejected'), variant: 'destructive', icon: XCircle, color: 'bg-red-500/10 text-red-500' },
+  expired: { label: t('quotes.statuses.expired'), variant: 'outline', icon: Clock, color: 'bg-orange-500/10 text-orange-500' },
+  signed: { label: t('quotes.statuses.signed'), variant: 'default', icon: CheckCircle2, color: 'bg-emerald-500/10 text-emerald-600' },
+});
 
 export default function QuoteDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -95,6 +97,8 @@ export default function QuoteDetailPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
+
+  const statusConfig = useMemo(() => getStatusConfig(t), [t]);
 
   const updateQuote = useUpdateQuote(id!);
   const deleteQuote = useDeleteQuote();
@@ -150,6 +154,48 @@ export default function QuoteDetailPage() {
   const handleStatusChange = async (newStatus: QuoteStatus) => {
     if (!id) return;
     
+    // Validate email exists when changing to 'sent' status
+    if (newStatus === 'sent') {
+      const contactEmail = quote?.contact?.email;
+      const signerEmailValue = signerEmail || contactEmail;
+      
+      if (!signerEmailValue) {
+        toast.error(t('errors.emailMissing'), {
+          description: t('errors.emailMissingDescription'),
+          duration: 5000,
+        });
+        return;
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(signerEmailValue)) {
+        toast.error(t('errors.invalidEmail'), {
+          description: t('errors.invalidEmailDescription'),
+          duration: 5000,
+        });
+        return;
+      }
+    }
+    
+    // Validate rejection - cannot reject a digitally signed quote
+    if (newStatus === 'rejected' && quote?.sign_status === 'signed') {
+      toast.error(t('errors.cannotRejectSigned'), {
+        description: t('errors.cannotRejectSignedDescription'),
+        duration: 5000,
+      });
+      return;
+    }
+    
+    // Validate rejection - cannot reject an already accepted quote
+    if (newStatus === 'rejected' && quote?.status === 'accepted') {
+      toast.error(t('errors.cannotRejectAccepted'), {
+        description: t('errors.cannotRejectAcceptedDescription'),
+        duration: 5000,
+      });
+      return;
+    }
+    
     const updates: any = { status: newStatus };
     
     // Update timestamps based on status
@@ -163,19 +209,30 @@ export default function QuoteDetailPage() {
 
     updateQuote.mutate(updates, {
       onSuccess: async () => {
-        toast.success(`Status gewijzigd naar ${statusConfig[newStatus].label}`);
+        toast.success(t('quotes.statusChangedTo', { status: statusConfig[newStatus].label }));
       },
     });
   };
 
   const handleGenerateSignLink = async () => {
     if (!id || !signerEmail) {
-      toast.error('Email adres is verplicht');
+      toast.error(t('errors.emailMissing'), {
+        description: t('errors.emailRequired'),
+      });
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(signerEmail)) {
+      toast.error(t('errors.invalidEmail'), {
+        description: t('errors.enterValidEmail'),
+      });
       return;
     }
 
     try {
-      toast.loading('Sign link genereren...');
+      toast.loading(t('quotes.generatingSignLink'));
 
       // Generate unique token
       const token = crypto.randomUUID();
@@ -213,11 +270,11 @@ export default function QuoteDetailPage() {
 
         if (emailError) {
           console.error('Email error:', emailError);
-          toast.warning('Link gegenereerd, maar email verzending mislukt');
+          toast.warning(t('quotes.linkGeneratedEmailFailed'));
         }
       } catch (emailError) {
         console.error('Email exception:', emailError);
-        toast.warning('Link gegenereerd, maar email verzending mislukt');
+        toast.warning(t('quotes.linkGeneratedEmailFailed'));
       }
 
       // Generate full link
@@ -226,12 +283,12 @@ export default function QuoteDetailPage() {
       setGeneratedSignLink(signLink);
 
       toast.dismiss();
-      toast.success('Sign link gegenereerd en email verzonden! 📧✨');
+      toast.success(t('quotes.signLinkSent'));
 
       queryClient.invalidateQueries({ queryKey: ['quotes', id] });
     } catch (error) {
       toast.dismiss();
-      toast.error('Sign link genereren mislukt');
+      toast.error(t('errors.generateSignLinkFailed'));
       console.error('Generate sign link error:', error);
     }
   };
@@ -350,30 +407,30 @@ export default function QuoteDetailPage() {
                   {statusConfig[displayStatus].label}
                 </Badge>
               </div>
-              <p className="text-muted-foreground">Offerte {quote.quote_number}</p>
+              <p className="text-muted-foreground">{t('quotes.quoteLabel')} {quote.quote_number}</p>
             </div>
 
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={exportToPDF}>
               <Download className="h-4 w-4 mr-2" />
-              PDF Exporteren
+              {t('quotes.exportPDF')}
             </Button>
             {canEdit && quote.sign_status !== 'signed' && (
               <Button variant="default" onClick={handleOpenSignDialog}>
                 <Pen className="h-4 w-4 mr-2" />
-                Verstuur voor Ondertekening
+                {t('quotes.sendForSignature')}
               </Button>
             )}
             {canEdit && (
               <Button onClick={() => setEditDialogOpen(true)}>
                 <Edit className="h-4 w-4 mr-2" />
-                Bewerken
+                {t('common.edit')}
               </Button>
             )}
             {canDelete && (
               <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
                 <Trash2 className="h-4 w-4 mr-2" />
-                Verwijderen
+                {t('common.delete')}
               </Button>
             )}
           </div>
@@ -386,14 +443,14 @@ export default function QuoteDetailPage() {
           {/* Quote Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Offerte Gegevens</CardTitle>
+              <CardTitle>{t('quotes.quoteDetails')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-start gap-3">
                   <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Bedrijf</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.title')}</p>
                     <Link 
                       to={`/companies/${quote.company?.id}`}
                       className="font-medium hover:underline"
@@ -407,7 +464,7 @@ export default function QuoteDetailPage() {
                   <div className="flex items-start gap-3">
                     <User className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Contactpersoon</p>
+                      <p className="text-sm text-muted-foreground">{t('quotes.contactPerson')}</p>
                       <Link 
                         to={`/contacts/${quote.contact.id}`}
                         className="font-medium hover:underline"
@@ -421,7 +478,7 @@ export default function QuoteDetailPage() {
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Aangemaakt</p>
+                    <p className="text-sm text-muted-foreground">{t('common.created')}</p>
                     <p className="font-medium">
                       {format(new Date(quote.created_at), 'dd MMMM yyyy', { locale: nl })}
                     </p>
@@ -432,7 +489,7 @@ export default function QuoteDetailPage() {
                   <div className="flex items-start gap-3">
                     <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Geldig tot</p>
+                      <p className="text-sm text-muted-foreground">{t('quotes.validUntil')}</p>
                       <p className="font-medium">
                         {format(new Date(quote.valid_until), 'dd MMMM yyyy', { locale: nl })}
                       </p>
@@ -445,7 +502,7 @@ export default function QuoteDetailPage() {
                 <>
                   <Separator />
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">Beschrijving</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t('quotes.description')}</p>
                     <p className="text-sm">{quote.description}</p>
                   </div>
                 </>
@@ -456,13 +513,13 @@ export default function QuoteDetailPage() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {quote.payment_terms && (
                   <div>
-                    <p className="text-muted-foreground">Betalingsvoorwaarden</p>
+                    <p className="text-muted-foreground">{t('quotes.paymentTerms')}</p>
                     <p className="font-medium">{quote.payment_terms}</p>
                   </div>
                 )}
                 {quote.delivery_time && (
                   <div>
-                    <p className="text-muted-foreground">Levertijd</p>
+                    <p className="text-muted-foreground">{t('quotes.deliveryTime')}</p>
                     <p className="font-medium">{quote.delivery_time}</p>
                   </div>
                 )}
@@ -473,7 +530,7 @@ export default function QuoteDetailPage() {
           {/* Line Items */}
           <Card>
             <CardHeader>
-              <CardTitle>Regel Items</CardTitle>
+              <CardTitle>{t('quotes.lineItems')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -512,16 +569,16 @@ export default function QuoteDetailPage() {
                     {/* Totals */}
                     <div className="space-y-2 pt-4">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotaal</span>
+                        <span className="text-muted-foreground">{t('quotes.subtotal')}</span>
                         <span className="font-medium">{formatCurrency(quote.subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">BTW ({quote.tax_rate}%)</span>
+                        <span className="text-muted-foreground">{t('quotes.tax')} ({quote.tax_rate}%)</span>
                         <span className="font-medium">{formatCurrency(quote.tax_amount)}</span>
                       </div>
                       <Separator />
                       <div className="flex justify-between text-lg font-bold">
-                        <span>Totaal</span>
+                        <span>{t('quotes.total')}</span>
                         <span>{formatCurrency(quote.total_amount)}</span>
                       </div>
                     </div>
@@ -529,7 +586,7 @@ export default function QuoteDetailPage() {
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                    <p>Geen regel items gevonden</p>
+                    <p>{t('quotes.noLineItems')}</p>
                   </div>
                 )}
               </div>
@@ -540,7 +597,7 @@ export default function QuoteDetailPage() {
           {quote.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Interne Notities</CardTitle>
+                <CardTitle>{t('quotes.internalNotes')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
@@ -553,7 +610,7 @@ export default function QuoteDetailPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Activiteiten
+                {t('navigation.activities')}
               </CardTitle>
               <div className="flex gap-2">
                 <Button
@@ -565,7 +622,7 @@ export default function QuoteDetailPage() {
                   }}
                 >
                   <Phone className="h-4 w-4 mr-2" />
-                  Gesprek
+                  {t('interactions.call')}
                 </Button>
                 <Button
                   size="sm"
@@ -576,7 +633,7 @@ export default function QuoteDetailPage() {
                   }}
                 >
                   <Mail className="h-4 w-4 mr-2" />
-                  E-mail
+                  {t('interactions.email')}
                 </Button>
                 <Button
                   size="sm"
@@ -586,7 +643,7 @@ export default function QuoteDetailPage() {
                   }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Activiteit
+                  {t('interactions.addActivity')}
                 </Button>
               </div>
             </CardHeader>
@@ -601,16 +658,16 @@ export default function QuoteDetailPage() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <CardTitle className="text-green-900">Digitaal Ondertekend</CardTitle>
+                  <CardTitle className="text-green-900">{t('quotes.digitallySigned')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Signature Image */}
                 <div className="bg-white p-4 rounded-lg border border-green-200">
-                  <p className="text-sm text-muted-foreground mb-2">Handtekening</p>
+                  <p className="text-sm text-muted-foreground mb-2">{t('quotes.signature')}</p>
                   <img 
                     src={quote.signature_data} 
-                    alt="Handtekening" 
+                    alt={t('quotes.signature')} 
                     className="max-w-full h-24 border border-gray-200 rounded"
                   />
                 </div>
@@ -618,11 +675,11 @@ export default function QuoteDetailPage() {
                 {/* Signature Details */}
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Ondertekend door</span>
+                    <span className="text-muted-foreground">{t('quotes.signedBy')}</span>
                     <span className="font-medium">{quote.signed_by_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Datum & Tijd</span>
+                    <span className="text-muted-foreground">{t('quotes.dateTime')}</span>
                     <span className="font-medium">
                       {quote.signed_at && format(new Date(quote.signed_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                     </span>
@@ -635,7 +692,7 @@ export default function QuoteDetailPage() {
                   )}
                   {quote.signer_ip_address && (
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">IP Adres</span>
+                      <span className="text-muted-foreground">{t('quotes.ipAddress')}</span>
                       <span className="font-mono text-xs">{quote.signer_ip_address}</span>
                     </div>
                   )}
@@ -643,7 +700,7 @@ export default function QuoteDetailPage() {
 
                 <div className="bg-green-100/50 p-3 rounded-lg border border-green-200">
                   <p className="text-xs text-green-800">
-                    ✅ Deze digitale handtekening is juridisch geldig en bevat een audit trail met IP-adres en tijdstempel.
+                    {t('quotes.signatureValid')}
                   </p>
                 </div>
               </CardContent>
@@ -657,7 +714,7 @@ export default function QuoteDetailPage() {
           {canEdit && (
             <Card>
               <CardHeader>
-                <CardTitle>Status Wijzigen</CardTitle>
+                <CardTitle>{t('quotes.changeStatus')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {quote.status === 'draft' && (
@@ -667,7 +724,7 @@ export default function QuoteDetailPage() {
                     disabled={updateQuote.isPending}
                   >
                     <Send className="h-4 w-4 mr-2" />
-                    Versturen
+                    {t('common.send')}
                   </Button>
                 )}
                 {['sent', 'viewed'].includes(quote.status) && (
@@ -678,7 +735,7 @@ export default function QuoteDetailPage() {
                       disabled={updateQuote.isPending}
                     >
                       <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Accepteren
+                      {t('quotes.accept')}
                     </Button>
                     <Button 
                       variant="destructive" 
@@ -687,7 +744,7 @@ export default function QuoteDetailPage() {
                       disabled={updateQuote.isPending}
                     >
                       <XCircle className="h-4 w-4 mr-2" />
-                      Afwijzen
+                      {t('quotes.reject')}
                     </Button>
                   </>
                 )}
@@ -746,7 +803,7 @@ export default function QuoteDetailPage() {
                   <div className="flex gap-3">
                     <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">Geaccepteerd</p>
+                      <p className="text-sm font-medium">{t('quotes.accepted')}</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(quote.accepted_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                       </p>
@@ -758,7 +815,7 @@ export default function QuoteDetailPage() {
                   <div className="flex gap-3">
                     <XCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">Afgewezen</p>
+                      <p className="text-sm font-medium">{t('quotes.rejected')}</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(quote.rejected_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                       </p>
@@ -773,7 +830,7 @@ export default function QuoteDetailPage() {
           {quote.owner && (
             <Card>
               <CardHeader>
-                <CardTitle>Gemaakt door</CardTitle>
+                <CardTitle>{t('quotes.createdBy')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-3">
@@ -784,7 +841,7 @@ export default function QuoteDetailPage() {
                     <p className="font-medium">
                       {quote.owner.voornaam} {quote.owner.achternaam}
                     </p>
-                    <p className="text-sm text-muted-foreground">Aangemaakt door</p>
+                    <p className="text-sm text-muted-foreground">{t('common.createdBy')}</p>
                   </div>
                 </div>
               </CardContent>
@@ -810,18 +867,18 @@ export default function QuoteDetailPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Offerte verwijderen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('quotes.deleteQuote')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je deze offerte wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+              {t('quotes.deleteConfirmation')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Verwijderen
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -833,17 +890,17 @@ export default function QuoteDetailPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pen className="h-5 w-5" />
-              Verstuur Offerte voor Ondertekening
+              {t('quotes.sendForSignature')}
             </DialogTitle>
             <DialogDescription>
-              Genereer een veilige link voor digitale handtekening. De link is 7 dagen geldig.
+              {t('quotes.signLinkDescription')}
             </DialogDescription>
           </DialogHeader>
 
           {!generatedSignLink ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="signer-email">Email Ondertekenaar *</Label>
+                <Label htmlFor="signer-email">{t('quotes.signerEmail')} *</Label>
                 <Input
                   id="signer-email"
                   type="email"
@@ -853,17 +910,17 @@ export default function QuoteDetailPage() {
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Er wordt een email verzonden met de ondertekeningslink
+                  {t('quotes.emailWillBeSent')}
                 </p>
               </div>
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setSignDialogOpen(false)}>
-                  Annuleren
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={handleGenerateSignLink} disabled={!signerEmail}>
                   <Mail className="h-4 w-4 mr-2" />
-                  Verstuur Link
+                  {t('quotes.sendLink')}
                 </Button>
               </DialogFooter>
             </div>
@@ -873,16 +930,16 @@ export default function QuoteDetailPage() {
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
                   <div className="flex-1">
-                    <p className="font-medium text-green-900">Link Verzonden!</p>
+                    <p className="font-medium text-green-900">{t('quotes.linkSent')}</p>
                     <p className="text-sm text-green-700 mt-1">
-                      Email verzonden naar <strong>{signerEmail}</strong>
+                      {t('quotes.emailSentTo')} <strong>{signerEmail}</strong>
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Ondertekeningslink</Label>
+                <Label>{t('quotes.signatureLink')}</Label>
                 <div className="flex gap-2">
                   <Input
                     value={generatedSignLink}

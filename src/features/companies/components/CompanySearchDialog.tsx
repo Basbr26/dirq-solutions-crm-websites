@@ -64,7 +64,7 @@ export function CompanySearchDialog({ open, onOpenChange, onPopupOpenChange }: C
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Bedrijf Opzoeken</DialogTitle>
+          <DialogTitle>Bedrijf opzoeken</DialogTitle>
           <DialogDescription>
             Zoek bedrijfsinformatie op KVK.nl
           </DialogDescription>

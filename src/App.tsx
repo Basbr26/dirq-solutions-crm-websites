@@ -42,6 +42,7 @@ const WorkflowBuilder = lazy(() => import("./pages/WorkflowBuilder"));
 const WorkflowTemplatesPage = lazy(() => import("./pages/WorkflowTemplatesPage"));
 const WorkflowExecutions = lazy(() => import("./pages/WorkflowExecutions"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const EmailDraftsPage = lazy(() => import("./pages/EmailDraftsPage"));
 const CostAnalyticsDashboard = lazy(() => import("./pages/CostAnalyticsDashboard"));
 const CompanySettingsPage = lazy(() => import("./pages/CompanySettingsPage"));
 const GebruikersbeheerPage = lazy(() => import("./pages/GebruikersbeheerPage"));
@@ -427,6 +428,18 @@ function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'super_admin']}>
                 <Suspense fallback={<SuspenseFallback />}>
                   <WorkflowTemplatesPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          } 
+        />
+        <Route 
+          path="/email-drafts" 
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <EmailDraftsPage />
                 </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>

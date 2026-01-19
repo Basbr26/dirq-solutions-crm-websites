@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Search, Filter, Phone, Mail, Calendar, FileText, CheckSquare, Presentation, CheckCircle2, XCircle } from 'lucide-react';
 import { useInteractions, useInteractionStats, useUpdateInteraction } from './hooks/useInteractions';
 import { InteractionCard } from './components/InteractionCard';
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { AppLayout } from '@/components/layout/AppLayout';
 
 export default function InteractionsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
