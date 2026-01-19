@@ -270,7 +270,7 @@ export function ContactForm({
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecteer een bedrijf" />
+                    <SelectValue placeholder={t('forms.selectCompany')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -374,12 +374,12 @@ export function ContactForm({
               onClick={onCancel}
               disabled={isSubmitting}
             >
-              Annuleren
+              {t('common.cancel')}
             </Button>
           )}
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {contact ? "Opslaan" : "Aanmaken"}
+            {contact ? t('common.save') : t('common.create')}
           </Button>
         </div>
       </form>

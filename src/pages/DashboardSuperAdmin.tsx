@@ -63,7 +63,7 @@ export default function DashboardSuperAdmin() {
       });
     } catch (error) {
       console.error('Error loading stats:', error);
-      toast.error('Fout bij laden van statistieken');
+      toast.error(t('errors.errorLoadingStats'));
     } finally {
       setLoading(false);
     }

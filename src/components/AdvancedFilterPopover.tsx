@@ -156,7 +156,7 @@ export function AdvancedFilterPopover({
             </div>
             {localFilters.stages && localFilters.stages.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                {localFilters.stages.length} stage(s) geselecteerd
+                {t('forms.itemsSelected', { count: localFilters.stages.length })}
               </p>
             )}
           </div>

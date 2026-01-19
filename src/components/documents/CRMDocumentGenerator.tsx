@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { pdf } from '@react-pdf/renderer';
 import { format, addDays } from 'date-fns';
 import { nl } from 'date-fns/locale';
@@ -105,6 +106,7 @@ export function CRMDocumentGenerator({
 }: CRMDocumentGeneratorProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<DocumentType>(defaultType);
   const [generating, setGenerating] = useState(false);
@@ -153,7 +155,7 @@ export function CRMDocumentGenerator({
     } catch (error) {
       console.error('Error generating document:', error);
       toast({
-        title: 'Fout bij genereren',
+        title: t('errors.errorGenerating'),
         description: error instanceof Error ? error.message : 'Onbekende fout',
         variant: 'destructive',
       });
@@ -227,7 +229,7 @@ export function CRMDocumentGenerator({
     } catch (error) {
       console.error('Error uploading document:', error);
       toast({
-        title: 'Fout bij uploaden',
+        title: t('errors.errorUploading'),
         description: error instanceof Error ? error.message : 'Onbekende fout',
         variant: 'destructive',
       });

@@ -209,7 +209,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
       url += `?q=${encodeURIComponent(companyName)}`;
     }
     
-    toast.info('KVK website wordt geopend. Kopieer de gegevens en plak ze in het tekstveld.', {
+    toast.info(t('dialogs.kvkToast'), {
       duration: 5000,
     });
     
@@ -237,11 +237,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{company ? 'Bedrijf bewerken' : 'Nieuw bedrijf'}</DialogTitle>
+          <DialogTitle>{company ? t('dialogs.editTitle', { item: t('companies.title').slice(0, -1).toLowerCase() }) : t('dialogs.newTitle', { item: t('companies.title').slice(0, -1).toLowerCase() })}</DialogTitle>
           <DialogDescription>
             {company
-              ? 'Wijzig de gegevens van het bedrijf'
-              : 'Voeg een nieuw bedrijf toe aan je CRM'}
+              ? t('companies.editDescription')
+              : t('companies.addDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -375,7 +375,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer branche" />
+                            <SelectValue placeholder={t('forms.selectIndustry')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -400,7 +400,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer grootte" />
+                            <SelectValue placeholder={t('forms.selectSize')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -475,7 +475,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecteer bron" />
+                          <SelectValue placeholder={t('forms.selectSource')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -697,11 +697,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                Annuleren
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {company ? 'Opslaan' : 'Aanmaken'}
+                {company ? t('common.save') : t('common.create')}
               </Button>
             </DialogFooter>
           </form>

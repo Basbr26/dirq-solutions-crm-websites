@@ -44,7 +44,7 @@ export default function ResetPassword() {
       if (error) {
         toast({
           variant: 'destructive',
-          title: 'Fout bij resetten',
+          title: t('errors.errorSaving'),
           description: error.message,
         });
       } else {

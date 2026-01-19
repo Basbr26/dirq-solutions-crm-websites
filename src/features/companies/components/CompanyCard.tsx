@@ -315,9 +315,9 @@ export function CompanyCard({ company }: CompanyCardProps) {
         <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Bedrijf verwijderen?</AlertDialogTitle>
+              <AlertDialogTitle>{t('dialogs.deleteConfirmTitle', { item: t('companies.title').slice(0, -1) })}</AlertDialogTitle>
               <AlertDialogDescription>
-                Weet je zeker dat je "{company.name}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+                {t('dialogs.deleteConfirmMessage', { name: company.name })}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -362,9 +362,9 @@ export function CompanyCard({ company }: CompanyCardProps) {
     <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Bedrijf verwijderen?</AlertDialogTitle>
+          <AlertDialogTitle>{t('dialogs.deleteConfirmTitle', { item: t('companies.title').slice(0, -1) })}</AlertDialogTitle>
           <AlertDialogDescription>
-            Weet je zeker dat je "{company.name}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+            {t('dialogs.deleteConfirmMessage', { name: company.name })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

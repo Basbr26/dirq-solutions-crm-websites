@@ -98,7 +98,7 @@ export function NotificationPreferences() {
       }
     } catch (error: any) {
       toast({
-        title: 'Fout bij opslaan',
+        title: t('errors.errorSaving'),
         description: error.message,
         variant: 'destructive',
       });
@@ -215,7 +215,7 @@ export function NotificationPreferences() {
         <CardHeader>
           <CardTitle>Notificatie Types</CardTitle>
           <CardDescription>
-            Selecteer welke type notificaties je wilt ontvangen
+            {t('dialogs.selectNotifications')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

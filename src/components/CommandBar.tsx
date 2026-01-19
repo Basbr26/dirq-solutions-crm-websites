@@ -9,6 +9,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -124,6 +125,7 @@ export function CommandBar({
   webhookUrl,
   onCommandProcessed 
 }: CommandBarProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -213,7 +215,7 @@ export function CommandBar({
       setOpen(false);
     },
     onError: (error) => {
-      toast.error('Fout bij verzenden', {
+      toast.error(t('errors.errorSending'), {
         description: error instanceof Error ? error.message : 'Onbekende fout',
       });
     },
@@ -419,7 +421,7 @@ function CommandBarDialog({
               </Button>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">Geen resultaten gevonden.</p>
+            <p className="text-sm text-muted-foreground">{t('dialogs.noResultsFound')}</p>
           )}
         </CommandEmpty>
         

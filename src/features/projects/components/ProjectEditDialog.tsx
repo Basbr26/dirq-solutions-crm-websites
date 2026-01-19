@@ -47,7 +47,7 @@ export function ProjectEditDialog({ project, open, onOpenChange }: ProjectEditDi
           onOpenChange(false);
         },
         onError: (error: Error) => {
-          toast.error('Fout bij bijwerken: ' + error.message);
+          toast.error(t('errors.errorUpdating', { message: error.message }));
         },
       }
     );

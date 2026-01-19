@@ -79,7 +79,7 @@ export const DocumentUpload = ({
 
   const uploadMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedFile) throw new Error('Geen bestand geselecteerd');
+      if (!selectedFile) throw new Error(t('forms.noFileSelected'));
       if (!user) throw new Error('Niet ingelogd');
 
       // Validate file type
@@ -195,7 +195,7 @@ export const DocumentUpload = ({
 
   const handleUpload = () => {
     if (!selectedFile) {
-      toast.error('Selecteer eerst een bestand');
+      toast.error(t('forms.selectFileFirst'));
       return;
     }
     uploadMutation.mutate();
@@ -288,7 +288,7 @@ export const DocumentUpload = ({
               disabled={uploadMutation.isPending}
             >
               <SelectTrigger id="category">
-                <SelectValue placeholder="Selecteer categorie" />
+                <SelectValue placeholder={t('forms.selectCategory')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="contract">Contract</SelectItem>

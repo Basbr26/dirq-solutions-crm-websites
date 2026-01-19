@@ -86,6 +86,7 @@ const templates = [
 ];
 
 export default function DocumentTemplatesPage() {
+  const { t } = useTranslation();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   return (
@@ -200,7 +201,7 @@ export default function DocumentTemplatesPage() {
             <li className="flex items-start">
               <span className="font-bold mr-3 text-primary">1.</span>
               <div>
-                <strong>Kies een template</strong> - Selecteer het type document dat je wilt
+                {t('dialogs.chooseTemplate')}
                 genereren (contract, factuur, etc.)
               </div>
             </li>

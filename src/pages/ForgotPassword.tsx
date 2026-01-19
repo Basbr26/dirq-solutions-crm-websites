@@ -33,7 +33,7 @@ export default function ForgotPassword() {
       if (error) {
         toast({
           variant: 'destructive',
-          title: 'Fout bij versturen',
+          title: t('errors.errorSending'),
           description: error.message,
         });
       } else {

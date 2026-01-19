@@ -106,7 +106,7 @@ export default function PipelinePage() {
       toast.success('Project fase bijgewerkt');
     } catch (error) {
       console.error('Failed to update stage:', error);
-      toast.error('Fout bij bijwerken project fase');
+      toast.error(t('errors.errorUpdatingPhase'));
     } finally {
       setDraggedProject(null);
     }
@@ -146,7 +146,7 @@ export default function PipelinePage() {
       toast.success(`Verplaatst naar ${projectStageConfig[newStage].label}`);
     } catch (error) {
       console.error('Failed to move project:', error);
-      toast.error('Fout bij verplaatsen project');
+      toast.error(t('errors.errorMovingProject'));
     }
   }, [queryClient]);
 

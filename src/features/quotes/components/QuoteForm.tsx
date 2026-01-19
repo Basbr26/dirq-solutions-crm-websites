@@ -93,6 +93,7 @@ export function QuoteForm({
   defaultCompanyId,
   defaultContactId,
 }: QuoteFormProps) {
+  const { t } = useTranslation();
   const { companies: companiesData } = useCompanies();
   const queryClient = useQueryClient();
   const [createContactDialogOpen, setCreateContactDialogOpen] = useState(false);
@@ -152,7 +153,7 @@ export function QuoteForm({
       form.setValue('contact_id', newContact.id);
     },
     onError: (error: any) => {
-      toast.error(`Fout bij aanmaken contact: ${error.message}`);
+      toast.error(t('errors.errorCreatingContact', { message: error.message }));
     },
   });
 
@@ -166,7 +167,7 @@ export function QuoteForm({
   // Apply Finance template
   const applyFinanceTemplate = async (templateType: 'starter' | 'growth') => {
     if (!selectedCompanyId) {
-      toast.error('Selecteer eerst een bedrijf');
+      toast.error(t('forms.selectCompanyFirst'));
       return;
     }
 
@@ -266,7 +267,7 @@ export function QuoteForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-4xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{quote ? 'Offerte bewerken' : 'Nieuwe offerte'}</DialogTitle>
+          <DialogTitle>{quote ? t('dialogs.editTitle', { item: t('quotes.quote') }) : t('dialogs.newTitle', { item: t('quotes.quote') })}</DialogTitle>
           <DialogDescription>
             Vul de gegevens in voor de offerte
           </DialogDescription>
@@ -323,7 +324,7 @@ export function QuoteForm({
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer bedrijf" />
+                            <SelectValue placeholder={t('forms.selectCompany')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -365,7 +366,7 @@ export function QuoteForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer contactpersoon" />
+                            <SelectValue placeholder={t('forms.selectContact')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -662,11 +663,11 @@ export function QuoteForm({
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                Annuleren
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {quote ? 'Opslaan' : 'Aanmaken'}
+                {quote ? t('common.save') : t('common.create')}
               </Button>
             </DialogFooter>
           </form>
@@ -680,7 +681,7 @@ export function QuoteForm({
         <DialogHeader>
           <DialogTitle>Nieuw contactpersoon toevoegen</DialogTitle>
           <DialogDescription>
-            Voeg een nieuwe contactpersoon toe voor de geselecteerde organisatie
+            {t('dialogs.addNewContactForCompany')}
           </DialogDescription>
         </DialogHeader>
         <ContactForm

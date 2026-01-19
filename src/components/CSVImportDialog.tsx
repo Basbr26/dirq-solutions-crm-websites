@@ -119,7 +119,7 @@ export function CSVImportDialog({
         setParseError(error.message);
       },
     });
-  }, [requiredFields, optionalFields]);
+  }, [requiredFields, optionalFields, t]);
 
   const handleFieldMappingChange = (targetField: string, sourceColumn: string) => {
     setFieldMapping((prev) => ({
@@ -283,7 +283,7 @@ export function CSVImportDialog({
                           onValueChange={(value) => handleFieldMappingChange(field, value)}
                         >
                           <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Selecteer kolom..." />
+                            <SelectValue placeholder={t('forms.selectColumn')} />
                           </SelectTrigger>
                           <SelectContent>
                             {parsedData.headers.map((header) => (
@@ -318,7 +318,7 @@ export function CSVImportDialog({
                             onValueChange={(value) => handleFieldMappingChange(field, value)}
                           >
                             <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Selecteer kolom (optioneel)..." />
+                              <SelectValue placeholder={t('forms.selectColumnOptional')} />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="">Niet koppelen</SelectItem>

@@ -427,7 +427,7 @@ export const DocumentsList = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Document verwijderen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je dit document wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+              {t('dialogs.deleteConfirmMessageGeneric')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

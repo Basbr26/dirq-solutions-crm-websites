@@ -420,7 +420,7 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
           <AlertDialogHeader>
             <AlertDialogTitle>Interactie verwijderen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je "{interaction.subject}" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+              {t('dialogs.deleteConfirmMessage', { name: interaction.subject })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -294,9 +294,9 @@ export function InteractionTimeline({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Interactie verwijderen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('dialogs.deleteConfirmTitle', { item: t('interactions.interaction') })}</AlertDialogTitle>
             <AlertDialogDescription>
-              Deze actie kan niet ongedaan worden gemaakt. De interactie wordt permanent verwijderd.
+              {t('dialogs.deleteConfirmMessageGeneric')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

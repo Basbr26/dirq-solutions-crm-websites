@@ -93,7 +93,7 @@ export default function InteractionsPage() {
       actions={
         <Button size="lg" onClick={() => setAddDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nieuwe Activiteit
+          {t('interactions.newActivity')}
         </Button>
       }
     >
@@ -169,7 +169,7 @@ export default function InteractionsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Zoek activiteiten..."
+            placeholder={t('dialogs.searchActivities')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -187,7 +187,7 @@ export default function InteractionsPage() {
               className="gap-2"
             >
               <CheckSquare className="h-4 w-4" />
-              {isBulkMode ? 'Selectie annuleren' : 'Bulk acties'}
+              {isBulkMode ? t('common.cancelSelection') : t('common.bulkActions')}
             </Button>
           )}
           <Button
@@ -196,7 +196,7 @@ export default function InteractionsPage() {
             className="gap-2"
           >
             <Filter className="h-4 w-4" />
-            Filters
+            {t('common.filters')}
             {(typeFilter || taskStatusFilter) && (
               <Badge variant="secondary" className="ml-1">
                 {[typeFilter, taskStatusFilter].filter(Boolean).length}
@@ -272,8 +272,8 @@ export default function InteractionsPage() {
                 />
                 <span className="text-sm font-medium">
                   {selectedIds.length > 0 
-                    ? `${selectedIds.length} geselecteerd`
-                    : 'Selecteer alles'}
+                    ? t('forms.itemsSelected', { count: selectedIds.length })
+                    : t('forms.selectAll')}
                 </span>
               </div>
               {showBulkActions && (
@@ -335,8 +335,8 @@ export default function InteractionsPage() {
               <h3 className="font-semibold text-lg">Geen activiteiten gevonden</h3>
               <p className="text-sm text-muted-foreground">
                 {search || typeFilter || taskStatusFilter
-                  ? 'Probeer andere filters of zoekterm'
-                  : 'Begin met het toevoegen van je eerste activiteit'}
+                  ? t('dialogs.tryDifferentFilters')
+                  : t('interactions.addFirstActivity')}
               </p>
             </div>
           </CardContent>

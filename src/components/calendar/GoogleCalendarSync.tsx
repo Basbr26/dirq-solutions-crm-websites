@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -26,6 +27,7 @@ import { cn } from '@/lib/utils';
 
 export function GoogleCalendarSync() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -274,7 +276,7 @@ export function GoogleCalendarSync() {
       }
     } catch (error) {
       console.error('Sign in error:', error);
-      toast.error('Fout bij inloggen');
+      toast.error(t('errors.errorSigning'));
     } finally {
       setIsLoading(false);
     }
@@ -486,7 +488,7 @@ export function GoogleCalendarSync() {
       }
     } catch (error) {
       console.error('Sync error:', error);
-      toast.error('Fout bij synchroniseren');
+      toast.error(t('errors.errorSending'));
     } finally {
       setIsSyncing(false);
     }

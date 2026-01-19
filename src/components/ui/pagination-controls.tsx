@@ -43,7 +43,7 @@ export function PaginationControls({
             <span className="font-medium">{totalCount}</span> resultaten
           </>
         ) : (
-          'Geen resultaten'
+          t('dialogs.noResultsFound')
         )}
       </p>
 

@@ -238,7 +238,7 @@ export default function PublicSignPage() {
     },
     onError: (error) => {
       setIsSigning(false);
-      toast.error(error instanceof Error ? error.message : 'Fout bij ondertekenen');
+      toast.error(error instanceof Error ? error.message : t('errors.errorSigning'));
     },
   });
   
@@ -265,7 +265,7 @@ export default function PublicSignPage() {
       toast.info('U heeft het document geweigerd te ondertekenen.');
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Fout bij weigeren');
+      toast.error(error instanceof Error ? error.message : t('errors.errorRejecting'));
     },
   });
   

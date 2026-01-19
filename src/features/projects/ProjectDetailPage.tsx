@@ -562,7 +562,7 @@ export default function ProjectDetailPage() {
                   <>
                     <Separator />
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Geselecteerde Add-ons</p>
+                      <p className="text-sm text-muted-foreground mb-2">{t('forms.selectedAddons')}</p>
                       <div className="flex flex-wrap gap-2">
                         {project.selected_addons.map((addon, idx) => {
                           const addonLabels: Record<string, string> = {
@@ -882,18 +882,18 @@ export default function ProjectDetailPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Project verwijderen?</AlertDialogTitle>
+            <AlertDialogTitle>{t('dialogs.deleteConfirmTitle', { item: t('projects.project') })}</AlertDialogTitle>
             <AlertDialogDescription>
-              Weet je zeker dat je dit project wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.
+              {t('dialogs.deleteConfirmMessageGeneric')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Verwijderen
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

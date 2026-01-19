@@ -532,12 +532,12 @@ function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose:
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
-      toast.success('Event verwijderd');
+      toast.success(t('dialogs.eventDeleted'));
       setShowDeleteDialog(false);
       onClose();
     },
     onError: (error: any) => {
-      toast.error(`Fout bij verwijderen: ${error.message}`);
+      toast.error(t('dialogs.deleteError', { error: error.message }));
     },
   });
 
@@ -629,7 +629,7 @@ function EventDetailContent({ event, onClose }: { event: CalendarEvent; onClose:
           <AlertDialogHeader>
             <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
             <AlertDialogDescription>
-              Dit calendar event wordt permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.
+              {t('dialogs.deleteCalendarEventWarning')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

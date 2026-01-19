@@ -91,6 +91,7 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onSubmit, isLoading }: ProjectFormProps) {
+  const { t } = useTranslation();
   const { companies: companiesData } = useCompanies();
   const { toast } = useToast();
   
@@ -201,7 +202,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{project ? 'Project bewerken' : 'Nieuw project'}</DialogTitle>
+          <DialogTitle>{project ? t('dialogs.editTitle', { item: t('projects.project') }) : t('dialogs.newTitle', { item: t('projects.project') })}</DialogTitle>
           <DialogDescription>
             Vul de gegevens in voor het project
           </DialogDescription>
@@ -250,7 +251,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer bedrijf" />
+                            <SelectValue placeholder={t('forms.selectCompany')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -279,7 +280,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer contactpersoon" />
+                            <SelectValue placeholder={t('forms.selectContact')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -338,7 +339,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer type" />
+                            <SelectValue placeholder={t('forms.selectType')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -414,7 +415,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Selecteer pakket" />
+                            <SelectValue placeholder={t('forms.selectPackage')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -464,7 +465,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                 name="selected_addons"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Geselecteerde Add-ons</FormLabel>
+                    <FormLabel>{t('forms.selectedAddons')}</FormLabel>
                     <div className="space-y-2">
                       {Object.entries(addonLabels).map(([value, label]) => (
                         <div key={value} className="flex items-center space-x-2">
@@ -525,11 +526,11 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                Annuleren
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {project ? 'Opslaan' : 'Aanmaken'}
+                {project ? t('common.save') : t('common.create')}
               </Button>
             </DialogFooter>
           </form>

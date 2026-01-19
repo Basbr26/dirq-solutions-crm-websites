@@ -57,7 +57,7 @@ export default function CompanySettingsPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Fout bij opslaan",
+        title: t('errors.errorSaving'),
         description: error.message,
         variant: "destructive",
       });
