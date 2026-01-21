@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuotes, useQuoteStats } from './hooks/useQuotes';
 import { useCreateQuote } from './hooks/useQuoteMutations';
+import { useQuoteStatusConfig } from './hooks/useQuoteStatusConfig';
 import { QuoteForm } from './components/QuoteForm';
 import { useDebounce } from '@/hooks/useDebounce';
 import { toast } from 'sonner';
@@ -23,15 +24,6 @@ import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
 
-const getStatusConfig = (t: any): Record<QuoteStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: React.ElementType }> => ({
-  draft: { label: t('quotes.statuses.draft'), variant: 'secondary', icon: FileText },
-  sent: { label: t('quotes.statuses.sent'), variant: 'default', icon: Send },
-  viewed: { label: t('quotes.statuses.viewed'), variant: 'outline', icon: Clock },
-  accepted: { label: t('quotes.statuses.accepted'), variant: 'default', icon: CheckCircle2 },
-  rejected: { label: t('quotes.statuses.rejected'), variant: 'destructive', icon: XCircle },
-  expired: { label: t('quotes.statuses.expired'), variant: 'outline', icon: Clock },
-});
-
 export default function QuotesPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -39,7 +31,7 @@ export default function QuotesPage() {
   const [statusFilter, setStatusFilter] = useState<QuoteStatus | 'all'>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
-  const statusConfig = useMemo(() => getStatusConfig(t), [t]);
+  const statusConfig = useQuoteStatusConfig();
   
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);

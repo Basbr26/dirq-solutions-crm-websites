@@ -9,6 +9,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useUpdateQuote, useDeleteQuote } from './hooks/useQuoteMutations';
+import { useQuoteStatusConfig } from './hooks/useQuoteStatusConfig';
 import {
   ArrowLeft,
   Edit,
@@ -68,21 +69,6 @@ import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
 
-const getStatusConfig = (t: any): Record<QuoteStatus | 'signed', { 
-  label: string; 
-  variant: 'default' | 'secondary' | 'destructive' | 'outline'; 
-  icon: React.ElementType;
-  color: string;
-}> => ({
-  draft: { label: t('quotes.statuses.draft'), variant: 'secondary', icon: FileText, color: 'bg-gray-500/10 text-gray-500' },
-  sent: { label: t('quotes.statuses.sent'), variant: 'default', icon: Send, color: 'bg-blue-500/10 text-blue-500' },
-  viewed: { label: t('quotes.statuses.viewed'), variant: 'outline', icon: Eye, color: 'bg-purple-500/10 text-purple-500' },
-  accepted: { label: t('quotes.statuses.accepted'), variant: 'default', icon: CheckCircle2, color: 'bg-green-500/10 text-green-500' },
-  rejected: { label: t('quotes.statuses.rejected'), variant: 'destructive', icon: XCircle, color: 'bg-red-500/10 text-red-500' },
-  expired: { label: t('quotes.statuses.expired'), variant: 'outline', icon: Clock, color: 'bg-orange-500/10 text-orange-500' },
-  signed: { label: t('quotes.statuses.signed'), variant: 'default', icon: CheckCircle2, color: 'bg-emerald-500/10 text-emerald-600' },
-});
-
 export default function QuoteDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
@@ -98,7 +84,7 @@ export default function QuoteDetailPage() {
   const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
-  const statusConfig = useMemo(() => getStatusConfig(t), [t]);
+  const statusConfig = useQuoteStatusConfig();
 
   const updateQuote = useUpdateQuote(id!);
   const deleteQuote = useDeleteQuote();
