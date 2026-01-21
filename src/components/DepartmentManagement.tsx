@@ -68,7 +68,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
   const filteredDepartments = departments.filter(dept => {
     const nameMatch = dept.name.toLowerCase().includes(searchQuery.toLowerCase());
     const managerMatch = dept.manager
-      ? `${dept.manager.voornaam} ${dept.manager.achternaam}`.toLowerCase().includes(searchQuery.toLowerCase())
+      ? `${dept.manager.first_name} ${dept.manager.last_name}`.toLowerCase().includes(searchQuery.toLowerCase())
       : false;
     return nameMatch || managerMatch;
   });
@@ -144,7 +144,7 @@ export function DepartmentManagement({ onRefresh }: DepartmentManagementProps) {
                       <TableCell>
                         {department.manager ? (
                           <Badge variant="secondary" className="font-normal">
-                            {department.manager.voornaam} {department.manager.achternaam}
+                            {department.manager.first_name} {department.manager.last_name}
                           </Badge>
                         ) : (
                           <span className="text-sm text-muted-foreground">Geen manager</span>

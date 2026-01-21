@@ -15,13 +15,16 @@ export interface Profile {
   department_id?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  // Name fields
+  first_name?: string;
+  last_name?: string;
   // Google Calendar sync fields
   google_calendar_sync?: boolean;
   last_calendar_sync?: string | null;
   google_access_token?: string | null;
   google_refresh_token?: string | null;
   google_token_expires_at?: string | null;
-  // Legacy fields (optional)
+  // Legacy fields (optional - for backwards compatibility)
   voornaam?: string;
   achternaam?: string;
   telefoon?: string | null;

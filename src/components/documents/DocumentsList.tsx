@@ -66,8 +66,8 @@ interface Document {
   sign_link_expires_at?: string | null;
   signer_email?: string | null;
   profiles?: {
-    voornaam: string;
-    achternaam: string;
+    first_name: string;
+    last_name: string;
   } | null;
 }
 
@@ -125,7 +125,7 @@ export const DocumentsList = ({
         .from('documents')
         .select(`
           *,
-          profiles:profiles!documents_uploaded_by_fkey(voornaam, achternaam)
+          profiles:profiles!documents_uploaded_by_fkey(first_name, last_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -380,7 +380,7 @@ export const DocumentsList = ({
                       </span>
                       {doc.profiles && (
                         <span>
-                          door {doc.profiles.voornaam} {doc.profiles.achternaam}
+                          door {doc.profiles.first_name} {doc.profiles.last_name}
                         </span>
                       )}
                     </div>

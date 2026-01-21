@@ -2,15 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileUpdateData {
-  voornaam: string;
-  achternaam: string;
+  first_name: string;
+  last_name: string;
   phone: string;
 }
 
 export interface Profile {
   id: string;
-  voornaam: string;
-  achternaam: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   avatar_url: string | null;
@@ -43,9 +43,9 @@ export function useUpdateProfile() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          voornaam: data.voornaam,
-          achternaam: data.achternaam,
-          full_name: `${data.voornaam} ${data.achternaam}`,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          full_name: `${data.first_name} ${data.last_name}`,
           phone: data.phone,
           updated_at: new Date().toISOString(),
         })

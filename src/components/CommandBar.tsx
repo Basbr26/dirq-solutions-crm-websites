@@ -173,7 +173,7 @@ export function CommandBar({
           id: user.id,
           email: user.email || '',
           role: '',
-          name: profile ? `${profile.voornaam} ${profile.achternaam}` : '',
+          name: profile ? `${profile.first_name} ${profile.last_name}` : '',
         } : null,
         entity: { type: null, id: null, data: null },
         activeTab: null,

@@ -198,7 +198,7 @@ export class TeamAnalyticsService {
 
       return {
         memberId,
-        memberName: profile ? `${profile.voornaam} ${profile.achternaam}` : 'Unknown',
+        memberName: profile ? `${profile.first_name} ${profile.last_name}` : 'Unknown',
         memberAvatar: null, // Avatar URL not available in current schema
         department: profile?.functie || 'Unknown',
         approvalRate,

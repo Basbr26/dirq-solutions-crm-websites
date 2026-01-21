@@ -25,8 +25,8 @@ const signupSchema = z.object({
     .regex(/[A-Z]/, 'Wachtwoord moet minimaal 1 hoofdletter bevatten')
     .regex(/[a-z]/, 'Wachtwoord moet minimaal 1 kleine letter bevatten')
     .regex(/[0-9]/, 'Wachtwoord moet minimaal 1 cijfer bevatten'),
-  voornaam: z.string().min(2, 'Voornaam moet minimaal 2 tekens zijn'),
-  achternaam: z.string().min(2, 'Achternaam moet minimaal 2 tekens zijn'),
+  first_name: z.string().min(2, 'Voornaam moet minimaal 2 tekens zijn'),
+  last_name: z.string().min(2, 'Achternaam moet minimaal 2 tekens zijn'),
 });
 
 

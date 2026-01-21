@@ -349,7 +349,7 @@ export function useAgentContext(entityData?: {
         id: user.id,
         email: user.email || '',
         role: role || '',
-        name: profile ? `${profile.voornaam} ${profile.achternaam}` : '',
+        name: profile ? `${profile.first_name} ${profile.last_name}` : '',
       } : null,
       entity: entityData || { type: null, id: null, data: null },
       activeTab: query.tab || null,

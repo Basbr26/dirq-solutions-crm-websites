@@ -18,8 +18,8 @@ export function ProfileSettings() {
   const deleteAvatar = useDeleteAvatar();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
-    voornaam: '',
-    achternaam: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     avatar_url: '',
@@ -28,8 +28,8 @@ export function ProfileSettings() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        voornaam: profile.voornaam || '',
-        achternaam: profile.achternaam || '',
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
         email: profile.email || '',
         phone: profile.phone || '',
         avatar_url: profile.avatar_url || '',
@@ -45,8 +45,8 @@ export function ProfileSettings() {
       { 
         userId: user.id, 
         data: {
-          voornaam: formData.voornaam,
-          achternaam: formData.achternaam,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
           phone: formData.phone,
         }
       },
@@ -66,8 +66,8 @@ export function ProfileSettings() {
   };
 
   const getInitials = () => {
-    const first = formData.voornaam?.charAt(0) || '';
-    const last = formData.achternaam?.charAt(0) || '';
+    const first = formData.first_name?.charAt(0) || '';
+    const last = formData.last_name?.charAt(0) || '';
     return `${first}${last}`.toUpperCase() || '?';
   };
 
@@ -195,20 +195,20 @@ export function ProfileSettings() {
           {/* Name Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="voornaam">{t('common.firstName')}</Label>
+              <Label htmlFor="first_name">{t('common.firstName')}</Label>
               <Input
-                id="voornaam"
-                value={formData.voornaam}
-                onChange={(e) => setFormData({ ...formData, voornaam: e.target.value })}
+                id="first_name"
+                value={formData.first_name}
+                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="achternaam">{t('common.lastName')}</Label>
+              <Label htmlFor="last_name">{t('common.lastName')}</Label>
               <Input
-                id="achternaam"
-                value={formData.achternaam}
-                onChange={(e) => setFormData({ ...formData, achternaam: e.target.value })}
+                id="last_name"
+                value={formData.last_name}
+                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                 required
               />
             </div>
