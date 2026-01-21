@@ -123,7 +123,7 @@ export function InteractionTimeline({
       <Card className={className}>
         <CardContent className="pt-6 text-center text-muted-foreground">
           <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-          <p>Nog geen activiteiten geregistreerd</p>
+          <p>{t('timeline.noActivities')}</p>
         </CardContent>
       </Card>
     );
@@ -163,12 +163,12 @@ export function InteractionTimeline({
                             {interaction.direction === 'inbound' ? (
                               <>
                                 <ArrowDownCircle className="h-3 w-3 text-blue-500" />
-                                Inkomend
+                                {t('timeline.inbound')}
                               </>
                             ) : (
                               <>
                                 <ArrowUpCircle className="h-3 w-3 text-green-500" />
-                                Uitgaand
+                                {t('timeline.outbound')}
                               </>
                             )}
                           </Badge>

@@ -885,6 +885,43 @@
     "eventDeleted": "Event verwijderd",
     "eventDeleteConfirm": "Dit calendar event wordt permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
     "addToCalendar": "Toevoegen aan agenda"
+  },
+  "timeline": {
+    "title": "Tijdlijn",
+    "created": "Aangemaakt",
+    "sent": "Verzonden",
+    "viewed": "Bekeken",
+    "signed": "Getekend",
+    "updated": "Bijgewerkt",
+    "noActivities": "Nog geen activiteiten geregistreerd",
+    "inbound": "Inkomend",
+    "outbound": "Uitgaand"
+  },
+  "activity": {
+    "types": {
+      "case_created": "Case aangemaakt",
+      "case_updated": "Case bijgewerkt",
+      "case_closed": "Case gesloten",
+      "case_reopened": "Case heropend",
+      "task_created": "Taak aangemaakt",
+      "task_completed": "Taak afgerond",
+      "task_updated": "Taak bijgewerkt",
+      "document_uploaded": "Document geüpload",
+      "document_signed": "Document ondertekend",
+      "document_deleted": "Document verwijderd",
+      "conversation_added": "Gesprek toegevoegd",
+      "status_changed": "Status gewijzigd",
+      "recovery_reported": "Herstel gemeld",
+      "user_login": "Ingelogd",
+      "user_logout": "Uitgelogd"
+    },
+    "entities": {
+      "sick_leave_case": "Verzuimdossier",
+      "task": "Taak",
+      "document": "Document",
+      "conversation_note": "Gespreksnotitie",
+      "user": "Gebruiker"
+    }
   }
 }
 

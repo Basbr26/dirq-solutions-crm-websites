@@ -885,5 +885,42 @@
     "eventDeleted": "Event deleted",
     "eventDeleteConfirm": "This calendar event will be permanently deleted. This action cannot be undone.",
     "addToCalendar": "Add to calendar"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "created": "Created",
+    "sent": "Sent",
+    "viewed": "Viewed",
+    "signed": "Signed",
+    "updated": "Updated",
+    "noActivities": "No activities registered yet",
+    "inbound": "Inbound",
+    "outbound": "Outbound"
+  },
+  "activity": {
+    "types": {
+      "case_created": "Case created",
+      "case_updated": "Case updated",
+      "case_closed": "Case closed",
+      "case_reopened": "Case reopened",
+      "task_created": "Task created",
+      "task_completed": "Task completed",
+      "task_updated": "Task updated",
+      "document_uploaded": "Document uploaded",
+      "document_signed": "Document signed",
+      "document_deleted": "Document deleted",
+      "conversation_added": "Conversation added",
+      "status_changed": "Status changed",
+      "recovery_reported": "Recovery reported",
+      "user_login": "Logged in",
+      "user_logout": "Logged out"
+    },
+    "entities": {
+      "sick_leave_case": "Sick leave case",
+      "task": "Task",
+      "document": "Document",
+      "conversation_note": "Conversation note",
+      "user": "User"
+    }
   }
 }

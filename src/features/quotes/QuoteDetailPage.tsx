@@ -747,14 +747,14 @@ export default function QuoteDetailPage() {
           {/* Timeline */}
           <Card>
             <CardHeader>
-              <CardTitle>Tijdlijn</CardTitle>
+              <CardTitle>{t('timeline.title')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex gap-3">
                   <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Aangemaakt</p>
+                    <p className="text-sm font-medium">{t('timeline.created')}</p>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(quote.created_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                     </p>
@@ -765,7 +765,7 @@ export default function QuoteDetailPage() {
                   <div className="flex gap-3">
                     <Send className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">Verzonden</p>
+                      <p className="text-sm font-medium">{t('timeline.sent')}</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(quote.sent_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                       </p>
@@ -777,7 +777,7 @@ export default function QuoteDetailPage() {
                   <div className="flex gap-3">
                     <Eye className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium">Bekeken</p>
+                      <p className="text-sm font-medium">{t('timeline.viewed')}</p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(quote.viewed_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                       </p>
