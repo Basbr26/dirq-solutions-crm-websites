@@ -426,7 +426,7 @@ export default function ContactDetailPage() {
               {contact.owner && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{t('projects.owner')}:</span>
-                  <span>{contact.owner.voornaam} {contact.owner.achternaam}</span>
+                  <span>{contact.owner.first_name} {contact.owner.last_name}</span>
                 </div>
               )}
             </CardContent>

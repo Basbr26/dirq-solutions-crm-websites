@@ -452,7 +452,7 @@ export default function CompanyDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Eigenaar</p>
                     <p className="text-sm font-medium">
-                      {company.owner.voornaam} {company.owner.achternaam}
+                      {company.owner.first_name} {company.owner.last_name}
                     </p>
                   </div>
                 )}

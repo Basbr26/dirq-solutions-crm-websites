@@ -347,8 +347,8 @@ export interface Interaction {
 export interface Profile {
   id: string;
   email: string;
-  voornaam: string;
-  achternaam: string;
+  first_name: string;
+  last_name: string;
   full_name?: string; // Computed or stored field
   role: AppRole;
   telefoon?: string | null;

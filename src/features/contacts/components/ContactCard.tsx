@@ -218,7 +218,7 @@ export function ContactCard({ contact }: ContactCardProps) {
             <div className="flex items-center text-xs text-muted-foreground">
               {contact.owner && (
                 <span>
-                  Eigenaar: {contact.owner.voornaam} {contact.owner.achternaam}
+                  Eigenaar: {contact.owner.first_name} {contact.owner.last_name}
                 </span>
               )}
             </div>

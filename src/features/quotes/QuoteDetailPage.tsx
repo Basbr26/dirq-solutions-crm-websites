@@ -117,7 +117,7 @@ export default function QuoteDetailPage() {
           company:companies!quotes_company_id_fkey(id, name, email, phone),
           contact:contacts!quotes_contact_id_fkey(id, first_name, last_name, email, phone, position),
           project:projects!quotes_project_id_fkey(id, title, stage),
-          owner:profiles!quotes_owner_id_fkey(id, voornaam, achternaam, email)
+          owner:profiles!quotes_owner_id_fkey(id, first_name, last_name, email)
         `)
         .eq('id', id!)
         .single();
@@ -264,7 +264,7 @@ export default function QuoteDetailPage() {
             signToken: token,
             companyName: quote?.company?.name,
             expiresAt: expiresAt.toISOString(),
-            senderName: quote?.owner?.voornaam || 'Dirq Solutions',
+            senderName: quote?.owner?.first_name ? `${quote.owner.first_name} ${quote.owner.last_name}` : 'Dirq Solutions',
           },
         });
 
@@ -839,7 +839,7 @@ export default function QuoteDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {quote.owner.voornaam} {quote.owner.achternaam}
+                      {quote.owner.first_name} {quote.owner.last_name}
                     </p>
                     <p className="text-sm text-muted-foreground">{t('common.createdBy')}</p>
                   </div>
