@@ -128,7 +128,7 @@ export function NotificationItem({
               <Badge variant="secondary" className="text-xs">
                 {getTypeLabel(notification.type)}
               </Badge>
-            )}}
+            )}
 
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Clock className="h-3 w-3" />
