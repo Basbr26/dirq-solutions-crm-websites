@@ -32,8 +32,8 @@ interface ActivityLogEntry {
   metadata: Record<string, unknown>;
   created_at: string;
   user?: {
-    first_name: string;
-    last_name: string;
+    voornaam: string;
+    achternaam: string;
   };
 }
 
@@ -89,8 +89,8 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
         .select(`
           *,
           user:profiles!activity_logs_user_id_fkey (
-            first_name,
-            last_name
+            voornaam,
+            achternaam
           )
         `)
         .order('created_at', { ascending: false })
