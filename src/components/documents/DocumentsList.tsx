@@ -66,8 +66,8 @@ interface Document {
   sign_link_expires_at?: string | null;
   signer_email?: string | null;
   profiles?: {
-    first_name: string;
-    last_name: string;
+    voornaam: string;
+    achternaam: string;
   } | null;
 }
 

@@ -195,7 +195,7 @@ export function InteractionTimeline({
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
-                          {interaction.user?.first_name} {interaction.user?.last_name}
+                          {interaction.user?.voornaam} {interaction.user?.achternaam}
                         </span>
                         <span>•</span>
                         <span>

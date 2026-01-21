@@ -66,8 +66,8 @@ export interface Project {
   };
   profiles?: {
     id: string;
-    first_name: string;
-    last_name: string;
+    voornaam: string;
+    achternaam: string;
     email?: string;
   };
 }

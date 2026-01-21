@@ -11,8 +11,8 @@ export interface Department {
   updated_at: string | null;
   manager?: {
     id: string;
-    first_name: string;
-    last_name: string;
+    voornaam: string;
+    achternaam: string;
     avatar_url?: string | null;
   } | null;
   employee_count?: number;
