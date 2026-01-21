@@ -13,6 +13,10 @@ export default function CostAnalyticsDashboard() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
+  // Loading and error states
+  const costLoading = false;
+  const costError = null;
+
   // Placeholder: This would fetch project profitability data
   // For now, showing basic structure with dummy data
   const projects = [
@@ -45,6 +49,27 @@ export default function CostAnalyticsDashboard() {
     marginPercent: ((p.margin / p.revenue) * 100).toFixed(1),
   }));
 
+  // Cost breakdown for pie chart
+  const costBreakdown = [
+    { name: 'Directe kosten', value: 12000, color: '#3b82f6' },
+    { name: 'Indirecte kosten', value: 8000, color: '#8b5cf6' },
+    { name: 'Overhead', value: 5000, color: '#f59e0b' },
+  ];
+
+  // Department costs
+  const departmentCosts = [
+    { name: 'Development', totalCost: 45000, avgCostPerEmployee: 7500, employees: 6 },
+    { name: 'Design', totalCost: 28000, avgCostPerEmployee: 7000, employees: 4 },
+    { name: 'Marketing', totalCost: 21000, avgCostPerEmployee: 7000, employees: 3 },
+  ];
+
+  // Top employees
+  const topEmployees = [
+    { name: 'John Doe', monthlyCost: 8500, department: 'Development' },
+    { name: 'Jane Smith', monthlyCost: 8200, department: 'Design' },
+    { name: 'Bob Johnson', monthlyCost: 7800, department: 'Development' },
+  ];
+
   const COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981", "#06b6d4", "#ec4899", "#6366f1"];
 
   if (costLoading) {
@@ -68,47 +93,7 @@ export default function CostAnalyticsDashboard() {
     );
   }
 
-  if (costError) {
-    return (
-      <AppLayout
-        title="Cost Analytics"
-        subtitle="Loonkosten analyse en forecasting"
-      >
-        <div className="p-4 md:p-6">
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive flex items-center gap-2">
-              <TrendingDown className="h-5 w-5" />
-              Kostenanalyse niet beschikbaar
-            </CardTitle>
-            <CardDescription>
-              De kostenanalyse module vereist database migraties die nog niet zijn uitgevoerd.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-muted p-4 rounded-lg">
-              <p className="text-sm font-medium mb-2">Ontbrekende database componenten:</p>
-              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                <li>Tabel: <code className="bg-background px-1 rounded">employee_cost_summary</code></li>
-                <li>View: <code className="bg-background px-1 rounded">v_employee_total_compensation</code></li>
-              </ul>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <p className="font-medium mb-1">Technische details:</p>
-              <code className="block bg-background p-2 rounded text-xs">
-                {costError instanceof Error ? costError.message : 'Unknown error'}
-              </code>
-            </div>
-            <p className="text-sm">
-              Neem contact op met de systeembeheerder om de benodigde database migraties uit te voeren.
-              Zie <code className="bg-muted px-1 rounded">supabase/migrations/20251218_company_cost_management.sql</code>
-            </p>
-          </CardContent>
-        </Card>
-        </div>
-      </AppLayout>
-    );
-  }
+  // Error state removed - costError is always null (placeholder data)
 
   return (
     <AppLayout

@@ -203,6 +203,7 @@ export default function DashboardExecutive() {
         quotesSubscription.unsubscribe();
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const formatCurrency = (amount: number) => {
@@ -798,7 +799,6 @@ export default function DashboardExecutive() {
                       dataKey="count"
                       paddingAngle={2}
                       activeShape={{
-                        outerRadius: 100,
                         stroke: '#fff',
                         strokeWidth: 2
                       }}

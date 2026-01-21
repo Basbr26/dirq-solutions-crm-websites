@@ -23,15 +23,16 @@ export default function DashboardSuperAdmin() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
-    totalDepartments: 0,
-    totalManagers: 0,
-    totalEmployees: 0,
+    totalCompanies: 0,
+    totalProjects: 0,
+    activeDeals: 0,
   });
   const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadStats = async () => {
@@ -73,6 +74,7 @@ export default function DashboardSuperAdmin() {
 
   const handleRefresh = useCallback(async () => {
     await loadStats();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -99,10 +101,7 @@ export default function DashboardSuperAdmin() {
 
           {/* Stats Cards */}
           <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-            <Card 
-              className="cursor-pointer transition-colors hover:bg-muted/50"
-              onClick={() => setActiveTab('users')}
-            >
+            <Card>
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-center gap-2 sm:gap-4">
                   <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
