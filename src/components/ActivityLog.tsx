@@ -180,7 +180,7 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
                           </p>
                           <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <Badge variant="outline" className="text-xs">
-                              {actionTypeLabels[actionType] || actionType}
+                              {t(actionTypeLabels[actionType]) || actionType}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
                               {t('activities.by')} {userName}
