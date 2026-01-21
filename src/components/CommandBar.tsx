@@ -380,6 +380,8 @@ function CommandBarDialog({
   suggestions,
   onSuggestionClick,
 }: CommandBarDialogProps) {
+  const { t } = useTranslation();
+  
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <div className="flex items-center border-b px-3">

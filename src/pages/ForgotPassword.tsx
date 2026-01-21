@@ -16,6 +16,7 @@ const emailSchema = z.object({
 });
 
 export default function ForgotPassword() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [emailSent, setEmailSent] = useState(false);

@@ -24,6 +24,7 @@ const passwordSchema = z.object({
 });
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

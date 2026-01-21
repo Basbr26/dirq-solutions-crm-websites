@@ -17,6 +17,7 @@ interface ProjectEditDialogProps {
 }
 
 export function ProjectEditDialog({ project, open, onOpenChange }: ProjectEditDialogProps) {
+  const { t } = useTranslation();
   const updateProject = useUpdateProject(project.id);
   
   const [value, setValue] = useState(project.value);
