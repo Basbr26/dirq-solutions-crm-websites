@@ -49,6 +49,8 @@ interface KPICardProps {
 }
 
 function KPICard({ title, value, trend, icon: Icon, subtitle, href }: KPICardProps) {
+  const { t } = useTranslation();
+  
   const content = (
     <Card className={`h-full ${href ? 'cursor-pointer hover:shadow-lg transition-shadow' : ''}`}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
