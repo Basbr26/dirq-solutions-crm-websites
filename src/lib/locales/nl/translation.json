@@ -244,7 +244,13 @@
     "contactCreated": "Contact aangemaakt",
     "projectCreated": "Project succesvol aangemaakt",
     "projectCreateFailed": "Fout bij aanmaken project",
-    "contactCreateFailed": "Fout bij aanmaken contact"
+    "contactCreateFailed": "Fout bij aanmaken contact",
+    "companySize": "Bedrijfsgrootte",
+    "employees": "werknemers",
+    "annualRevenue": "Jaaromzet",
+    "monthlyRecurring": "Maandelijks Terugkerend",
+    "lastContact": "Laatste contact",
+    "viewProfile": "Bekijk profiel"
   },
   "contacts": {
     "title": "Contactpersonen",

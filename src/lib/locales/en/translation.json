@@ -244,7 +244,13 @@
     "contactCreated": "Contact created",
     "projectCreated": "Project created successfully",
     "projectCreateFailed": "Error creating project",
-    "contactCreateFailed": "Error creating contact"
+    "contactCreateFailed": "Error creating contact",
+    "companySize": "Company size",
+    "employees": "employees",
+    "annualRevenue": "Annual revenue",
+    "monthlyRecurring": "Monthly Recurring",
+    "lastContact": "Last contact",
+    "viewProfile": "View profile"
   },
   "contacts": {
     "title": "Contacts",

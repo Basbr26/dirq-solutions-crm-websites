@@ -326,7 +326,7 @@ export default function CompanyDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="h-5 w-5" />
-                  Contactinformatie
+                  {t('companies.contactInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -395,13 +395,13 @@ export default function CompanyDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  Bedrijfsgegevens
+                  {t('companies.companyDetails')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {company.kvk_number && (
                   <div>
-                    <p className="text-sm text-muted-foreground">KVK Nummer</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.kvkNumber')}</p>
                     <p className="text-sm font-medium">{company.kvk_number}</p>
                   </div>
                 )}
@@ -414,19 +414,19 @@ export default function CompanyDetailPage() {
                       rel="noopener noreferrer"
                       className="text-sm font-medium hover:underline text-blue-600"
                     >
-                      Bekijk profiel →
+                      {t('companies.viewProfile')} →
                     </a>
                   </div>
                 )}
                 {company.company_size && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Bedrijfsgrootte</p>
-                    <p className="text-sm font-medium">{company.company_size} werknemers</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.companySize')}</p>
+                    <p className="text-sm font-medium">{company.company_size} {t('companies.employees')}</p>
                   </div>
                 )}
                 {company.annual_revenue && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Jaaromzet</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.annualRevenue')}</p>
                     <p className="text-sm font-medium">
                       € {company.annual_revenue.toLocaleString('nl-NL')}
                     </p>
@@ -434,7 +434,7 @@ export default function CompanyDetailPage() {
                 )}
                 {company.total_mrr && company.total_mrr > 0 && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Maandelijks Terugkerend</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.monthlyRecurring')}</p>
                     <p className="text-sm font-medium">
                       € {company.total_mrr.toLocaleString('nl-NL')} MRR
                     </p>
@@ -442,7 +442,7 @@ export default function CompanyDetailPage() {
                 )}
                 {company.source && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Bron</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.source')}</p>
                     <Badge variant="outline" className="text-xs">
                       {company.source === 'n8n_automation' ? 'n8n Automation' : company.source}
                     </Badge>
@@ -450,21 +450,21 @@ export default function CompanyDetailPage() {
                 )}
                 {company.owner && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Eigenaar</p>
+                    <p className="text-sm text-muted-foreground">{t('common.owner')}</p>
                     <p className="text-sm font-medium">
                       {company.owner?.voornaam} {company.owner?.achternaam}
                     </p>
                   </div>
                 )}
                 <div>
-                  <p className="text-sm text-muted-foreground">Aangemaakt</p>
+                  <p className="text-sm text-muted-foreground">{t('common.created')}</p>
                   <p className="text-sm font-medium">
                     {format(new Date(company.created_at), 'dd MMMM yyyy', { locale: nl })}
                   </p>
                 </div>
                 {company.last_contact_date && (
                   <div>
-                    <p className="text-sm text-muted-foreground">Laatste contact</p>
+                    <p className="text-sm text-muted-foreground">{t('companies.lastContact')}</p>
                     <p className="text-sm font-medium">
                       {format(new Date(company.last_contact_date), 'dd MMMM yyyy', { locale: nl })}
                     </p>
@@ -480,7 +480,7 @@ export default function CompanyDetailPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  Notities
+                  {t('companies.notes')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
