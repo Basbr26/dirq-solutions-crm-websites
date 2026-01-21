@@ -366,6 +366,7 @@
       "lead": "Lead",
       "quote_requested": "Quote requested",
       "quote_sent": "Quote sent",
+      "negotiation": "Negotiation",
       "quote_signed": "Quote signed",
       "in_development": "In development",
       "review": "Review",
@@ -426,7 +427,15 @@
     "totalValue": "Total value",
     "stageUpdated": "Project moved to {{stage}}",
     "moveFailed": "Error moving project",
-    "newProject": "New project"
+    "newProject": "New project",
+    "stats": {
+      "totalValue": "Total value",
+      "totalValueDescription": "total value",
+      "weightedValue": "Weighted value",
+      "weightedValueDescription": "based on probability",
+      "activeProjects": "Active projects",
+      "avgDealSize": "Avg. deal size"
+    }
   },
   "quotes": {
     "title": "Quotes",

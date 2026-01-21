@@ -427,7 +427,15 @@
     "totalValue": "Totale waarde",
     "stageUpdated": "Project verplaatst naar {{stage}}",
     "moveFailed": "Fout bij verplaatsen",
-    "newProject": "Nieuw project"
+    "newProject": "Nieuw project",
+    "stats": {
+      "totalValue": "Totale waarde",
+      "totalValueDescription": "totale waarde",
+      "weightedValue": "Gewogen waarde",
+      "weightedValueDescription": "op basis van probability",
+      "activeProjects": "Actieve projecten",
+      "avgDealSize": "Gem. deal size"
+    }
   },
   "quotes": {
     "title": "Offertes",
