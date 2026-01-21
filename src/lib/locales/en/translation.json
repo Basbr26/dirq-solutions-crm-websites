@@ -860,6 +860,7 @@
     "searchActivities": "Search activities...",
     "tryDifferentFilters": "Try different filters or search term",
     "noItemsFound": "No {{items}} found",
+    "noResultsFound": "No results found",
     "clickToAdd": "Click '{{action}}' to add {{items}}",
     "eventDeleted": "Event deleted",
     "eventDeleteConfirm": "This calendar event will be permanently deleted. This action cannot be undone.",

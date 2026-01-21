@@ -860,6 +860,7 @@
     "searchActivities": "Zoek activiteiten...",
     "tryDifferentFilters": "Probeer andere filters of zoekterm",
     "noItemsFound": "Geen {{items}} gevonden",
+    "noResultsFound": "Geen resultaten gevonden",
     "clickToAdd": "Klik op '{{action}}' om {{items}} toe te voegen",
     "eventDeleted": "Event verwijderd",
     "eventDeleteConfirm": "Dit calendar event wordt permanent verwijderd. Deze actie kan niet ongedaan worden gemaakt.",
