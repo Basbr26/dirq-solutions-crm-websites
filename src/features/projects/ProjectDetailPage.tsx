@@ -106,7 +106,7 @@ export default function ProjectDetailPage() {
           *,
           companies:companies!projects_company_id_fkey(id, name, email, phone, website),
           contacts:contacts(id, first_name, last_name, email, phone),
-          profiles:profiles!projects_owner_id_fkey(id, first_name, last_name, email)
+          profiles:profiles!projects_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id!)
         .single();
@@ -789,7 +789,7 @@ export default function ProjectDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {project.profiles.first_name} {project.profiles.last_name}
+                      {project.profiles.voornaam} {project.profiles.achternaam}
                     </p>
                     <p className="text-sm text-muted-foreground">Eigenaar</p>
                   </div>

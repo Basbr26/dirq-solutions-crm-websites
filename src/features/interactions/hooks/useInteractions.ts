@@ -89,7 +89,7 @@ export function useInteractions(filters: InteractionFilters = {}) {
           *,
           company:companies(id, name),
           contact:contacts(id, first_name, last_name),
-          user:profiles!interactions_user_id_fkey(id, first_name, last_name, email)
+          user:profiles!interactions_user_id_fkey(id, voornaam, achternaam, email)
         `, { count: 'exact' })
         .order('created_at', { ascending: false });
 

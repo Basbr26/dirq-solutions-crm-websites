@@ -16,7 +16,7 @@ export function useCompanies(filters?: CompanyFilters) {
         .select(`
           *,
           industry:industries(*),
-          owner:profiles!companies_owner_id_fkey(id, first_name, last_name, email)
+          owner:profiles!companies_owner_id_fkey(id, voornaam, achternaam, email)
         `, { count: 'exact' });
 
       // All authenticated users can see all companies
@@ -75,7 +75,7 @@ export function useCompany(id: string) {
         .select(`
           *,
           industry:industries(*),
-          owner:profiles!companies_owner_id_fkey(id, first_name, last_name, email)
+          owner:profiles!companies_owner_id_fkey(id, voornaam, achternaam, email)
         `)
         .eq('id', id)
         .single();

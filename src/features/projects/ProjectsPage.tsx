@@ -390,7 +390,7 @@ export default function ProjectsPage() {
 
                   {project.profiles && (
                     <div className="text-xs text-muted-foreground">
-                      {t('projects.owner')}: {project.profiles.first_name} {project.profiles.last_name}
+                      {t('projects.owner')}: {project.profiles.voornaam} {project.profiles.achternaam}
                     </div>
                   )}
                 </CardContent>

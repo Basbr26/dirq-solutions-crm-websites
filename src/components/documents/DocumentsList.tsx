@@ -125,7 +125,7 @@ export const DocumentsList = ({
         .from('documents')
         .select(`
           *,
-          profiles:profiles!documents_uploaded_by_fkey(first_name, last_name)
+          profiles:profiles!documents_uploaded_by_fkey(voornaam, achternaam)
         `)
         .order('created_at', { ascending: false });
 
@@ -380,7 +380,7 @@ export const DocumentsList = ({
                       </span>
                       {doc.profiles && (
                         <span>
-                          door {doc.profiles.first_name} {doc.profiles.last_name}
+                          door {doc.profiles.voornaam} {doc.profiles.achternaam}
                         </span>
                       )}
                     </div>
