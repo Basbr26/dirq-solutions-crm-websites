@@ -1,3 +1,1 @@
-# SPA fallback - serve index.html for all routes
-# But don't redirect existing files (like /assets/*)
 /*  /index.html  200
