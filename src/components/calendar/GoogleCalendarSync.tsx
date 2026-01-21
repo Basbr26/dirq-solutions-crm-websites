@@ -10,7 +10,6 @@ import {
   syncToGoogleCalendar,
   syncFromGoogleCalendar,
   refreshAccessToken,
-  refreshGoogleAccessToken,
   isTokenExpired,
   registerGoogleCalendarWebhook,
   stopGoogleCalendarWebhook,
@@ -176,6 +175,56 @@ export function GoogleCalendarSync() {
     }
   }, [user, loadSyncSettings]);
 
+  // Real-time subscription for connection status updates
+  useEffect(() => {
+    if (!user) return;
+
+    addDebugLog('📡 Setting up real-time connection status monitoring...');
+
+    // Subscribe to profile changes for real-time status updates
+    const channel = supabase
+      .channel(`profile_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        (payload) => {
+          addDebugLog('📡 Profile update detected via real-time subscription');
+          const newData = payload.new;
+          
+          // Update connection status based on token presence
+          if (newData.google_access_token && newData.google_token_expires_at) {
+            const expiresAt = new Date(newData.google_token_expires_at);
+            const isExpired = expiresAt < new Date();
+            
+            if (!isExpired) {
+              addDebugLog('✅ Connection status: CONNECTED (via real-time update)');
+              setIsSignedIn(true);
+              setConnectionError(null);
+            } else {
+              addDebugLog('⚠️ Connection status: TOKEN EXPIRED (via real-time update)');
+              setIsSignedIn(false);
+              setConnectionError('Token verlopen');
+            }
+          } else {
+            addDebugLog('❌ Connection status: DISCONNECTED (via real-time update)');
+            setIsSignedIn(false);
+            setConnectionError('Geen actieve verbinding');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      addDebugLog('📡 Cleaning up real-time subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [user, addDebugLog]);
+
   const saveSyncSettings = async (enabled: boolean) => {
     if (!user) return;
 
@@ -296,7 +345,7 @@ export function GoogleCalendarSync() {
     const timeoutId = setTimeout(async () => {
       addDebugLog('🔄 Auto-refreshing access token...');
       try {
-        const newTokenData = await refreshGoogleAccessToken(refreshToken);
+        const newTokenData = await refreshAccessToken(refreshToken);
         
         if (newTokenData) {
           const newExpiresAt = new Date();
@@ -568,8 +617,9 @@ export function GoogleCalendarSync() {
               expires_in: newToken.expires_in,
             });
             addDebugLog('✅ Token automatically refreshed and stored');
-            setConnectionError(null);
-          }
+            setConnectionError(null);            // Update connection status to reflect successful refresh
+            setIsSignedIn(true);
+            toast.success('Google Calendar verbinding automatisch vernieuwd');          }
         } else {
           addDebugLog('❌ Token refresh failed - refresh token may be revoked');
           setConnectionError('Token refresh gefaald - mogelijk ingetrokken door Google');
@@ -611,10 +661,10 @@ export function GoogleCalendarSync() {
           .single();
 
         if (data?.webhook_expiration && webhookNeedsRenewal(new Date(data.webhook_expiration).getTime())) {
-          console.log('Webhook expiring soon, renewing...');
+          addDebugLog('🔔 Webhook expiring soon, renewing...');
           const webhookResult = await registerGoogleCalendarWebhook(user.id);
           if (webhookResult) {
-            await supabase
+            const { error: webhookUpdateError } = await supabase
               .from('profiles')
               .update({
                 webhook_channel_id: webhookResult.channelId,
@@ -622,7 +672,16 @@ export function GoogleCalendarSync() {
                 webhook_expiration: new Date(parseInt(webhookResult.expiration)).toISOString(),
               })
               .eq('id', user.id);
-            toast.info('Webhook verlengd voor real-time sync');
+            
+            if (webhookUpdateError) {
+              addDebugLog(`❌ Failed to update webhook info: ${webhookUpdateError.message}`);
+            } else {
+              addDebugLog('✅ Webhook successfully renewed');
+              toast.success('Google Calendar real-time sync verlengd');
+            }
+          } else {
+            addDebugLog('❌ Webhook renewal failed');
+            toast.error('Kon webhook niet verlengen - real-time sync mogelijk beperkt');
           }
         }
       } catch (error) {
@@ -637,7 +696,7 @@ export function GoogleCalendarSync() {
     const webhookCheckInterval = setInterval(checkWebhook, 60 * 60 * 1000);
 
     return () => clearInterval(webhookCheckInterval);
-  }, [user, isSignedIn]);
+  }, [user, isSignedIn, addDebugLog]);
 
   if (!isInitialized && !isLoading) {
     return (

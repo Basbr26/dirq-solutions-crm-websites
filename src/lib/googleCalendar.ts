@@ -162,40 +162,6 @@ async function exchangeCodeForTokens(code: string): Promise<{
 }
 
 /**
- * Refresh access token using refresh token
- */
-export async function refreshGoogleAccessToken(refreshToken: string): Promise<{
-  access_token: string;
-  expires_in: number;
-} | null> {
-  try {
-    // Call Supabase Edge Function to refresh token
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Token refresh failed: ${errorText}`);
-    }
-
-    const data = await response.json();
-    return {
-      access_token: data.access_token,
-      expires_in: data.expires_in || 3600,
-    };
-  } catch (error) {
-    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Error refreshing access token' });
-    return null;
-  }
-}
-
-/**
  * Sign out from Google
  */
 export function signOutFromGoogle(): void {
