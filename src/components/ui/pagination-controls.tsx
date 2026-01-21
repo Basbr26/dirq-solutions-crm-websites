@@ -40,9 +40,9 @@ export function PaginationControls({
       <p className="text-sm text-muted-foreground">
         {totalCount > 0 ? (
           <>
-            Toont <span className="font-medium">{from}</span> tot{' '}
-            <span className="font-medium">{to}</span> van{' '}
-            <span className="font-medium">{totalCount}</span> resultaten
+            {t('table.showing')} <span className="font-medium">{from}</span> {t('table.to')}{' '}
+            <span className="font-medium">{to}</span> {t('table.of')}{' '}
+            <span className="font-medium">{totalCount}</span> {t('table.results')}
           </>
         ) : (
           t('dialogs.noResultsFound')
@@ -52,7 +52,7 @@ export function PaginationControls({
       <div className="flex items-center gap-4">
         {/* Page size selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Per pagina:</span>
+          <span className="text-sm text-muted-foreground">{t('table.perPage')}:</span>
           <Select
             value={String(pageSize)}
             onValueChange={(value) => onPageSizeChange(Number(value))}
@@ -93,7 +93,7 @@ export function PaginationControls({
           </Button>
 
           <span className="px-3 text-sm">
-            Pagina {page} van {totalPages || 1}
+            {t('table.page')} {page} {t('table.of')} {totalPages || 1}
           </span>
 
           <Button
