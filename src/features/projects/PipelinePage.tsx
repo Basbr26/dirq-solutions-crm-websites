@@ -110,7 +110,13 @@ export default function PipelinePage() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
       await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
-      toast.success(t('success.projectStageUpdated'));
+      // Show toast with project name and company
+      const projectName = draggedProject.title || 'Project';
+      const companyName = draggedProject.companies?.name || draggedProject.profiles?.voornaam 
+        ? `${draggedProject.profiles?.voornaam} ${draggedProject.profiles?.achternaam}`.trim()
+        : 'Onbekend';
+      
+      toast.success(`${projectName} (${companyName}) verplaatst naar ${projectStageConfig[stage].label}`);
     } catch (error) {
       console.error('Failed to update stage:', error);
       toast.error(t('errors.updateProjectStageFailed'));
@@ -150,7 +156,13 @@ export default function PipelinePage() {
       await queryClient.invalidateQueries({ queryKey: ['projects'] });
       await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
-      toast.success(t('success.movedToStage', { stage: projectStageConfig[newStage].label }));
+      // Show toast with project name and company
+      const projectName = project.title || 'Project';
+      const companyName = project.companies?.name || project.profiles?.voornaam
+        ? `${project.profiles?.voornaam} ${project.profiles?.achternaam}`.trim()
+        : 'Onbekend';
+      
+      toast.success(`${projectName} (${companyName}) verplaatst naar ${projectStageConfig[newStage].label}`);
     } catch (error) {
       console.error('Failed to move project:', error);
       toast.error(t('errors.moveProjectFailed'));
