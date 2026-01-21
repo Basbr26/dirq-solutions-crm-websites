@@ -730,6 +730,8 @@
     "noData": "No data available",
     "loading": "Loading...",
     "search": "Search in table...",
+    "previous": "Previous",
+    "next": "Next",
     "sortAscending": "Sort ascending",
     "sortDescending": "Sort descending",
     "selectAll": "Select all",

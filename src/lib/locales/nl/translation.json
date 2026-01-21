@@ -728,6 +728,8 @@
     "to": "tot",
     "results": "resultaten",
     "noData": "Geen gegevens beschikbaar",
+    "previous": "Vorige",
+    "next": "Volgende",
     "loading": "Laden...",
     "search": "Zoeken in tabel...",
     "sortAscending": "Sorteer oplopend",

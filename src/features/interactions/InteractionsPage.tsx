@@ -351,7 +351,7 @@ export default function InteractionsPage() {
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
           >
-            Vorige
+            {t('table.previous')}
           </Button>
           <div className="flex items-center gap-1">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -374,7 +374,7 @@ export default function InteractionsPage() {
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
           >
-            Volgende
+            {t('table.next')}
           </Button>
         </div>
       )}
