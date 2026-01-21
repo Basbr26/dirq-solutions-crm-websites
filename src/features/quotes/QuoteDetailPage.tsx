@@ -250,7 +250,7 @@ export default function QuoteDetailPage() {
             signToken: token,
             companyName: quote?.company?.name,
             expiresAt: expiresAt.toISOString(),
-            senderName: quote?.owner?.voornaam ? `${quote.owner.voornaam} ${quote.owner.achternaam}` : 'Dirq Solutions',
+            senderName: quote?.owner?.voornaam ? `${quote.owner?.voornaam} ${quote.owner?.achternaam}` : 'Dirq Solutions',
           },
         });
 
