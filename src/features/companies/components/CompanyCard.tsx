@@ -216,7 +216,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
           <div className="flex items-center text-xs text-muted-foreground truncate">
             {company.owner && (
               <span className="truncate">
-                {company.owner.voornaam} {company.owner.achternaam}
+                {company.owner?.voornaam} {company.owner?.achternaam}
               </span>
             )}
           </div>

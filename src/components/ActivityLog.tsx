@@ -161,7 +161,7 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
               {activities.map((activity) => {
                 const actionType = activity.action_type as ActionType;
                 const userName = activity.user 
-                  ? `${activity.user.voornaam} ${activity.user.achternaam}`
+                  ? `${activity.user?.voornaam} ${activity.user?.achternaam}`
                   : t('common.unknown');
 
                 return (

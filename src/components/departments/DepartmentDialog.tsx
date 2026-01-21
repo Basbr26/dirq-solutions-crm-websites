@@ -163,7 +163,7 @@ export function DepartmentDialog({
                       <SelectItem value="none">Geen manager</SelectItem>
                       {managers?.filter(m => m.id && m.id.trim() !== '').map((manager) => (
                         <SelectItem key={manager.id} value={manager.id}>
-                          {manager.voornaam} {manager.achternaam}
+                          {manager?.voornaam} {manager?.achternaam}
                           {manager.functie && ` - ${manager.functie}`}
                         </SelectItem>
                       ))}

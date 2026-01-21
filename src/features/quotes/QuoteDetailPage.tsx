@@ -839,7 +839,7 @@ export default function QuoteDetailPage() {
                   </div>
                   <div>
                     <p className="font-medium">
-                      {quote.owner.voornaam} {quote.owner.achternaam}
+                      {quote.owner?.voornaam} {quote.owner?.achternaam}
                     </p>
                     <p className="text-sm text-muted-foreground">{t('common.createdBy')}</p>
                   </div>

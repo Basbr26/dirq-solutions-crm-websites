@@ -380,7 +380,7 @@ export const DocumentsList = ({
                       </span>
                       {doc.profiles && (
                         <span>
-                          door {doc.profiles.voornaam} {doc.profiles.achternaam}
+                          door {doc.profiles?.voornaam} {doc.profiles?.achternaam}
                         </span>
                       )}
                     </div>

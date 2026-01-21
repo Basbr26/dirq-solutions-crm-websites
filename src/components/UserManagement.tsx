@@ -202,7 +202,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
   };
 
   const filteredUsers = users.filter(user => {
-    const fullName = `${user.voornaam} ${user.achternaam}`.toLowerCase();
+    const fullName = `${user?.voornaam} ${user?.achternaam}`.toLowerCase();
     return fullName.includes(searchQuery.toLowerCase()) || 
            user.email.toLowerCase().includes(searchQuery.toLowerCase());
   });
@@ -248,7 +248,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
-                      {user.voornaam} {user.achternaam}
+                      {user?.voornaam} {user?.achternaam}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-muted-foreground">
                       {user.email}
@@ -263,7 +263,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       {user.manager 
-                        ? `${user.manager.voornaam} ${user.manager.achternaam}` 
+                        ? `${user.manager?.voornaam} ${user.manager?.achternaam}` 
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right">

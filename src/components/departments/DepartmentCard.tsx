@@ -62,12 +62,12 @@ export function DepartmentCard({ department, onEdit, onDelete }: DepartmentCardP
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {getInitials(department.manager.voornaam, department.manager.achternaam)}
+                  {getInitials(department.manager?.voornaam, department.manager?.achternaam)}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-medium text-sm">
-                  {department.manager.voornaam} {department.manager.achternaam}
+                  {department.manager?.voornaam} {department.manager?.achternaam}
                 </p>
                 <p className="text-xs text-muted-foreground">Manager</p>
               </div>
