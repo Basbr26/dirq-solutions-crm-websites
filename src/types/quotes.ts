@@ -46,6 +46,11 @@ export interface Quote {
   signer_ip_address?: string;
   signer_user_agent?: string;
   
+  // Provider (leverancier) signature fields
+  provider_signature_data?: string;
+  provider_signed_at?: string;
+  provider_signed_document_url?: string;
+  
   // Relations (from joins)
   company?: {
     id: string;

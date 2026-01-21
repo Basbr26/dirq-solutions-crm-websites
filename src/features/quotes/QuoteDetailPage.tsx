@@ -68,6 +68,8 @@ import { toast } from 'sonner';
 import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
+import SignatureCanvas from '@/components/SignatureCanvas';
+import { PDFDocument } from 'pdf-lib';
 
 export default function QuoteDetailPage() {
   const { t } = useTranslation();
@@ -83,6 +85,9 @@ export default function QuoteDetailPage() {
   const [linkCopied, setLinkCopied] = useState(false);
   const [addInteractionDialogOpen, setAddInteractionDialogOpen] = useState(false);
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
+  const [providerSignDialogOpen, setProviderSignDialogOpen] = useState(false);
+  const [providerSigning, setProviderSigning] = useState(false);
+  const [showProviderSignatureCanvas, setShowProviderSignatureCanvas] = useState(false);
 
   const statusConfig = useQuoteStatusConfig();
 
@@ -299,6 +304,110 @@ export default function QuoteDetailPage() {
     setLinkCopied(false);
   };
 
+  const handleProviderSignature = async (signatureData: string) => {
+    if (!quote || !items) return;
+
+    setProviderSigning(true);
+    try {
+      // Generate PDF with signature embedded
+      const pdfBlob = await pdf(
+        <QuotePDFDocument quote={quote} items={items} />
+      ).toBlob();
+
+      // Load PDF and add signature
+      const arrayBuffer = await pdfBlob.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const pages = pdfDoc.getPages();
+      const lastPage = pages[pages.length - 1];
+
+      // Embed signature image
+      const base64Data = signatureData.split(',')[1];
+      const signatureBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      const signatureImage = await pdfDoc.embedPng(signatureBytes);
+
+      const { width, height } = lastPage.getSize();
+      const signatureWidth = 150;
+      const signatureHeight = 75;
+      const x = 50; // Left side for provider
+      const y = 100;
+
+      // Draw signature
+      lastPage.drawImage(signatureImage, {
+        x,
+        y,
+        width: signatureWidth,
+        height: signatureHeight,
+      });
+
+      // Add text below signature
+      lastPage.drawText('Namens Dirq Solutions', { x, y: y - 15, size: 8 });
+      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { x, y: y - 25, size: 7 });
+
+      // Save signed PDF
+      const signedPdfBytes = await pdfDoc.save();
+      const signedBlob = new Blob([signedPdfBytes], { type: 'application/pdf' });
+
+      // Upload to Supabase Storage
+      const fileName = `quote-${quote.id}-provider-signed-${Date.now()}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(fileName, signedBlob);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(fileName);
+
+      // Update quote with provider signature info
+      const { error: updateError } = await supabase
+        .from('quotes')
+        .update({
+          provider_signature_data: signatureData,
+          provider_signed_at: new Date().toISOString(),
+          provider_signed_document_url: urlData.publicUrl,
+        })
+        .eq('id', quote.id);
+
+      if (updateError) throw updateError;
+
+      queryClient.invalidateQueries({ queryKey: ['quotes', id] });
+      toast.success('Offerte getekend als leverancier! ✍️');
+      setProviderSignDialogOpen(false);
+      setShowProviderSignatureCanvas(false);
+    } catch (error) {
+      console.error('Provider signature error:', error);
+      toast.error('Fout bij ondertekenen');
+    } finally {
+      setProviderSigning(false);
+    }
+  };
+
+  const downloadSignedDocument = async () => {
+    if (!quote?.provider_signed_document_url) {
+      toast.error('Geen getekend document beschikbaar');
+      return;
+    }
+
+    try {
+      const response = await fetch(quote.provider_signed_document_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `offerte-${quote.quote_number}-getekend.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Getekend document gedownload');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Download mislukt');
+    }
+  };
+
   const exportToPDF = async () => {
     if (!quote || !items) {
       toast.error('Offerte data ontbreekt');
@@ -405,6 +514,18 @@ export default function QuoteDetailPage() {
               <Button variant="default" onClick={handleOpenSignDialog}>
                 <Pen className="h-4 w-4 mr-2" />
                 {t('quotes.sendForSignature')}
+              </Button>
+            )}
+            {canEdit && !quote.provider_signature_data && (
+              <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setProviderSignDialogOpen(true)}>
+                <Pen className="h-4 w-4 mr-2" />
+                Teken als Leverancier
+              </Button>
+            )}
+            {quote.provider_signed_document_url && (
+              <Button variant="outline" className="border-green-500 text-green-600 hover:bg-green-50" onClick={downloadSignedDocument}>
+                <Download className="h-4 w-4 mr-2" />
+                Download Getekend
               </Button>
             )}
             {canEdit && (
@@ -638,13 +759,13 @@ export default function QuoteDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Signature Information */}
+          {/* Customer Signature Information */}
           {quote.sign_status === 'signed' && quote.signature_data && (
             <Card className="border-green-200 bg-green-50/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <CardTitle className="text-green-900">{t('quotes.digitallySigned')}</CardTitle>
+                  <CardTitle className="text-green-900">Getekend door Klant</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -689,6 +810,69 @@ export default function QuoteDetailPage() {
                     {t('quotes.signatureValid')}
                   </p>
                 </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Provider Signature Information */}
+          {quote.provider_signature_data && (
+            <Card className="border-blue-200 bg-blue-50/50">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-blue-900">Getekend door Leverancier</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Signature Image */}
+                <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <p className="text-sm text-muted-foreground mb-2">Handtekening</p>
+                  <img 
+                    src={quote.provider_signature_data} 
+                    alt="Provider signature" 
+                    className="max-w-full h-24 border border-gray-200 rounded"
+                  />
+                </div>
+
+                {/* Signature Details */}
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Namens</span>
+                    <span className="font-medium">Dirq Solutions</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Datum</span>
+                    <span className="font-medium">
+                      {quote.provider_signed_at && format(new Date(quote.provider_signed_at), 'dd MMM yyyy HH:mm', { locale: nl })}
+                    </span>
+                  </div>
+                </div>
+
+                {quote.provider_signed_document_url && (
+                  <div className="bg-blue-100/50 p-3 rounded-lg border border-blue-200">
+                    <p className="text-xs text-blue-800 mb-2">
+                      ✓ Volledig getekend document beschikbaar
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <Button size="sm" variant="outline" className="w-full" onClick={downloadSignedDocument}>
+                        <Download className="h-3 w-3 mr-2" />
+                        Download Getekend PDF
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(quote.provider_signed_document_url!);
+                          toast.success('Link gekopieerd!');
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-2" />
+                        Kopieer Download Link
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -968,6 +1152,87 @@ export default function QuoteDetailPage() {
         quoteId={id}
         defaultType={interactionDefaultType}
       />
+
+      {/* Provider Signature Dialog */}
+      <Dialog open={providerSignDialogOpen} onOpenChange={setProviderSignDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pen className="h-5 w-5 text-blue-600" />
+              Teken Offerte als Leverancier
+            </DialogTitle>
+            <DialogDescription>
+              Teken deze offerte namens Dirq Solutions om het document officieel te maken
+            </DialogDescription>
+          </DialogHeader>
+
+          {!showProviderSignatureCanvas ? (
+            <div className="space-y-4 py-4">
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg space-y-3">
+                <p className="font-medium text-blue-900">Offerte Details</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Offertenummer:</span>
+                    <span className="font-medium">{quote?.quote_number}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bedrag:</span>
+                    <span className="font-medium">{formatCurrency(quote?.total_amount || 0)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Klant:</span>
+                    <span className="font-medium">{quote?.company?.name}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                <p className="text-sm text-amber-900">
+                  <strong>Let op:</strong> Door deze offerte te ondertekenen bevestigt u namens Dirq Solutions:
+                </p>
+                <ul className="text-sm text-amber-800 mt-2 space-y-1 list-disc list-inside">
+                  <li>Dat u gemachtigd bent om namens het bedrijf te tekenen</li>
+                  <li>Dat de prijzen en voorwaarden definitief zijn</li>
+                  <li>Dat u akkoord gaat met levering volgens offerte</li>
+                </ul>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setProviderSignDialogOpen(false)}>
+                  Annuleren
+                </Button>
+                <Button onClick={() => setShowProviderSignatureCanvas(true)} className="bg-blue-600 hover:bg-blue-700">
+                  <Pen className="h-4 w-4 mr-2" />
+                  Doorgaan naar Ondertekenen
+                </Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <p className="text-sm font-medium text-blue-900 mb-1">
+                  Ondertekenen als: Dirq Solutions
+                </p>
+                <p className="text-xs text-blue-700">
+                  Teken hieronder om de offerte officieel te maken
+                </p>
+              </div>
+
+              <SignatureCanvas
+                onSave={handleProviderSignature}
+                onCancel={() => setShowProviderSignatureCanvas(false)}
+              />
+
+              {providerSigning && (
+                <div className="flex items-center justify-center gap-2 text-blue-600">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  <span className="text-sm">Document wordt gegenereerd...</span>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       </div>
     </AppLayout>
   );
