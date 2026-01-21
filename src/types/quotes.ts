@@ -68,8 +68,8 @@ export interface Quote {
   };
   owner?: {
     id: string;
-    first_name: string;
-    last_name: string;
+    voornaam: string;
+    achternaam: string;
     email?: string;
   };
   
@@ -86,8 +86,8 @@ export interface Quote {
   };
   profiles?: {
     id: string;
-    first_name: string;
-    last_name: string;
+    voornaam: string;
+    achternaam: string;
     email?: string;
   };
 }
