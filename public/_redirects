@@ -1,1 +1,5 @@
+# Exclude assets from SPA redirect
+/assets/*  /assets/:splat  200
+
+# SPA fallback - all other routes to index.html
 /*    /index.html   200
