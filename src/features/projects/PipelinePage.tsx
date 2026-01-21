@@ -343,7 +343,7 @@ export default function PipelinePage() {
         {/* Enhanced Stats Cards */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-6 bg-gradient-to-br from-primary/5 to-white border-l-4 border-l-primary">
+            <Card className="p-6 border-l-4 border-l-primary">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-primary/10 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-primary" />
@@ -358,7 +358,7 @@ export default function PipelinePage() {
               </div>
             </Card>
             
-            <Card className="p-6 bg-gradient-to-br from-green-50 to-white border-l-4 border-l-green-500">
+            <Card className="p-6 border-l-4 border-l-green-500">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <Target className="h-5 w-5 text-green-600" />
@@ -373,7 +373,7 @@ export default function PipelinePage() {
               </div>
             </Card>
             
-            <Card className="p-6 bg-gradient-to-br from-blue-50 to-white border-l-4 border-l-blue-500">
+            <Card className="p-6 border-l-4 border-l-blue-500">
               <div className="flex items-center gap-3 mb-2">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Briefcase className="h-5 w-5 text-blue-600" />

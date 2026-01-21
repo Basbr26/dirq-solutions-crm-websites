@@ -11,6 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { FileSignature, CheckCircle, XCircle, Clock } from 'lucide-react';
 import SignatureCanvas from '@/components/SignatureCanvas';
@@ -45,6 +54,7 @@ interface Quote {
     name: string;
   };
   quote_items: QuoteItem[];
+  project_id?: string; // For updating project status
 }
 
 export default function PublicSignQuotePage() {
@@ -55,6 +65,9 @@ export default function PublicSignQuotePage() {
   const [signing, setSigning] = useState(false);
   const [signerName, setSignerName] = useState('');
   const [showSignatureCanvas, setShowSignatureCanvas] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectionFeedback, setRejectionFeedback] = useState('');
+  const [rejecting, setRejecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,6 +101,7 @@ export default function PublicSignQuotePage() {
           signer_email,
           signed_at,
           signed_by_name,
+          project_id,
           company:companies!quotes_company_id_fkey(name),
           quote_items(
             id,
@@ -148,7 +162,6 @@ export default function PublicSignQuotePage() {
     setSigning(true);
 
     try {
-      // Get client user agent
       const userAgent = navigator.userAgent;
       
       // Update quote with signature
@@ -156,6 +169,7 @@ export default function PublicSignQuotePage() {
         .from('quotes')
         .update({
           sign_status: 'signed',
+          status: 'accepted',
           signature_data: signatureData,
           signed_at: new Date().toISOString(),
           signed_by_name: signerName,
@@ -169,7 +183,22 @@ export default function PublicSignQuotePage() {
         throw new Error('Kon handtekening niet opslaan');
       }
 
-      // Reload quote to show signed state
+      // Update associated project status to 'quote_signed' if exists
+      if (quote.project_id) {
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({
+            stage: 'quote_signed',
+            probability: 90,
+          })
+          .eq('id', quote.project_id);
+
+        if (projectError) {
+          console.error('Project update error:', projectError);
+          // Don't throw - quote is already signed
+        }
+      }
+
       await loadQuote();
       
       toast.success('✅ Offerte succesvol ondertekend!');
@@ -179,6 +208,60 @@ export default function PublicSignQuotePage() {
       toast.error(err.message || 'Ondertekenen mislukt');
     } finally {
       setSigning(false);
+    }
+  };
+
+  const handleRejectQuote = async () => {
+    if (!quote || !rejectionFeedback.trim()) {
+      toast.error('Vul uw feedback in');
+      return;
+    }
+
+    setRejecting(true);
+
+    try {
+      // Update quote status to rejected with feedback
+      const { error: updateError } = await supabase
+        .from('quotes')
+        .update({
+          status: 'rejected',
+          rejection_reason: rejectionFeedback,
+          rejected_at: new Date().toISOString(),
+          rejected_by_name: signerName || 'Onbekend',
+        })
+        .eq('id', quote.id)
+        .eq('sign_token', token);
+
+      if (updateError) {
+        console.error('Rejection save error:', updateError);
+        throw new Error('Kon afwijzing niet opslaan');
+      }
+
+      // Update associated project status to 'lost' if exists
+      if (quote.project_id) {
+        const { error: projectError } = await supabase
+          .from('projects')
+          .update({
+            stage: 'lost',
+            probability: 0,
+          })
+          .eq('id', quote.project_id);
+
+        if (projectError) {
+          console.error('Project update error:', projectError);
+        }
+      }
+
+      await loadQuote();
+      
+      toast.success('Offerte afgewezen. Bedankt voor uw feedback.');
+      setShowRejectDialog(false);
+      setRejectionFeedback('');
+    } catch (err: any) {
+      console.error('Rejection error:', err);
+      toast.error(err.message || 'Afwijzen mislukt');
+    } finally {
+      setRejecting(false);
     }
   };
 
@@ -403,6 +486,15 @@ export default function PublicSignQuotePage() {
                   <FileSignature className="h-5 w-5 mr-2" />
                   Ga naar Ondertekenen
                 </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50"
+                  onClick={() => setShowRejectDialog(true)}
+                >
+                  <XCircle className="h-5 w-5 mr-2" />
+                  Offerte Afwijzen
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -430,6 +522,62 @@ export default function PublicSignQuotePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Rejection Dialog */}
+        <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Offerte Afwijzen</DialogTitle>
+              <DialogDescription>
+                Vertel ons waarom u deze offerte afwijst. Uw feedback helpt ons om betere offertes te maken.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="signer-name-reject">Uw naam</Label>
+                <Input
+                  id="signer-name-reject"
+                  placeholder="Voornaam Achternaam"
+                  value={signerName}
+                  onChange={(e) => setSignerName(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="rejection-feedback">Reden voor afwijzing *</Label>
+                <Textarea
+                  id="rejection-feedback"
+                  placeholder="Bijv. prijs te hoog, andere leverancier gekozen, timing niet goed..."
+                  value={rejectionFeedback}
+                  onChange={(e) => setRejectionFeedback(e.target.value)}
+                  className="mt-1 min-h-[120px]"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRejectDialog(false);
+                  setRejectionFeedback('');
+                }}
+                disabled={rejecting}
+              >
+                Annuleren
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleRejectQuote}
+                disabled={rejecting || !rejectionFeedback.trim()}
+              >
+                {rejecting ? 'Bezig...' : 'Offerte Afwijzen'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} Dirq Solutions</p>
