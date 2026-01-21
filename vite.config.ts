@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
-    sourcemap: true, // Enable source maps for production debugging
+    sourcemap: 'hidden', // Generate sourcemaps but don't reference them (lower memory usage)
     rollupOptions: {
       output: {
         manualChunks: undefined,
