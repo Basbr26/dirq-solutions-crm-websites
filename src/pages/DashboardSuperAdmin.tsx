@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CreateUserDialog } from '@/components/CreateUserDialog';
 import { UserManagement } from '@/components/UserManagement';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,6 +20,7 @@ interface Stats {
 }
 
 export default function DashboardSuperAdmin() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
     totalDepartments: 0,

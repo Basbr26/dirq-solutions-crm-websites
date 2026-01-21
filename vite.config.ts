@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
+    sourcemap: true, // Enable source maps for production debugging
     rollupOptions: {
       output: {
         manualChunks: undefined,
