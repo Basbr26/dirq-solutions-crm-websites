@@ -102,7 +102,7 @@ BEGIN
       related_entity_id,
       deep_link
     ) VALUES (
-      NEW.created_by,
+      NEW.owner_id,
       'update',
       'Quote Status Updated',
       'Quote "' || COALESCE(v_quote_title, NEW.quote_number) || '" (' || COALESCE(v_company_name, 'Geen bedrijf') || ') changed to ' || v_status_label,
