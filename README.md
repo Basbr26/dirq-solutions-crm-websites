@@ -1,3 +1,23 @@
+# 2026-01-22
+
+## Belangrijkste wijzigingen
+
+- **Provider Signature System**: Leverancier kan nu offertes digitaal tekenen, volledig getekende PDF's genereren en delen met klanten via download link
+- **MRR Calculation Fix**: Trigger verbeterd om company_id changes te handlen (project reassignment) - update BEIDE companies bij verplaatsing
+- **Google Calendar Sync Improvements**: Real-time connection status via Supabase subscriptions, geconsolideerde token refresh, verbeterde webhook renewal met UI feedback
+- **Dual Signature Support**: Quotes tonen nu zowel klant als leverancier handtekeningen met duidelijke visual separation (groen vs blauw)
+- **Public Share Links**: Getekende documenten delen via directe download link - ideaal voor email/WhatsApp
+
+# 2026-01-22
+
+## Belangrijkste wijzigingen
+
+- **Provider Signature System**: Leverancier kan nu offertes digitaal tekenen, volledig getekende PDF's genereren en delen met klanten via download link
+- **MRR Calculation Fix**: Trigger verbeterd om company_id changes te handlen (project reassignment) - update BEIDE companies bij verplaatsing
+- **Google Calendar Sync Improvements**: Real-time connection status via Supabase subscriptions, geconsolideerde token refresh, verbeterde webhook renewal met UI feedback
+- **Dual Signature Support**: Quotes tonen nu zowel klant als leverancier handtekeningen met duidelijke visual separation (groen vs blauw)
+- **Public Share Links**: Getekende documenten delen via directe download link - ideaal voor email/WhatsApp
+
 # 2026-01-16
 
 ## Belangrijkste wijzigingen
@@ -23,7 +43,7 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-2.0.6-blue)]()
+[![Version](https://img.shields.io/badge/version-2.1.0-blue)]()
 [![Completion](https://img.shields.io/badge/completion-99%25-success)]()
 [![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
@@ -54,12 +74,15 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Company Management** - Volledige klantendatabase  
 ✅ **Contact Management** - Met interaction history  
 ✅ **Quote Generator** - PDF export met BTW berekeningen + Digital E-Sign  
+✅ **Provider Signature** - Leverancier kan offertes tekenen + volledig getekende PDF's delen  
+✅ **Dual Signature Support** - Beide handtekeningen (klant + leverancier) in één document  
 ✅ **Quote Automation** - Auto-update project stage bij send/sign/reject  
 ✅ **Quote Interactions** - Volledige notities/activiteiten integratie  
 ✅ **Project Tracking** - Hosting, pages, features specifiek voor websites  
 ✅ **Task Management** - Met calendar integration en CASCADE delete  
 ✅ **Google Calendar Sync** - Bi-directional auto-sync met real-time webhooks + refresh tokens  
 ✅ **Real-time Updates** - Google Calendar webhook push notifications (binnen seconden)  
+✅ **Real-time Status** - Connection status via Supabase subscriptions  
 ✅ **Token Encryption** - AES-256 encrypted OAuth tokens via pgcrypto  
 ✅ **Performance Optimized** - Database indexes (94% sneller task queries)  
 ✅ **Refresh Tokens** - Maanden-lange sessies zonder re-authenticatie  
@@ -75,7 +98,8 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Command Bar** - AI-powered command input (Cmd+K)  
 ✅ **API Gateway** - Secure Edge Functions voor n8n/KVK/Apollo webhooks  
 ✅ **System User** - Enterprise ownership tracking voor automation  
-✅ **MRR Tracking** - Auto-calculated ARR via database triggers  
+✅ **MRR Tracking** - Auto-calculated ARR via database triggers + project reassignment support  
+✅ **Real-time Status** - Google Calendar connection status via Supabase subscriptions  
 ✅ **External Data** - KVK, LinkedIn, AI audit fields  
 ✅ **28 n8n Workflows** - Complete automation suite voor sales, marketing & support  
 
@@ -322,6 +346,9 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 ### Features
 
 - **Public Sign Links** - Ondertekenen zonder account via `/sign/:token`
+- **Provider Signature** - Leverancier kan offertes tekenen namens Dirq Solutions
+- **Dual Signature PDF** - Volledig getekende documenten met beide handtekeningen
+- **Share Links** - Direct download links voor getekende documenten
 - **Signature Canvas** - Touch-friendly handtekeningveld
 - **PDF Embedding** - Handtekening wordt in PDF ingevoegd via pdf-lib
 - **Audit Trail** - IP-adres, user agent, timestamps, locatie
@@ -330,12 +357,21 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 
 ### Workflow
 
+**Customer Signing:**
 1. Upload PDF document bij Company/Contact/Quote
 2. Klik op ✒️ icoon om sign link te genereren
 3. Voer e-mail ondertekenaar in
 4. Kopieer link en stuur naar ontvanger
 5. Ontvanger opent link, vult gegevens in, tekent
 6. Document krijgt status "Getekend" met audit record
+
+**Provider Signing:**
+1. Open quote detail page
+2. Klik "Teken als Leverancier"
+3. Review quote details
+4. Teken op signature canvas
+5. PDF met beide handtekeningen wordt gegenereerd
+6. Deel via "Download Getekend" of "Kopieer Download Link"
 
 ### Database Tabellen
 
@@ -352,15 +388,17 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 
 ## 📊 Current Status
 
-**Version:** 1.2.0 - Project Velocity Phase 1  
+**Version:** 2.1.0 - Provider Signature & Bug Fixes  
 **Status:** ✅ Production Ready + Enterprise Architecture  
-**Last Updated:** 9 Januari 2026
+**Last Updated:** 22 Januari 2026
 
 **Completion:** 99%
 
 | Category | Status |
 |----------|--------|
 | Core Features | ✅ 100% |
+| Quote E-Sign (Customer) | ✅ 100% |
+| Quote E-Sign (Provider) | ✅ 100% |
 | Google Calendar Integration | ✅ 100% |
 | Mobile UX | ✅ 100% |
 | E-Sign System | ✅ 100% |
@@ -370,9 +408,18 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 | Performance | ✅ 100% |
 | Security | ✅ 100% |
 | Testing | ⚠️ 20% |
-| Documentation | ✅ 90% |
+| Documentation | ✅ 95% |
 
-### Recent Updates (v1.2.0 - Project Velocity Phase 1)
+### Recent Updates (v2.1.0 - 22 Jan 2026)
+- ✅ **Provider Signature System** - Leverancier kan offertes digitaal tekenen
+- ✅ **Dual Signature PDF** - Volledig getekende documenten met beide handtekeningen
+- ✅ **Public Share Links** - Direct download links voor getekende documenten
+- ✅ **MRR Calculation Fix** - Trigger handlet nu company reassignment correct
+- ✅ **Google Calendar Sync Improvements** - Real-time connection status
+- ✅ **Token Refresh Consolidation** - Single implementation, betere reliability
+- ✅ **Webhook Auto-Renewal** - Improved UI feedback en error handling
+
+### Previous Updates (v1.2.0 - Project Velocity Phase 1)
 - ✅ **Enterprise Database Architecture** - Foreign keys, CHECK constraints, MRR triggers
 - ✅ **External Data Integration** - KVK API, Apollo.io, Manus AI fields
 - ✅ **Type-Safe Pricing System** - pricing.ts config matching DB validation
