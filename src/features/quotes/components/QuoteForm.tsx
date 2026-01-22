@@ -404,8 +404,8 @@ export function QuoteForm({
                   <FormItem>
                     <FormLabel>Project/Lead (optioneel)</FormLabel>
                     <Select 
-                      onValueChange={field.onChange} 
-                      value={field.value}
+                      onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
+                      value={field.value || 'none'}
                       disabled={!selectedCompanyId}
                     >
                       <FormControl>
@@ -414,7 +414,7 @@ export function QuoteForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Geen project</SelectItem>
+                        <SelectItem value="none">Geen project</SelectItem>
                         {projectsData?.map((project: any) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.title} ({project.stage})
