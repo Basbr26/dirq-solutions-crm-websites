@@ -87,8 +87,8 @@ export default function InteractionsPage() {
 
   return (
     <AppLayout
-      title="Activiteiten"
-      subtitle="Overzicht van alle interacties en taken"
+      title={t('interactions.title')}
+      subtitle={t('interactions.subtitle')}
       onPrimaryAction={() => setAddDialogOpen(true)}
       actions={
         <Button size="lg" onClick={() => setAddDialogOpen(true)}>
@@ -104,7 +104,7 @@ export default function InteractionsPage() {
         <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Totaal</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('interactions.stats.total')}</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -114,7 +114,7 @@ export default function InteractionsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Telefoongesprekken</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('interactions.stats.calls')}</CardTitle>
               <Phone className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
@@ -124,7 +124,7 @@ export default function InteractionsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Vergaderingen</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('interactions.stats.meetings')}</CardTitle>
               <Calendar className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
@@ -134,7 +134,7 @@ export default function InteractionsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">E-mails</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('interactions.stats.emails')}</CardTitle>
               <Mail className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
@@ -144,7 +144,7 @@ export default function InteractionsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Taken</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('interactions.stats.tasks')}</CardTitle>
               <CheckSquare className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
@@ -154,7 +154,7 @@ export default function InteractionsPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Openstaand</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('interactions.stats.pending')}</CardTitle>
               <CheckSquare className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
@@ -212,34 +212,34 @@ export default function InteractionsPage() {
           <CardContent className="pt-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Type</label>
+                <label className="text-sm font-medium">{t('filters.type')}</label>
                 <Select value={typeFilter || ''} onValueChange={(value) => setTypeFilter(value || undefined)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle types" />
+                    <SelectValue placeholder={t('interactions.types.all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle types</SelectItem>
-                    <SelectItem value="call">Telefoongesprek</SelectItem>
-                    <SelectItem value="email">E-mail</SelectItem>
-                    <SelectItem value="meeting">Vergadering</SelectItem>
-                    <SelectItem value="note">Notitie</SelectItem>
-                    <SelectItem value="task">Taak</SelectItem>
-                    <SelectItem value="demo">Demo</SelectItem>
+                    <SelectItem value="">{t('interactions.types.all')}</SelectItem>
+                    <SelectItem value="call">{t('interactions.types.call')}</SelectItem>
+                    <SelectItem value="email">{t('interactions.types.email')}</SelectItem>
+                    <SelectItem value="meeting">{t('interactions.types.meeting')}</SelectItem>
+                    <SelectItem value="note">{t('interactions.types.note')}</SelectItem>
+                    <SelectItem value="task">{t('interactions.types.task')}</SelectItem>
+                    <SelectItem value="demo">{t('interactions.types.demo')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Taak Status</label>
+                <label className="text-sm font-medium">{t('interactions.taskStatus.label')}</label>
                 <Select value={taskStatusFilter || ''} onValueChange={(value) => setTaskStatusFilter(value || undefined)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Alle statussen" />
+                    <SelectValue placeholder={t('interactions.taskStatus.all')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle statussen</SelectItem>
-                    <SelectItem value="pending">Te doen</SelectItem>
-                    <SelectItem value="completed">Voltooid</SelectItem>
-                    <SelectItem value="cancelled">Geannuleerd</SelectItem>
+                    <SelectItem value="">{t('interactions.taskStatus.all')}</SelectItem>
+                    <SelectItem value="pending">{t('interactions.taskStatus.pending')}</SelectItem>
+                    <SelectItem value="completed">{t('interactions.taskStatus.completed')}</SelectItem>
+                    <SelectItem value="cancelled">{t('interactions.taskStatus.cancelled')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

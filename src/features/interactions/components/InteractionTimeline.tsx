@@ -53,15 +53,6 @@ interface InteractionTimelineProps {
   className?: string;
 }
 
-const typeConfig = {
-  call: { icon: Phone, label: 'Telefoongesprek', color: 'bg-blue-500' },
-  email: { icon: Mail, label: 'E-mail', color: 'bg-purple-500' },
-  meeting: { icon: Calendar, label: 'Vergadering', color: 'bg-green-500' },
-  note: { icon: FileText, label: 'Notitie', color: 'bg-gray-500' },
-  task: { icon: CheckSquare, label: 'Taak', color: 'bg-orange-500' },
-  demo: { icon: Presentation, label: 'Demo', color: 'bg-teal-500' },
-};
-
 export function InteractionTimeline({ 
   companyId, 
   contactId, 
@@ -72,6 +63,15 @@ export function InteractionTimeline({
   const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [interactionToDelete, setInteractionToDelete] = useState<string | null>(null);
+
+  const typeConfig = {
+    call: { icon: Phone, label: t('interactions.types.call'), color: 'bg-blue-500' },
+    email: { icon: Mail, label: t('interactions.types.email'), color: 'bg-purple-500' },
+    meeting: { icon: Calendar, label: t('interactions.types.meeting'), color: 'bg-green-500' },
+    note: { icon: FileText, label: t('interactions.types.note'), color: 'bg-gray-500' },
+    task: { icon: CheckSquare, label: t('interactions.types.task'), color: 'bg-orange-500' },
+    demo: { icon: Presentation, label: t('interactions.types.demo'), color: 'bg-teal-500' },
+  };
 
   const { data, isLoading } = useInteractions({
     companyId,

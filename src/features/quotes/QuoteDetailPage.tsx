@@ -355,10 +355,12 @@ export default function QuoteDetailPage() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
+      // Get signed URL (valid for 1 year)
+      const { data: urlData, error: urlError } = await supabase.storage
         .from('documents')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 31536000); // 1 year in seconds
+
+      if (urlError) throw urlError;
 
       // Update quote with provider signature info
       const { error: updateError } = await supabase
@@ -366,14 +368,14 @@ export default function QuoteDetailPage() {
         .update({
           provider_signature_data: signatureData,
           provider_signed_at: new Date().toISOString(),
-          provider_signed_document_url: urlData.publicUrl,
+          provider_signed_document_url: urlData.signedUrl,
         })
         .eq('id', quote.id);
 
       if (updateError) throw updateError;
 
       queryClient.invalidateQueries({ queryKey: ['quotes', id] });
-      toast.success('Offerte getekend als leverancier! ✍️');
+      toast.success(t('quotes.signedAsProvider'));
       setProviderSignDialogOpen(false);
       setShowProviderSignatureCanvas(false);
     } catch (error) {
@@ -392,6 +394,11 @@ export default function QuoteDetailPage() {
 
     try {
       const response = await fetch(quote.provider_signed_document_url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -519,13 +526,13 @@ export default function QuoteDetailPage() {
             {canEdit && !quote.provider_signature_data && (
               <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setProviderSignDialogOpen(true)}>
                 <Pen className="h-4 w-4 mr-2" />
-                Teken als Leverancier
+                {t('quotes.signAsProvider')}
               </Button>
             )}
             {quote.provider_signed_document_url && (
               <Button variant="outline" className="border-green-500 text-green-600 hover:bg-green-50" onClick={downloadSignedDocument}>
                 <Download className="h-4 w-4 mr-2" />
-                Download Getekend
+                {t('quotes.downloadSigned')}
               </Button>
             )}
             {canEdit && (
@@ -820,7 +827,7 @@ export default function QuoteDetailPage() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-blue-900">Getekend door Leverancier</CardTitle>
+                  <CardTitle className="text-blue-900">{t('quotes.signedByProvider')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1159,28 +1166,28 @@ export default function QuoteDetailPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Pen className="h-5 w-5 text-blue-600" />
-              Teken Offerte als Leverancier
+              {t('quotes.signQuoteAsProvider')}
             </DialogTitle>
             <DialogDescription>
-              Teken deze offerte namens Dirq Solutions om het document officieel te maken
+              {t('quotes.signOnBehalfOfDirq')}
             </DialogDescription>
           </DialogHeader>
 
           {!showProviderSignatureCanvas ? (
             <div className="space-y-4 py-4">
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg space-y-3">
-                <p className="font-medium text-blue-900">Offerte Details</p>
+                <p className="font-medium text-blue-900">{t('quotes.quoteDetails')}</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Offertenummer:</span>
+                    <span className="text-muted-foreground">{t('quotes.quoteNumber')}:</span>
                     <span className="font-medium">{quote?.quote_number}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bedrag:</span>
+                    <span className="text-muted-foreground">{t('quotes.amount')}:</span>
                     <span className="font-medium">{formatCurrency(quote?.total_amount || 0)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Klant:</span>
+                    <span className="text-muted-foreground">{t('quotes.customer')}:</span>
                     <span className="font-medium">{quote?.company?.name}</span>
                   </div>
                 </div>
@@ -1188,22 +1195,22 @@ export default function QuoteDetailPage() {
 
               <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
                 <p className="text-sm text-amber-900">
-                  <strong>Let op:</strong> Door deze offerte te ondertekenen bevestigt u namens Dirq Solutions:
+                  <strong>{t('quotes.providerSignWarningTitle')}</strong> {t('quotes.providerSignWarningText')}
                 </p>
                 <ul className="text-sm text-amber-800 mt-2 space-y-1 list-disc list-inside">
-                  <li>Dat u gemachtigd bent om namens het bedrijf te tekenen</li>
-                  <li>Dat de prijzen en voorwaarden definitief zijn</li>
-                  <li>Dat u akkoord gaat met levering volgens offerte</li>
+                  <li>{t('quotes.providerWarning1')}</li>
+                  <li>{t('quotes.providerWarning2')}</li>
+                  <li>{t('quotes.providerWarning3')}</li>
                 </ul>
               </div>
 
               <DialogFooter>
                 <Button variant="outline" onClick={() => setProviderSignDialogOpen(false)}>
-                  Annuleren
+                  {t('common.cancel')}
                 </Button>
                 <Button onClick={() => setShowProviderSignatureCanvas(true)} className="bg-blue-600 hover:bg-blue-700">
                   <Pen className="h-4 w-4 mr-2" />
-                  Doorgaan naar Ondertekenen
+                  {t('quotes.continueToSign')}
                 </Button>
               </DialogFooter>
             </div>
@@ -1211,10 +1218,10 @@ export default function QuoteDetailPage() {
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                 <p className="text-sm font-medium text-blue-900 mb-1">
-                  Ondertekenen als: Dirq Solutions
+                  {t('quotes.signAs')}
                 </p>
                 <p className="text-xs text-blue-700">
-                  Teken hieronder om de offerte officieel te maken
+                  {t('quotes.signBelowOfficial')}
                 </p>
               </div>
 
@@ -1226,7 +1233,7 @@ export default function QuoteDetailPage() {
               {providerSigning && (
                 <div className="flex items-center justify-center gap-2 text-blue-600">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                  <span className="text-sm">Document wordt gegenereerd...</span>
+                  <span className="text-sm">{t('quotes.documentGenerating')}</span>
                 </div>
               )}
             </div>

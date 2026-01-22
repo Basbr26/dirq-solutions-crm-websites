@@ -58,7 +58,7 @@ import { ProjectForm } from './components/ProjectForm';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { Project, ProjectStage } from '@/types/projects';
-import { projectStageConfig } from '@/types/projects';
+import { useProjectStageConfig } from '@/types/projectStageConfig';
 import { QuoteForm } from '@/features/quotes/components/QuoteForm';
 import { useCreateQuote } from '@/features/quotes/hooks/useQuoteMutations';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -80,6 +80,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { role } = useAuth();
+  const projectStageConfig = useProjectStageConfig();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -215,7 +216,7 @@ export default function ProjectDetailPage() {
       },
       {
         onSuccess: () => {
-          toast.success(`Fase gewijzigd naar ${projectStageConfig[newStage].label}`);
+          toast.success(t('projects.stageChanged', { stage: projectStageConfig[newStage].label }));
         },
       }
     );
@@ -284,8 +285,9 @@ export default function ProjectDetailPage() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-3xl font-bold">{project.title}</h1>
-              <Badge style={{ backgroundColor: stageConfig.color + '20', color: stageConfig.color }}>
-                {stageConfig.icon} {stageConfig.label}
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <stageConfig.icon className={`h-3 w-3 ${stageConfig.colorClass}`} />
+                {stageConfig.label}
               </Badge>
             </div>
             {project.project_type && (
@@ -757,6 +759,7 @@ export default function ProjectDetailPage() {
                     const stageKey = stage as ProjectStage;
                     const config = projectStageConfig[stageKey];
                     const isCurrent = project.stage === stageKey;
+                    const StageIcon = config.icon;
                     
                     return (
                       <Button
@@ -766,7 +769,7 @@ export default function ProjectDetailPage() {
                         onClick={() => handleStageChange(stageKey)}
                         disabled={updateProject.isPending || isCurrent}
                       >
-                        <span className="mr-2">{config.icon}</span>
+                        <StageIcon className={`h-4 w-4 mr-2 ${config.colorClass}`} />
                         {config.label}
                       </Button>
                     );

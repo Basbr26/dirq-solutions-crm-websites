@@ -269,7 +269,7 @@ export function QuoteForm({
         <DialogHeader>
           <DialogTitle>{quote ? t('dialogs.editTitle', { item: t('quotes.quote') }) : t('dialogs.newTitle', { item: t('quotes.quote') })}</DialogTitle>
           <DialogDescription>
-            Vul de gegevens in voor de offerte
+            {t('quotes.formDescription')}
           </DialogDescription>
         </DialogHeader>
 
@@ -277,7 +277,7 @@ export function QuoteForm({
         {!quote && selectedCompanyId && (
           <div className="space-y-3 pb-4 border-b">
             <h4 className="text-sm font-medium text-muted-foreground">
-              Snel starten met een Finance template:
+              {t('quotes.quickStartFinance')}
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
@@ -286,10 +286,10 @@ export function QuoteForm({
                 className="h-auto flex flex-col items-start p-4 hover:bg-accent"
                 onClick={() => applyFinanceTemplate('starter')}
               >
-                <div className="font-semibold text-base mb-1">Finance Starter Offerte</div>
-                <div className="text-sm text-muted-foreground">€799,99 + €99/maand</div>
+                <div className="font-semibold text-base mb-1">{t('quotes.financeStarterTitle')}</div>
+                <div className="text-sm text-muted-foreground">{t('quotes.financeStarterPrice')}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Complete offerte met juridische voorwaarden
+                  {t('quotes.financeStarterDesc')}
                 </div>
               </Button>
               <Button
@@ -298,10 +298,10 @@ export function QuoteForm({
                 className="h-auto flex flex-col items-start p-4 hover:bg-accent"
                 onClick={() => applyFinanceTemplate('growth')}
               >
-                <div className="font-semibold text-base mb-1">Finance Growth Offerte</div>
-                <div className="text-sm text-muted-foreground">€1.299,99 + €149/maand</div>
+                <div className="font-semibold text-base mb-1">{t('quotes.financeGrowthTitle')}</div>
+                <div className="text-sm text-muted-foreground">{t('quotes.financeGrowthPrice')}</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  Premium offerte met SLA en uitgebreide voorwaarden
+                  {t('quotes.financeGrowthDesc')}
                 </div>
               </Button>
             </div>
@@ -312,7 +312,7 @@ export function QuoteForm({
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Basic Info */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Algemene Informatie</h3>
+              <h3 className="text-lg font-semibold">{t('quotes.generalInfo')}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -320,7 +320,7 @@ export function QuoteForm({
                   name="company_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bedrijf *</FormLabel>
+                      <FormLabel>{t('quotes.requiredCompany')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -346,7 +346,7 @@ export function QuoteForm({
                   render={({ field }) => (
                     <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel>Contactpersoon</FormLabel>
+                        <FormLabel>{t('quotes.contactPersonLabel')}</FormLabel>
                         <Button
                           type="button"
                           variant="ghost"
@@ -388,7 +388,7 @@ export function QuoteForm({
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Titel *</FormLabel>
+                    <FormLabel>{t('quotes.requiredTitle')}</FormLabel>
                     <FormControl>
                       <Input placeholder="Website ontwikkeling" {...field} />
                     </FormControl>
@@ -435,7 +435,7 @@ export function QuoteForm({
                   name="payment_terms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Betalingsvoorwaarden</FormLabel>
+                      <FormLabel>{t('quotes.paymentTerms')}</FormLabel>
                       <FormControl>
                         <Input placeholder="30 dagen" {...field} />
                       </FormControl>
@@ -449,7 +449,7 @@ export function QuoteForm({
                   name="delivery_time"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Levertijd</FormLabel>
+                      <FormLabel>{t('quotes.deliveryTime')}</FormLabel>
                       <FormControl>
                         <Input placeholder="4-6 weken" {...field} />
                       </FormControl>
@@ -463,7 +463,7 @@ export function QuoteForm({
             {/* Line Items */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Regel Items</h3>
+                <h3 className="text-lg font-semibold">{t('quotes.lineItemsSection')}</h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -471,7 +471,7 @@ export function QuoteForm({
                   onClick={() => append({ title: '', description: '', quantity: 1, unit_price: 0, category: '' })}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Item Toevoegen
+                  {t('quotes.addItem')}
                 </Button>
               </div>
 
@@ -498,7 +498,7 @@ export function QuoteForm({
                         name={`items.${index}.title`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Titel *</FormLabel>
+                            <FormLabel>{t('quotes.requiredTitle')}</FormLabel>
                             <FormControl>
                               <Input placeholder="Website design" {...field} />
                             </FormControl>
@@ -679,7 +679,7 @@ export function QuoteForm({
     <Dialog open={createContactDialogOpen} onOpenChange={setCreateContactDialogOpen}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nieuw contactpersoon toevoegen</DialogTitle>
+          <DialogTitle>{t('quotes.addNewContact')}</DialogTitle>
           <DialogDescription>
             {t('dialogs.addNewContactForCompany')}
           </DialogDescription>

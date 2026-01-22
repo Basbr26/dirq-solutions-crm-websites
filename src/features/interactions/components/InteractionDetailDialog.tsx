@@ -184,7 +184,7 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
                     <>
                       <Button size="sm" variant="outline" onClick={handleMarkCompleted}>
                         <Check className="h-4 w-4 mr-1" />
-                        Voltooid
+                        {t('interactions.taskStatus.completed')}
                       </Button>
                       <Button size="sm" variant="outline" onClick={handleMarkCancelled}>
                         <X className="h-4 w-4 mr-1" />
@@ -251,7 +251,7 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
                   {interaction.direction && (
                     <div>
                       <Label className="text-muted-foreground text-xs">Richting</Label>
-                      <p className="mt-1 capitalize">{interaction.direction === 'inbound' ? 'Inkomend' : 'Uitgaand'}</p>
+                      <p className="mt-1 capitalize">{interaction.direction === 'inbound' ? t('interactions.direction.inbound') : t('interactions.direction.outbound')}</p>
                     </div>
                   )}
                   {interaction.duration_minutes && (
@@ -278,7 +278,7 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
                   )}
                   {interaction.completed_at && (
                     <div>
-                      <Label className="text-muted-foreground text-xs">Voltooid op</Label>
+                      <Label className="text-muted-foreground text-xs">{t('interactions.completedOn')}</Label>
                       <p className="mt-1">
                         {format(new Date(interaction.completed_at), 'PP', { locale: nl })}
                       </p>
@@ -319,12 +319,12 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="call">Telefoongesprek</SelectItem>
-                      <SelectItem value="email">E-mail</SelectItem>
-                      <SelectItem value="meeting">Vergadering</SelectItem>
-                      <SelectItem value="note">Notitie</SelectItem>
-                      <SelectItem value="task">Taak</SelectItem>
-                      <SelectItem value="demo">Demo</SelectItem>
+                      <SelectItem value="call">{t('interactions.types.call')}</SelectItem>
+                      <SelectItem value="email">{t('interactions.types.email')}</SelectItem>
+                      <SelectItem value="meeting">{t('interactions.types.meeting')}</SelectItem>
+                      <SelectItem value="note">{t('interactions.types.note')}</SelectItem>
+                      <SelectItem value="task">{t('interactions.types.task')}</SelectItem>
+                      <SelectItem value="demo">{t('interactions.types.demo')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -347,8 +347,8 @@ export function InteractionDetailDialog({ interaction, open, onOpenChange }: Int
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="inbound">Inkomend</SelectItem>
-                        <SelectItem value="outbound">Uitgaand</SelectItem>
+                        <SelectItem value="inbound">{t('interactions.direction.inbound')}</SelectItem>
+                        <SelectItem value="outbound">{t('interactions.direction.outbound')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

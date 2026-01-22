@@ -49,17 +49,6 @@ interface AddInteractionDialogProps {
   defaultType?: 'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo' | 'physical_mail' | 'linkedin_video_audit';
 }
 
-const interactionTypes = [
-  { value: 'call', label: 'Telefoongesprek', icon: Phone, color: 'text-blue-500' },
-  { value: 'email', label: 'E-mail', icon: Mail, color: 'text-purple-500' },
-  { value: 'meeting', label: 'Vergadering', icon: Calendar, color: 'text-green-500' },
-  { value: 'note', label: 'Notitie', icon: FileText, color: 'text-gray-500' },
-  { value: 'task', label: 'Taak', icon: CheckSquare, color: 'text-orange-500' },
-  { value: 'demo', label: 'Demo', icon: Presentation, color: 'text-teal-500' },
-  { value: 'physical_mail', label: 'Fysiek Kaartje', icon: Mailbox, color: 'text-pink-500' },
-  { value: 'linkedin_video_audit', label: 'LinkedIn Video Audit', icon: Video, color: 'text-red-500' },
-];
-
 export function AddInteractionDialog({
   open,
   onOpenChange,
@@ -73,6 +62,17 @@ export function AddInteractionDialog({
   const [isTask, setIsTask] = useState(defaultType === 'task');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(companyId);
   const { companies: companiesData } = useCompanies({});
+  
+  const interactionTypes = [
+    { value: 'call', label: t('interactions.types.call'), icon: Phone, color: 'text-blue-500' },
+    { value: 'email', label: t('interactions.types.email'), icon: Mail, color: 'text-purple-500' },
+    { value: 'meeting', label: t('interactions.types.meeting'), icon: Calendar, color: 'text-green-500' },
+    { value: 'note', label: t('interactions.types.note'), icon: FileText, color: 'text-gray-500' },
+    { value: 'task', label: t('interactions.types.task'), icon: CheckSquare, color: 'text-orange-500' },
+    { value: 'demo', label: t('interactions.types.demo'), icon: Presentation, color: 'text-teal-500' },
+    { value: 'physical_mail', label: t('interactions.physicalMail'), icon: Mailbox, color: 'text-pink-500' },
+    { value: 'linkedin_video_audit', label: t('interactions.linkedinVideoAudit'), icon: Video, color: 'text-red-500' },
+  ];
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       type: defaultType,
