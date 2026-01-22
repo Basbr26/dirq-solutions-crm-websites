@@ -328,8 +328,19 @@ export default function QuoteDetailPage() {
       const { width, height } = lastPage.getSize();
       const signatureWidth = 150;
       const signatureHeight = 75;
-      const x = 50; // Left side for provider
-      const y = 100;
+      
+      // Position provider signature on the RIGHT side, at the bottom
+      const x = width - signatureWidth - 50;
+      const y = 120; // Higher from bottom for safety
+
+      // Draw border box around signature area
+      lastPage.drawRectangle({
+        x: x - 10,
+        y: y - 35,
+        width: signatureWidth + 20,
+        height: signatureHeight + 70,
+        borderWidth: 1,
+      });
 
       // Draw signature
       lastPage.drawImage(signatureImage, {
@@ -341,7 +352,8 @@ export default function QuoteDetailPage() {
 
       // Add text below signature
       lastPage.drawText('Namens Dirq Solutions', { x, y: y - 15, size: 8 });
-      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { x, y: y - 25, size: 7 });
+      lastPage.drawText('(Leverancier)', { x, y: y - 25, size: 7 });
+      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { x, y: y - 35, size: 7 });
 
       // Save signed PDF
       const signedPdfBytes = await pdfDoc.save();

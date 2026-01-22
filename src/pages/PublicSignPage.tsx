@@ -148,18 +148,19 @@ export default function PublicSignPage() {
       const lastPage = pages[pages.length - 1];
       const { width, height } = lastPage.getSize();
       
-      const signatureWidth = 180;
-      const signatureHeight = 90;
-      const x = width - signatureWidth - 50;
-      const y = 80;
+      const signatureWidth = 150;
+      const signatureHeight = 75;
+      // Position customer signature on the LEFT side, at the bottom
+      const x = 50;
+      const y = 120; // Higher from bottom for safety
       
       // Draw signature box
       // Draw border box around signature area
       lastPage.drawRectangle({
         x: x - 10,
-        y: y - 30,
+        y: y - 40,
         width: signatureWidth + 20,
-        height: signatureHeight + 60,
+        height: signatureHeight + 75,
         borderWidth: 1,
       });
       
@@ -171,19 +172,23 @@ export default function PublicSignPage() {
         height: signatureHeight,
       });
       
-      // Add signature info
-      const signatureText = [
-        `Digitaal ondertekend door: ${signerName}`,
-        `Email: ${signerEmail}`,
-        `Datum: ${format(new Date(), 'dd MMMM yyyy HH:mm', { locale: nl })}`,
-        `Document ID: ${document.id.slice(0, 8)}...`,
-      ].join('\n');
+      // Add signature info (shorter labels)
+      lastPage.drawText(`Ondertekend door: ${signerName}`, {
+        x,
+        y: y - 15,
+        size: 7,
+      });
       
-      lastPage.drawText(signatureText, {
-        x: x - 5,
+      lastPage.drawText(`(Klant)`, {
+        x,
         y: y - 25,
         size: 7,
-        lineHeight: 10,
+      });
+      
+      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, {
+        x,
+        y: y - 35,
+        size: 7,
       });
       
       // Add "Digitaal Ondertekend" watermark
