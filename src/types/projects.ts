@@ -94,6 +94,7 @@ export type ProjectStage =
   | 'maintenance'       // Ongoing maintenance
   | 'lost';             // Deal lost
 
+// NOTE: Deze config is deprecated - gebruik useProjectStageConfig() hook voor consistente, vertaalde config met Lucide icons
 export const projectStageConfig: Record<ProjectStage, { 
   label: string; 
   color: string;

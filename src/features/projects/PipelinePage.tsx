@@ -24,7 +24,8 @@ import { useProjectsByStage, usePipelineStats } from './hooks/useProjects';
 import { useCreateProject } from './hooks/useProjectMutations';
 import { ProjectForm } from './components/ProjectForm';
 import { supabase } from '@/integrations/supabase/client';
-import { projectStageConfig, type ProjectStage, type Project } from '@/types/projects';
+import { type ProjectStage, type Project } from '@/types/projects';
+import { useProjectStageConfig } from '@/types/projectStageConfig';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -32,6 +33,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 export default function PipelinePage() {
   const { t } = useTranslation();
+  const projectStageConfig = useProjectStageConfig();
   
   // Pipeline sections with translations
   const PIPELINE_SECTIONS = {
@@ -123,7 +125,7 @@ export default function PipelinePage() {
     } finally {
       setDraggedProject(null);
     }
-  }, [draggedProject, queryClient, t]);
+  }, [draggedProject, queryClient, t, projectStageConfig]);
 
   // For mobile: move project to stage using dropdown
   const handleMoveToStage = useCallback(async (project: Project, newStage: ProjectStage) => {
@@ -167,7 +169,7 @@ export default function PipelinePage() {
       console.error('Failed to move project:', error);
       toast.error(t('errors.moveProjectFailed'));
     }
-  }, [queryClient, t]);
+  }, [queryClient, t, projectStageConfig]);
 
   // Render a pipeline section
   const renderPipelineSection = (
@@ -197,13 +199,6 @@ export default function PipelinePage() {
             gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))`,
           }}
         >
-          {/* Flow indicator line (desktop only) */}
-          {!isTablet && stages.length > 1 && (
-            <div className="absolute top-12 left-8 right-8 h-0.5 bg-gradient-to-r from-slate-200 via-primary/10 to-slate-200 z-0" 
-              style={{ pointerEvents: 'none' }} 
-            />
-          )}
-
           {stages.map((stage, index) => {
             const config = projectStageConfig[stage];
             const projects = projectsByStage?.[stage] || [];
@@ -223,15 +218,14 @@ export default function PipelinePage() {
                 onClick={() => setFocusedStage(isFocused ? null : stage)}
               >
                 <Card 
-                  className={`h-full flex flex-col transition-all duration-200 cursor-pointer
+                  className={`h-full flex flex-col transition-shadow duration-200 cursor-pointer
                     ${isFocused ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'}
-                    bg-white border-l-4`}
-                  style={{ borderLeftColor: config.color }}
+                    bg-white`}
                 >
                   <div className="p-4 border-b bg-slate-50/50">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-xl">{config.icon}</span>
+                        <config.icon className={`h-5 w-5 ${config.colorClass}`} />
                         <h3 className="font-semibold text-sm">{config.label}</h3>
                       </div>
                       <Badge variant="secondary" className="font-semibold">
@@ -241,20 +235,13 @@ export default function PipelinePage() {
                     <div className="text-sm font-medium text-muted-foreground">
                       {formatCurrency(stageValue)}
                     </div>
-                    
-                    {/* Flow arrow (desktop only, not on last stage) */}
-                    {!isTablet && index < stages.length - 1 && (
-                      <div className="absolute top-12 -right-4 text-slate-300 text-2xl z-10">
-                        →
-                      </div>
-                    )}
                   </div>
 
                   <ScrollArea className="flex-1 p-3">
                     <div className="space-y-2">
                       {projects.length === 0 ? (
                         <div className="text-center py-12 text-sm text-muted-foreground">
-                          <div className="text-3xl mb-2 opacity-20">{config.icon}</div>
+                          <config.icon className="h-12 w-12 mx-auto mb-2 opacity-20" />
                           <div>{t('projects.noProjects')}</div>
                         </div>
                       ) : (
@@ -267,8 +254,8 @@ export default function PipelinePage() {
                               className="block"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Card className={`p-3 transition-all duration-150
-                                ${isMobile ? 'active:scale-[0.98]' : 'hover:shadow-md hover:scale-[1.02] cursor-move'}
+                              <Card className={`p-3 transition-shadow duration-150
+                                ${isMobile ? 'active:opacity-90' : 'hover:shadow-md cursor-move'}
                                 bg-white border border-slate-200`}>
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <h4 className="font-medium text-sm line-clamp-2 flex-1">
@@ -283,9 +270,9 @@ export default function PipelinePage() {
                                         <Button 
                                           variant="ghost" 
                                           size="sm" 
-                                          className="h-7 w-7 p-0 flex-shrink-0"
+                                          className="min-h-[44px] min-w-[44px] p-0 flex-shrink-0"
                                         >
-                                          <MoreVertical className="h-3.5 w-3.5" />
+                                          <MoreVertical className="h-4 w-4" />
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end" className="w-48">
@@ -294,6 +281,7 @@ export default function PipelinePage() {
                                           .filter(s => s !== project.stage)
                                           .map(targetStage => {
                                             const config = projectStageConfig[targetStage];
+                                            const TargetIcon = config.icon;
                                             return (
                                               <DropdownMenuItem
                                                 key={targetStage}
@@ -302,7 +290,7 @@ export default function PipelinePage() {
                                                   handleMoveToStage(project, targetStage);
                                                 }}
                                               >
-                                                <span className="mr-2">{config.icon}</span>
+                                                <TargetIcon className={`mr-2 h-4 w-4 ${config.colorClass}`} />
                                                 {config.label}
                                               </DropdownMenuItem>
                                             );
@@ -352,49 +340,49 @@ export default function PipelinePage() {
       }
     >
       <div className="p-4 md:p-6 space-y-8">
-        {/* Enhanced Stats Cards */}
+        {/* Stats Cards - Consistent with rest of app */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="p-6 border-l-4 border-l-primary">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <div className="text-sm font-medium text-muted-foreground">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">
                   {t('pipeline.stats.totalValue')}
                 </div>
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                </div>
               </div>
-              <div className="text-3xl font-bold">{formatCurrency(stats.total_value)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.total_value)}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {t('pipeline.stats.totalValueDescription')}
               </div>
             </Card>
             
-            <Card className="p-6 border-l-4 border-l-green-500">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Target className="h-5 w-5 text-green-600" />
-                </div>
-                <div className="text-sm font-medium text-muted-foreground">
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">
                   {t('pipeline.stats.weightedValue')}
                 </div>
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <Target className="h-4 w-4 text-green-600" />
+                </div>
               </div>
-              <div className="text-3xl font-bold">{formatCurrency(stats.weighted_value)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.weighted_value)}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {t('pipeline.stats.weightedValueDescription')}
               </div>
             </Card>
             
-            <Card className="p-6 border-l-4 border-l-blue-500">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="text-sm font-medium text-muted-foreground">
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-muted-foreground">
                   {t('pipeline.stats.activeProjects')}
                 </div>
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Briefcase className="h-4 w-4 text-blue-600" />
+                </div>
               </div>
-              <div className="text-3xl font-bold">{stats.total_projects}</div>
+              <div className="text-2xl font-bold">{stats.total_projects}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {t('pipeline.stats.avgDealSize')}: {formatCurrency(stats.avg_deal_size)}
               </div>

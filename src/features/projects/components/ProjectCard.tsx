@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Project } from '@/types/projects';
+import { useProjectStageConfig } from '@/types/projectStageConfig';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -16,46 +17,9 @@ interface ProjectCardProps {
   project: Project;
 }
 
-const stageConfig = {
-  lead: { label: 'Lead', color: 'bg-blue-500/10 text-blue-500' },
-  quote_requested: { label: 'Quote Aangevraagd', color: 'bg-purple-500/10 text-purple-500' },
-  quote_sent: { label: 'Quote Verstuurd', color: 'bg-indigo-500/10 text-indigo-500' },
-  negotiation: { label: 'Onderhandeling', color: 'bg-amber-500/10 text-amber-500' },
-  quote_signed: { label: 'Quote Getekend', color: 'bg-green-500/10 text-green-500' },
-  in_development: { label: 'In Ontwikkeling', color: 'bg-cyan-500/10 text-cyan-500' },
-  review: { label: 'Review', color: 'bg-orange-500/10 text-orange-500' },
-  live: { label: 'Live', color: 'bg-emerald-500/10 text-emerald-500' },
-  maintenance: { label: 'Onderhoud', color: 'bg-slate-500/10 text-slate-500' },
-  lost: { label: 'Verloren', color: 'bg-red-500/10 text-red-500' },
-};
-
-const projectTypeLabels = {
-  landing_page: 'Landing Page',
-  corporate_website: 'Bedrijfswebsite',
-  ecommerce: 'E-commerce',
-  web_app: 'Web Applicatie',
-  blog: 'Blog',
-  portfolio: 'Portfolio',
-  custom: 'Op Maat',  ai_automation: 'AI Automatisering',};
-
 export function ProjectCard({ project }: ProjectCardProps) {
   const { t } = useTranslation();
-  
-  const stageConfig = (stage: string) => {
-    const configs = {
-      lead: { label: t('projects.stages.lead'), color: 'bg-blue-500/10 text-blue-500' },
-      quote_requested: { label: t('projects.stages.quote_requested'), color: 'bg-purple-500/10 text-purple-500' },
-      quote_sent: { label: t('projects.stages.quote_sent'), color: 'bg-indigo-500/10 text-indigo-500' },
-      negotiation: { label: t('projects.stages.negotiation'), color: 'bg-amber-500/10 text-amber-500' },
-      quote_signed: { label: t('projects.stages.quote_signed'), color: 'bg-green-500/10 text-green-500' },
-      in_development: { label: t('projects.stages.in_development'), color: 'bg-cyan-500/10 text-cyan-500' },
-      review: { label: t('projects.stages.review'), color: 'bg-orange-500/10 text-orange-500' },
-      live: { label: t('projects.stages.live'), color: 'bg-emerald-500/10 text-emerald-500' },
-      maintenance: { label: t('projects.stages.maintenance'), color: 'bg-slate-500/10 text-slate-500' },
-      lost: { label: t('projects.stages.lost'), color: 'bg-red-500/10 text-red-500' },
-    };
-    return configs[stage as keyof typeof configs] || configs.lead;
-  };
+  const projectStageConfig = useProjectStageConfig();
   
   const projectTypeLabels = (type: string) => {
     const labels = {
@@ -71,7 +35,8 @@ export function ProjectCard({ project }: ProjectCardProps) {
     return labels[type as keyof typeof labels] || labels.custom;
   };
   
-  const stageStyle = stageConfig(project.stage);
+  const stageConfig = projectStageConfig[project.stage];
+  const StageIcon = stageConfig.icon;
 
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -87,8 +52,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 </p>
               )}
             </div>
-            <Badge className={stageStyle.color} variant="secondary">
-              {stageStyle.label}
+            <Badge variant="secondary" className="flex items-center gap-1">
+              <StageIcon className={`h-3 w-3 ${stageConfig.colorClass}`} />
+              {stageConfig.label}
             </Badge>
           </div>
 
