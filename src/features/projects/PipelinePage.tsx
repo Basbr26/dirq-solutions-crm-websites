@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { Plus, TrendingUp, DollarSign, MoreVertical, Target, Briefcase, Code } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -219,10 +219,9 @@ export default function PipelinePage() {
               >
                 <Card 
                   className={`h-full flex flex-col transition-shadow duration-200 cursor-pointer
-                    ${isFocused ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'}
-                    bg-white`}
+                    ${isFocused ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'}`}
                 >
-                  <div className="p-4 border-b bg-slate-50/50">
+                  <div className="p-4 border-b">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <config.icon className={`h-5 w-5 ${config.colorClass}`} />
@@ -255,8 +254,7 @@ export default function PipelinePage() {
                               onClick={(e) => e.stopPropagation()}
                             >
                               <Card className={`p-3 transition-shadow duration-150
-                                ${isMobile ? 'active:opacity-90' : 'hover:shadow-md cursor-move'}
-                                bg-white border border-slate-200`}>
+                                ${isMobile ? 'active:opacity-90' : 'hover:shadow-md cursor-move'}`}>
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <h4 className="font-medium text-sm line-clamp-2 flex-1">
                                     {project.title}
@@ -340,52 +338,52 @@ export default function PipelinePage() {
       }
     >
       <div className="p-4 md:p-6 space-y-8">
-        {/* Stats Cards - Consistent with rest of app */}
+        {/* Stats Cards - Identical to Dashboard KPI cards */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
                   {t('pipeline.stats.totalValue')}
-                </div>
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <TrendingUp className="h-4 w-4 text-primary" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold">{formatCurrency(stats.total_value)}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {t('pipeline.stats.totalValueDescription')}
-              </div>
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                <div className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.total_value)}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">
+                  {t('pipeline.stats.totalValueDescription')}
+                </p>
+              </CardContent>
             </Card>
             
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
                   {t('pipeline.stats.weightedValue')}
-                </div>
-                <div className="p-2 bg-green-500/10 rounded-lg">
-                  <Target className="h-4 w-4 text-green-600" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold">{formatCurrency(stats.weighted_value)}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {t('pipeline.stats.weightedValueDescription')}
-              </div>
+                </CardTitle>
+                <Target className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                <div className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.weighted_value)}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">
+                  {t('pipeline.stats.weightedValueDescription')}
+                </p>
+              </CardContent>
             </Card>
             
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-muted-foreground">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">
                   {t('pipeline.stats.activeProjects')}
-                </div>
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <Briefcase className="h-4 w-4 text-blue-600" />
-                </div>
-              </div>
-              <div className="text-2xl font-bold">{stats.total_projects}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {t('pipeline.stats.avgDealSize')}: {formatCurrency(stats.avg_deal_size)}
-              </div>
+                </CardTitle>
+                <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              </CardHeader>
+              <CardContent className="p-3 pt-0 sm:p-6 sm:pt-0">
+                <div className="text-lg sm:text-2xl font-bold truncate">{stats.total_projects}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">
+                  {t('pipeline.stats.avgDealSize')}: {formatCurrency(stats.avg_deal_size)}
+                </p>
+              </CardContent>
             </Card>
           </div>
         )}
