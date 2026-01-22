@@ -152,7 +152,7 @@ export default function PublicSignPage() {
       const signatureHeight = 75;
       // Position customer signature on the LEFT side, at the bottom
       const x = 50;
-      const y = 120; // Higher from bottom for safety
+      const y = 200; // Moved higher to ensure visibility
       
       // Draw signature box
       // Draw border box around signature area

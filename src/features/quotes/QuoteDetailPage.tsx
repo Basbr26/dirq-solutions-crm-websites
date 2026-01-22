@@ -331,7 +331,7 @@ export default function QuoteDetailPage() {
       
       // Position provider signature on the RIGHT side, at the bottom
       const x = width - signatureWidth - 50;
-      const y = 120; // Higher from bottom for safety
+      const y = 200; // Moved higher to ensure visibility
 
       // Draw border box around signature area
       lastPage.drawRectangle({
