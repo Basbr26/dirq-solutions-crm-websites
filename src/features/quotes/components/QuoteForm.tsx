@@ -84,6 +84,7 @@ interface QuoteFormProps {
   isLoading?: boolean;
   defaultCompanyId?: string;
   defaultContactId?: string;
+  defaultProjectId?: string;
 }
 
 export function QuoteForm({ 
@@ -94,6 +95,7 @@ export function QuoteForm({
   isLoading,
   defaultCompanyId,
   defaultContactId,
+  defaultProjectId,
 }: QuoteFormProps) {
   const { t } = useTranslation();
   const { companies: companiesData } = useCompanies();
@@ -105,7 +107,7 @@ export function QuoteForm({
     defaultValues: {
       company_id: defaultCompanyId || '',
       contact_id: defaultContactId || '',
-      project_id: '',
+      project_id: defaultProjectId || '',
       title: '',
       description: '',
       tax_rate: 21,
@@ -243,12 +245,13 @@ export function QuoteForm({
   useEffect(() => {
     if (!open) {
       form.reset();
-    } else if (defaultCompanyId || defaultContactId) {
-      // Pre-fill company and contact when opening with defaults
+    } else if (defaultCompanyId || defaultContactId || defaultProjectId) {
+      // Pre-fill company, contact and project when opening with defaults
       if (defaultCompanyId) form.setValue('company_id', defaultCompanyId);
       if (defaultContactId) form.setValue('contact_id', defaultContactId);
+      if (defaultProjectId) form.setValue('project_id', defaultProjectId);
     }
-  }, [open, form, defaultCompanyId, defaultContactId]);
+  }, [open, form, defaultCompanyId, defaultContactId, defaultProjectId]);
 
   const handleSubmit = (data: QuoteFormData) => {
     const submitData: CreateQuoteInput = {

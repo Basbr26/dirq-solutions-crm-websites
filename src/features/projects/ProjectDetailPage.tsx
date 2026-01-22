@@ -936,6 +936,7 @@ export default function ProjectDetailPage() {
           onOpenChange={setCreateQuoteDialogOpen}
           defaultCompanyId={project.company_id}
           defaultContactId={project.contact_id || undefined}
+          defaultProjectId={id}
           onSubmit={async (quoteData) => {
             try {
               const newQuote = await createQuote.mutateAsync({
