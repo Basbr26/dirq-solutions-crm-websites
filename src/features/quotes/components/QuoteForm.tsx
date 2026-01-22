@@ -44,6 +44,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
 import { useContacts } from '@/features/contacts/hooks/useContacts';
+import { useProjects } from '@/features/projects/hooks/useProjects';
 import { ContactForm } from '@/features/contacts/components/ContactForm';
 import { Loader2, Plus, Trash2, UserPlus } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -62,6 +63,7 @@ const quoteItemSchema = z.object({
 const quoteFormSchema = z.object({
   company_id: z.string().uuid('Selecteer een bedrijf'),
   contact_id: z.string().uuid('Selecteer een contactpersoon').optional().or(z.literal('')),
+  project_id: z.string().uuid('Selecteer een project').optional().or(z.literal('')),
   title: z.string().min(1, 'Titel is verplicht'),
   description: z.string().optional(),
   tax_rate: z.number().min(0).max(100).default(21),
@@ -103,6 +105,7 @@ export function QuoteForm({
     defaultValues: {
       company_id: defaultCompanyId || '',
       contact_id: defaultContactId || '',
+      project_id: '',
       title: '',
       description: '',
       tax_rate: 21,
@@ -129,8 +132,14 @@ export function QuoteForm({
 
   const selectedCompanyId = form.watch('company_id');
   
+  // Fetch contacts for selected company
   const { contacts: contactsData } = useContacts({
     companyId: selectedCompanyId || undefined,
+  });
+  
+  // Fetch projects for selected company
+  const { projects: projectsData } = useProjects({
+    company_id: selectedCompanyId || undefined,
   });
 
   // Create contact mutation
@@ -246,6 +255,7 @@ export function QuoteForm({
       title: data.title || '',
       company_id: data.company_id || '',
       contact_id: data.contact_id || undefined,
+      project_id: data.project_id || undefined,
       valid_until: data.valid_until || undefined,
       notes: data.notes,
       payment_terms: data.payment_terms,
@@ -382,6 +392,40 @@ export function QuoteForm({
                   )}
                 />
               </div>
+              
+              {/* Project/Lead selector */}
+              <FormField
+                control={form.control}
+                name="project_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Project/Lead (optioneel)</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value}
+                      disabled={!selectedCompanyId}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Koppel aan project..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Geen project</SelectItem>
+                        {projectsData?.map((project: any) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.title} ({project.stage})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Koppel deze offerte aan een bestaand project
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
