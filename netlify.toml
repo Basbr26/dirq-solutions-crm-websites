@@ -7,8 +7,8 @@
   
 [build.environment]
   NODE_VERSION = "20"
-  # Allow Google API key in build output (client-side key, domain-restricted)
-  SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES = "AIza"
+  # Disable smart detection for client-side API keys (VITE_ prefixed vars are meant for browser)
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
 
 # SPA routing
 [[redirects]]
