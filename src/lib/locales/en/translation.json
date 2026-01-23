@@ -740,6 +740,16 @@
     "call": "Call",
     "email": "Email",
     "addActivity": "Activity",
+    "direction": "Direction",
+    "outbound": "Outbound",
+    "inbound": "Inbound",
+    "duration": "Duration (minutes)",
+    "scheduledAt": "Scheduled at",
+    "dueDate": "Due date",
+    "makeTask": "Make this a task",
+    "subjectPlaceholder": "E.g.: Meeting about new website",
+    "subjectRequired": "Subject is required",
+    "descriptionPlaceholder": "Provide a detailed description...",
     "stats": {
       "total": "Total",
       "calls": "Phone calls",
@@ -763,10 +773,6 @@
       "pending": "To do",
       "completed": "Completed",
       "cancelled": "Cancelled"
-    },
-    "direction": {
-      "inbound": "Inbound",
-      "outbound": "Outbound"
     },
     "markCompleted": "Mark completed",
     "cancelTask": "Cancel task",

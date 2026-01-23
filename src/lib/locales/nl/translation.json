@@ -743,6 +743,16 @@
     "call": "Gesprek",
     "email": "E-mail",
     "addActivity": "Activiteit",
+    "direction": "Richting",
+    "outbound": "Uitgaand",
+    "inbound": "Inkomend",
+    "duration": "Duur (minuten)",
+    "scheduledAt": "Gepland op",
+    "dueDate": "Deadline",
+    "makeTask": "Maak taak aan",
+    "subjectPlaceholder": "Bijvoorbeeld: Overleg nieuwe website",
+    "subjectRequired": "Onderwerp is verplicht",
+    "descriptionPlaceholder": "Geef een gedetailleerde beschrijving...",
     "stats": {
       "total": "Totaal",
       "calls": "Telefoongesprekken",
@@ -766,10 +776,6 @@
       "pending": "Te doen",
       "completed": "Voltooid",
       "cancelled": "Geannuleerd"
-    },
-    "direction": {
-      "inbound": "Inkomend",
-      "outbound": "Uitgaand"
     },
     "markCompleted": "Markeer voltooid",
     "cancelTask": "Annuleer taak",
