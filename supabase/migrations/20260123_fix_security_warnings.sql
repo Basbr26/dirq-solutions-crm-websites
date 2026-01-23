@@ -11,8 +11,24 @@
 -- =============================================
 -- Dit voorkomt schema injection attacks door search_path te locken
 
+-- Drop all functions first (to avoid signature conflicts)
+-- CASCADE will also drop dependent triggers (we'll recreate them after)
+DROP FUNCTION IF EXISTS update_company_mrr() CASCADE;
+DROP FUNCTION IF EXISTS encrypt_google_access_token(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS decrypt_google_access_token(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS encrypt_google_refresh_token(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS decrypt_google_refresh_token(TEXT) CASCADE;
+DROP FUNCTION IF EXISTS encrypt_tokens_on_update() CASCADE;
+DROP FUNCTION IF EXISTS create_physical_mail_followup() CASCADE;
+DROP FUNCTION IF EXISTS is_admin_or_manager() CASCADE;
+DROP FUNCTION IF EXISTS update_project_on_quote_status_change() CASCADE;
+DROP FUNCTION IF EXISTS get_user_role() CASCADE;
+DROP FUNCTION IF EXISTS crm_audit_trigger() CASCADE;
+DROP FUNCTION IF EXISTS update_project_mrr_from_quote() CASCADE;
+DROP FUNCTION IF EXISTS cleanup_old_webhook_events() CASCADE;
+
 -- 1. update_company_mrr
-CREATE OR REPLACE FUNCTION update_company_mrr()
+CREATE FUNCTION update_company_mrr()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -32,7 +48,7 @@ END;
 $$;
 
 -- 2. encrypt_google_access_token
-CREATE OR REPLACE FUNCTION encrypt_google_access_token(token TEXT)
+CREATE FUNCTION encrypt_google_access_token(token TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -54,7 +70,7 @@ END;
 $$;
 
 -- 3. decrypt_google_access_token
-CREATE OR REPLACE FUNCTION decrypt_google_access_token(encrypted_token TEXT)
+CREATE FUNCTION decrypt_google_access_token(encrypted_token TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -76,7 +92,7 @@ END;
 $$;
 
 -- 4. encrypt_google_refresh_token
-CREATE OR REPLACE FUNCTION encrypt_google_refresh_token(token TEXT)
+CREATE FUNCTION encrypt_google_refresh_token(token TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -98,7 +114,7 @@ END;
 $$;
 
 -- 5. decrypt_google_refresh_token
-CREATE OR REPLACE FUNCTION decrypt_google_refresh_token(encrypted_token TEXT)
+CREATE FUNCTION decrypt_google_refresh_token(encrypted_token TEXT)
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -120,7 +136,7 @@ END;
 $$;
 
 -- 6. encrypt_tokens_on_update
-CREATE OR REPLACE FUNCTION encrypt_tokens_on_update()
+CREATE FUNCTION encrypt_tokens_on_update()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -142,7 +158,7 @@ END;
 $$;
 
 -- 7. create_physical_mail_followup
-CREATE OR REPLACE FUNCTION create_physical_mail_followup()
+CREATE FUNCTION create_physical_mail_followup()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -180,7 +196,7 @@ END;
 $$;
 
 -- 8. is_admin_or_manager
-CREATE OR REPLACE FUNCTION is_admin_or_manager()
+CREATE FUNCTION is_admin_or_manager()
 RETURNS BOOLEAN
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -196,7 +212,7 @@ END;
 $$;
 
 -- 9. update_project_on_quote_status_change
-CREATE OR REPLACE FUNCTION update_project_on_quote_status_change()
+CREATE FUNCTION update_project_on_quote_status_change()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -227,7 +243,7 @@ END;
 $$;
 
 -- 10. get_user_role (alias for user_role)
-CREATE OR REPLACE FUNCTION get_user_role()
+CREATE FUNCTION get_user_role()
 RETURNS TEXT
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -243,7 +259,7 @@ END;
 $$;
 
 -- 11. crm_audit_trigger
-CREATE OR REPLACE FUNCTION crm_audit_trigger()
+CREATE FUNCTION crm_audit_trigger()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -332,7 +348,7 @@ END;
 $$;
 
 -- 12. update_project_mrr_from_quote
-CREATE OR REPLACE FUNCTION update_project_mrr_from_quote()
+CREATE FUNCTION update_project_mrr_from_quote()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -386,7 +402,7 @@ END;
 $$;
 
 -- 13. cleanup_old_webhook_events
-CREATE OR REPLACE FUNCTION cleanup_old_webhook_events()
+CREATE FUNCTION cleanup_old_webhook_events()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -427,6 +443,71 @@ COMMENT ON POLICY "Service role can insert profiles" ON profiles IS
 
 COMMENT ON POLICY "rate_limit_system_insert" ON rate_limit_requests IS
 'Intentionally permissive: Rate limit tracking moet altijd kunnen loggen, ongeacht user permissions';
+
+-- =============================================
+-- RECREATE TRIGGERS (dropped with CASCADE)
+-- =============================================
+
+-- Trigger for update_company_mrr
+CREATE TRIGGER trigger_update_company_mrr
+  AFTER INSERT OR UPDATE OF monthly_recurring_revenue ON projects
+  FOR EACH ROW
+  EXECUTE FUNCTION update_company_mrr();
+
+-- Trigger for encrypt_tokens_on_update
+CREATE TRIGGER encrypt_tokens_on_update_trigger
+  BEFORE INSERT OR UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION encrypt_tokens_on_update();
+
+-- Trigger for create_physical_mail_followup
+CREATE TRIGGER trigger_create_physical_mail_followup
+  AFTER INSERT ON interactions
+  FOR EACH ROW
+  EXECUTE FUNCTION create_physical_mail_followup();
+
+-- Trigger for update_project_on_quote_status_change
+CREATE TRIGGER trigger_update_project_on_quote_status_change
+  AFTER UPDATE ON quotes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_project_on_quote_status_change();
+
+-- Trigger for update_project_mrr_from_quote
+CREATE TRIGGER trigger_update_project_mrr_from_quote
+  AFTER UPDATE ON quotes
+  FOR EACH ROW
+  EXECUTE FUNCTION update_project_mrr_from_quote();
+
+-- Audit triggers for crm_audit_trigger (on all audited tables)
+CREATE TRIGGER audit_companies_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON companies
+  FOR EACH ROW
+  EXECUTE FUNCTION crm_audit_trigger();
+
+CREATE TRIGGER audit_contacts_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON contacts
+  FOR EACH ROW
+  EXECUTE FUNCTION crm_audit_trigger();
+
+CREATE TRIGGER audit_leads_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON leads
+  FOR EACH ROW
+  EXECUTE FUNCTION crm_audit_trigger();
+
+CREATE TRIGGER audit_projects_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON projects
+  FOR EACH ROW
+  EXECUTE FUNCTION crm_audit_trigger();
+
+CREATE TRIGGER audit_quotes_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON quotes
+  FOR EACH ROW
+  EXECUTE FUNCTION crm_audit_trigger();
+
+CREATE TRIGGER audit_interactions_trigger
+  AFTER INSERT OR UPDATE OR DELETE ON interactions
+  FOR EACH ROW
+  EXECUTE FUNCTION crm_audit_trigger();
 
 -- =============================================
 -- VERIFICATION
