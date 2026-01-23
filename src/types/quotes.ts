@@ -107,6 +107,7 @@ export interface QuoteItem {
   unit_price: number;
   total_price: number;
   category?: string;
+  billing_frequency?: 'monthly' | 'yearly' | 'quarterly' | 'one-time';
   created_at: string;
 }
 
@@ -132,6 +133,7 @@ export interface CreateQuoteItemInput {
   quantity: number;
   unit_price: number;
   category?: string;
+  billing_frequency?: 'monthly' | 'yearly' | 'quarterly' | 'one-time';
   item_order?: number;
 }
 

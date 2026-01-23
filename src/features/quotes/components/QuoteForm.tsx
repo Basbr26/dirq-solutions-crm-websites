@@ -58,6 +58,7 @@ const quoteItemSchema = z.object({
   quantity: z.number().min(1, 'Minimaal 1').default(1),
   unit_price: z.number().min(0, 'Prijs moet positief zijn').default(0),
   category: z.string().optional(),
+  billing_frequency: z.enum(['monthly', 'yearly', 'quarterly', 'one-time']).default('monthly'),
 });
 
 const quoteFormSchema = z.object({
@@ -122,6 +123,7 @@ export function QuoteForm({
           quantity: 1,
           unit_price: 0,
           category: '',
+          billing_frequency: 'monthly' as const,
         },
       ],
     },
@@ -230,6 +232,7 @@ export function QuoteForm({
       quantity: item.quantity,
       unit_price: item.unit_price,
       category: item.category,
+      billing_frequency: item.billing_frequency || 'yearly' as const,
     })));
 
     toast.success(`${templateType === 'starter' ? 'Finance Starter' : 'Finance Growth'} template toegepast! 🎉`);
@@ -563,6 +566,30 @@ export function QuoteForm({
                             <FormControl>
                               <Input placeholder="Design, Development, etc." {...field} />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`items.${index}.billing_frequency`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Facturatie frequentie</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecteer frequentie" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="monthly">Maandelijks</SelectItem>
+                                <SelectItem value="quarterly">Per kwartaal</SelectItem>
+                                <SelectItem value="yearly">Jaarlijks</SelectItem>
+                                <SelectItem value="one-time">Eenmalig</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}

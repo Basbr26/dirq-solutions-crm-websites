@@ -82,7 +82,7 @@ BEGIN
       updated_at = NOW()
     WHERE id = NEW.project_id;
     
-    RAISE NOTICE '✅ Project % automatically updated to % (probability: %%)', NEW.project_id, new_stage, new_probability;
+    RAISE NOTICE '✅ Project % automatically updated to % (probability: % percent)', NEW.project_id, new_stage, new_probability;
   END IF;
   
   RETURN NEW;
@@ -103,6 +103,7 @@ RETURNS TRIGGER AS $$
 DECLARE
   calculated_mrr DECIMAL(10,2);
   v_project_id UUID;
+  v_company_id UUID;
 BEGIN
   -- Only proceed if quote has provider signature (fully signed)
   IF NEW.provider_signature_data IS NULL THEN
@@ -116,12 +117,24 @@ BEGIN
     RETURN NEW;
   END IF;
   
-  -- Calculate MRR from quote items with recurring category
-  SELECT COALESCE(SUM(qi.unit_price * qi.quantity), 0)
+  -- Calculate MRR from quote items with recurring category (supports Dutch & English + billing frequency)
+  SELECT COALESCE(SUM(
+    CASE 
+      WHEN COALESCE(qi.billing_frequency, 'monthly') = 'yearly' THEN (qi.unit_price * qi.quantity) / 12
+      WHEN qi.billing_frequency = 'quarterly' THEN (qi.unit_price * qi.quantity) / 3
+      WHEN qi.billing_frequency = 'one-time' THEN 0
+      ELSE qi.unit_price * qi.quantity
+    END
+  ), 0)
   INTO calculated_mrr
   FROM quote_items qi
   WHERE qi.quote_id = NEW.id
-    AND qi.category IN ('hosting', 'maintenance', 'subscription', 'recurring');
+    AND LOWER(qi.category) IN (
+      'hosting', 
+      'maintenance', 'onderhoud',
+      'subscription', 'abonnement',
+      'recurring', 'terugkerend'
+    );
   
   -- Update project MRR if we have a value
   IF calculated_mrr > 0 THEN
@@ -132,6 +145,22 @@ BEGIN
     WHERE id = v_project_id;
     
     RAISE NOTICE '💰 Project % MRR updated to €% from quote %', v_project_id, calculated_mrr, NEW.quote_number;
+  END IF;
+  
+  -- Get company_id from project and update company status to 'active'
+  SELECT company_id INTO v_company_id
+  FROM projects
+  WHERE id = v_project_id;
+  
+  IF v_company_id IS NOT NULL THEN
+    UPDATE companies
+    SET 
+      status = 'active',
+      updated_at = NOW()
+    WHERE id = v_company_id
+      AND status IN ('prospect', 'lead');
+    
+    RAISE NOTICE '✅ Company % status updated to active (contract signed)', v_company_id;
   END IF;
   
   RETURN NEW;
@@ -152,7 +181,7 @@ COMMENT ON FUNCTION update_project_on_quote_status_change() IS
   'Auto-updates project stage: sent→quote_sent, signed→quote_signed (includes provider signature), rejected→lost';
 
 COMMENT ON FUNCTION update_project_mrr_from_quote() IS 
-  'Auto-calculates MRR from quote items when provider signs quote';
+  'Auto-calculates MRR from quote items (respects billing_frequency) and updates company status to active when provider signs quote';
 
 COMMENT ON TRIGGER quote_signed_update_mrr ON quotes IS 
   'Calculates project MRR from recurring quote items when provider signature is added';
@@ -170,15 +199,18 @@ BEGIN
   RAISE NOTICE '   2. Provider signature → project.monthly_recurring_revenue calculated';
   RAISE NOTICE '';
   RAISE NOTICE '💰 MRR Calculation:';
-  RAISE NOTICE '   • Sums quote_items with category IN (hosting, maintenance, subscription, recurring)';
+  RAISE NOTICE '   • Sums quote_items with category: hosting/onderhoud, maintenance, subscription/abonnement, recurring/terugkerend';
+  RAISE NOTICE '   • Respects billing_frequency: yearly/12, quarterly/3, monthly*1';
   RAISE NOTICE '   • Updates project.monthly_recurring_revenue';
+  RAISE NOTICE '   • Updates company.status → active (if prospect/lead)';
   RAISE NOTICE '   • Triggers dashboard MRR recalculation';
   RAISE NOTICE '';
   RAISE NOTICE '🎯 Complete Flow:';
   RAISE NOTICE '   1. Create quote → no automation';
   RAISE NOTICE '   2. Customer signs → quote.sign_status = signed';
-  RAISE NOTICE '   3. Provider signs → quote.provider_signature_data added';
-  RAISE NOTICE '   4. → Project stage = quote_signed (90% probability)';
+  RAISE NOTICE '   3. Provider signs → quote.provider_signature_dat (respects billing_frequency)';
+  RAISE NOTICE '   6. → Company status = active (if was prospect/lead)';
+  RAISE NOTICE '   7. → Project stage = quote_signed (90 percent probability)';
   RAISE NOTICE '   5. → Project MRR calculated from recurring items';
   RAISE NOTICE '   6. → Dashboard updates automatically! 🎉';
   RAISE NOTICE '';

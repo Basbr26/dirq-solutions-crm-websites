@@ -33,6 +33,7 @@ export interface QuoteTemplateItem {
   quantity: number;
   unit_price: number;
   category?: string;
+  billing_frequency?: 'monthly' | 'yearly' | 'quarterly' | 'one-time';
 }
 
 export interface QuoteTemplate {
@@ -82,6 +83,7 @@ De website wordt opgeleverd binnen 14 werkdagen na akkoord op deze offerte en on
       quantity: 1,
       unit_price: setupFee,
       category: 'Setup',
+      billing_frequency: 'one-time',
     },
     {
       title: 'Finance Starter Website - Maandelijks Onderhoud',
@@ -101,6 +103,7 @@ Maandelijkse kosten bedragen €${monthlyFee.toFixed(2)} en worden vooraf per kw
       quantity: 12,
       unit_price: monthlyFee,
       category: 'Abonnement',
+      billing_frequency: 'yearly',
     },
   ];
 
@@ -243,6 +246,7 @@ De website wordt opgeleverd binnen 21 werkdagen na akkoord op deze offerte en on
       quantity: 1,
       unit_price: setupFee,
       category: 'Setup',
+      billing_frequency: 'one-time',
     },
     {
       title: 'Finance Growth Website - Premium Onderhoud',
@@ -266,6 +270,7 @@ Maandelijkse kosten bedragen €${monthlyFee.toFixed(2)} en worden vooraf per kw
       quantity: 12,
       unit_price: monthlyFee,
       category: 'Abonnement',
+      billing_frequency: 'yearly',
     },
   ];
 
