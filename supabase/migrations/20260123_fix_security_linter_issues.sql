@@ -103,11 +103,10 @@ BEGIN
     -- Enable RLS
     ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
     
-    -- Policy: Users can view their own tasks or tasks they created
-    CREATE POLICY "Users can view own tasks" ON tasks
+    -- Policy: Users can view their assigned tasks
+    CREATE POLICY "Users can view assigned tasks" ON tasks
       FOR SELECT USING (
         assigned_to = auth.uid() OR
-        created_by = auth.uid() OR
         public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
       );
     
@@ -117,11 +116,10 @@ BEGIN
         public.user_role() IN ('super_admin', 'ADMIN', 'SALES', 'MANAGER')
       );
     
-    -- Policy: Users can update own tasks
-    CREATE POLICY "Users can update own tasks" ON tasks
+    -- Policy: Users can update assigned tasks
+    CREATE POLICY "Users can update assigned tasks" ON tasks
       FOR UPDATE USING (
         assigned_to = auth.uid() OR
-        created_by = auth.uid() OR
         public.user_role() IN ('super_admin', 'ADMIN', 'MANAGER')
       );
     
