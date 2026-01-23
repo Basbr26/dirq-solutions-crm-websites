@@ -37,6 +37,9 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useCreateInteraction, CreateInteractionData } from '../hooks/useInteractions';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
+import { useContact } from '@/features/contacts/hooks/useContacts';
+import { useProjects, useProject } from '@/features/projects/hooks/useProjects';
+import { useQuotes, useQuote } from '@/features/quotes/hooks/useQuotes';
 import { useTranslation } from 'react-i18next';
 
 interface AddInteractionDialogProps {
@@ -61,7 +64,25 @@ export function AddInteractionDialog({
   const { t } = useTranslation();
   const [isTask, setIsTask] = useState(defaultType === 'task');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | undefined>(companyId);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(projectId);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | undefined>(quoteId);
   const { companies: companiesData } = useCompanies({});
+  
+  // Auto-fetch related entities when IDs are provided
+  const { data: contactData } = useContact(contactId || '');
+  const { data: projectData } = useProject(projectId || '');
+  const { data: quoteData } = useQuote(quoteId || '');
+  
+  // Determine the company_id for fetching related projects/quotes
+  const effectiveCompanyId = companyId || contactData?.company_id;
+  
+  // Fetch projects and quotes for the company (for optional linking)
+  const { projects: companyProjects } = useProjects(
+    effectiveCompanyId ? { company_id: effectiveCompanyId } : undefined
+  );
+  const { quotes: companyQuotes } = useQuotes(
+    effectiveCompanyId ? { company_id: effectiveCompanyId } : undefined
+  );
   
   const interactionTypes = [
     { value: 'call', label: t('interactions.types.call'), icon: Phone, color: 'text-blue-500' },
@@ -97,19 +118,32 @@ export function AddInteractionDialog({
   }, [open, defaultType, setValue]);
 
   const onSubmit = async (data: any) => {
-    // Use either the prop companyId or the selected one from the dropdown
-    const finalCompanyId = companyId || selectedCompanyId;
+    // Auto-populate company_id from various sources
+    const finalCompanyId = companyId || 
+      contactData?.company_id || 
+      projectData?.company_id || 
+      quoteData?.company_id || 
+      selectedCompanyId;
     
-    // Require companyId if neither is set
+    // Auto-populate contact_id from project or quote if not provided
+    const finalContactId = contactId || 
+      projectData?.contact_id || 
+      quoteData?.contact_id;
+    
+    // Use selected project/quote or the ones passed as props
+    const finalProjectId = selectedProjectId || projectId;
+    const finalQuoteId = selectedQuoteId || quoteId;
+    
+    // Require companyId
     if (!finalCompanyId) {
       return;
     }
 
     const interactionData: CreateInteractionData = {
       company_id: finalCompanyId,
-      contact_id: contactId,
-      lead_id: projectId, // Link to project if provided
-      quote_id: quoteId, // Link to quote if provided
+      contact_id: finalContactId,
+      lead_id: finalProjectId, // Link to project if provided
+      quote_id: finalQuoteId, // Link to quote if provided
       type: data.type,
       subject: data.subject,
       description: data.description || undefined,
@@ -143,6 +177,8 @@ export function AddInteractionDialog({
       onSuccess: () => {
         reset();
         setIsTask(false);
+        setSelectedProjectId(undefined);
+        setSelectedQuoteId(undefined);
         onOpenChange(false);
       },
     });
@@ -173,7 +209,7 @@ export function AddInteractionDialog({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Company Selection (only if no companyId prop provided) */}
-          {!companyId && (
+          {!companyId && !contactId && (
             <div className="space-y-2">
               <Label htmlFor="company">{t('common.company')} *</Label>
               <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
@@ -187,6 +223,45 @@ export function AddInteractionDialog({
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                         {company.name}
                       </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Optional Project/Quote linking (when logging from contact or company) */}
+          {!projectId && effectiveCompanyId && companyProjects && companyProjects.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="project">{t('projects.title')} ({t('common.optional')})</Label>
+              <Select value={selectedProjectId} onValueChange={setSelectedProjectId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('projects.selectProject')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Geen deal</SelectItem>
+                  {companyProjects.map((project: any) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {!quoteId && effectiveCompanyId && companyQuotes && companyQuotes.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="quote">{t('quotes.title')} ({t('common.optional')})</Label>
+              <Select value={selectedQuoteId} onValueChange={setSelectedQuoteId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('quotes.selectQuote')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Geen offerte</SelectItem>
+                  {companyQuotes.map((quote: any) => (
+                    <SelectItem key={quote.id} value={quote.id}>
+                      {quote.quote_number} - {quote.title}
                     </SelectItem>
                   ))}
                 </SelectContent>
