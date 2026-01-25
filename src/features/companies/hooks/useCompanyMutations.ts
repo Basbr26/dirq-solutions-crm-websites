@@ -12,6 +12,19 @@ export function useCreateCompany() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Check if KVK number already exists
+      if (data.kvk_number) {
+        const { data: existing } = await supabase
+          .from('companies')
+          .select('id, name')
+          .eq('kvk_number', data.kvk_number)
+          .maybeSingle();
+
+        if (existing) {
+          throw new Error(`Dit KVK nummer is al in gebruik bij bedrijf "${existing.name}"`);
+        }
+      }
+
       const { data: company, error } = await supabase
         .from('companies')
         .insert([{
@@ -25,7 +38,13 @@ export function useCreateCompany() {
         `)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Check for duplicate KVK constraint violation
+        if (error.code === '23505' && error.message.includes('companies_kvk_number_key')) {
+          throw new Error('Dit KVK nummer is al in gebruik');
+        }
+        throw error;
+      }
       return company as Company;
     },
     onSuccess: () => {
