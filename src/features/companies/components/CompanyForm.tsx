@@ -31,10 +31,11 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Sparkles, FileText, Search } from 'lucide-react';
+import { Loader2, Sparkles, FileText, Search, AlertCircle } from 'lucide-react';
 import { parseDrimbleText, parseCompanySize, cleanPhoneNumber, formatKVKNumber } from '@/lib/companyDataParser';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 
 const companyFormSchema = z.object({
@@ -72,6 +73,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
   const { t } = useTranslation();
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
+  const [kvkError, setKvkError] = useState<string | null>(null);
   
   const { data: industries } = useQuery({
     queryKey: ['industries'],
@@ -227,10 +229,44 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     );
   };
 
-  const handleSubmit = (data: CompanyFormData) => {
+  const handleSubmit = async (data: CompanyFormData) => {
+    // Clear any previous error
+    setKvkError(null);
+    
+    try {
+      // Check if company name already exists
+      const { data: existingName } = await supabase
+        .from('companies')
+        .select('id, name')
+        .eq('name', data.name)
+        .maybeSingle();
+
+      if (existingName && existingName.id !== company?.id) {
+        setKvkError(`Een bedrijf met de naam "${data.name}" bestaat al`);
+        return;
+      }
+
+      // Check KVK number if provided
+      if (data.kvk_number) {
+        const { data: existingKVK } = await supabase
+          .from('companies')
+          .select('id, name')
+          .eq('kvk_number', data.kvk_number)
+          .maybeSingle();
+
+        if (existingKVK && existingKVK.id !== company?.id) {
+          setKvkError(`Dit KVK nummer is al in gebruik bij bedrijf "${existingKVK.name}"`);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking duplicates:', error);
+    }
+    
     onSubmit(data);
     if (!company) {
       form.reset();
+      setKvkError(null);
     }
   };
 
@@ -541,19 +577,32 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
               <FormField
                 control={form.control}
-                name="website"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Website</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="https://www.company.com" 
-                        inputMode="url"
-                        type="url"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
+              {kvkError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Bedrijf bestaat al</AlertTitle>
+                  <AlertDescription>{kvkError}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="kvk_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>KVK Nummer</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="12345678 (8 cijfers)" 
+                          inputMode="numeric"
+                          maxLength={8}
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            setKvkError(null); // Clear error when user types
+                          }}
+                          className={kvkError ? 'border-red-500' : ''}
                   </FormItem>
                 )}
               />

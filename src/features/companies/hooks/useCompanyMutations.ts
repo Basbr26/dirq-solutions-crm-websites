@@ -55,6 +55,10 @@ export function useCreateCompany() {
     },
     onError: (error: Error) => {
       haptics.error();
+      // Don't show toast for duplicate KVK - handled in form
+      if (error.message.includes('KVK nummer is al in gebruik')) {
+        return;
+      }
       toast.error('Fout bij aanmaken bedrijf', {
         description: error.message,
       });
