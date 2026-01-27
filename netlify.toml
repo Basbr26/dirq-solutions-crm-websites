@@ -16,6 +16,14 @@
   to = "/index.html"
   status = 200
   force = false
+  conditions = {path = "!_redirects"}
+  
+# Ensure assets are served with correct MIME types
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+  force = false
 
 # Security headers
 [[headers]]
