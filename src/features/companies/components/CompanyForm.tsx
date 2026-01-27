@@ -210,36 +210,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     setShowQuickFill(false);
   };
 
-  const handleKVKLookup = () => {
-    // Check if we have a KVK number to search with
-    const kvkNumber = form.watch('kvk_number');
-    const companyName = form.watch('name');
-    
-    let url = 'https://www.kvk.nl/zoeken/';
-    
-    // Add search parameter if we have a KVK number or company name
-    if (kvkNumber && kvkNumber.length === 8) {
-      url += `?q=${kvkNumber}`;
-    } else if (companyName) {
-      url += `?q=${encodeURIComponent(companyName)}`;
-    }
-    
-    toast.info(t('dialogs.kvkToast'), {
-      duration: 5000,
-    });
-    
-    // Open popup positioned on the right side
-    const width = 900;
-    const height = 1000;
-    const left = window.screen.width - width - 50;
-    const top = 50;
-    
-    window.open(
-      url,
-      'kvk-search',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    );
-  };
+
 
   const handleSubmit = async (data: CompanyFormData) => {
     // Clear any previous error
@@ -325,43 +296,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
               <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
                 <p className="font-medium mb-1">💡 Zo werkt het:</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>{t('companies.searchViaKvk')}</li>
-                  <li>Kopieer de gegevens (naam, adres, etc.)</li>
+                  <li>Zoek het bedrijf op via KVK.nl of een andere bron</li>
+                  <li>Kopieer de gegevens (naam, adres, KVK nummer, etc.)</li>
                   <li>Plak ze in het tekstveld hieronder</li>
                   <li>Klik op "Gegevens invullen" - formulier wordt automatisch gevuld</li>
                 </ol>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-xs text-muted-foreground font-medium">
-                  {t('companies.searchKvkStep')}
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={t('companies.kvkSearch')}
-                    value={form.watch('kvk_number') || form.watch('name') || ''}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      // If it's numeric, treat as KVK number
-                      if (/^\d+$/.test(value)) {
-                        form.setValue('kvk_number', value.replace(/\D/g, '').slice(0, 8));
-                      } else {
-                        form.setValue('name', value);
-                      }
-                    }}
-                    className="text-sm flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleKVKLookup}
-                    className="shrink-0"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Open KVK
-                  </Button>
-                </div>
               </div>
               
               <div className="space-y-2">
