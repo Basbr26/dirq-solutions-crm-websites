@@ -10,7 +10,13 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [
+    react({
+      jsxRuntime: 'automatic',
+      jsxImportSource: 'react',
+    }), 
+    mode === "development" && componentTagger()
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -24,29 +30,31 @@ export default defineConfig(({ mode }) => ({
     outDir: "dist",
     assetsDir: "assets",
     sourcemap: 'hidden',
-    // Force new chunk hashes after workflow removal
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // Generate deterministic but fresh chunk names
         entryFileNames: `assets/[name].[hash].js`,
         chunkFileNames: `assets/[name].[hash].js`,
         assetFileNames: `assets/[name].[hash].[ext]`,
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // Separate React core (most critical)
-            if (id.includes('react/') || id.includes('react-dom/')) {
-              return 'react-core';
+            // React MUST be in its own chunk and loaded FIRST
+            if (id.includes('react/') && !id.includes('react-router') && !id.includes('react-dom')) {
+              return 'react';
             }
-            // React ecosystem
-            if (id.includes('react-router') || id.includes('react-hook-form') || id.includes('react-error-boundary')) {
-              return 'react-ecosystem';
+            // React-DOM in separate chunk (depends on react)
+            if (id.includes('react-dom/')) {
+              return 'react-dom';
             }
-            // Calendar libraries
+            // All other React ecosystem libraries
+            if (id.includes('react-') || id.includes('react')) {
+              return 'react-libs';
+            }
+            // Calendar
             if (id.includes('react-big-calendar') || id.includes('date-fns')) {
               return 'calendar';
             }
-            // All other vendor code
+            // Everything else
             return 'vendor';
           }
         },

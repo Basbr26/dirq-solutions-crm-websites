@@ -3,6 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!-- Force cache invalidation after workflow removal -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Dirq Solutions - CRM voor Website Ontwikkeling</title>
     <meta name="description" content="Professioneel CRM systeem voor website ontwikkeling en verkoop" />
     <meta name="author" content="Dirq Solutions" />
@@ -18,6 +22,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    
+    <!-- Critical: Preload React to ensure it loads before any components -->
+    <link rel="modulepreload" href="/node_modules/react/index.js" />
+    <link rel="modulepreload" href="/node_modules/react-dom/client.js" />
     <meta name="apple-mobile-web-app-title" content="Dirq CRM" />
 
     <meta property="og:title" content="Dirq Solutions - CRM voor Website Ontwikkeling" />
