@@ -64,7 +64,9 @@
     "bulkActions": "Bulk actions",
     "cancelSelection": "Cancel selection",
     "tryDifferentSearch": "Try a different search",
-    "addFirstItem": "Add your first item"
+    "addFirstItem": "Add your first item",
+    "subject": "Subject",
+    "description": "Description"
   },
   "navigation": {
     "dashboard": "Dashboard",

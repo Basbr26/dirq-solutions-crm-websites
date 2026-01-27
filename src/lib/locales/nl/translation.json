@@ -66,7 +66,9 @@
     "bulkActions": "Bulk acties",
     "cancelSelection": "Selectie annuleren",
     "tryDifferentSearch": "Probeer een andere zoekopdracht",
-    "addFirstItem": "Voeg je eerste item toe"
+    "addFirstItem": "Voeg je eerste item toe",
+    "subject": "Onderwerp",
+    "description": "Omschrijving"
   },
   "navigation": {
     "dashboard": "Dashboard",
