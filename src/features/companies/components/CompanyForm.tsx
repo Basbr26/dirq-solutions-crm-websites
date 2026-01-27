@@ -421,7 +421,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common.status')} *</FormLabel>
+                      <FormLabel>Status *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
