@@ -22,7 +22,6 @@ import {
   Shield,
   Layers,
   Calendar,
-  Workflow,
   Mail,
 } from 'lucide-react';
 
@@ -68,7 +67,6 @@ const getNavGroups = (role: string | null, t: (key: string) => string, draftCoun
     {
       title: t('common.automation') || 'Automatisering',
       items: [
-        { title: t('common.workflows') || 'Workflows', icon: Workflow, href: '/workflows/templates', roles: ['ADMIN', 'MANAGER', 'super_admin'] },
         { title: t('navigation.emailDrafts'), icon: Mail, href: '/email-drafts', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'], badge: draftCount },
         { title: t('common.documents') || 'Documenten', icon: FileText, href: '/documents/templates', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'] },
       ],
