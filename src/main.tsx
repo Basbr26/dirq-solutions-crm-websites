@@ -5,10 +5,6 @@ import "./lib/i18n"; // Initialize i18n before React
 import "./lib/validation-messages"; // Initialize Dutch validation messages
 import { initSentry } from "./lib/sentry";
 import { GlobalErrorBoundary } from "./components/GlobalErrorBoundary";
-import { runStartupDiagnostics } from "./lib/startup-diagnostics";
-
-// Run startup diagnostics
-runStartupDiagnostics();
 
 // Initialize Sentry before rendering the app
 initSentry();

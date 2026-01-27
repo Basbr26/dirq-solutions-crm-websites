@@ -2,7 +2,7 @@
 # Voor Dirq Verzuim App deployment
 
 [build]
-  command = "bash netlify-build.sh"
+  command = "NODE_OPTIONS='--max-old-space-size=4096' npm run build"
   publish = "dist"
   
 [build.environment]
