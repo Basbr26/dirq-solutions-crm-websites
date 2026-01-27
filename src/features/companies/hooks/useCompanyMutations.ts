@@ -12,19 +12,6 @@ export function useCreateCompany() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Check if KVK number already exists
-      if (data.kvk_number) {
-        const { data: existing } = await supabase
-          .from('companies')
-          .select('id, name')
-          .eq('kvk_number', data.kvk_number)
-          .maybeSingle();
-
-        if (existing) {
-          throw new Error(`Dit KVK nummer is al in gebruik bij bedrijf "${existing.name}"`);
-        }
-      }
-
       const { data: company, error } = await supabase
         .from('companies')
         .insert([{
@@ -39,9 +26,14 @@ export function useCreateCompany() {
         .single();
 
       if (error) {
-        // Check for duplicate KVK constraint violation
-        if (error.code === '23505' && error.message.includes('companies_kvk_number_key')) {
-          throw new Error('Dit KVK nummer is al in gebruik');
+        // Handle database constraint violations
+        if (error.code === '23505') {
+          if (error.message.includes('companies_kvk_number_key')) {
+            throw new Error('Dit KVK nummer is al in gebruik');
+          }
+          if (error.message.includes('companies_name_unique_idx')) {
+            throw new Error('Een bedrijf met deze naam bestaat al');
+          }
         }
         throw error;
       }
@@ -55,8 +47,8 @@ export function useCreateCompany() {
     },
     onError: (error: Error) => {
       haptics.error();
-      // Don't show toast for duplicate KVK - handled in form
-      if (error.message.includes('KVK nummer is al in gebruik')) {
+      // Don't show toast - error is handled in the form's duplicate dialog
+      if (error.message.includes('bestaat al') || error.message.includes('is al in gebruik')) {
         return;
       }
       toast.error('Fout bij aanmaken bedrijf', {

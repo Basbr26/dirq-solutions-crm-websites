@@ -31,12 +31,22 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Sparkles, FileText, Search, AlertCircle } from 'lucide-react';
+import { Loader2, Sparkles, FileText, Search, AlertCircle, Building2 } from 'lucide-react';
 import { parseDrimbleText, parseCompanySize, cleanPhoneNumber, formatKVKNumber } from '@/lib/companyDataParser';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const companyFormSchema = z.object({
   name: z.string().min(2, 'Naam moet minimaal 2 karakters bevatten'),
@@ -71,9 +81,11 @@ interface CompanyFormProps {
 
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
-  const [kvkError, setKvkError] = useState<string | null>(null);
+  const [duplicateInfo, setDuplicateInfo] = useState<{ type: 'name' | 'kvk', existingName: string, existingId: string } | null>(null);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   
   const { data: industries } = useQuery({
     queryKey: ['industries'],
@@ -231,18 +243,23 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
   const handleSubmit = async (data: CompanyFormData) => {
     // Clear any previous error
-    setKvkError(null);
+    setDuplicateInfo(null);
     
     try {
       // Check if company name already exists
       const { data: existingName } = await supabase
         .from('companies')
         .select('id, name')
-        .eq('name', data.name)
+        .ilike('name', data.name)  // Case-insensitive
         .maybeSingle();
 
       if (existingName && existingName.id !== company?.id) {
-        setKvkError(t('companies.companyExists', { name: data.name }));
+        setDuplicateInfo({
+          type: 'name',
+          existingName: existingName.name,
+          existingId: existingName.id,
+        });
+        setShowDuplicateDialog(true);
         return;
       }
 
@@ -255,7 +272,12 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
           .maybeSingle();
 
         if (existingKVK && existingKVK.id !== company?.id) {
-          setKvkError(t('companies.kvkInUse', { name: existingKVK.name }));
+          setDuplicateInfo({
+            type: 'kvk',
+            existingName: existingKVK.name,
+            existingId: existingKVK.id,
+          });
+          setShowDuplicateDialog(true);
           return;
         }
       }
@@ -266,7 +288,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     onSubmit(data);
     if (!company) {
       form.reset();
-      setKvkError(null);
+      setDuplicateInfo(null);
     }
   };
 
@@ -599,14 +621,6 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             <div className="space-y-4">
               <h3 className="text-sm font-semibold">Externe Data (optioneel)</h3>
               
-              {kvkError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Bedrijf bestaat al</AlertTitle>
-                  <AlertDescription>{kvkError}</AlertDescription>
-                </Alert>
-              )}
-              
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -622,9 +636,8 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            setKvkError(null);
+                            setDuplicateInfo(null);
                           }}
-                          className={kvkError ? 'border-red-500' : ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -757,6 +770,48 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
           </form>
         </Form>
       </DialogContent>
+
+      {/* Duplicate Warning Dialog */}
+      <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Bedrijf bestaat al
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                {duplicateInfo?.type === 'name' ? (
+                  <span>
+                    Er bestaat al een bedrijf met de naam <strong>"{duplicateInfo.existingName}"</strong>.
+                  </span>
+                ) : (
+                  <span>
+                    Dit KVK nummer is al in gebruik bij bedrijf <strong>"{duplicateInfo?.existingName}"</strong>.
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Wil je het bestaande bedrijf bekijken?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (duplicateInfo?.existingId) {
+                  onOpenChange(false);
+                  navigate(`/companies/${duplicateInfo.existingId}`);
+                }
+              }}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Bekijk Bestaand Bedrijf
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
