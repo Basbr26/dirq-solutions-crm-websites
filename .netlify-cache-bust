@@ -1,0 +1,6 @@
+# Netlify Build Cache Buster
+# Change this value to force Netlify to rebuild from scratch
+# Last reset: 2026-01-27 - Removed Workflow Builder feature
+
+BUILD_VERSION=2026-01-27-workflow-removal
+CACHE_BUST=true
