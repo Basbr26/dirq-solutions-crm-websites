@@ -42,6 +42,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -93,6 +94,8 @@ export default function QuoteDetailPage() {
   const [providerSigning, setProviderSigning] = useState(false);
   const [showProviderSignatureCanvas, setShowProviderSignatureCanvas] = useState(false);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedFields, setEditedFields] = useState<Record<string, any>>({});
 
   const statusConfig = useQuoteStatusConfig();
 
@@ -158,6 +161,33 @@ export default function QuoteDetailPage() {
 
   const canEdit = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
   const canDelete = role === 'ADMIN';
+
+  const handleSaveInlineEdit = async () => {
+    if (!quote || Object.keys(editedFields).length === 0) return;
+    
+    try {
+      await updateQuote.mutateAsync(editedFields as any);
+      setIsEditMode(false);
+      setEditedFields({});
+      toast.success('Offerte bijgewerkt');
+    } catch (error) {
+      console.error('Error updating quote:', error);
+      toast.error('Fout bij opslaan');
+    }
+  };
+
+  const handleCancelInlineEdit = () => {
+    setIsEditMode(false);
+    setEditedFields({});
+  };
+
+  const updateField = (field: string, value: any) => {
+    setEditedFields(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getFieldValue = (field: string, defaultValue: any) => {
+    return editedFields[field] !== undefined ? editedFields[field] : defaultValue;
+  };
 
   // Fetch quote with all related data
   const { data: quote, isLoading } = useQuery({
@@ -578,13 +608,7 @@ export default function QuoteDetailPage() {
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-3xl font-bold">{quote.title}</h1>
-                <Badge className={statusConfig[displayStatus].color} variant="outline">
-                  <StatusIcon className="h-3 w-3 mr-1" />
-                  {statusConfig[displayStatus].label}
-                </Badge>
-              </div>
+              <h1 className="text-3xl font-bold mb-2">{quote.title}</h1>
               <p className="text-muted-foreground">{t('quotes.quoteLabel')} {quote.quote_number}</p>
             </div>
 
@@ -612,10 +636,25 @@ export default function QuoteDetailPage() {
               </Button>
             )}
             {canEdit && (
-              <Button onClick={() => setEditDialogOpen(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                {t('common.edit')}
-              </Button>
+              <>
+                {!isEditMode ? (
+                  <Button onClick={() => setIsEditMode(true)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    {t('common.edit')}
+                  </Button>
+                ) : (
+                  <>
+                    <Button onClick={handleSaveInlineEdit} disabled={updateQuote.isPending}>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Opslaan
+                    </Button>
+                    <Button variant="outline" onClick={handleCancelInlineEdit}>
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Annuleren
+                    </Button>
+                  </>
+                )}
+              </>
             )}
             {canDelete && (
               <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
@@ -640,10 +679,10 @@ export default function QuoteDetailPage() {
                 <div className="flex items-start gap-3">
                   <Building2 className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-blue-900 mb-1">{t('companies.title')}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('companies.singular')}</p>
                     <Link 
                       to={`/companies/${quote.company?.id}`}
-                      className="font-semibold text-blue-700 hover:text-blue-900 hover:underline block truncate"
+                      className="font-medium hover:underline block truncate"
                     >
                       {quote.company?.name}
                     </Link>
@@ -693,7 +732,16 @@ export default function QuoteDetailPage() {
                   <Separator className="my-6" />
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">{t('quotes.description')}</p>
-                    <p className="text-sm leading-relaxed">{quote.description}</p>
+                    {isEditMode ? (
+                      <Textarea
+                        className="min-h-[100px]"
+                        value={getFieldValue('description', quote.description)}
+                        onChange={(e) => updateField('description', e.target.value)}
+                        placeholder="Beschrijving..."
+                      />
+                    ) : (
+                      <p className="text-sm leading-relaxed">{quote.description}</p>
+                    )}
                   </div>
                 </>
               )}
@@ -708,9 +756,18 @@ export default function QuoteDetailPage() {
                           <CreditCard className="h-4 w-4" />
                           {t('quotes.paymentTerms')}
                         </p>
-                        <div className="text-sm">
-                          {formatDescription(quote.payment_terms)}
-                        </div>
+                        {isEditMode ? (
+                          <Textarea
+                            className="min-h-[100px]"
+                            value={getFieldValue('payment_terms', quote.payment_terms)}
+                            onChange={(e) => updateField('payment_terms', e.target.value)}
+                            placeholder="Betalingsvoorwaarden...\n\nTip: gebruik • voor bullet points"
+                          />
+                        ) : (
+                          <div className="text-sm">
+                            {formatDescription(quote.payment_terms)}
+                          </div>
+                        )}
                       </div>
                     )}
                     {quote.delivery_time && (
@@ -719,9 +776,18 @@ export default function QuoteDetailPage() {
                           <Clock className="h-4 w-4" />
                           {t('quotes.deliveryTime')}
                         </p>
-                        <div className="text-sm">
-                          {formatDescription(quote.delivery_time)}
-                        </div>
+                        {isEditMode ? (
+                          <Textarea
+                            className="min-h-[100px]"
+                            value={getFieldValue('delivery_time', quote.delivery_time)}
+                            onChange={(e) => updateField('delivery_time', e.target.value)}
+                            placeholder="Levertijd...\n\nTip: gebruik • voor bullet points"
+                          />
+                        ) : (
+                          <div className="text-sm">
+                            {formatDescription(quote.delivery_time)}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -834,21 +900,30 @@ export default function QuoteDetailPage() {
           </Card>
 
           {/* Internal Notes */}
-          {quote.notes && (
+          {(quote.notes || isEditMode) && (
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">{t('quotes.internalNotes')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm whitespace-pre-wrap">
-                  {formatDescription(quote.notes)}
-                </div>
+                {isEditMode ? (
+                  <Textarea
+                    className="min-h-[120px]"
+                    value={getFieldValue('notes', quote.notes || '')}
+                    onChange={(e) => updateField('notes', e.target.value)}
+                    placeholder="Interne notities...\n\nTip: gebruik • voor bullet points"
+                  />
+                ) : (
+                  <div className="text-sm whitespace-pre-wrap">
+                    {formatDescription(quote.notes)}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
 
           {/* Client Notes */}
-          {quote.client_notes && (
+          {(quote.client_notes || isEditMode) && (
             <Card>
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -857,9 +932,18 @@ export default function QuoteDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm whitespace-pre-wrap">
-                  {formatDescription(quote.client_notes)}
-                </div>
+                {isEditMode ? (
+                  <Textarea
+                    className="min-h-[120px]"
+                    value={getFieldValue('client_notes', quote.client_notes || '')}
+                    onChange={(e) => updateField('client_notes', e.target.value)}
+                    placeholder="Bericht aan klant...\n\nTip: gebruik • voor bullet points"
+                  />
+                ) : (
+                  <div className="text-sm whitespace-pre-wrap">
+                    {formatDescription(quote.client_notes)}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -1039,53 +1123,48 @@ export default function QuoteDetailPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Status Actions */}
-          {canEdit && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{t('quotes.changeStatus')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {quote.status === 'draft' && (
-                  <Button 
-                    className="w-full" 
-                    onClick={() => handleStatusChange('sent')}
-                    disabled={updateQuote.isPending}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {t('common.send')}
-                  </Button>
-                )}
-                {['sent', 'viewed'].includes(quote.status) && (
-                  <>
-                    <Button 
-                      className="w-full bg-green-600 hover:bg-green-700" 
-                      onClick={() => handleStatusChange('accepted')}
-                      disabled={updateQuote.isPending}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      {t('quotes.accept')}
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      className="w-full" 
-                      onClick={() => handleStatusChange('rejected')}
-                      disabled={updateQuote.isPending}
-                    >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      {t('quotes.reject')}
-                    </Button>
-                  </>
-                )}
-                {quote.status === 'accepted' && (
-                  <div className="text-center py-4">
-                    <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-green-600">Offerte Geaccepteerd</p>
+          {/* Status Tracker */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Status</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {/* Current Status Badge */}
+                <div className="flex items-center justify-between p-3 rounded-lg border-2" style={{
+                  borderColor: statusConfig[quote.status]?.color || '#94a3b8',
+                  backgroundColor: `${statusConfig[quote.status]?.color}10` || '#f1f5f9'
+                }}>
+                  <span className="font-semibold" style={{ color: statusConfig[quote.status]?.color }}>
+                    {statusConfig[quote.status]?.label}
+                  </span>
+                  {statusConfig[quote.status]?.icon}
+                </div>
+
+                {/* Status Progress Indicators */}
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`w-2 h-2 rounded-full ${quote.status !== 'draft' ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                    <span className={quote.status !== 'draft' ? 'text-foreground' : 'text-muted-foreground'}>
+                      Verzonden
+                    </span>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`w-2 h-2 rounded-full ${['viewed', 'accepted', 'rejected'].includes(quote.status) ? 'bg-purple-500' : 'bg-gray-300'}`} />
+                    <span className={['viewed', 'accepted', 'rejected'].includes(quote.status) ? 'text-foreground' : 'text-muted-foreground'}>
+                      Bekeken
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`w-2 h-2 rounded-full ${quote.status === 'accepted' ? 'bg-green-500' : quote.status === 'rejected' ? 'bg-red-500' : 'bg-gray-300'}`} />
+                    <span className={['accepted', 'rejected'].includes(quote.status) ? 'text-foreground' : 'text-muted-foreground'}>
+                      {quote.status === 'accepted' ? 'Geaccepteerd' : quote.status === 'rejected' ? 'Afgewezen' : 'Beslissing'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Timeline */}
           <Card>

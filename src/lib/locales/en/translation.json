@@ -166,6 +166,7 @@
   },
   "companies": {
     "title": "Companies",
+    "singular": "Company",
     "subtitle": "Manage and track all your business relationships",
     "addNew": "New company",
     "newCompany": "New Company",
