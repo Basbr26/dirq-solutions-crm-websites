@@ -56,11 +56,15 @@
 
 ## 📋 Quick Links
 
-- **📊 [Current Status](STATUS.md)** - Features, bugs, production readiness
+- **📊 [Current Status](docs/STATUS.md)** - Features, bugs, production readiness
 - **📝 [Changelog](CHANGELOG.md)** - Alle updates chronologisch
-- **🏗️ [Setup Guides](./docs/)** - Google Calendar, Supabase, deployment
-- **🤖 [n8n Workflows](N8N_WORKFLOWS.md)** - 28 automation workflows
-- **📦 [Archived Audits](./archive/)** - Historische audit documenten
+- **🏗️ [Setup Guides](docs/setup-guides/)** - Google Calendar, Supabase, deployment
+- **🔧 [Troubleshooting](docs/troubleshooting/)** - RLS fixes, Google Calendar sync
+- **📖 [Implementation Guides](docs/implementation/)** - AI, i18n, mobile UX
+- **📊 [Audit Reports](docs/audit-reports/)** - Code audits & analyses
+- **🤖 [n8n Workflows](docs/N8N_WORKFLOWS.md)** - 28 automation workflows
+- **🗄️ [SQL Scripts](scripts/sql/)** - Checks, fixes, diagnostics
+- **📦 [Archived Audits](archive/)** - Historische audit documenten
 
 ---
 
@@ -105,7 +109,37 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 
 ---
 
-## 🚀 Quick Start
+## � Project Structure
+
+```
+dirq-solutions-crmwebsite/
+├── docs/                           # 📚 All documentation
+│   ├── setup-guides/              # Setup & installation guides
+│   ├── troubleshooting/           # Fixes & problem solving
+│   ├── implementation/            # Feature implementation docs
+│   ├── audit-reports/             # Code audits & analyses
+│   ├── STATUS.md                  # Current project status
+│   └── N8N_WORKFLOWS.md           # Automation workflows
+├── scripts/                        # 🔧 Utility scripts
+│   ├── sql/                       # SQL scripts
+│   │   ├── checks/               # Database checks
+│   │   ├── fixes/                # Database fixes
+│   │   └── diagnostics/          # Diagnostic queries
+│   └── powershell/               # PowerShell automation
+├── src/                           # 💻 Application code
+│   ├── features/                 # Feature modules
+│   ├── components/               # Shared components
+│   ├── lib/                      # Utilities & config
+│   └── hooks/                    # Custom React hooks
+├── supabase/                      # 🗄️ Database
+│   ├── migrations/               # Database migrations
+│   └── functions/                # Edge functions
+└── archive/                       # 📦 Historical documents
+```
+
+---
+
+## �🚀 Quick Start
 
 ### Prerequisites
 

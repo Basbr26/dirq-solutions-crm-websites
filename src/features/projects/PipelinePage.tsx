@@ -114,9 +114,7 @@ export default function PipelinePage() {
 
       // Show toast with project name and company
       const projectName = draggedProject.title || 'Project';
-      const companyName = draggedProject.companies?.name || draggedProject.profiles?.voornaam 
-        ? `${draggedProject.profiles?.voornaam} ${draggedProject.profiles?.achternaam}`.trim()
-        : 'Onbekend';
+      const companyName = draggedProject.companies?.name || 'Onbekend bedrijf';
       
       toast.success(`${projectName} (${companyName}) verplaatst naar ${projectStageConfig[stage].label}`);
     } catch (error) {
@@ -160,9 +158,7 @@ export default function PipelinePage() {
 
       // Show toast with project name and company
       const projectName = project.title || 'Project';
-      const companyName = project.companies?.name || project.profiles?.voornaam
-        ? `${project.profiles?.voornaam} ${project.profiles?.achternaam}`.trim()
-        : 'Onbekend';
+      const companyName = project.companies?.name || 'Onbekend bedrijf';
       
       toast.success(`${projectName} (${companyName}) verplaatst naar ${projectStageConfig[newStage].label}`);
     } catch (error) {

@@ -163,7 +163,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
   const handleParsePaste = () => {
     if (!pasteText.trim()) {
-      toast.error('Plak eerst bedrijfsgegevens in het tekstveld');
+      toast.error(t('companies.pasteDataFirst'));
       return;
     }
 
@@ -193,7 +193,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     // Set source to Manual for paste
     form.setValue('source', 'Manual');
     
-    toast.success('Bedrijfsgegevens ingevuld!');
+    toast.success(t('companies.dataFilled'));
     setPasteText('');
     setShowQuickFill(false);
   };
@@ -242,7 +242,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
         .maybeSingle();
 
       if (existingName && existingName.id !== company?.id) {
-        setKvkError(`Een bedrijf met de naam "${data.name}" bestaat al`);
+        setKvkError(t('companies.companyExists', { name: data.name }));
         return;
       }
 
@@ -255,7 +255,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
           .maybeSingle();
 
         if (existingKVK && existingKVK.id !== company?.id) {
-          setKvkError(`Dit KVK nummer is al in gebruik bij bedrijf "${existingKVK.name}"`);
+          setKvkError(t('companies.kvkInUse', { name: existingKVK.name }));
           return;
         }
       }
@@ -303,7 +303,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
               <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
                 <p className="font-medium mb-1">💡 Zo werkt het:</p>
                 <ol className="list-decimal list-inside space-y-1">
-                  <li>Zoek het bedrijf op via de KVK knop</li>
+                  <li>{t('companies.searchViaKvk')}</li>
                   <li>Kopieer de gegevens (naam, adres, etc.)</li>
                   <li>Plak ze in het tekstveld hieronder</li>
                   <li>Klik op "Gegevens invullen" - formulier wordt automatisch gevuld</li>
@@ -312,11 +312,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
               
               <div className="space-y-2">
                 <label className="text-xs text-muted-foreground font-medium">
-                  Stap 1: Zoek bedrijf op KVK
+                  {t('companies.searchKvkStep')}
                 </label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="KVK nummer of bedrijfsnaam"
+                    placeholder={t('companies.kvkSearch')}
                     value={form.watch('kvk_number') || form.watch('name') || ''}
                     onChange={(e) => {
                       const value = e.target.value;
@@ -347,7 +347,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   Stap 2: Plak gekopieerde gegevens
                 </label>
                 <Textarea
-                  placeholder="Plak hier de bedrijfsgegevens van KVK, Drimble, of andere bron..."
+                  placeholder={t('companies.pasteBusinessData')}
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
                   className="min-h-[100px] text-sm"
@@ -393,7 +393,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bedrijfsnaam *</FormLabel>
+                    <FormLabel>{t('formLabels.companyName')} *</FormLabel>
                     <FormControl>
                       <Input placeholder="Acme Corporation" {...field} />
                     </FormControl>
@@ -408,7 +408,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="industry_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Branche</FormLabel>
+                      <FormLabel>{t('companies.industry')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -433,7 +433,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="company_size"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bedrijfsgrootte</FormLabel>
+                      <FormLabel>{t('formLabels.companySize')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -460,7 +460,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status *</FormLabel>
+                      <FormLabel>{t('common.status')} *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -484,7 +484,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Prioriteit *</FormLabel>
+                      <FormLabel>{t('companies.priority')} *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -508,7 +508,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 name="source"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lead Bron</FormLabel>
+                    <FormLabel>{t('companies.source')}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -541,7 +541,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>E-mail</FormLabel>
+                      <FormLabel>{t('formLabels.email')}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="info@company.com" 
@@ -560,7 +560,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Telefoon</FormLabel>
+                      <FormLabel>{t('formLabels.phone')}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="+31 20 123 4567" 
@@ -577,6 +577,28 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
 
               <FormField
                 control={form.control}
+                name="website"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('formLabels.website')}</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://www.company.com" 
+                        inputMode="url"
+                        type="url"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* External Data Integration (v2.0) */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold">Externe Data (optioneel)</h3>
+              
               {kvkError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -591,7 +613,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="kvk_number"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>KVK Nummer</FormLabel>
+                      <FormLabel>{t('formLabels.kvkNumber')}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="12345678 (8 cijfers)" 
@@ -600,31 +622,9 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            setKvkError(null); // Clear error when user types
+                            setKvkError(null);
                           }}
                           className={kvkError ? 'border-red-500' : ''}
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* External Data Integration (v2.0) */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold">Externe Data (optioneel)</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="kvk_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>KVK Nummer</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="12345678 (8 cijfers)" 
-                          inputMode="numeric"
-                          maxLength={8}
-                          {...field} 
                         />
                       </FormControl>
                       <FormMessage />
@@ -637,7 +637,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="linkedin_url"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>LinkedIn URL</FormLabel>
+                      <FormLabel>{t('formLabels.linkedinUrl')}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="https://www.linkedin.com/company/..." 
@@ -662,7 +662,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 name="address.street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Straat + Huisnummer</FormLabel>
+                    <FormLabel>{t('companies.streetAddress')}</FormLabel>
                     <FormControl>
                       <Input placeholder="Keizersgracht 123" {...field} />
                     </FormControl>
@@ -677,7 +677,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="address.postal_code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Postcode</FormLabel>
+                      <FormLabel>{t('formLabels.postalCode')}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="1015 CW" 
@@ -695,7 +695,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   name="address.city"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Stad</FormLabel>
+                      <FormLabel>{t('formLabels.city')}</FormLabel>
                       <FormControl>
                         <Input placeholder="Amsterdam" {...field} />
                       </FormControl>

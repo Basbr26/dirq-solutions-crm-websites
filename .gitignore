@@ -16,8 +16,11 @@ dist-ssr
 .env.local
 .env.*.local
 .env.webhook
-SETUP_API_KEYS.md
-API_KEYS_PRIVATE.md
+
+# Private/sensitive documentation
+docs/api-keys/
+docs/API_KEYS_PRIVATE.md
+docs/LAATSTE_PUSH_GITHUB.md
 
 # Editor directories and files
 .vscode/*

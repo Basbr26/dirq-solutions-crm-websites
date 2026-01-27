@@ -27,16 +27,18 @@ import { Contact } from "@/types/crm";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
+// Note: Zod schema validation messages can't use t() directly
+// So we keep English messages here and translate in FormMessage components
 const contactFormSchema = z.object({
-  first_name: z.string().min(1, "Voornaam is verplicht"),
-  last_name: z.string().min(1, "Achternaam is verplicht"),
-  email: z.string().email("Ongeldig e-mailadres").optional().or(z.literal("")),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().optional(),
   mobile: z.string().optional(),
   position: z.string().optional(),
   department: z.string().optional(),
-  linkedin_url: z.string().url("Ongeldige URL").optional().or(z.literal("")),
-  company_id: z.string().uuid("Selecteer een bedrijf").optional(),
+  linkedin_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+  company_id: z.string().uuid("Select a company").optional(),
   is_primary: z.boolean().default(false),
   is_decision_maker: z.boolean().default(false),
   notes: z.string().optional(),
@@ -110,7 +112,7 @@ export function ContactForm({
             name="first_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Voornaam *</FormLabel>
+                <FormLabel>{t('formLabels.firstName')} *</FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="Jan" 
@@ -128,7 +130,7 @@ export function ContactForm({
             name="last_name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Achternaam *</FormLabel>
+                <FormLabel>{t('formLabels.lastName')} *</FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="Jansen" 
@@ -149,7 +151,7 @@ export function ContactForm({
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>E-mail</FormLabel>
+                <FormLabel>{t('formLabels.email')}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -169,7 +171,7 @@ export function ContactForm({
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Telefoon</FormLabel>
+                <FormLabel>{t('formLabels.phone')}</FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="+31 20 123 4567" 
@@ -191,7 +193,7 @@ export function ContactForm({
             name="mobile"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Mobiel</FormLabel>
+                <FormLabel>{t('formLabels.mobile')}</FormLabel>
                 <FormControl>
                   <Input 
                     placeholder="+31 6 12 34 56 78" 
@@ -211,7 +213,7 @@ export function ContactForm({
             name="linkedin_url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>LinkedIn URL</FormLabel>
+                <FormLabel>{t('formLabels.linkedinUrl')}</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="https://linkedin.com/in/janjansen"
@@ -233,7 +235,7 @@ export function ContactForm({
             name="position"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Functie</FormLabel>
+                <FormLabel>{t('formLabels.position')}</FormLabel>
                 <FormControl>
                   <Input placeholder="Marketing Manager" {...field} />
                 </FormControl>
@@ -247,7 +249,7 @@ export function ContactForm({
             name="department"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Afdeling</FormLabel>
+                <FormLabel>{t('formLabels.department')}</FormLabel>
                 <FormControl>
                   <Input placeholder="Marketing" {...field} />
                 </FormControl>
@@ -263,7 +265,7 @@ export function ContactForm({
           name="company_id"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Bedrijf</FormLabel>
+              <FormLabel>{t('formLabels.company')}</FormLabel>
               <Select 
                 onValueChange={field.onChange} 
                 value={field.value}
@@ -281,7 +283,7 @@ export function ContactForm({
                     </div>
                   ) : (
                     <>
-                      <SelectItem value="none">Geen bedrijf</SelectItem>
+                      <SelectItem value="none">{t('forms.noCompany')}</SelectItem>
                       {companiesData.map((company: any) => (
                         <SelectItem key={company.id} value={company.id}>
                           {company.name}
@@ -353,7 +355,7 @@ export function ContactForm({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Notities</FormLabel>
+              <FormLabel>{t('formLabels.notes')}</FormLabel>
               <FormControl>
                 <Textarea
                   placeholder="Aanvullende informatie over dit contact..."

@@ -372,7 +372,7 @@ export function QuoteForm({
                           className="h-auto p-1 text-xs"
                         >
                           <UserPlus className="h-3 w-3 mr-1" />
-                          Nieuw
+                          {t('common.new')}
                         </Button>
                       </div>
                       <Select 
@@ -405,7 +405,7 @@ export function QuoteForm({
                 name="project_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project/Lead (optioneel)</FormLabel>
+                    <FormLabel>{t('projects.title')}/{t('projects.lead')} ({t('common.optional')})</FormLabel>
                     <Select 
                       onValueChange={(value) => field.onChange(value === 'none' ? '' : value)}
                       value={field.value || 'none'}
@@ -417,7 +417,7 @@ export function QuoteForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">Geen project</SelectItem>
+                        <SelectItem value="none">{t('projects.noProject')}</SelectItem>
                         {projectsData?.map((project: any) => (
                           <SelectItem key={project.id} value={project.id}>
                             {project.title} ({project.stage})
@@ -452,7 +452,7 @@ export function QuoteForm({
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Beschrijving</FormLabel>
+                    <FormLabel>{t('formLabels.description')}</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Korte beschrijving van het project"
@@ -471,7 +471,7 @@ export function QuoteForm({
                   name="valid_until"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Geldig tot</FormLabel>
+                      <FormLabel>{t('formLabels.validUntil')}</FormLabel>
                       <FormControl>
                         <Input type="date" {...field} />
                       </FormControl>
@@ -518,7 +518,7 @@ export function QuoteForm({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ title: '', description: '', quantity: 1, unit_price: 0, category: '' })}
+                  onClick={() => append({ title: '', description: '', quantity: 1, unit_price: 0, category: '', billing_frequency: 'one-time' })}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {t('quotes.addItem')}
@@ -562,7 +562,7 @@ export function QuoteForm({
                         name={`items.${index}.category`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Categorie</FormLabel>
+                            <FormLabel>{t('formLabels.category')}</FormLabel>
                             <FormControl>
                               <Input placeholder="Design, Development, etc." {...field} />
                             </FormControl>
@@ -620,7 +620,7 @@ export function QuoteForm({
                         name={`items.${index}.quantity`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Aantal *</FormLabel>
+                            <FormLabel>{t('formLabels.quantity')} *</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
@@ -639,7 +639,7 @@ export function QuoteForm({
                         name={`items.${index}.unit_price`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Prijs per stuk *</FormLabel>
+                            <FormLabel>{t('formLabels.unitPrice')} *</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
@@ -655,7 +655,7 @@ export function QuoteForm({
                       />
 
                       <div className="flex flex-col justify-end">
-                        <FormLabel>Totaal</FormLabel>
+                        <FormLabel>{t('formLabels.total')}</FormLabel>
                         <div className="h-10 flex items-center font-semibold">
                           €{((items[index]?.quantity || 0) * (items[index]?.unit_price || 0)).toFixed(2)}
                         </div>
@@ -714,7 +714,7 @@ export function QuoteForm({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Interne Notities</FormLabel>
+                  <FormLabel>{t('formLabels.internalNotes')}</FormLabel>
                   <FormControl>
                     <Textarea 
                       placeholder="Interne opmerkingen (niet zichtbaar voor klant)"

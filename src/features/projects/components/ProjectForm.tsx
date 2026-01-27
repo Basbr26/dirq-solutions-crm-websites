@@ -239,7 +239,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Basic Info */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Algemene Informatie</h3>
+              <h3 className="text-lg font-semibold">{t('formLabels.generalInfo')}</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -247,7 +247,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                   name="company_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Bedrijf *</FormLabel>
+                      <FormLabel>{t('formLabels.company')} *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -272,7 +272,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                   name="contact_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contactpersoon</FormLabel>
+                      <FormLabel>{t('formLabels.contactPerson')}</FormLabel>
                       <Select 
                         onValueChange={field.onChange} 
                         value={field.value}
@@ -302,7 +302,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Titel *</FormLabel>
+                    <FormLabel>{t('formLabels.title')} *</FormLabel>
                     <FormControl>
                       <Input placeholder="Website ontwikkeling" {...field} />
                     </FormControl>
@@ -316,7 +316,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Beschrijving</FormLabel>
+                    <FormLabel>{t('formLabels.description')}</FormLabel>
                     <FormControl>
                       <Textarea 
                         placeholder="Korte beschrijving van het project"
@@ -335,7 +335,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                   name="project_type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Project Type</FormLabel>
+                      <FormLabel>{t('projects.type')}</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -360,7 +360,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                   name="value"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Waarde (€) *</FormLabel>
+                      <FormLabel>{t('projects.value')} (€) *</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
@@ -385,7 +385,7 @@ export function ProjectForm({ open, onOpenChange, project, defaultCompanyId, onS
                 name="expected_close_date"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Verwachte Afrondingsdatum</FormLabel>
+                    <FormLabel>{t('projects.expectedCloseDate')}</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
