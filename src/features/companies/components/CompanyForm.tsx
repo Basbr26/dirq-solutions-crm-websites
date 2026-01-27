@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Company, CompanyFormData } from '@/types/crm';
+import { getIndustryName } from '@/lib/industry-translations';
 import {
   Dialog,
   DialogContent,
@@ -80,7 +81,7 @@ interface CompanyFormProps {
 }
 
 export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }: CompanyFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [pasteText, setPasteText] = useState('');
   const [showQuickFill, setShowQuickFill] = useState(!company);
@@ -379,7 +380,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                         <SelectContent>
                           {industries?.map((industry) => (
                             <SelectItem key={industry.id} value={industry.id}>
-                              {industry.name}
+                              {getIndustryName(industry.name, i18n.language)}
                             </SelectItem>
                           ))}
                         </SelectContent>
