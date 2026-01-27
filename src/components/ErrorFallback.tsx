@@ -22,16 +22,36 @@ export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps)
             Er is een onverwachte fout opgetreden. Probeer de pagina te vernieuwen of ga terug naar de homepage.
           </p>
           
-          {process.env.NODE_ENV === 'development' && (
-            <details className="mt-4">
-              <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-                Technische details
+          {(import.meta.env.DEV || window.location.search.includes('debug=true')) && (
+            <details className="mt-4" open>
+              <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground font-semibold">
+                🔍 Technische details (DEBUG MODE)
               </summary>
-              <pre className="mt-2 p-3 bg-muted rounded-md text-xs overflow-auto max-h-32">
-                {error.message}
-                {'\n\n'}
-                {error.stack}
-              </pre>
+              <div className="mt-2 space-y-2">
+                <div className="p-3 bg-destructive/10 rounded-md">
+                  <p className="text-xs font-semibold mb-1">Error:</p>
+                  <pre className="text-xs overflow-auto">
+                    {error.message}
+                  </pre>
+                </div>
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-xs font-semibold mb-1">Stack Trace:</p>
+                  <pre className="text-xs overflow-auto max-h-48">
+                    {error.stack}
+                  </pre>
+                </div>
+                {error.message?.includes('createContext') && (
+                  <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                    <p className="text-xs font-semibold mb-1 text-yellow-600 dark:text-yellow-400">
+                      ⚠️ Diagnose: createContext Error
+                    </p>
+                    <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                      Dit betekent meestal dat een React-gerelateerde module undefined is.
+                      Check de browser console voor meer details over welke module het probleem veroorzaakt.
+                    </p>
+                  </div>
+                )}
+              </div>
             </details>
           )}
           
