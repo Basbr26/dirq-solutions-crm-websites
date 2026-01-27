@@ -31,6 +31,10 @@ import {
   Mail,
   MessageSquare,
   Phone,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  CreditCard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,8 +92,66 @@ export default function QuoteDetailPage() {
   const [providerSignDialogOpen, setProviderSignDialogOpen] = useState(false);
   const [providerSigning, setProviderSigning] = useState(false);
   const [showProviderSignatureCanvas, setShowProviderSignatureCanvas] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
   const statusConfig = useQuoteStatusConfig();
+
+  const toggleItemExpanded = (itemId: string) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
+
+  // Helper to format text with bullets and newlines
+  const formatDescription = (text: string) => {
+    if (!text) return null;
+    
+    const lines = text.split('\n');
+    const elements: JSX.Element[] = [];
+    let currentList: string[] = [];
+    
+    lines.forEach((line, index) => {
+      const trimmed = line.trim();
+      
+      if (trimmed.startsWith('•')) {
+        currentList.push(trimmed.substring(1).trim());
+      } else {
+        if (currentList.length > 0) {
+          elements.push(
+            <ul key={`list-${index}`} className="list-disc list-inside space-y-1 my-2 ml-2">
+              {currentList.map((item, i) => (
+                <li key={i} className="text-sm text-gray-600">{item}</li>
+              ))}
+            </ul>
+          );
+          currentList = [];
+        }
+        if (trimmed) {
+          elements.push(
+            <p key={`p-${index}`} className="text-sm text-gray-700 leading-relaxed">{trimmed}</p>
+          );
+        }
+      }
+    });
+    
+    if (currentList.length > 0) {
+      elements.push(
+        <ul key="list-final" className="list-disc list-inside space-y-1 my-2 ml-2">
+          {currentList.map((item, i) => (
+            <li key={i} className="text-sm text-gray-600">{item}</li>
+          ))}
+        </ul>
+      );
+    }
+    
+    return <div className="space-y-2">{elements}</div>;
+  };
 
   const updateQuote = useUpdateQuote(id!);
   const deleteQuote = useDeleteQuote();
@@ -471,9 +533,9 @@ export default function QuoteDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 space-y-6 p-4 md:p-6">
+      <div className="flex-1 space-y-6 p-4 md:p-8">
         <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-96 w-full rounded-xl" />
       </div>
     );
   }
@@ -481,15 +543,17 @@ export default function QuoteDetailPage() {
   if (!quote) {
     return (
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
+        <Card className="max-w-md w-full shadow-lg border-0">
           <CardContent className="pt-6 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-8 w-8 text-gray-400" />
+            </div>
             <h3 className="text-lg font-semibold mb-2">Offerte niet gevonden</h3>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-muted-foreground mb-6">
               Deze offerte bestaat niet of je hebt geen toegang.
             </p>
             <Link to="/quotes">
-              <Button>Terug naar overzicht</Button>
+              <Button className="shadow-md">Terug naar overzicht</Button>
             </Link>
           </CardContent>
         </Card>
@@ -567,19 +631,20 @@ export default function QuoteDetailPage() {
         {/* Main Content */}
         <div className="md:col-span-2 space-y-6">
           {/* Quote Info */}
-          <Card>
-            <CardHeader className="pb-4">
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
+            <CardHeader className="pb-4 bg-gradient-to-br from-slate-50 to-gray-50">
               <CardTitle className="text-lg">{t('quotes.quoteDetails')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="flex items-start gap-3">
-                  <Building2 className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+            <CardContent className="space-y-6 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100">
+                  <Building2 className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm text-muted-foreground mb-1">{t('companies.title')}</p>
+                    <p className="text-xs font-medium text-blue-900 mb-1">{t('companies.title')}</p>
                     <Link 
                       to={`/companies/${quote.company?.id}`}
-                      className="font-medium hover:underline block truncate"
+                      className="font-semibold text-blue-700 hover:text-blue-900 hover:underline block truncate"
                     >
                       {quote.company?.name}
                     </Link>
@@ -587,13 +652,13 @@ export default function QuoteDetailPage() {
                 </div>
 
                 {quote.contact && (
-                  <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
+                    <User className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-sm text-muted-foreground mb-1">{t('quotes.contactPerson')}</p>
+                      <p className="text-xs font-medium text-purple-900 mb-1">{t('quotes.contactPerson')}</p>
                       <Link 
                         to={`/contacts/${quote.contact.id}`}
-                        className="font-medium hover:underline block truncate"
+                        className="font-semibold text-purple-700 hover:text-purple-900 hover:underline block truncate"
                       >
                         {quote.contact.first_name} {quote.contact.last_name}
                       </Link>
@@ -601,22 +666,22 @@ export default function QuoteDetailPage() {
                   </div>
                 )}
 
-                <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100">
+                  <Calendar className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-sm text-muted-foreground mb-1">{t('common.created')}</p>
-                    <p className="font-medium">
+                    <p className="text-xs font-medium text-green-900 mb-1">{t('common.created')}</p>
+                    <p className="font-semibold text-green-700">
                       {format(new Date(quote.created_at), 'dd MMMM yyyy', { locale: nl })}
                     </p>
                   </div>
                 </div>
 
                 {quote.valid_until && (
-                  <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100">
+                    <Clock className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-sm text-muted-foreground mb-1">{t('quotes.validUntil')}</p>
-                      <p className="font-medium">
+                      <p className="text-xs font-medium text-orange-900 mb-1">{t('quotes.validUntil')}</p>
+                      <p className="font-semibold text-orange-700">
                         {format(new Date(quote.valid_until), 'dd MMMM yyyy', { locale: nl })}
                       </p>
                     </div>
@@ -637,17 +702,27 @@ export default function QuoteDetailPage() {
               {(quote.payment_terms || quote.delivery_time) && (
                 <>
                   <Separator className="my-6" />
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {quote.payment_terms && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">{t('quotes.paymentTerms')}</p>
-                        <p className="text-sm leading-relaxed">{quote.payment_terms}</p>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200">
+                        <p className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          {t('quotes.paymentTerms')}
+                        </p>
+                        <div className="prose prose-sm max-w-none">
+                          {formatDescription(quote.payment_terms)}
+                        </div>
                       </div>
                     )}
                     {quote.delivery_time && (
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">{t('quotes.deliveryTime')}</p>
-                        <p className="text-sm leading-relaxed">{quote.delivery_time}</p>
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200">
+                        <p className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          {t('quotes.deliveryTime')}
+                        </p>
+                        <div className="prose prose-sm max-w-none">
+                          {formatDescription(quote.delivery_time)}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -657,38 +732,77 @@ export default function QuoteDetailPage() {
           </Card>
 
           {/* Line Items */}
-          <Card>
+          <Card className="shadow-lg border-0 overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg">{t('quotes.lineItems')}</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-blue-500" />
+                {t('quotes.lineItems')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {items && items.length > 0 ? (
                   <>
                     {items.map((item, index) => (
-                      <div key={item.id} className="border-b pb-6 last:border-0 last:pb-0">
+                      <div 
+                        key={item.id} 
+                        className="p-5 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 shadow-sm hover:shadow-md transition-all"
+                      >
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
-                              <h4 className="font-semibold text-base">{item.title}</h4>
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white text-xs font-bold">
+                                {index + 1}
+                              </span>
+                              <h4 className="font-bold text-lg">{item.title}</h4>
                               {item.category && (
-                                <Badge variant="secondary" className="text-xs">
+                                <Badge variant="secondary" className="text-xs bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 border-blue-200">
                                   {item.category}
                                 </Badge>
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
+                              <div className="mt-3">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-7 text-xs -ml-2 mb-2 hover:bg-blue-50"
+                                  onClick={() => toggleItemExpanded(item.id)}
+                                >
+                                  {expandedItems.has(item.id) ? (
+                                    <>
+                                      <ChevronUp className="h-3 w-3 mr-1" />
+                                      Inklappen
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ChevronDown className="h-3 w-3 mr-1" />
+                                      Toon details
+                                    </>
+                                  )}
+                                </Button>
+                                {expandedItems.has(item.id) && (
+                                  <div className="pl-3 border-l-2 border-blue-200">
+                                    {formatDescription(item.description)}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                           <div className="text-right ml-6 flex-shrink-0">
-                            <p className="font-bold text-lg">{formatCurrency(item.total_price)}</p>
+                            <p className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                              {formatCurrency(item.total_price)}
+                            </p>
                           </div>
                         </div>
-                        <div className="flex gap-6 text-sm text-muted-foreground">
-                          <span>Aantal: <span className="font-medium text-foreground">{item.quantity}</span></span>
-                          <span>Prijs: <span className="font-medium text-foreground">{formatCurrency(item.unit_price)}</span></span>
+                        <div className="flex gap-6 text-sm text-gray-600 bg-white/50 rounded-lg p-3 mt-3">
+                          <span className="flex items-center gap-1">
+                            Aantal: <span className="font-semibold text-gray-900">{item.quantity}</span>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            Prijs: <span className="font-semibold text-gray-900">{formatCurrency(item.unit_price)}</span>
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -696,19 +810,21 @@ export default function QuoteDetailPage() {
                     <Separator className="my-6" />
 
                     {/* Totals */}
-                    <div className="space-y-3 pt-2">
+                    <div className="rounded-xl bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-6 space-y-3">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('quotes.subtotal')}</span>
-                        <span className="font-medium">{formatCurrency(quote.subtotal)}</span>
+                        <span className="text-gray-600">{t('quotes.subtotal')}</span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(quote.subtotal)}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">{t('quotes.tax')} ({quote.tax_rate}%)</span>
-                        <span className="font-medium">{formatCurrency(quote.tax_amount)}</span>
+                        <span className="text-gray-600">{t('quotes.tax')} ({quote.tax_rate}%)</span>
+                        <span className="font-semibold text-gray-900">{formatCurrency(quote.tax_amount)}</span>
                       </div>
-                      <Separator className="my-3" />
+                      <Separator className="my-3 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
                       <div className="flex justify-between items-center pt-2">
-                        <span className="text-lg font-bold">{t('quotes.total')}</span>
-                        <span className="text-2xl font-bold">{formatCurrency(quote.total_amount)}</span>
+                        <span className="text-lg font-bold text-gray-900">{t('quotes.total')}</span>
+                        <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                          {formatCurrency(quote.total_amount)}
+                        </span>
                       </div>
                     </div>
                   </>
@@ -724,12 +840,33 @@ export default function QuoteDetailPage() {
 
           {/* Internal Notes */}
           {quote.notes && (
-            <Card>
+            <Card className="shadow-lg border-0 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500" />
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg">{t('quotes.internalNotes')}</CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">{quote.notes}</p>
+              <CardContent className="bg-gradient-to-br from-amber-50 to-orange-50">
+                <div className="prose prose-sm max-w-none">
+                  {formatDescription(quote.notes)}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Client Notes */}
+          {quote.client_notes && (
+            <Card className="shadow-lg border-0 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500" />
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-green-500" />
+                  Bericht aan klant
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="bg-gradient-to-br from-green-50 to-emerald-50">
+                <div className="prose prose-sm max-w-none">
+                  {formatDescription(quote.client_notes)}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -838,52 +975,67 @@ export default function QuoteDetailPage() {
 
           {/* Provider Signature Information */}
           {quote.provider_signature_data && (
-            <Card className="border-blue-200 bg-blue-50/50">
-              <CardHeader>
+            <Card className="shadow-lg border-0 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+              <CardHeader className="pb-3 bg-gradient-to-br from-emerald-50 to-teal-50">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-blue-900">{t('quotes.signedByProvider')}</CardTitle>
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <CardTitle className="text-emerald-900">{t('quotes.signedByProvider')}</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-6">
                 {/* Signature Image */}
-                <div className="bg-white p-4 rounded-lg border border-blue-200">
-                  <p className="text-sm text-muted-foreground mb-2">Handtekening</p>
-                  <img 
-                    src={quote.provider_signature_data} 
-                    alt="Provider signature" 
-                    className="max-w-full h-24 border border-gray-200 rounded"
-                  />
+                <div className="bg-white p-5 rounded-xl border-2 border-emerald-200 shadow-sm">
+                  <p className="text-xs font-semibold text-emerald-900 mb-3 flex items-center gap-2">
+                    <Pen className="h-4 w-4" />
+                    Handtekening
+                  </p>
+                  <div className="bg-gradient-to-br from-gray-50 to-white p-3 rounded-lg border border-gray-200">
+                    <img 
+                      src={quote.provider_signature_data} 
+                      alt="Provider signature" 
+                      className="max-w-full h-24 mx-auto"
+                    />
+                  </div>
                 </div>
 
                 {/* Signature Details */}
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Namens</span>
-                    <span className="font-medium">Dirq Solutions</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between p-3 rounded-lg bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-100">
+                    <span className="text-xs font-medium text-blue-900">Namens</span>
+                    <span className="font-semibold text-blue-700">Dirq Solutions</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Datum</span>
-                    <span className="font-medium">
+                  <div className="flex justify-between p-3 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
+                    <span className="text-xs font-medium text-purple-900">Datum</span>
+                    <span className="font-semibold text-purple-700">
                       {quote.provider_signed_at && format(new Date(quote.provider_signed_at), 'dd MMM yyyy HH:mm', { locale: nl })}
                     </span>
                   </div>
                 </div>
 
                 {quote.provider_signed_document_url && (
-                  <div className="bg-blue-100/50 p-3 rounded-lg border border-blue-200">
-                    <p className="text-xs text-blue-800 mb-2">
-                      ✓ Volledig getekend document beschikbaar
-                    </p>
+                  <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-4 rounded-xl border-2 border-green-200 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-5 h-5 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                        <CheckCircle2 className="h-3 w-3 text-white" />
+                      </div>
+                      <p className="text-sm font-semibold text-green-900">
+                        Volledig getekend document beschikbaar
+                      </p>
+                    </div>
                     <div className="flex flex-col gap-2">
-                      <Button size="sm" variant="outline" className="w-full" onClick={downloadSignedDocument}>
+                      <Button 
+                        size="sm" 
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md"
+                        onClick={downloadSignedDocument}
+                      >
                         <Download className="h-3 w-3 mr-2" />
                         Download Getekend PDF
                       </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
-                        className="w-full"
+                        className="w-full border-green-300 hover:bg-green-50"
                         onClick={async () => {
                           await navigator.clipboard.writeText(quote.provider_signed_document_url!);
                           toast.success('Link gekopieerd!');

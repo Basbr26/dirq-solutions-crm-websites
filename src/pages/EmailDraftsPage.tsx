@@ -163,7 +163,7 @@ export default function EmailDraftsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Mail className="w-12 h-12 mx-auto mb-4 text-gray-400 animate-pulse" />
           <p className="text-gray-600">{t('common.loading')}</p>
@@ -173,14 +173,14 @@ export default function EmailDraftsPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Mail className="w-7 h-7" />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Mail className="w-8 h-8" />
           {t('emailDrafts.title')}
         </h1>
-        <p className="text-gray-600 mt-1">
-          {t('emailDrafts.subtitle') || t('emailDrafts.noDraftsDescription')} • {drafts.length} {t('emailDrafts.pending') || 'pending'}
+        <p className="text-muted-foreground mt-2">
+          {t('emailDrafts.subtitle')} • {drafts.length} {t('emailDrafts.pending')}
         </p>
       </div>
       

@@ -109,6 +109,17 @@ const styles = StyleSheet.create({
   itemDescription: {
     fontSize: 8,
     color: '#6b7280',
+    lineHeight: 1.4,
+  },
+  bulletList: {
+    fontSize: 8,
+    color: '#4b5563',
+    marginLeft: 10,
+    marginTop: 2,
+    lineHeight: 1.5,
+  },
+  bulletItem: {
+    marginBottom: 2,
   },
   totals: {
     marginTop: 20,
@@ -307,7 +318,26 @@ export const QuotePDFDocument = ({ quote, items = [] }: QuotePDFDocumentProps) =
                       )}
                     </Text>
                     {item.description && (
-                      <Text style={styles.itemDescription}>{item.description}</Text>
+                      <View style={styles.bulletList}>
+                        {item.description.split('\n').map((line, i) => {
+                          const trimmed = line.trim();
+                          if (trimmed.startsWith('•')) {
+                            return (
+                              <Text key={i} style={styles.bulletItem}>
+                                • {trimmed.substring(1).trim()}
+                              </Text>
+                            );
+                          }
+                          if (trimmed) {
+                            return (
+                              <Text key={i} style={styles.itemDescription}>
+                                {trimmed}
+                              </Text>
+                            );
+                          }
+                          return null;
+                        })}
+                      </View>
                     )}
                   </View>
                   <Text style={styles.colQuantity}>{item.quantity}</Text>
@@ -331,6 +361,29 @@ export const QuotePDFDocument = ({ quote, items = [] }: QuotePDFDocumentProps) =
                 <Text style={styles.grandTotalLabel}>Totaal:</Text>
                 <Text style={styles.grandTotalValue}>{formatCurrency(quote.total_amount)}</Text>
               </View>
+            </View>
+          </View>
+        )}
+
+        {/* Client Notes */}
+        {quote.client_notes && (
+          <View style={styles.notes}>
+            <Text style={styles.notesTitle}>Bericht aan klant</Text>
+            <View style={styles.bulletList}>
+              {quote.client_notes.split('\n').map((line, i) => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('•')) {
+                  return (
+                    <Text key={i} style={styles.bulletItem}>
+                      • {trimmed.substring(1).trim()}
+                    </Text>
+                  );
+                }
+                if (trimmed) {
+                  return <Text key={i} style={styles.notesText}>{trimmed}</Text>;
+                }
+                return null;
+              })}
             </View>
           </View>
         )}
