@@ -1,12 +1,13 @@
-# 2026-01-22
+# 2026-01-27
 
 ## Belangrijkste wijzigingen
 
-- **Provider Signature System**: Leverancier kan nu offertes digitaal tekenen, volledig getekende PDF's genereren en delen met klanten via download link
-- **MRR Calculation Fix**: Trigger verbeterd om company_id changes te handlen (project reassignment) - update BEIDE companies bij verplaatsing
-- **Google Calendar Sync Improvements**: Real-time connection status via Supabase subscriptions, geconsolideerde token refresh, verbeterde webhook renewal met UI feedback
-- **Dual Signature Support**: Quotes tonen nu zowel klant als leverancier handtekeningen met duidelijke visual separation (groen vs blauw)
-- **Public Share Links**: Getekende documenten delen via directe download link - ideaal voor email/WhatsApp
+- **i18n Implementation**: Multi-language support (Nederlands 🇳🇱 / English 🇬🇧) met react-i18next, 560+ translation keys, LanguageSwitcher component
+- **Form Translations**: ContactForm, CompanyForm, ProjectForm, QuoteForm volledig vertaald naar i18n systeem
+- **Localized Formatting**: Date/currency formatting per taal met Intl API en date-fns locales
+- **Project Reorganization**: Documentatie verplaatst naar docs/, SQL scripts naar scripts/sql/, cleaner root directory
+- **RLS Fix**: Fixed interactions_lead_id_fkey constraint na leads → projects tabel rename
+- **Pipeline Fix**: Opgelost "undefined undefined" in kanban toast messages bij company name weergave
 
 # 2026-01-22
 
@@ -95,6 +96,9 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **CSV Import/Export** - Bulk operations  
 ✅ **Mobile Optimized** - Native app experience met pull-to-refresh  
 ✅ **Role-Based Access** - 5 gebruikersrollen met RLS  
+✅ **Internationalization (i18n)** - Multi-language support (Nederlands 🇳🇱 / English 🇬🇧) via react-i18next  
+✅ **Language Switcher** - Real-time language switching met localStorage persistence  
+✅ **Localized Formatting** - Date/currency formatting per taal met Intl API  
 ✅ **Outreach Tracking** - LinkedIn videos, physical mail, direct messages  
 ✅ **Lead Conversion** - Automated lead → project conversion  
 ✅ **E-Sign Documents** - Digitale handtekeningen met audit trail  
