@@ -19,25 +19,8 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
-    sourcemap: 'hidden', // Generate sourcemaps but don't reference them (lower memory usage)
-    rollupOptions: {
-      output: {
-        manualChunks: (id) => {
-          // Split vendor chunks for better caching
-          if (id.includes('node_modules')) {
-            // Split large calendar library into separate chunk
-            if (id.includes('react-big-calendar') || id.includes('date-fns')) {
-              return 'calendar-vendor';
-            }
-            // Split React and related libraries
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            // All other node_modules
-            return 'vendor';
-          }
-        },
-      },
-    },
+    sourcemap: 'hidden',
+    // Let Vite handle chunking automatically to avoid race conditions
+    // Manual chunks can cause React to load after libraries that depend on it
   },
 }));
