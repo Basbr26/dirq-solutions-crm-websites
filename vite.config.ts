@@ -19,21 +19,30 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: "dist",
     assetsDir: "assets",
-    sourcemap: 'hidden', // Generate sourcemaps but don't reference them (lower memory usage)
+    sourcemap: 'hidden',
+    // Force new chunk hashes after workflow removal
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
+        // Generate deterministic but fresh chunk names
+        entryFileNames: `assets/[name].[hash].js`,
+        chunkFileNames: `assets/[name].[hash].js`,
+        assetFileNames: `assets/[name].[hash].[ext]`,
         manualChunks: (id) => {
-          // Split vendor chunks for better caching
           if (id.includes('node_modules')) {
-            // Split large calendar library into separate chunk
+            // Separate React core (most critical)
+            if (id.includes('react/') || id.includes('react-dom/')) {
+              return 'react-core';
+            }
+            // React ecosystem
+            if (id.includes('react-router') || id.includes('react-hook-form') || id.includes('react-error-boundary')) {
+              return 'react-ecosystem';
+            }
+            // Calendar libraries
             if (id.includes('react-big-calendar') || id.includes('date-fns')) {
-              return 'calendar-vendor';
+              return 'calendar';
             }
-            // Split React and related libraries
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            // All other node_modules
+            // All other vendor code
             return 'vendor';
           }
         },
