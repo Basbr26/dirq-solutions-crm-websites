@@ -333,6 +333,7 @@
   "projects": {
     "title": "Projects",
     "subtitle": "Overview of all website development projects",
+    "project": "Project",
     "addNew": "New project",
     "newProject": "New project",
     "addProject": "Add project",
@@ -356,6 +357,7 @@
     "chance": "chance",
     "expected": "Expected",
     "expectedClose": "Expected close",
+    "expectedCloseDate": "Expected close date",
     "hosting": "Hosting",
     "maintenance": "Maintenance",
     "noProjectsFound": "No projects found",
@@ -364,6 +366,7 @@
     "exporting": "Exporting projects...",
     "noProjectsToExport": "No projects to export",
     "projectsExported": "{{count}} projects exported",
+    "lead": "Lead",
     "stages": {
       "lead": "Lead",
       "quote_requested": "Quote requested",
@@ -587,8 +590,10 @@
   },
   "emailDrafts": {
     "title": "Email drafts",
+    "subtitle": "Review and send AI-generated emails",
     "noDrafts": "No email drafts",
     "noDraftsDescription": "Email drafts are automatically created by AI workflows",
+    "pending": "pending",
     "subject": "Subject",
     "recipient": "Recipient",
     "status": "Status",
@@ -596,6 +601,7 @@
     "preview": "Preview",
     "edit": "Edit",
     "send": "Send",
+    "sending": "Sending...",
     "cancel": "Cancel",
     "delete": "Delete",
     "sendNow": "Send now",
@@ -605,7 +611,14 @@
     "deleteDescription": "Are you sure you want to delete this draft?",
     "emailSent": "Email sent",
     "emailDeleted": "Draft deleted",
-    "errorSending": "Error sending email"
+    "draftSaved": "Draft saved",
+    "draftCancelled": "Draft cancelled",
+    "errorSending": "Error sending email",
+    "errorLoading": "Error loading drafts",
+    "errorSaving": "Error saving changes",
+    "errorCancelling": "Error cancelling draft",
+    "unsavedChanges": "You have unsaved changes",
+    "saveBeforeSending": "Save changes before sending"
   },
   "tasks": {
     "title": "Tasks",

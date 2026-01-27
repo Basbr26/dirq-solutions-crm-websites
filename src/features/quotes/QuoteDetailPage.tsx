@@ -568,18 +568,18 @@ export default function QuoteDetailPage() {
         <div className="md:col-span-2 space-y-6">
           {/* Quote Info */}
           <Card>
-            <CardHeader>
-              <CardTitle>{t('quotes.quoteDetails')}</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">{t('quotes.quoteDetails')}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="flex items-start gap-3">
-                  <Building2 className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('companies.title')}</p>
+                  <Building2 className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-muted-foreground mb-1">{t('companies.title')}</p>
                     <Link 
                       to={`/companies/${quote.company?.id}`}
-                      className="font-medium hover:underline"
+                      className="font-medium hover:underline block truncate"
                     >
                       {quote.company?.name}
                     </Link>
@@ -588,12 +588,12 @@ export default function QuoteDetailPage() {
 
                 {quote.contact && (
                   <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">{t('quotes.contactPerson')}</p>
+                    <User className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm text-muted-foreground mb-1">{t('quotes.contactPerson')}</p>
                       <Link 
                         to={`/contacts/${quote.contact.id}`}
-                        className="font-medium hover:underline"
+                        className="font-medium hover:underline block truncate"
                       >
                         {quote.contact.first_name} {quote.contact.last_name}
                       </Link>
@@ -602,9 +602,9 @@ export default function QuoteDetailPage() {
                 )}
 
                 <div className="flex items-start gap-3">
-                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">{t('common.created')}</p>
+                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-muted-foreground mb-1">{t('common.created')}</p>
                     <p className="font-medium">
                       {format(new Date(quote.created_at), 'dd MMMM yyyy', { locale: nl })}
                     </p>
@@ -613,9 +613,9 @@ export default function QuoteDetailPage() {
 
                 {quote.valid_until && (
                   <div className="flex items-start gap-3">
-                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">{t('quotes.validUntil')}</p>
+                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm text-muted-foreground mb-1">{t('quotes.validUntil')}</p>
                       <p className="font-medium">
                         {format(new Date(quote.valid_until), 'dd MMMM yyyy', { locale: nl })}
                       </p>
@@ -626,49 +626,52 @@ export default function QuoteDetailPage() {
 
               {quote.description && (
                 <>
-                  <Separator />
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">{t('quotes.description')}</p>
-                    <p className="text-sm">{quote.description}</p>
+                  <Separator className="my-6" />
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">{t('quotes.description')}</p>
+                    <p className="text-sm leading-relaxed">{quote.description}</p>
                   </div>
                 </>
               )}
 
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {quote.payment_terms && (
-                  <div>
-                    <p className="text-muted-foreground">{t('quotes.paymentTerms')}</p>
-                    <p className="font-medium">{quote.payment_terms}</p>
+              {(quote.payment_terms || quote.delivery_time) && (
+                <>
+                  <Separator className="my-6" />
+                  <div className="grid grid-cols-2 gap-6">
+                    {quote.payment_terms && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">{t('quotes.paymentTerms')}</p>
+                        <p className="text-sm leading-relaxed">{quote.payment_terms}</p>
+                      </div>
+                    )}
+                    {quote.delivery_time && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">{t('quotes.deliveryTime')}</p>
+                        <p className="text-sm leading-relaxed">{quote.delivery_time}</p>
+                      </div>
+                    )}
                   </div>
-                )}
-                {quote.delivery_time && (
-                  <div>
-                    <p className="text-muted-foreground">{t('quotes.deliveryTime')}</p>
-                    <p className="font-medium">{quote.delivery_time}</p>
-                  </div>
-                )}
-              </div>
+                </>
+              )}
             </CardContent>
           </Card>
 
           {/* Line Items */}
           <Card>
-            <CardHeader>
-              <CardTitle>{t('quotes.lineItems')}</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">{t('quotes.lineItems')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {items && items.length > 0 ? (
                   <>
                     {items.map((item, index) => (
-                      <div key={item.id} className="border-b pb-4 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-start mb-2">
+                      <div key={item.id} className="border-b pb-6 last:border-0 last:pb-0">
+                        <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                              <h4 className="font-semibold">{item.title}</h4>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-medium text-muted-foreground">#{index + 1}</span>
+                              <h4 className="font-semibold text-base">{item.title}</h4>
                               {item.category && (
                                 <Badge variant="secondary" className="text-xs">
                                   {item.category}
@@ -676,24 +679,24 @@ export default function QuoteDetailPage() {
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-sm text-muted-foreground">{item.description}</p>
+                              <p className="text-sm text-muted-foreground leading-relaxed">{item.description}</p>
                             )}
                           </div>
-                          <div className="text-right ml-4">
-                            <p className="font-semibold">{formatCurrency(item.total_price)}</p>
+                          <div className="text-right ml-6 flex-shrink-0">
+                            <p className="font-bold text-lg">{formatCurrency(item.total_price)}</p>
                           </div>
                         </div>
-                        <div className="flex gap-4 text-sm text-muted-foreground">
-                          <span>Aantal: {item.quantity}</span>
-                          <span>Prijs: {formatCurrency(item.unit_price)}</span>
+                        <div className="flex gap-6 text-sm text-muted-foreground">
+                          <span>Aantal: <span className="font-medium text-foreground">{item.quantity}</span></span>
+                          <span>Prijs: <span className="font-medium text-foreground">{formatCurrency(item.unit_price)}</span></span>
                         </div>
                       </div>
                     ))}
 
-                    <Separator />
+                    <Separator className="my-6" />
 
                     {/* Totals */}
-                    <div className="space-y-2 pt-4">
+                    <div className="space-y-3 pt-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t('quotes.subtotal')}</span>
                         <span className="font-medium">{formatCurrency(quote.subtotal)}</span>
@@ -702,16 +705,16 @@ export default function QuoteDetailPage() {
                         <span className="text-muted-foreground">{t('quotes.tax')} ({quote.tax_rate}%)</span>
                         <span className="font-medium">{formatCurrency(quote.tax_amount)}</span>
                       </div>
-                      <Separator />
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>{t('quotes.total')}</span>
-                        <span>{formatCurrency(quote.total_amount)}</span>
+                      <Separator className="my-3" />
+                      <div className="flex justify-between items-center pt-2">
+                        <span className="text-lg font-bold">{t('quotes.total')}</span>
+                        <span className="text-2xl font-bold">{formatCurrency(quote.total_amount)}</span>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <div className="text-center py-12 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>{t('quotes.noLineItems')}</p>
                   </div>
                 )}
@@ -722,19 +725,19 @@ export default function QuoteDetailPage() {
           {/* Internal Notes */}
           {quote.notes && (
             <Card>
-              <CardHeader>
-                <CardTitle>{t('quotes.internalNotes')}</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">{t('quotes.internalNotes')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{quote.notes}</p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{quote.notes}</p>
               </CardContent>
             </Card>
           )}
 
           {/* Interactions/Activities */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
                 <MessageSquare className="h-5 w-5" />
                 {t('navigation.activities')}
               </CardTitle>

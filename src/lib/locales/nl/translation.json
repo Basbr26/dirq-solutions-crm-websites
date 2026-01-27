@@ -347,6 +347,7 @@
   "projects": {
     "title": "Projecten",
     "subtitle": "Overzicht van alle website ontwikkel projecten",
+    "project": "Project",
     "addNew": "Nieuw project",
     "newProject": "Nieuw project",
     "addProject": "Project toevoegen",
@@ -370,6 +371,7 @@
     "chance": "kans",
     "expected": "Verwacht",
     "expectedClose": "Verwachte afsluiting",
+    "expectedCloseDate": "Verwachte sluitingsdatum",
     "hosting": "Hosting",
     "maintenance": "Onderhoud",
     "noProjectsFound": "Geen projecten gevonden",
@@ -378,6 +380,7 @@
     "exporting": "Projecten exporteren...",
     "noProjectsToExport": "Geen projecten om te exporteren",
     "projectsExported": "{{count}} projecten geëxporteerd",
+    "lead": "Lead",
     "stages": {
       "lead": "Lead",
       "quote_requested": "Offerte aangevraagd",
@@ -604,8 +607,10 @@
   },
   "emailDrafts": {
     "title": "Email concepten",
+    "subtitle": "Bekijk en verstuur AI-gegenereerde emails",
     "noDrafts": "Geen email concepten",
     "noDraftsDescription": "Email concepten worden automatisch aangemaakt door AI workflows",
+    "pending": "in behandeling",
     "subject": "Onderwerp",
     "recipient": "Ontvanger",
     "status": "Status",
@@ -613,6 +618,7 @@
     "preview": "Voorbeeld",
     "edit": "Bewerken",
     "send": "Versturen",
+    "sending": "Verzenden...",
     "cancel": "Annuleren",
     "delete": "Verwijderen",
     "sendNow": "Nu versturen",
@@ -622,7 +628,14 @@
     "deleteDescription": "Weet je zeker dat je dit concept wilt verwijderen?",
     "emailSent": "Email verzonden",
     "emailDeleted": "Concept verwijderd",
-    "errorSending": "Fout bij versturen email"
+    "draftSaved": "Concept opgeslagen",
+    "draftCancelled": "Concept geannuleerd",
+    "errorSending": "Fout bij versturen email",
+    "errorLoading": "Fout bij laden concepten",
+    "errorSaving": "Fout bij opslaan wijzigingen",
+    "errorCancelling": "Fout bij annuleren concept",
+    "unsavedChanges": "Je hebt niet opgeslagen wijzigingen",
+    "saveBeforeSending": "Sla wijzigingen op voordat je verstuurt"
   },
   "tasks": {
     "title": "Taken",

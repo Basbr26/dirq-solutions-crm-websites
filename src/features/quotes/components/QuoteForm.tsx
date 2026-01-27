@@ -456,7 +456,8 @@ export function QuoteForm({
                     <FormControl>
                       <Textarea 
                         placeholder="Korte beschrijving van het project"
-                        rows={3}
+                        className="min-h-[80px] resize-y"
+                        rows={4}
                         {...field}
                       />
                     </FormControl>

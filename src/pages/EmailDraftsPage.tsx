@@ -50,7 +50,7 @@ export default function EmailDraftsPage() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Failed to load drafts');
+      toast.error(t('emailDrafts.errorLoading') || 'Failed to load drafts');
       console.error(error);
     } else {
       setDrafts(data || []);
@@ -71,42 +71,45 @@ export default function EmailDraftsPage() {
     }
   }, [selectedDraft]);
 
-  // Send draft via Resend (call API route)
+  // Send draft via Supabase Edge Function
   async function handleSend(draft: EmailDraft) {
     setSending(true);
     
     try {
-      const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Get current session for auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      // Call Supabase Edge Function
+      const { data, error } = await supabase.functions.invoke('send-email', {
+        body: {
           to: draft.to_email,
           subject: draft.subject,
           html: draft.body,
           draftId: draft.id
-        })
+        }
       });
 
-      if (!response.ok) throw new Error('Failed to send');
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to send');
 
-      // Update draft status
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      await supabase
-        .from('email_drafts')
-        .update({ 
-          status: 'sent',
-          sent_at: new Date().toISOString(),
-          sent_by: user?.id
-        })
-        .eq('id', draft.id);
-
-      toast.success('Email sent successfully!');
+      toast.success(t('emailDrafts.emailSent'));
       fetchDrafts(); // Refresh list
       setSelectedDraft(null);
     } catch (error) {
-      toast.error('Failed to send email');
-      console.error(error);
+      console.error('Send error:', error);
+      toast.error(t('emailDrafts.errorSending'));
+      
+      // Update draft with error
+      await supabase
+        .from('email_drafts')
+        .update({ 
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error'
+        })
+        .eq('id', draft.id);
     } finally {
       setSending(false);
     }
@@ -126,10 +129,10 @@ export default function EmailDraftsPage() {
       .eq('id', editedDraft.id);
 
     if (error) {
-      toast.error('Failed to save changes');
+      toast.error(t('emailDrafts.errorSaving') || 'Failed to save changes');
       console.error(error);
     } else {
-      toast.success('Draft updated');
+      toast.success(t('emailDrafts.draftSaved') || 'Draft updated');
       setSelectedDraft(editedDraft);
       fetchDrafts();
     }
@@ -143,9 +146,9 @@ export default function EmailDraftsPage() {
       .eq('id', draftId);
 
     if (error) {
-      toast.error('Failed to cancel draft');
+      toast.error(t('emailDrafts.errorCancelling') || 'Failed to cancel draft');
     } else {
-      toast.success('Draft cancelled');
+      toast.success(t('emailDrafts.draftCancelled') || 'Draft cancelled');
       setSelectedDraft(null);
       fetchDrafts();
     }
@@ -163,7 +166,7 @@ export default function EmailDraftsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <Mail className="w-12 h-12 mx-auto mb-4 text-gray-400 animate-pulse" />
-          <p className="text-gray-600">Loading drafts...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -174,10 +177,10 @@ export default function EmailDraftsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Mail className="w-7 h-7" />
-          Email Drafts
+          {t('emailDrafts.title')}
         </h1>
         <p className="text-gray-600 mt-1">
-          Review and send AI-generated emails • {drafts.length} pending
+          {t('emailDrafts.subtitle') || t('emailDrafts.noDraftsDescription')} • {drafts.length} {t('emailDrafts.pending') || 'pending'}
         </p>
       </div>
       
@@ -215,8 +218,8 @@ export default function EmailDraftsPage() {
             <Card className="p-12">
               <div className="text-center text-gray-500">
                 <Mail className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="font-medium">No drafts pending review</p>
-                <p className="text-sm mt-1">AI-generated emails will appear here</p>
+                <p className="font-medium">{t('emailDrafts.noDrafts')}</p>
+                <p className="text-sm mt-1">{t('emailDrafts.noDraftsDescription')}</p>
               </div>
             </Card>
           )}
@@ -228,7 +231,7 @@ export default function EmailDraftsPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Edit2 className="w-5 h-5" />
-                Review & Edit
+                {t('emailDrafts.preview') || 'Review & Edit'}
               </h2>
               <Button 
                 variant="ghost" 
@@ -242,7 +245,7 @@ export default function EmailDraftsPage() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">
-                  To:
+                  {t('emailDrafts.recipient')}:
                 </label>
                 <input 
                   type="email"
@@ -254,7 +257,7 @@ export default function EmailDraftsPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Subject:
+                  {t('emailDrafts.subject')}:
                 </label>
                 <input 
                   type="text"
@@ -266,7 +269,7 @@ export default function EmailDraftsPage() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1">
-                  Body:
+                  {t('common.description')}:
                 </label>
                 <textarea 
                   value={editedDraft.body}
@@ -279,7 +282,7 @@ export default function EmailDraftsPage() {
               {hasEdits && (
                 <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
                   <p className="text-sm text-amber-800">
-                    You have unsaved changes
+                    {t('emailDrafts.unsavedChanges') || 'You have unsaved changes'}
                   </p>
                 </div>
               )}
@@ -291,7 +294,7 @@ export default function EmailDraftsPage() {
                     variant="outline"
                     className="flex-1"
                   >
-                    Save Changes
+                    {t('common.save')}
                   </Button>
                 ) : null}
                 
@@ -301,7 +304,7 @@ export default function EmailDraftsPage() {
                   className="flex-1"
                 >
                   <Send className="w-4 h-4 mr-2" />
-                  {sending ? 'Sending...' : 'Send Email'}
+                  {sending ? t('emailDrafts.sending') || 'Sending...' : t('emailDrafts.sendNow')}
                 </Button>
                 
                 <Button 
@@ -315,7 +318,7 @@ export default function EmailDraftsPage() {
 
               {hasEdits && (
                 <p className="text-xs text-gray-500 text-center">
-                  Save changes before sending
+                  {t('emailDrafts.saveBeforeSending') || 'Save changes before sending'}
                 </p>
               )}
             </div>
