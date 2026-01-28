@@ -269,11 +269,11 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-2xl h-[95vh] sm:h-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{company ? t('dialogs.editTitle', { item: t('companies.title').slice(0, -1).toLowerCase() }) : t('dialogs.newTitle', { item: t('companies.title').slice(0, -1).toLowerCase() })}</DialogTitle>
+          <DialogTitle>{company ? t('dialogs.editTitle', { item: t('companies.singular') }) : t('dialogs.newTitle', { item: t('companies.singular') })}</DialogTitle>
           <DialogDescription>
             {company
-              ? t('companies.editDescription')
-              : t('companies.addDescription')}
+              ? t('dialogs.editDescription', { item: t('companies.singular').toLowerCase() })
+              : t('dialogs.addDescription', { item: t('companies.singular').toLowerCase() })}
           </DialogDescription>
         </DialogHeader>
 
@@ -341,7 +341,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             onClick={() => setShowQuickFill(true)}
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            Snel invullen via KVK
+            Snel invullen (kopieer/plak)
           </Button>
         )}
 

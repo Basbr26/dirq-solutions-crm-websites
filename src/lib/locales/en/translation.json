@@ -172,6 +172,8 @@
     "newCompany": "New Company",
     "addCompany": "Add company",
     "editCompany": "Edit company",
+    "addDescription": "Add a new company to your CRM",
+    "editDescription": "Edit this company's details",
     "companyName": "Company name",
     "name": "Name",
     "kvkNumber": "Chamber of Commerce number",
