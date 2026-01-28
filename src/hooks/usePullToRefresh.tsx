@@ -37,7 +37,6 @@ interface UsePullToRefreshOptions {
  *         {isRefreshing ? 'Refreshing...' : 'Pull to refresh'}
  *       </div>
  *     )}
- *     {/* Content */}
  *   </div>
  * );
  * ```
