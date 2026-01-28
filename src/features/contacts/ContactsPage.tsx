@@ -412,7 +412,7 @@ export function ContactsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('companies.title')}</label>
                 <Select
-                  value={filterCompanyId || "all"}
+                  value={filterCompanyId ?? "all"}
                   onValueChange={(value) => {
                     setFilterCompanyId(value === "all" ? undefined : value);
                     pagination.resetPage();

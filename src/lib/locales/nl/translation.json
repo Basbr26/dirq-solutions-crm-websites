@@ -68,7 +68,12 @@
     "tryDifferentSearch": "Probeer een andere zoekopdracht",
     "addFirstItem": "Voeg je eerste item toe",
     "subject": "Onderwerp",
-    "description": "Omschrijving"
+    "description": "Omschrijving",
+    "firstName": "Voornaam",
+    "lastName": "Achternaam",
+    "email": "E-mail",
+    "phone": "Telefoon",
+    "uploading": "Uploaden..."
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -715,7 +720,13 @@
     "dataFetched": "Bedrijfsgegevens opgehaald van KVK",
     "statusUpdated": "Status bijgewerkt",
     "changesApplied": "Wijzigingen toegepast",
-    "operationComplete": "Operatie voltooid"
+    "operationComplete": "Operatie voltooid",
+    "profileUpdated": "Profiel bijgewerkt",
+    "profileUpdatedDescription": "Je profielgegevens zijn succesvol opgeslagen",
+    "avatarUpdated": "Profielfoto bijgewerkt",
+    "avatarUpdatedDescription": "Je nieuwe profielfoto is succesvol geüpload",
+    "avatarRemoved": "Profielfoto verwijderd",
+    "avatarRemovedDescription": "Je profielfoto is verwijderd"
   },
   "settings": {
     "title": "Instellingen",
@@ -994,7 +1005,10 @@
     "tokenSaveFailed": "Token opslaan mislukt: {{message}}",
     "noRefreshToken": "Let op: geen refresh token - sessie verloopt na 1 uur",
     "sessionExpiresWarning": "Verbonden - Maar sessie verloopt na 1 uur (geen refresh token)",
-    "noRefreshTokenRelogin": "Geen refresh token - log opnieuw in voor blijvende toegang"
+    "noRefreshTokenRelogin": "Geen refresh token - log opnieuw in voor blijvende toegang",
+    "saveFailed": "Opslaan mislukt",
+    "uploadFailed": "Uploaden mislukt",
+    "deleteFailed": "Verwijderen mislukt"
   },
   "dialogs": {
     "deleteConfirmTitle": "{{item}} verwijderen?",

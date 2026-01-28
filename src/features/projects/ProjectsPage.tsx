@@ -266,8 +266,8 @@ export default function ProjectsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('projects.stage')}</label>
                 <Select 
-                  value={stageFilter || ''} 
-                  onValueChange={(value) => setStageFilter(value ? value as ProjectStage : undefined)}
+                  value={stageFilter ?? ''} 
+                  onValueChange={(value) => setStageFilter(value === '' ? undefined : value as ProjectStage)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t('projects.allStages')} />
@@ -286,8 +286,8 @@ export default function ProjectsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('projects.projectType')}</label>
                 <Select 
-                  value={typeFilter || ''} 
-                  onValueChange={(value) => setTypeFilter(value ? value as ProjectType : undefined)}
+                  value={typeFilter ?? ''} 
+                  onValueChange={(value) => setTypeFilter(value === '' ? undefined : value as ProjectType)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder={t('projects.allTypes')} />

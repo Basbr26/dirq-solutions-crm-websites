@@ -66,7 +66,12 @@
     "tryDifferentSearch": "Try a different search",
     "addFirstItem": "Add your first item",
     "subject": "Subject",
-    "description": "Description"
+    "description": "Description",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "uploading": "Uploading..."
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -701,7 +706,13 @@
     "dataFetched": "Company data fetched from Chamber of Commerce",
     "statusUpdated": "Status updated",
     "changesApplied": "Changes applied",
-    "operationComplete": "Operation complete"
+    "operationComplete": "Operation complete",
+    "profileUpdated": "Profile updated",
+    "profileUpdatedDescription": "Your profile information has been saved successfully",
+    "avatarUpdated": "Avatar updated",
+    "avatarUpdatedDescription": "Your new profile photo has been uploaded successfully",
+    "avatarRemoved": "Avatar removed",
+    "avatarRemovedDescription": "Your profile photo has been removed"
   },
   "settings": {
     "title": "Settings",
@@ -980,7 +991,10 @@
     "tokenSaveFailed": "Token save failed: {{message}}",
     "noRefreshToken": "Warning: no refresh token - session expires after 1 hour",
     "sessionExpiresWarning": "Connected - But session expires after 1 hour (no refresh token)",
-    "noRefreshTokenRelogin": "No refresh token - log in again for permanent access"
+    "noRefreshTokenRelogin": "No refresh token - log in again for permanent access",
+    "saveFailed": "Save failed",
+    "uploadFailed": "Upload failed",
+    "deleteFailed": "Delete failed"
   },
   "dialogs": {
     "deleteConfirmTitle": "Delete {{item}}?",

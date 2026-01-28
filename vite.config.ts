@@ -16,6 +16,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    // Polyfill Buffer for pdf-lib in browser
+    'global': 'globalThis',
+  },
   build: {
     outDir: "dist",
     assetsDir: "assets",

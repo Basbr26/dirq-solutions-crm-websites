@@ -98,7 +98,7 @@ export default function PipelinePage() {
       if (error) throw error;
 
       // Invalidate queries to refresh data
-      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
       await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
       // Show toast with project name and company
@@ -142,7 +142,7 @@ export default function PipelinePage() {
 
       if (error) throw error;
 
-      await queryClient.invalidateQueries({ queryKey: ['projects'] });
+      await queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
       await queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
 
       // Show toast with project name and company

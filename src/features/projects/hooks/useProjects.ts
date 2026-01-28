@@ -178,6 +178,8 @@ export function usePipelineStats() {
 
       return stats;
     },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchOnWindowFocus: true, // Refresh when user returns to tab
   });
 }
 
@@ -219,5 +221,7 @@ export function useProjectsByStage() {
 
       return grouped;
     },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds
+    refetchOnWindowFocus: true, // Refresh when user returns to tab
   });
 }

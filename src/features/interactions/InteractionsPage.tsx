@@ -213,7 +213,7 @@ export default function InteractionsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('filters.type')}</label>
-                <Select value={typeFilter || ''} onValueChange={(value) => setTypeFilter(value || undefined)}>
+                <Select value={typeFilter ?? ''} onValueChange={(value) => setTypeFilter(value === '' ? undefined : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('interactions.types.all')} />
                   </SelectTrigger>
@@ -231,7 +231,7 @@ export default function InteractionsPage() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('interactions.taskStatus.label')}</label>
-                <Select value={taskStatusFilter || ''} onValueChange={(value) => setTaskStatusFilter(value || undefined)}>
+                <Select value={taskStatusFilter ?? ''} onValueChange={(value) => setTaskStatusFilter(value === '' ? undefined : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('interactions.taskStatus.all')} />
                   </SelectTrigger>

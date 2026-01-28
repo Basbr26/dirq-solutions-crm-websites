@@ -131,7 +131,7 @@ export default function QuoteDetailPage() {
           elements.push(
             <ul key={`list-${index}`} className="list-disc list-inside space-y-1 my-2 ml-2">
               {currentList.map((item, i) => (
-                <li key={i} className="text-sm text-gray-600">{item}</li>
+                <li key={i} className="text-sm text-muted-foreground">{item}</li>
               ))}
             </ul>
           );
@@ -139,7 +139,7 @@ export default function QuoteDetailPage() {
         }
         if (trimmed) {
           elements.push(
-            <p key={`p-${index}`} className="text-sm text-gray-700 leading-relaxed">{trimmed}</p>
+            <p key={`p-${index}`} className="text-sm text-foreground leading-relaxed">{trimmed}</p>
           );
         }
       }
@@ -149,7 +149,7 @@ export default function QuoteDetailPage() {
       elements.push(
         <ul key="list-final" className="list-disc list-inside space-y-1 my-2 ml-2">
           {currentList.map((item, i) => (
-            <li key={i} className="text-sm text-gray-600">{item}</li>
+            <li key={i} className="text-sm text-muted-foreground">{item}</li>
           ))}
         </ul>
       );
@@ -722,13 +722,13 @@ export default function QuoteDetailPage() {
               </Button>
             )}
             {canEdit && !quote.provider_signature_data && (
-              <Button variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50" onClick={() => setProviderSignDialogOpen(true)}>
+              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10 dark:hover:bg-primary/20" onClick={() => setProviderSignDialogOpen(true)}>
                 <Pen className="h-4 w-4 mr-2" />
                 {t('quotes.signAsProvider')}
               </Button>
             )}
             {quote.provider_signed_document_url && (
-              <Button variant="outline" className="border-green-500 text-green-600 hover:bg-green-50" onClick={downloadSignedDocument}>
+              <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/30" onClick={downloadSignedDocument}>
                 <Download className="h-4 w-4 mr-2" />
                 {t('quotes.downloadSigned')}
               </Button>
@@ -906,12 +906,12 @@ export default function QuoteDetailPage() {
                     {items.map((item, index) => (
                       <div 
                         key={item.id} 
-                        className="p-4 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-colors"
+                        className="p-4 rounded-lg border bg-card hover:border-muted-foreground/30 transition-colors"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-700 text-xs font-semibold">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-muted text-foreground text-xs font-semibold">
                                 {index + 1}
                               </span>
                               <h4 className="font-semibold text-base">{item.title}</h4>
@@ -942,7 +942,7 @@ export default function QuoteDetailPage() {
                                   )}
                                 </Button>
                                 {expandedItems.has(item.id) && (
-                                  <div className="pl-3 border-l-2 border-gray-200 mt-2">
+                                  <div className="pl-3 border-l-2 border-border mt-2">
                                     {formatDescription(item.description)}
                                   </div>
                                 )}
@@ -955,12 +955,12 @@ export default function QuoteDetailPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex gap-6 text-sm text-muted-foreground bg-gray-50 rounded p-2 mt-3">
+                        <div className="flex gap-6 text-sm text-muted-foreground bg-muted/50 rounded p-2 mt-3">
                           <span className="flex items-center gap-1">
-                            Aantal: <span className="font-semibold text-gray-900">{item.quantity}</span>
+                            Aantal: <span className="font-semibold text-foreground">{item.quantity}</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            Prijs: <span className="font-semibold text-gray-900">{formatCurrency(item.unit_price)}</span>
+                            Prijs: <span className="font-semibold text-foreground">{formatCurrency(item.unit_price)}</span>
                           </span>
                         </div>
                       </div>
@@ -969,7 +969,7 @@ export default function QuoteDetailPage() {
                     <Separator className="my-6" />
 
                     {/* Totals */}
-                    <div className="bg-gray-50 rounded-lg p-5 space-y-3">
+                    <div className="bg-muted/50 rounded-lg p-5 space-y-3">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">{t('quotes.subtotal')}</span>
                         <span className="font-medium">{formatCurrency(quote.subtotal)}</span>
