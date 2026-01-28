@@ -74,7 +74,7 @@ import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
 import SignatureCanvas from '@/components/SignatureCanvas';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
 
 export default function QuoteDetailPage() {
   const { t } = useTranslation();
@@ -412,40 +412,83 @@ export default function QuoteDetailPage() {
       const pages = pdfDoc.getPages();
       const lastPage = pages[pages.length - 1];
 
-      // Embed signature image
+      const { width, height } = lastPage.getSize();
+      const signatureWidth = 150;
+      const signatureHeight = 75;
+      const yPosition = 200;
+
+      // Add client signature if exists (LEFT side)
+      if (quote.signature_data) {
+        const clientBase64Data = quote.signature_data.split(',')[1];
+        const clientSignatureBytes = Uint8Array.from(atob(clientBase64Data), c => c.charCodeAt(0));
+        const clientSignatureImage = await pdfDoc.embedPng(clientSignatureBytes);
+
+        const clientX = 50;
+
+        // Draw border box around client signature area
+        lastPage.drawRectangle({
+          x: clientX - 10,
+          y: yPosition - 35,
+          width: signatureWidth + 20,
+          height: signatureHeight + 70,
+          borderWidth: 1,
+          borderColor: rgb(0.7, 0.7, 0.7),
+        });
+
+        // Draw client signature
+        lastPage.drawImage(clientSignatureImage, {
+          x: clientX,
+          y: yPosition,
+          width: signatureWidth,
+          height: signatureHeight,
+        });
+
+        // Add text below client signature
+        const clientName = quote.signed_by_name || 'Klant';
+        lastPage.drawText(clientName, { x: clientX, y: yPosition - 15, size: 8 });
+        lastPage.drawText('(Opdrachtgever)', { x: clientX, y: yPosition - 25, size: 7 });
+        if (quote.signed_at) {
+          lastPage.drawText(`Datum: ${format(new Date(quote.signed_at), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { 
+            x: clientX, 
+            y: yPosition - 35, 
+            size: 7 
+          });
+        }
+      }
+
+      // Add provider signature (RIGHT side)
       const base64Data = signatureData.split(',')[1];
       const signatureBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
       const signatureImage = await pdfDoc.embedPng(signatureBytes);
 
-      const { width, height } = lastPage.getSize();
-      const signatureWidth = 150;
-      const signatureHeight = 75;
-      
-      // Position provider signature on the RIGHT side, at the bottom
-      const x = width - signatureWidth - 50;
-      const y = 200; // Moved higher to ensure visibility
+      const providerX = width - signatureWidth - 50;
 
-      // Draw border box around signature area
+      // Draw border box around provider signature area
       lastPage.drawRectangle({
-        x: x - 10,
-        y: y - 35,
+        x: providerX - 10,
+        y: yPosition - 35,
         width: signatureWidth + 20,
         height: signatureHeight + 70,
         borderWidth: 1,
+        borderColor: rgb(0.7, 0.7, 0.7),
       });
 
-      // Draw signature
+      // Draw provider signature
       lastPage.drawImage(signatureImage, {
-        x,
-        y,
+        x: providerX,
+        y: yPosition,
         width: signatureWidth,
         height: signatureHeight,
       });
 
-      // Add text below signature
-      lastPage.drawText('Namens Dirq Solutions', { x, y: y - 15, size: 8 });
-      lastPage.drawText('(Leverancier)', { x, y: y - 25, size: 7 });
-      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { x, y: y - 35, size: 7 });
+      // Add text below provider signature
+      lastPage.drawText('Namens Dirq Solutions', { x: providerX, y: yPosition - 15, size: 8 });
+      lastPage.drawText('(Leverancier)', { x: providerX, y: yPosition - 25, size: 7 });
+      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { 
+        x: providerX, 
+        y: yPosition - 35, 
+        size: 7 
+      });
 
       // Save signed PDF
       const signedPdfBytes = await pdfDoc.save();
@@ -1160,7 +1203,7 @@ export default function QuoteDetailPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <div className={`w-2 h-2 rounded-full ${quote.status === 'accepted' ? 'bg-green-500' : quote.status === 'rejected' ? 'bg-red-500' : 'bg-gray-300'}`} />
                     <span className={['accepted', 'rejected'].includes(quote.status) ? 'text-foreground' : 'text-muted-foreground'}>
-                      {quote.status === 'accepted' ? 'Geaccepteerd' : quote.status === 'rejected' ? 'Afgewezen' : 'Beslissing'}
+                      {quote.status === 'accepted' ? 'Getekend' : quote.status === 'rejected' ? 'Afgewezen' : 'Beslissing'}
                     </span>
                   </div>
                 </div>
