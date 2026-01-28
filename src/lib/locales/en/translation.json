@@ -715,10 +715,7 @@
       "system": "System"
     },
     "notifications": "Notifications",
-    "appearance": "Appearance",
-    "integrations": "Integrations",
     "account": "Account",
-    "profile": "Profile",
     "privacy": "Privacy",
     "security": "Security",
     "preferences": "Preferences",
@@ -727,7 +724,30 @@
     "help": "Help",
     "documentation": "Documentation",
     "support": "Support",
-    "version": "Version"
+    "version": "Version",
+    "profile": {
+      "title": "Profile",
+      "description": "Manage your personal information and profile photo",
+      "uploadPhoto": "Upload photo",
+      "photoRequirements": "JPG, PNG or GIF. Max 2MB.",
+      "emailCannotChange": "Email address cannot be changed"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "description": "Customize the application appearance",
+      "theme": "Theme",
+      "themeDescription": "Select the color scheme",
+      "light": "Light",
+      "dark": "Dark",
+      "compactMode": "Compact mode",
+      "compactModeDescription": "Show more information in less space",
+      "fontSize": "Font size",
+      "fontSizeDescription": "Adjust the font size"
+    },
+    "integrations": {
+      "googleCalendar": "Google Calendar",
+      "googleCalendarDescription": "Synchronize your appointments with Google Calendar"
+    }
   },
   "auth": {
     "login": "Login",
@@ -875,7 +895,14 @@
     "time": "Time",
     "event": "Event",
     "noEventsInRange": "No events in this period",
-    "more": "more"
+    "more": "more",
+    "newActivity": "New Activity",
+    "newActivityDescription": "Schedule a new meeting, demo or follow-up",
+    "startDate": "Start date",
+    "startTime": "Start time",
+    "endDate": "End date",
+    "endTime": "End time",
+    "location": "Location"
   },
   "activities": {
     "title": "Activity Log",

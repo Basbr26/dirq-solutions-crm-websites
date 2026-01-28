@@ -256,9 +256,6 @@
     "lastContact": "Laatste contact",
     "viewProfile": "Bekijk profiel",
     "streetAddress": "Straat + Huisnummer",
-    "country": "Land",
-    "industry": "Branche",
-    "source": "Lead Bron",
     "kvkSearch": "KVK nummer of bedrijfsnaam",
     "searchViaKvk": "Zoek het bedrijf op via de KVK knop",
     "searchKvkStep": "Stap 1: Zoek bedrijf op KVK",
@@ -732,10 +729,7 @@
       "system": "Systeem"
     },
     "notifications": "Meldingen",
-    "appearance": "Weergave",
-    "integrations": "Integraties",
     "account": "Account",
-    "profile": "Profiel",
     "privacy": "Privacy",
     "security": "Beveiliging",
     "preferences": "Voorkeuren",
@@ -744,7 +738,30 @@
     "help": "Help",
     "documentation": "Documentatie",
     "support": "Ondersteuning",
-    "version": "Versie"
+    "version": "Versie",
+    "profile": {
+      "title": "Profiel",
+      "description": "Beheer je persoonlijke informatie en profielfoto",
+      "uploadPhoto": "Upload foto",
+      "photoRequirements": "JPG, PNG of GIF. Max 2MB.",
+      "emailCannotChange": "E-mailadres kan niet worden gewijzigd"
+    },
+    "appearance": {
+      "title": "Weergave",
+      "description": "Pas het uiterlijk van de applicatie aan",
+      "theme": "Thema",
+      "themeDescription": "Selecteer het kleurenschema",
+      "light": "Licht",
+      "dark": "Donker",
+      "compactMode": "Compacte modus",
+      "compactModeDescription": "Toon meer informatie in minder ruimte",
+      "fontSize": "Lettergrootte",
+      "fontSizeDescription": "Pas de lettergrootte aan"
+    },
+    "integrations": {
+      "googleCalendar": "Google Calendar",
+      "googleCalendarDescription": "Synchroniseer je afspraken met Google Calendar"
+    }
   },
   "auth": {
     "login": "Inloggen",
@@ -892,7 +909,14 @@
     "time": "Tijd",
     "event": "Event",
     "noEventsInRange": "Geen events in deze periode",
-    "more": "meer"
+    "more": "meer",
+    "newActivity": "Nieuwe Activiteit",
+    "newActivityDescription": "Plan een nieuwe meeting, demo of follow-up",
+    "startDate": "Startdatum",
+    "startTime": "Starttijd",
+    "endDate": "Einddatum",
+    "endTime": "Eindtijd",
+    "location": "Locatie"
   },
   "activities": {
     "title": "Activiteiten Log",

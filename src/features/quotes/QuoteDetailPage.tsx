@@ -3,7 +3,7 @@
  * Full quote detail page with line items, status management, and PDF export
  */
 
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -690,13 +690,13 @@ export default function QuoteDetailPage() {
                 </div>
 
                 {quote.contact && (
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100">
-                    <User className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-3">
+                    <User className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-purple-900 mb-1">{t('quotes.contactPerson')}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{t('quotes.contactPerson')}</p>
                       <Link 
                         to={`/contacts/${quote.contact.id}`}
-                        className="font-semibold text-purple-700 hover:text-purple-900 hover:underline block truncate"
+                        className="font-medium hover:underline block truncate"
                       >
                         {quote.contact.first_name} {quote.contact.last_name}
                       </Link>
@@ -704,22 +704,22 @@ export default function QuoteDetailPage() {
                   </div>
                 )}
 
-                <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100">
-                  <Calendar className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-green-900 mb-1">{t('common.created')}</p>
-                    <p className="font-semibold text-green-700">
+                    <p className="text-sm text-muted-foreground mb-1">{t('common.created')}</p>
+                    <p className="font-medium">
                       {format(new Date(quote.created_at), 'dd MMMM yyyy', { locale: nl })}
                     </p>
                   </div>
                 </div>
 
                 {quote.valid_until && (
-                  <div className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100">
-                    <Clock className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-orange-900 mb-1">{t('quotes.validUntil')}</p>
-                      <p className="font-semibold text-orange-700">
+                      <p className="text-sm text-muted-foreground mb-1">{t('quotes.validUntil')}</p>
+                      <p className="font-medium">
                         {format(new Date(quote.valid_until), 'dd MMMM yyyy', { locale: nl })}
                       </p>
                     </div>
@@ -915,7 +915,7 @@ export default function QuoteDetailPage() {
                   />
                 ) : (
                   <div className="text-sm whitespace-pre-wrap">
-                    {formatDescription(quote.notes)}
+                    {quote.notes && formatDescription(quote.notes)}
                   </div>
                 )}
               </CardContent>
@@ -941,7 +941,7 @@ export default function QuoteDetailPage() {
                   />
                 ) : (
                   <div className="text-sm whitespace-pre-wrap">
-                    {formatDescription(quote.client_notes)}
+                    {quote.client_notes && formatDescription(quote.client_notes)}
                   </div>
                 )}
               </CardContent>
@@ -1133,12 +1133,14 @@ export default function QuoteDetailPage() {
                 {/* Current Status Badge */}
                 <div className="flex items-center justify-between p-3 rounded-lg border-2" style={{
                   borderColor: statusConfig[quote.status]?.color || '#94a3b8',
-                  backgroundColor: `${statusConfig[quote.status]?.color}10` || '#f1f5f9'
+                  backgroundColor: statusConfig[quote.status]?.color ? `${statusConfig[quote.status].color}10` : '#f1f5f9'
                 }}>
                   <span className="font-semibold" style={{ color: statusConfig[quote.status]?.color }}>
                     {statusConfig[quote.status]?.label}
                   </span>
-                  {statusConfig[quote.status]?.icon}
+                  {statusConfig[quote.status]?.icon && 
+                    React.createElement(statusConfig[quote.status].icon, { className: "h-5 w-5" })
+                  }
                 </div>
 
                 {/* Status Progress Indicators */}
