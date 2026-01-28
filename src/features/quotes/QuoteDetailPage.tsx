@@ -558,7 +558,7 @@ export default function QuoteDetailPage() {
           provider_signed_by: user.id,
           provider_signed_by_ip: ipAddress,
           provider_signed_document_url: urlData.signedUrl,
-          status: 'signed',
+          status: 'accepted',
           // Invalidate sign token to prevent replay attacks
           sign_token: null,
           sign_token_expires_at: null,
