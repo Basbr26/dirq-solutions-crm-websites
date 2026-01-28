@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { Bell, Check, CheckCheck, X, Settings, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +61,7 @@ export function NotificationCenter() {
       .limit(50);
 
     if (error) {
-      console.error('Error loading notifications:', error);
+      logger.error('Failed to load notifications', { error });
       setLoading(false);
       return;
     }

@@ -11,6 +11,33 @@ interface UseContactsParams {
   isDecisionMaker?: boolean;
 }
 
+/**
+ * Contacts Query Hook
+ * Fetches paginated list of contacts with filtering and RBAC enforcement.
+ * Automatically respects Row Level Security policies.
+ * 
+ * @param params - Optional parameters to filter contacts
+ * @param params.search - Search by name, email, or position
+ * @param params.companyId - Filter by specific company ID
+ * @param params.isPrimary - Filter for primary contacts only
+ * @param params.isDecisionMaker - Filter for decision makers only
+ * @returns Query result with contacts, pagination controls, and loading state
+ * 
+ * @example
+ * ```tsx
+ * // All contacts
+ * const { contacts, isLoading, pagination } = useContacts();
+ * 
+ * // Company's decision makers
+ * const { contacts } = useContacts({ 
+ *   companyId: 'company-123',
+ *   isDecisionMaker: true 
+ * });
+ * 
+ * // Search contacts
+ * const { contacts } = useContacts({ search: 'john' });
+ * ```
+ */
 export function useContacts(params: UseContactsParams = {}) {
   const { role } = useAuth();
   const pagination = usePagination({ initialPageSize: 25 });

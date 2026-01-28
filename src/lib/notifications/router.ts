@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { safeFrom, safeRpc } from '@/lib/supabaseTypeHelpers';
 import type {
   NotificationChannel,
@@ -31,13 +32,13 @@ export class NotificationRouter {
       });
 
       if (error) {
-        console.error('Error creating notification:', error);
+        logger.error('Failed to create notification', { params, error });
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error('Exception creating notification:', error);
+      logger.error('Exception creating notification', { params, error });
       return null;
     }
   }
@@ -128,7 +129,7 @@ export class NotificationRouter {
       .single();
 
     if (error) {
-      console.error('Error creating digest:', error);
+      logger.error('Failed to create notification digest', { userId, error });
       return null;
     }
 
@@ -153,7 +154,7 @@ export class NotificationRouter {
     _preferences: Partial<NotificationPreferences>
   ): Promise<boolean> {
     // notification_preferences table doesn't exist yet
-    console.warn('updatePreferences: notification_preferences table not implemented');
+    logger.warn('updatePreferences called but notification_preferences table not implemented');
     return true;
   }
 
@@ -291,7 +292,7 @@ export class NotificationRouter {
     });
 
     if (error) {
-      console.error('Error marking as read:', error);
+      logger.error('Failed to mark notification as read', { notificationId, error });
       return false;
     }
 
@@ -307,7 +308,7 @@ export class NotificationRouter {
     });
 
     if (error) {
-      console.error('Error marking as acted:', error);
+      logger.error('Failed to mark notification as acted', { notificationId, error });
       return false;
     }
 
@@ -324,7 +325,7 @@ export class NotificationRouter {
       .is('read_at', null);
 
     if (error) {
-      console.error('Error marking all as read:', error);
+      logger.error('Failed to mark all notifications as read', { userId, error });
       return false;
     }
 

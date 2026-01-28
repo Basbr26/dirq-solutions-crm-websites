@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Filter, Download, Upload } from 'lucide-react';
 import { useCompanies, useCompanyStats } from './hooks/useCompanies';
 import { useCreateCompany } from './hooks/useCompanyMutations';
@@ -26,13 +27,16 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { format } from 'date-fns';
 import { CSVImportDialog } from '@/components/CSVImportDialog';
+import { z } from 'zod';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export default function CompaniesPage() {
   const { t } = useTranslation();
   const { role } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<CompanyFiltersType>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -45,10 +49,10 @@ export default function CompaniesPage() {
   const debouncedSearch = useDebounce(search, 500);
 
   // Apply search after debounce - reset to page 1 when search changes
-  const activeFilters: CompanyFiltersType = {
+  const activeFilters: CompanyFiltersType = useMemo(() => ({
     ...filters,
     search: debouncedSearch || undefined,
-  };
+  }), [filters, debouncedSearch]);
 
   const {
     companies,
@@ -60,14 +64,14 @@ export default function CompaniesPage() {
   const { data: stats } = useCompanyStats();
 
   // Reset to page 1 when search or filters change
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     pagination.resetPage();
-  };
+  }, [pagination]);
 
   const canCreateCompany = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
 
-  const handleExportCSV = async () => {
+  const handleExportCSV = useCallback(async () => {
     try {
       toast.info(t('companies.exporting'));
       
@@ -124,30 +128,66 @@ export default function CompaniesPage() {
 
       toast.success(t('companies.companiesExported', { count: exportCompanies.length }));
     } catch (error: any) {
-      console.error('Export error:', error);
+      logger.error(error, { context: 'companies_export' });
       toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
-  };
+  }, [activeFilters, t]);
 
-  const handleImport = async (data: any[], fieldMapping: Record<string, string>) => {
+  const handleImport = useCallback(async (data: any[], fieldMapping: Record<string, string>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
+    // Validation schema to prevent SQL injection, XSS, and data corruption
+    const companyImportSchema = z.object({
+      name: z.string().min(1, 'Bedrijfsnaam is verplicht').max(200).trim(),
+      email: z.string().email('Ongeldig email formaat').max(255).optional().or(z.literal('')),
+      phone: z.string().regex(/^\+?[0-9\s\-()]+$/, 'Ongeldig telefoonnummer').max(50).optional().or(z.literal('')),
+      website: z.string().url('Ongeldige website URL').max(255).optional().or(z.literal('')),
+      status: z.enum(['prospect', 'active', 'inactive', 'churned']).default('prospect'),
+      priority: z.enum(['low', 'medium', 'high']).default('medium'),
+      company_size: z.string().max(50).optional(),
+      notes: z.string().max(1000).optional(),
+    });
+
     let successCount = 0;
     let errorCount = 0;
+    const errors: Array<{ row: number; error: string }> = [];
 
-    for (const row of data) {
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
       try {
-        // Map CSV fields to database fields
+        // Prepare raw data
+        const rawData = {
+          name: (row.name || row.Naam || '').toString().trim(),
+          email: (row.email || row.Email || '').toString().trim(),
+          phone: (row.phone || row.Telefoon || '').toString().trim(),
+          website: (row.website || row.Website || '').toString().trim(),
+          status: (row.status || row.Status || 'prospect').toString().toLowerCase(),
+          priority: (row.priority || row.Prioriteit || 'medium').toString().toLowerCase(),
+          company_size: (row.company_size || row.Grootte || '').toString().trim(),
+          notes: (row.notes || row.Notities || '').toString().trim(),
+        };
+
+        // Validate with Zod schema
+        const validated = companyImportSchema.safeParse(rawData);
+        
+        if (!validated.success) {
+          const errorMessages = validated.error.errors.map((e: { message: string }) => e.message).join(', ');
+          errors.push({ row: i + 1, error: errorMessages });
+          errorCount++;
+          continue;
+        }
+
+        // Map validated fields to database fields
         const companyData: any = {
-          name: row.name || row.Naam,
-          email: row.email || row.Email || undefined,
-          phone: row.phone || row.Telefoon || undefined,
-          website: row.website || row.Website || undefined,
-          status: (row.status || row.Status || 'prospect').toLowerCase(),
-          priority: (row.priority || row.Prioriteit || 'medium').toLowerCase(),
-          company_size: row.company_size || row.Grootte || undefined,
-          notes: row.notes || row.Notities || undefined,
+          name: validated.data.name,
+          email: validated.data.email || undefined,
+          phone: validated.data.phone || undefined,
+          website: validated.data.website || undefined,
+          status: validated.data.status,
+          priority: validated.data.priority,
+          company_size: validated.data.company_size || undefined,
+          notes: validated.data.notes || undefined,
           owner_id: user.id,
         };
 
@@ -157,19 +197,35 @@ export default function CompaniesPage() {
           .insert([companyData]);
 
         if (error) {
-          console.error('Insert error for row:', row, error);
+          errors.push({ row: i + 1, error: error.message });
+          logger.error(error, { context: 'company_import_insert', row_data: companyData });
           errorCount++;
         } else {
           successCount++;
         }
-      } catch (error) {
-        console.error('Row processing error:', error);
+      } catch (error: any) {
+        errors.push({ row: i + 1, error: error.message || 'Unknown error' });
+        logger.error(error, { context: 'company_import_row_process', row });
         errorCount++;
       }
     }
 
+    // Show detailed error messages
+    if (successCount > 0) {
+      toast.success(`${successCount} bedrijven succesvol geïmporteerd`);
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+    }
+    if (errorCount > 0) {
+      const errorSummary = errors.slice(0, 3).map(e => `Rij ${e.row}: ${e.error}`).join('\n');
+      const moreErrors = errors.length > 3 ? `\n... en ${errors.length - 3} meer` : '';
+      toast.error(`${errorCount} bedrijven konden niet worden geïmporteerd:\n${errorSummary}${moreErrors}`, {
+        duration: 8000,
+      });
+      logger.error(new Error('Company import errors'), { context: 'companies_import', error_count: errorCount, errors: errors.slice(0, 10) });
+    }
+
     return { success: successCount, errors: errorCount };
-  };
+  }, [queryClient]);
 
   return (
     <AppLayout

@@ -23,6 +23,7 @@ import { HorizontalDatePicker } from '@/components/calendar/HorizontalDatePicker
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SidePanel } from '@/components/ui/side-panel';
+import { logger } from '@/lib/logger';
 
 const locales = { nl };
 const localizer = dateFnsLocalizer({
@@ -97,7 +98,7 @@ export default function CalendarPage() {
         .order('start_time');
       
       if (calendarError) {
-        console.error('Error fetching calendar events:', calendarError);
+        logger.error(calendarError, { context: 'calendar_events_fetch', user_id: user.id });
       }
 
       // Fetch scheduled interactions (calls, meetings, demos with scheduled_at)
@@ -112,7 +113,7 @@ export default function CalendarPage() {
         .order('scheduled_at');
 
       if (scheduledError) {
-        console.error('Error fetching scheduled interactions:', scheduledError);
+        logger.error(scheduledError, { context: 'calendar_scheduled_interactions_fetch', user_id: user.id });
       }
 
       // Fetch tasks with due dates
@@ -127,7 +128,7 @@ export default function CalendarPage() {
         .order('due_date');
 
       if (tasksError) {
-        console.error('Error fetching tasks:', tasksError);
+        logger.error(tasksError, { context: 'calendar_tasks_fetch', user_id: user.id });
       }
 
       // Type color mapping

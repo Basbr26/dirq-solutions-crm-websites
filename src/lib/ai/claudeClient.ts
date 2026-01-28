@@ -3,6 +3,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { searchKnowledgeBase } from './knowledgeBase';
 
 export interface Message {
@@ -194,7 +195,7 @@ Kan ik je met iets anders helpen?`;
       },
     };
   } catch (error) {
-    console.error('Claude API error:', error);
+    logger.error('Claude API request failed', { userId, error });
     throw new Error('Er is een fout opgetreden bij het verwerken van je vraag. Probeer het later opnieuw.');
   }
 }
@@ -220,7 +221,7 @@ async function logAuditEntry(entry: {
       response_time_ms: entry.responseTimeMs,
     });
   } catch (error) {
-    console.error('Failed to log audit entry:', error);
+    logger.error('Failed to log Claude audit entry', { userId: entry.userId, error });
     // Don't throw - logging failure shouldn't break the chat
   }
 }
@@ -244,7 +245,7 @@ export async function saveMessage(
   });
 
   if (error) {
-    console.error('Failed to save message:', error);
+    logger.error('Failed to save Claude message', { sessionId, role, error });
     throw error;
   }
 }
@@ -263,7 +264,7 @@ export async function getOrCreateSession(userId: string): Promise<string> {
       .limit(1);
 
     if (fetchError) {
-      console.error('Failed to fetch sessions:', fetchError);
+      logger.error('Failed to fetch chat sessions', { userId, error: fetchError });
     }
 
     // If recent session exists (< 1 hour old), use it
@@ -282,13 +283,13 @@ export async function getOrCreateSession(userId: string): Promise<string> {
       .single();
 
     if (createError || !newSession) {
-      console.error('Failed to create session:', createError);
+      logger.error('Failed to create chat session', { userId, error: createError });
       throw new Error('Could not create chat session');
     }
 
     return newSession.id;
   } catch (error) {
-    console.error('Session error:', error);
+    logger.error('Chat session creation error', { userId, error });
     throw new Error('Could not create chat session');
   }
 }
@@ -305,7 +306,7 @@ export async function getChatHistory(sessionId: string, limit = 10): Promise<Mes
     .limit(limit);
 
   if (error) {
-    console.error('Failed to fetch chat history:', error);
+    logger.error('Failed to fetch chat history', { sessionId, error });
     return [];
   }
 
@@ -332,7 +333,7 @@ export async function submitFeedback(
     });
 
   if (error) {
-    console.error('Failed to submit feedback:', error);
+    logger.error('Failed to submit Claude feedback', { messageId, isHelpful, error });
     throw error;
   }
 }

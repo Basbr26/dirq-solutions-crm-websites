@@ -11,6 +11,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface Stats {
   totalUsers: number;
@@ -65,7 +66,7 @@ export default function DashboardSuperAdmin() {
         activeDeals: activeDealsCount || 0,
       });
     } catch (error) {
-      console.error('Error loading stats:', error);
+      logger.error(error, { context: 'superadmin_stats_load' });
       toast.error(t('errors.errorLoadingStats'));
     } finally {
       setLoading(false);

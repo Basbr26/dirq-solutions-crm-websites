@@ -9,9 +9,11 @@ import { toast } from 'sonner';
 import type { CreateQuoteInput, UpdateQuoteInput, QuoteStatus } from '@/types/quotes';
 import { notifyQuoteStatusChange } from '@/lib/crmNotifications';
 import { haptics } from '@/lib/haptics';
+import { useTranslation } from 'react-i18next';
 
 export function useCreateQuote() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (input: CreateQuoteInput) => {
@@ -74,17 +76,18 @@ export function useCreateQuote() {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote-stats'] });
       haptics.success();
-      toast.success('Offerte aangemaakt');
+      toast.success(t('toast.quote.created'));
     },
     onError: (error: Error) => {
       haptics.error();
-      toast.error(`Fout bij aanmaken offerte: ${error.message}`);
+      toast.error(t('toast.quote.createError', { message: error.message }));
     },
   });
 }
 
 export function useUpdateQuote(id: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (input: UpdateQuoteInput) => {
@@ -102,16 +105,17 @@ export function useUpdateQuote(id: string) {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quotes', id] });
       queryClient.invalidateQueries({ queryKey: ['quote-stats'] });
-      toast.success('Offerte bijgewerkt');
+      toast.success(t('toast.quote.updated'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij bijwerken offerte: ${error.message}`);
+      toast.error(t('toast.quote.updateError', { message: error.message }));
     },
   });
 }
 
 export function useDeleteQuote() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -125,16 +129,17 @@ export function useDeleteQuote() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote-stats'] });
-      toast.success('Offerte verwijderd');
+      toast.success(t('toast.quote.deleted'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij verwijderen offerte: ${error.message}`);
+      toast.error(t('toast.quote.deleteError', { message: error.message }));
     },
   });
 }
 
 export function useUpdateQuoteStatus(id: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (status: QuoteStatus) => {
@@ -165,15 +170,15 @@ export function useUpdateQuoteStatus(id: string) {
       queryClient.invalidateQueries({ queryKey: ['quote-stats'] });
       
       const statusLabels: Record<QuoteStatus, string> = {
-        draft: 'Concept',
-        sent: 'Verzonden',
-        viewed: 'Bekeken',
-        accepted: 'Geaccepteerd',
-        rejected: 'Afgewezen',
-        expired: 'Verlopen',
+        draft: t('quotes.statuses.draft'),
+        sent: t('quotes.statuses.sent'),
+        viewed: t('quotes.statuses.viewed'),
+        accepted: t('quotes.statuses.accepted'),
+        rejected: t('quotes.statuses.rejected'),
+        expired: t('quotes.statuses.expired'),
       };
       
-      toast.success(`Offerte status: ${statusLabels[status]}`);
+      toast.success(t('toast.quote.statusChanged', { status: statusLabels[status] }));
 
       // Send notification for accepted/rejected status
       if (status === 'accepted' || status === 'rejected') {
@@ -196,7 +201,7 @@ export function useUpdateQuoteStatus(id: string) {
       }
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij status wijziging: ${error.message}`);
+      toast.error(t('toast.quote.statusError', { message: error.message }));
     },
   });
 }

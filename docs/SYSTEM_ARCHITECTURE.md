@@ -416,12 +416,16 @@ CREATE UNIQUE INDEX idx_quotes_sign_token ON quotes(sign_token)
 
 **Purpose:** Quote generation & e-signature  
 **Key Features:**  
-- PDF generation with VAT calculations
-- Multi-status workflow (draft → signed)
-- Secure e-signature tokens (expiring)
-- Dual signature support (client + provider)
-- IP tracking for legal validity
-- Auto-sync with project stage
+- **Professional PDF generation** with brand styling (Teal #06BDC7, Navy #0F172A)
+- **Company logo integration** via base64 embedding in PDF header
+- **Dual signature system** - Client (Opdrachtgever) + Provider (Opdrachtnemer)
+- Email addresses in signature boxes for verification
+- VAT calculations with Dutch 21% BTW
+- Multi-status workflow: draft → sent → viewed → signed/rejected
+- Secure e-signature tokens (24h expiry)
+- IP tracking for legal validity (GDPR compliant)
+- Auto-sync with project stage (quote_signed → project stage updates)
+- Status tracking: "Getekend" instead of generic "Geaccepteerd"
 
 **Triggers:**
 - `generate_quote_number` - Auto-increment quote numbers

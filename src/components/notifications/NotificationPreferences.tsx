@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -101,7 +102,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
       //   setPreferences({ ...defaultPreferences, ...data.preferences });
       // }
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      logger.error('Failed to load notification preferences', { error });
       toast({
         title: 'Error',
         description: 'Failed to load notification preferences',
@@ -137,7 +138,7 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
       setShowDialog(false);
       if (onClose) onClose();
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      logger.error('Failed to save notification preferences', { error });
       toast({
         title: 'Error',
         description: 'Failed to save notification preferences',

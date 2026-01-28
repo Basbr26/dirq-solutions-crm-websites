@@ -4,6 +4,7 @@
  */
 
 import { createWorker, type Worker } from 'tesseract.js';
+import { logger } from '@/lib/logger';
 
 export interface OCRResult {
   text: string;
@@ -33,7 +34,7 @@ async function initializeWorker(language = 'nld'): Promise<Worker> {
 
   worker = await createWorker(language, undefined, {
     logger: (m) => {
-      console.log('Tesseract:', m);
+      logger.debug('Tesseract OCR progress', { message: m });
     },
   });
 
@@ -95,7 +96,7 @@ export async function performOCR(
       processingTime,
     };
   } catch (error) {
-    console.error('OCR error:', error);
+    logger.error('OCR processing failed', { language, error });
     options.onProgress?.({
       status: 'error',
       progress: 0,

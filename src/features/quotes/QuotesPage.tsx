@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import type { QuoteStatus } from '@/types/quotes';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function QuotesPage() {
@@ -99,7 +100,7 @@ export default function QuotesPage() {
 
       toast.success(t('quotes.quotesExported', { count: quotesData.length }));
     } catch (error: any) {
-      console.error('Export error:', error);
+      logger.error('Failed to export quotes to CSV', { error });
       toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
   };

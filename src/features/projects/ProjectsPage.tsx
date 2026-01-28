@@ -13,6 +13,7 @@ import { ProjectForm } from './components/ProjectForm';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { logger } from '@/lib/logger';
 import {
   Select,
   SelectContent,
@@ -128,7 +129,7 @@ export default function ProjectsPage() {
 
       toast.success(t('projects.projectsExported', { count: projectsData.length }));
     } catch (error: any) {
-      console.error('Export error:', error);
+      logger.error(error, { context: 'projects_export', project_count: projects?.length });
       toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
   };

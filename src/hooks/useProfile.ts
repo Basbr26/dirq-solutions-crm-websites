@@ -18,6 +18,20 @@ export interface Profile {
   updated_at: string;
 }
 
+/**
+ * Fetch user profile data by user ID
+ * 
+ * @param userId - The user ID to fetch profile for
+ * @returns React Query result with profile data
+ * 
+ * @example
+ * ```tsx
+ * const { data: profile, isLoading } = useProfile(user?.id);
+ * if (profile) {
+ *   console.log(profile.full_name);
+ * }
+ * ```
+ */
 export function useProfile(userId: string | undefined) {
   return useQuery({
     queryKey: ['profile', userId],
@@ -35,6 +49,28 @@ export function useProfile(userId: string | undefined) {
   });
 }
 
+/**
+ * Update user profile information
+ * Automatically updates full_name field from first_name and last_name.
+ * Invalidates profile query cache on success.
+ * 
+ * @returns React Query mutation for updating profile
+ * 
+ * @example
+ * ```tsx
+ * const updateProfile = useUpdateProfile();
+ * 
+ * const handleSubmit = (formData) => {
+ *   updateProfile.mutate(
+ *     { userId: user.id, data: formData },
+ *     {
+ *       onSuccess: () => toast.success('Profile updated'),
+ *       onError: (error) => toast.error(error.message)
+ *     }
+ *   );
+ * };
+ * ```
+ */
 export function useUpdateProfile() {
   const queryClient = useQueryClient();
 

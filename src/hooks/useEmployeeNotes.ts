@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
 export interface HRNote {
@@ -50,7 +51,31 @@ export interface UpdateNoteInput {
   is_pinned?: boolean;
 }
 
-// Fetch all notes for an employee
+/**
+ * Employee HR Notes Query Hook
+ * Fetches all HR notes for a specific employee.
+ * Notes are sorted by pinned status first, then by creation date (newest first).
+ * 
+ * @param employeeId - The employee's user ID
+ * @returns React Query result with array of HR notes
+ * @returns data - Array of HRNote objects with creator profile info
+ * 
+ * @example
+ * ```tsx
+ * const { data: notes, isLoading } = useEmployeeNotes(employee.id);
+ * 
+ * return (
+ *   <div>
+ *     {notes?.filter(n => n.is_pinned).map(note => (
+ *       <PinnedNote key={note.id} note={note} />
+ *     ))}
+ *     {notes?.filter(n => !n.is_pinned).map(note => (
+ *       <NoteCard key={note.id} note={note} />
+ *     ))}
+ *   </div>
+ * );
+ * ```
+ */
 export function useEmployeeNotes(employeeId: string) {
   return useQuery({
     queryKey: ['hr-notes', employeeId],
@@ -136,7 +161,7 @@ export function useCreateNote() {
       toast.success('Notitie toegevoegd');
     },
     onError: (error) => {
-      console.error('Create note error:', error);
+      logger.error('Failed to create employee note', { error });
       toast.error('Notitie toevoegen mislukt');
     },
   });
@@ -172,7 +197,7 @@ export function useUpdateNote() {
       toast.success('Notitie bijgewerkt');
     },
     onError: (error) => {
-      console.error('Update note error:', error);
+      logger.error('Failed to update employee note', { error });
       toast.error('Notitie bijwerken mislukt');
     },
   });
@@ -198,7 +223,7 @@ export function useDeleteNote() {
       toast.success('Notitie verwijderd');
     },
     onError: (error) => {
-      console.error('Delete note error:', error);
+      logger.error('Failed to delete employee note', { error });
       toast.error('Notitie verwijderen mislukt');
     },
   });
@@ -233,7 +258,7 @@ export function useTogglePin() {
       toast.success(data.is_pinned ? 'Notitie vastgepind' : 'Notitie losgemaakt');
     },
     onError: (error) => {
-      console.error('Toggle pin error:', error);
+      logger.error('Failed to toggle note pin', { error });
       toast.error('Pin wijzigen mislukt');
     },
   });
@@ -269,7 +294,7 @@ export function useCompleteFollowUp() {
       toast.success('Follow-up voltooid');
     },
     onError: (error) => {
-      console.error('Complete follow-up error:', error);
+      logger.error('Failed to complete follow-up', { error });
       toast.error('Follow-up voltooien mislukt');
     },
   });

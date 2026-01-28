@@ -25,6 +25,7 @@ import { FileSignature, CheckCircle, XCircle, Clock } from 'lucide-react';
 import SignatureCanvas from '@/components/SignatureCanvas';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface QuoteItem {
   id: string;
@@ -147,7 +148,7 @@ export default function PublicSignQuotePage() {
 
       setLoading(false);
     } catch (err) {
-      console.error('Load quote error:', err);
+      logger.error(err, { context: 'public_quote_load', token });
       setError('Er is een fout opgetreden bij het laden');
       setLoading(false);
     }
@@ -179,7 +180,7 @@ export default function PublicSignQuotePage() {
         .eq('sign_token', token);
 
       if (updateError) {
-        console.error('Signature save error:', updateError);
+        logger.error(updateError, { context: 'public_quote_signature_save', quote_id: quote.id });
         throw new Error('Kon handtekening niet opslaan');
       }
 
@@ -194,7 +195,7 @@ export default function PublicSignQuotePage() {
           .eq('id', quote.project_id);
 
         if (projectError) {
-          console.error('Project update error:', projectError);
+          logger.error(projectError, { context: 'public_quote_project_update_after_sign', project_id: quote.project_id });
           // Don't throw - quote is already signed
         }
       }
@@ -204,7 +205,7 @@ export default function PublicSignQuotePage() {
       toast.success('✅ Offerte succesvol ondertekend!');
       setShowSignatureCanvas(false);
     } catch (err: any) {
-      console.error('Signing error:', err);
+      logger.error(err, { context: 'public_quote_signing', quote_id: quote?.id });
       toast.error(err.message || 'Ondertekenen mislukt');
     } finally {
       setSigning(false);
@@ -233,7 +234,7 @@ export default function PublicSignQuotePage() {
         .eq('sign_token', token);
 
       if (updateError) {
-        console.error('Rejection save error:', updateError);
+        logger.error(updateError, { context: 'public_quote_rejection_save', quote_id: quote.id });
         throw new Error('Kon afwijzing niet opslaan');
       }
 
@@ -248,7 +249,7 @@ export default function PublicSignQuotePage() {
           .eq('id', quote.project_id);
 
         if (projectError) {
-          console.error('Project update error:', projectError);
+          logger.error(projectError, { context: 'public_quote_project_update_after_reject', project_id: quote.project_id });
         }
       }
 
@@ -258,7 +259,7 @@ export default function PublicSignQuotePage() {
       setShowRejectDialog(false);
       setRejectionFeedback('');
     } catch (err: any) {
-      console.error('Rejection error:', err);
+      logger.error(err, { context: 'public_quote_rejection', quote_id: quote?.id });
       toast.error(err.message || 'Afwijzen mislukt');
     } finally {
       setRejecting(false);

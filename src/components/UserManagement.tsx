@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,7 +67,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
         .select('role')
         .eq('id', user.id)
         .single();
-      console.log('Current user role:', profile?.role);
+      logger.debug('Current user role loaded', { userId: user.id, role: profile?.role });
       setCurrentUserRole(profile?.role as AppRole);
     }
   };
@@ -105,7 +106,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
       setUsers(usersWithRoles);
       setManagers(usersWithRoles.filter(u => u.role === 'manager'));
     } catch (error) {
-      console.error('Error loading users:', error);
+      logger.error('Failed to load users', { error });
       toast.error('Fout bij laden van gebruikers');
     } finally {
       setLoading(false);
@@ -152,7 +153,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
       loadData();
       onRefresh?.();
     } catch (error) {
-      console.error('Error updating user:', error);
+      logger.error('Failed to update user', { error });
       toast.error('Fout bij bijwerken van gebruiker');
     }
   };
@@ -177,7 +178,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
       loadData();
       onRefresh?.();
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Failed to delete user', { error });
       toast.error('Fout bij verwijderen van gebruiker. Mogelijk ontbreken de benodigde rechten.');
     }
   };

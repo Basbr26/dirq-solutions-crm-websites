@@ -75,13 +75,15 @@ import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
 import SignatureCanvas from '@/components/SignatureCanvas';
 import { PDFDocument, rgb } from 'pdf-lib';
+import dirqLogo from '@/assets/dirq-logo.png';
+import { logger } from '@/lib/logger';
 
 export default function QuoteDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [signDialogOpen, setSignDialogOpen] = useState(false);
@@ -171,7 +173,7 @@ export default function QuoteDetailPage() {
       setEditedFields({});
       toast.success('Offerte bijgewerkt');
     } catch (error) {
-      console.error('Error updating quote:', error);
+      logger.error(error, { context: 'quote_inline_edit', quote_id: quote.id });
       toast.error('Fout bij opslaan');
     }
   };
@@ -352,11 +354,11 @@ export default function QuoteDetailPage() {
         });
 
         if (emailError) {
-          console.error('Email error:', emailError);
+          logger.error(emailError, { context: 'quote_sign_link_email', quote_id: id });
           toast.warning(t('quotes.linkGeneratedEmailFailed'));
         }
       } catch (emailError) {
-        console.error('Email exception:', emailError);
+        logger.error(emailError, { context: 'quote_sign_link_email_exception', quote_id: id });
         toast.warning(t('quotes.linkGeneratedEmailFailed'));
       }
 
@@ -372,7 +374,7 @@ export default function QuoteDetailPage() {
     } catch (error) {
       toast.dismiss();
       toast.error(t('errors.generateSignLinkFailed'));
-      console.error('Generate sign link error:', error);
+      logger.error(error, { context: 'quote_generate_sign_link', quote_id: id });
     }
   };
 
@@ -399,11 +401,43 @@ export default function QuoteDetailPage() {
   const handleProviderSignature = async (signatureData: string) => {
     if (!quote || !items) return;
 
+    // Authorization check: Only owner or admin can sign as provider
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      toast.error('Authenticatie mislukt');
+      return;
+    }
+
+    if (profile?.role !== 'ADMIN' && quote.owner_id !== user.id) {
+      toast.error('Geen toestemming om te tekenen als opdrachtnemer. Alleen de eigenaar of admin kan deze offerte tekenen.');
+      return;
+    }
+
     setProviderSigning(true);
     try {
+      // Get IP address for audit trail
+      let ipAddress = 'unknown';
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip;
+      } catch (ipError) {
+        logger.error(ipError, { context: 'quote_provider_sign_ip_fetch', quote_id: id });
+        // Continue even if IP fetch fails
+      }
+
+      // Convert logo to base64
+      const logoBase64 = await fetch(dirqLogo)
+        .then(res => res.blob())
+        .then(blob => new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        }));
+
       // Generate PDF with signature embedded
       const pdfBlob = await pdf(
-        <QuotePDFDocument quote={quote} items={items} />
+        <QuotePDFDocument quote={quote} items={items} logoUrl={logoBase64} />
       ).toBlob();
 
       // Load PDF and add signature
@@ -415,7 +449,8 @@ export default function QuoteDetailPage() {
       const { width, height } = lastPage.getSize();
       const signatureWidth = 150;
       const signatureHeight = 75;
-      const yPosition = 200;
+      const yPosition = 220;
+      const boxHeight = 110;
 
       // Add client signature if exists (LEFT side)
       if (quote.signature_data) {
@@ -428,9 +463,9 @@ export default function QuoteDetailPage() {
         // Draw border box around client signature area
         lastPage.drawRectangle({
           x: clientX - 10,
-          y: yPosition - 35,
+          y: yPosition - 55,
           width: signatureWidth + 20,
-          height: signatureHeight + 70,
+          height: boxHeight,
           borderWidth: 1,
           borderColor: rgb(0.7, 0.7, 0.7),
         });
@@ -445,12 +480,16 @@ export default function QuoteDetailPage() {
 
         // Add text below client signature
         const clientName = quote.signed_by_name || 'Klant';
+        const clientEmail = quote.signer_email || '';
         lastPage.drawText(clientName, { x: clientX, y: yPosition - 15, size: 8 });
-        lastPage.drawText('(Opdrachtgever)', { x: clientX, y: yPosition - 25, size: 7 });
+        if (clientEmail) {
+          lastPage.drawText(clientEmail, { x: clientX, y: yPosition - 25, size: 7 });
+        }
+        lastPage.drawText('(Opdrachtgever)', { x: clientX, y: yPosition - 35, size: 7 });
         if (quote.signed_at) {
-          lastPage.drawText(`Datum: ${format(new Date(quote.signed_at), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { 
+          lastPage.drawText(`${format(new Date(quote.signed_at), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { 
             x: clientX, 
-            y: yPosition - 35, 
+            y: yPosition - 45, 
             size: 7 
           });
         }
@@ -466,9 +505,9 @@ export default function QuoteDetailPage() {
       // Draw border box around provider signature area
       lastPage.drawRectangle({
         x: providerX - 10,
-        y: yPosition - 35,
+        y: yPosition - 55,
         width: signatureWidth + 20,
-        height: signatureHeight + 70,
+        height: boxHeight,
         borderWidth: 1,
         borderColor: rgb(0.7, 0.7, 0.7),
       });
@@ -483,10 +522,11 @@ export default function QuoteDetailPage() {
 
       // Add text below provider signature
       lastPage.drawText('Namens Dirq Solutions', { x: providerX, y: yPosition - 15, size: 8 });
-      lastPage.drawText('(Leverancier)', { x: providerX, y: yPosition - 25, size: 7 });
-      lastPage.drawText(`Datum: ${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { 
+      lastPage.drawText('info@dirqsolutions.nl', { x: providerX, y: yPosition - 25, size: 7 });
+      lastPage.drawText('(Opdrachtnemer)', { x: providerX, y: yPosition - 35, size: 7 });
+      lastPage.drawText(`${format(new Date(), 'dd-MM-yyyy HH:mm', { locale: nl })}`, { 
         x: providerX, 
-        y: yPosition - 35, 
+        y: yPosition - 45, 
         size: 7 
       });
 
@@ -509,13 +549,19 @@ export default function QuoteDetailPage() {
 
       if (urlError) throw urlError;
 
-      // Update quote with provider signature info
+      // Update quote with provider signature, IP logging, and invalidate token
       const { error: updateError } = await supabase
         .from('quotes')
         .update({
           provider_signature_data: signatureData,
           provider_signed_at: new Date().toISOString(),
+          provider_signed_by: user.id,
+          provider_signed_by_ip: ipAddress,
           provider_signed_document_url: urlData.signedUrl,
+          status: 'signed',
+          // Invalidate sign token to prevent replay attacks
+          sign_token: null,
+          sign_token_expires_at: null,
         })
         .eq('id', quote.id);
 
@@ -526,7 +572,7 @@ export default function QuoteDetailPage() {
       setProviderSignDialogOpen(false);
       setShowProviderSignatureCanvas(false);
     } catch (error) {
-      console.error('Provider signature error:', error);
+      logger.error(error, { context: 'quote_provider_signature', quote_id: id, user_id: user?.id });
       toast.error('Fout bij ondertekenen');
     } finally {
       setProviderSigning(false);
@@ -557,7 +603,7 @@ export default function QuoteDetailPage() {
       URL.revokeObjectURL(url);
       toast.success('Getekend document gedownload');
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error(error, { context: 'quote_download_signed', quote_id: id });
       toast.error('Download mislukt');
     }
   };
@@ -571,9 +617,18 @@ export default function QuoteDetailPage() {
     try {
       toast.loading('PDF genereren...');
       
-      // Generate PDF blob
+      // Convert logo to base64
+      const logoBase64 = await fetch(dirqLogo)
+        .then(res => res.blob())
+        .then(blob => new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        }));
+      
+      // Generate PDF blob with logo
       const blob = await pdf(
-        <QuotePDFDocument quote={quote} items={items} />
+        <QuotePDFDocument quote={quote} items={items} logoUrl={logoBase64} />
       ).toBlob();
 
       // Create download link
@@ -589,7 +644,7 @@ export default function QuoteDetailPage() {
       toast.dismiss();
       toast.success('PDF gedownload');
     } catch (error) {
-      console.error('PDF export error:', error);
+      logger.error(error, { context: 'quote_pdf_export', quote_id: id });
       toast.dismiss();
       toast.error('PDF export mislukt');
     }

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Project } from '@/types/projects';
 import { useProjectStageConfig } from '@/types/projectStageConfig';
@@ -17,7 +18,7 @@ interface ProjectCardProps {
   project: Project;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export const ProjectCard = memo(function ProjectCard({ project }: ProjectCardProps) {
   const { t } = useTranslation();
   const projectStageConfig = useProjectStageConfig();
   
@@ -125,4 +126,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardContent>
     </Card>
   );
-}
+});
+
+ProjectCard.displayName = 'ProjectCard';

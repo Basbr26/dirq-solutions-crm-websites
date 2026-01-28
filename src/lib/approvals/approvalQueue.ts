@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface ApprovalQueueItem {
   id: string;
@@ -79,7 +80,7 @@ export class ApprovalQueueService {
         })) || []
       );
     } catch (error) {
-      console.error('Failed to fetch pending approvals:', error);
+      logger.error('Failed to fetch pending approvals', { managerId, error });
       return [];
     }
   }
@@ -117,7 +118,7 @@ export class ApprovalQueueService {
         actionTime: new Date(),
       };
     } catch (error) {
-      console.error('Failed to approve action:', error);
+      logger.error('Failed to approve action', { managerId, actionType, entityId, error });
       return {
         approved: false,
         reason: error instanceof Error ? error.message : 'Unknown error',
@@ -161,7 +162,7 @@ export class ApprovalQueueService {
         actionTime: new Date(),
       };
     } catch (error) {
-      console.error('Failed to deny action:', error);
+      logger.error('Failed to deny action', { managerId, actionType, entityId, reason, error });
       return {
         approved: false,
         reason: error instanceof Error ? error.message : 'Unknown error',
@@ -220,7 +221,7 @@ export class ApprovalQueueService {
 
       return true;
     } catch (error) {
-      console.error('Failed to undo action:', error);
+      logger.error('Failed to undo action', { managerId, actionId, error });
       return false;
     }
   }
@@ -250,7 +251,7 @@ export class ApprovalQueueService {
         total: approvals + denials,
       };
     } catch (error) {
-      console.error('Failed to get approval stats:', error);
+      logger.error('Failed to get approval stats', { managerId, error });
       return { approved: 0, denied: 0, undone: 0, total: 0 };
     }
   }

@@ -11,6 +11,35 @@ export interface GestureState {
   isMoving: boolean;
 }
 
+/**
+ * Touch Gestures Hook
+ * Provides swipe gesture detection for mobile interfaces.
+ * Detects left, right, and down swipes with 75px threshold.
+ * 
+ * @returns Object with gesture handler factories
+ * @returns handleSwipeLeft - Create left swipe handler
+ * @returns handleSwipeRight - Create right swipe handler
+ * @returns handleSwipeDown - Create down swipe handler
+ * 
+ * @example
+ * ```tsx
+ * const { handleSwipeLeft, handleSwipeRight } = useGestures();
+ * 
+ * return (
+ *   <div
+ *     onTouchEnd={handleSwipeLeft(() => console.log('Swiped left'))}
+ *     onTouchEnd={handleSwipeRight(() => navigate('/back'))}
+ *   >
+ *     Swipe me!
+ *   </div>
+ * );
+ * 
+ * // Common use case: swipe to delete
+ * <Card onTouchEnd={handleSwipeLeft(() => deleteItem(id))}>
+ *   {item.name}
+ * </Card>
+ * ```
+ */
 export function useGestures() {
   const handleSwipeLeft = useCallback((callback: () => void) => {
     return (e: React.TouchEvent) => {

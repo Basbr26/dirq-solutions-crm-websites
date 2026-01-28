@@ -574,10 +574,10 @@
     "quickStartFinance": "Quick start with a Finance template:",
     "financeStarterTitle": "Finance Starter Quote",
     "financeStarterPrice": "€799.99 + €99/month",
-    "financeStarterDesc": "Complete quote with legal terms",
+    "financeStarterDesc": "Basic package with support",
     "financeGrowthTitle": "Finance Growth Quote",
     "financeGrowthPrice": "€1,299.99 + €149/month",
-    "financeGrowthDesc": "Premium quote with SLA and extended terms",
+    "financeGrowthDesc": "Premium with SLA guarantee",
     "generalInfo": "General Information",
     "lineItemsSection": "Line Items",
     "requiredCompany": "Company *",
@@ -1038,5 +1038,172 @@
       "conversation_note": "Conversation note",
       "user": "User"
     }
+  },
+  "toast": {
+    "success": {
+      "created": "{{entity}} created",
+      "updated": "{{entity}} updated",
+      "deleted": "{{entity}} deleted",
+      "saved": "Saved",
+      "copied": "Copied to clipboard",
+      "sent": "Sent",
+      "uploaded": "Uploaded",
+      "downloaded": "Downloaded",
+      "exported": "{{count}} {{entity}} exported",
+      "imported": "{{count}} {{entity}} successfully imported"
+    },
+    "error": {
+      "create": "Error creating {{entity}}: {{message}}",
+      "update": "Error updating {{entity}}: {{message}}",
+      "delete": "Error deleting {{entity}}: {{message}}",
+      "save": "Error saving",
+      "upload": "Upload failed: {{message}}",
+      "download": "Download failed",
+      "export": "Error exporting",
+      "import": "{{count}} {{entity}} could not be imported",
+      "failed": "{{action}} failed",
+      "generic": "An error occurred"
+    },
+    "warning": {
+      "noData": "No {{entity}} to {{action}}",
+      "fillRequired": "Fill in {{field}} first"
+    },
+    "project": {
+      "created": "Project created",
+      "updated": "Project updated",
+      "deleted": "Project deleted",
+      "stageChanged": "{{projectName}} ({{companyName}}) moved to {{stage}}",
+      "converted": "🎉 Lead successfully converted to customer!",
+      "convertedToQuoteSigned": "🎉 Project converted to \"Quote Signed\"!",
+      "createError": "Error creating project: {{message}}",
+      "updateError": "Error updating project: {{message}}",
+      "deleteError": "Error deleting project: {{message}}",
+      "stageError": "Error changing stage: {{message}}",
+      "conversionError": "Error during conversion"
+    },
+    "quote": {
+      "created": "Quote created",
+      "updated": "Quote updated",
+      "deleted": "Quote deleted",
+      "signed": "✅ Quote successfully signed!",
+      "rejected": "Quote rejected. Thank you for your feedback.",
+      "statusChanged": "Quote status: {{status}}",
+      "downloaded": "PDF downloaded",
+      "signedDownloaded": "Signed document downloaded",
+      "createError": "Error creating quote: {{message}}",
+      "updateError": "Error updating quote: {{message}}",
+      "deleteError": "Error deleting quote: {{message}}",
+      "statusError": "Error changing status: {{message}}",
+      "signError": "Error signing",
+      "noSignedDocument": "No signed document available",
+      "missingData": "Quote data missing",
+      "pdfError": "PDF export failed",
+      "authError": "Authentication failed",
+      "permissionError": "No permission to sign as contractor. Only the owner or admin can sign this quote."
+    },
+    "company": {
+      "created": "Company successfully created",
+      "updated": "Company successfully updated",
+      "deleted": "Company successfully deleted",
+      "createError": "Error creating company",
+      "updateError": "Error updating company",
+      "deleteError": "Error deleting company"
+    },
+    "contact": {
+      "created": "Contact successfully created",
+      "updated": "Contact successfully updated",
+      "deleted": "Contact successfully deleted",
+      "createError": "Error creating contact",
+      "updateError": "Error updating contact",
+      "deleteError": "Error deleting contact",
+      "openingDialer": "Opening dialer..."
+    },
+    "interaction": {
+      "created": "Interaction successfully created",
+      "updated": "Interaction updated",
+      "deleted": "Interaction deleted",
+      "createError": "Error creating interaction: {{message}}",
+      "updateError": "Error updating: {{message}}",
+      "deleteError": "Error deleting: {{message}}"
+    },
+    "document": {
+      "uploaded": "Document uploaded",
+      "downloaded": "Document downloaded",
+      "deleted": "Document deleted",
+      "signed": "Document successfully signed!",
+      "refused": "You have refused to sign the document.",
+      "linkGenerated": "Sign link generated and email sent! 📧",
+      "linkCopied": "Link copied to clipboard",
+      "uploadError": "Upload failed: {{message}}",
+      "downloadError": "Could not download document",
+      "deleteError": "Delete failed: {{message}}",
+      "linkError": "Generation failed: {{message}}",
+      "linkWarning": "Link generated, but email could not be sent",
+      "fileTooLarge": "File too large. Maximum: 10MB",
+      "fileTypeNotAllowed": "File type not allowed. Supported types: PDF, Word, Excel, images, text."
+    },
+    "calendar": {
+      "exported": "Calendar exported",
+      "noEvents": "No events to export"
+    },
+    "googleCalendar": {
+      "initError": "Google Calendar could not be initialized",
+      "loadError": "Could not load synchronization settings",
+      "connectionRestored": "Google Calendar connection restored",
+      "sessionExpired": "Google Calendar session expired, log in again",
+      "saveError": "Could not save settings",
+      "storeTokensError": "Could not store tokens in database",
+      "connectedPersistent": "Connected to Google Calendar with persistent authentication",
+      "connectedTemporary": "Connected - But session expires after 1 hour (no refresh token)",
+      "webhookWarning": "Webhook registration failed, fallback to polling",
+      "connectError": "Could not connect to Google Calendar",
+      "disconnected": "Google Calendar connection disconnected - Tokens removed",
+      "synced": "{{count}} events successfully synchronized",
+      "autoSyncEnabled": "Automatic synchronization enabled",
+      "autoSyncDisabled": "Automatic synchronization disabled",
+      "reloginWarning": "Google Calendar: log in again for automatic renewal",
+      "connectionRenewed": "Google Calendar connection automatically renewed",
+      "sessionExpiredRelogin": "Google Calendar session expired, log in again",
+      "realtimeSyncExtended": "Google Calendar real-time sync extended",
+      "webhookExtendError": "Could not extend webhook - real-time sync may be limited"
+    },
+    "department": {
+      "created": "Department created",
+      "updated": "Department updated",
+      "deleted": "Department deleted",
+      "createError": "Error creating: {{message}}",
+      "updateError": "Error updating: {{message}}",
+      "deleteError": "Error deleting: {{message}}"
+    },
+    "note": {
+      "added": "Note added",
+      "updated": "Note updated",
+      "deleted": "Note deleted",
+      "pinChanged": "Change pin failed",
+      "followUpCompleted": "Follow-up completed",
+      "addError": "Adding note failed",
+      "updateError": "Updating note failed",
+      "deleteError": "Deleting note failed",
+      "followUpError": "Completing follow-up failed",
+      "loadError": "Error loading conversation notes"
+    },
+    "user": {
+      "updated": "User updated",
+      "loadError": "Error loading users"
+    },
+    "ai": {
+      "copied": "Copied to clipboard",
+      "copyError": "Copy failed",
+      "feedbackSaved": "Thank you for your feedback!",
+      "feedbackError": "Saving feedback failed"
+    },
+    "command": {
+      "processed": "Command processed",
+      "failed": "Command failed"
+    },
+    "template": {
+      "applied": "{{templateType}} template applied! 🎉"
+    },
+    "dealWon": "🎉 Deal Won!"
   }
 }

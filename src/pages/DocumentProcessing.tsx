@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import { SmartDocumentUpload } from '@/components/documents/SmartDocumentUpload';
 import { DocumentSearch } from '@/components/documents/DocumentSearch';
+import { logger } from '@/lib/logger';
 import { DocumentList } from '@/components/DocumentList';
 import { FileText, Upload, Search } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -39,7 +40,7 @@ export default function DocumentProcessing() {
         <TabsContent value="upload" className="space-y-4">
           <SmartDocumentUpload
             onUploadComplete={(docId) => {
-              console.log('Document uploaded:', docId);
+              logger.info('Document uploaded successfully', { documentId: docId });
               setSelectedDocumentId(docId);
             }}
           />
@@ -48,7 +49,7 @@ export default function DocumentProcessing() {
         <TabsContent value="search" className="space-y-4">
           <DocumentSearch
             onDocumentSelect={(docId) => {
-              console.log('Document selected:', docId);
+              logger.info('Document selected', { documentId: docId });
               setSelectedDocumentId(docId);
             }}
           />

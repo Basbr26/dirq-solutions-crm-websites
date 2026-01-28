@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import {
   Card,
   CardContent,
@@ -116,7 +117,7 @@ export function DocumentAnalysis({
       setIsEditing(false);
       onApprove?.(editedData);
     } catch (error) {
-      console.error('Failed to save changes:', error);
+      logger.error('Failed to save document analysis changes', { documentId, error });
       toast({
         variant: 'destructive',
         title: 'Opslaan mislukt',

@@ -26,28 +26,17 @@ import { ProjectForm } from './components/ProjectForm';
 import { supabase } from '@/integrations/supabase/client';
 import { type ProjectStage, type Project } from '@/types/projects';
 import { useProjectStageConfig } from '@/types/projectStageConfig';
+import { getPipelineSections } from '@/config/pipeline';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { logger } from '@/lib/logger';
 
 export default function PipelinePage() {
   const { t } = useTranslation();
   const projectStageConfig = useProjectStageConfig();
-  
-  // Pipeline sections with translations
-  const PIPELINE_SECTIONS = {
-    sales: {
-      title: `💼 ${t('pipeline.salesPipeline')}`,
-      subtitle: t('pipeline.salesSubtitle'),
-      stages: ['lead', 'quote_requested', 'quote_sent', 'negotiation', 'quote_signed'] as ProjectStage[],
-    },
-    development: {
-      title: `⚙️ ${t('pipeline.devPipeline')}`,
-      subtitle: t('pipeline.devSubtitle'),
-      stages: ['in_development', 'review', 'live'] as ProjectStage[],
-    },
-  };
+  const PIPELINE_SECTIONS = useMemo(() => getPipelineSections(t), [t]);
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(max-width: 1024px)');
   const { data: projectsByStage, isLoading } = useProjectsByStage();
@@ -69,13 +58,13 @@ export default function PipelinePage() {
     []
   );
 
-  const handleDragStart = (project: Project) => {
+  const handleDragStart = useCallback((project: Project) => {
     setDraggedProject(project);
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-  };
+  }, []);
 
   const handleDrop = useCallback(async (stage: ProjectStage) => {
     if (!draggedProject || draggedProject.stage === stage) {
@@ -118,7 +107,7 @@ export default function PipelinePage() {
       
       toast.success(`${projectName} (${companyName}) verplaatst naar ${projectStageConfig[stage].label}`);
     } catch (error) {
-      console.error('Failed to update stage:', error);
+      logger.error(error, { context: 'pipeline_drag_drop', project_id: draggedProject?.id, target_stage: stage });
       toast.error(t('errors.updateProjectStageFailed'));
     } finally {
       setDraggedProject(null);
@@ -162,7 +151,7 @@ export default function PipelinePage() {
       
       toast.success(`${projectName} (${companyName}) verplaatst naar ${projectStageConfig[newStage].label}`);
     } catch (error) {
-      console.error('Failed to move project:', error);
+      logger.error(error, { context: 'pipeline_move_project', project_id: project.id, target_stage: newStage });
       toast.error(t('errors.moveProjectFailed'));
     }
   }, [queryClient, t, projectStageConfig]);

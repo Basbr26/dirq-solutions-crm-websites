@@ -363,7 +363,7 @@ export async function syncFromGoogleCalendar(
           _action: 'delete', // Special flag for deletion
         } as any);
       } catch (error) {
-        console.error(`Error deleting event ${deletedEvent.id}:`, error);
+        logger.error('Failed to delete Google Calendar event', { eventId: deletedEvent.id, error });
         errors++;
       }
     }
@@ -399,12 +399,12 @@ export async function syncFromGoogleCalendar(
         await onEventImport(localEvent);
         imported++;
       } catch (error) {
-        console.error(`Error importing event ${event.id}:`, error);
+        logger.error('Failed to import Google Calendar event', { eventId: event.id, error });
         errors++;
       }
     }
   } catch (error) {
-    console.error('Error syncing from Google Calendar:', error);
+    logger.error('Google Calendar sync failed', { error });
     throw error;
   }
 

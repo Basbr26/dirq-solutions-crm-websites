@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -119,7 +120,7 @@ export function EmployeeDocumentUpload({ employeeId, onUploaded }: EmployeeDocum
       setNotes('');
       setOpen(false);
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Failed to upload employee document', { employeeId, documentType, error });
       toast.error('Upload mislukt: ' + (error instanceof Error ? error.message : 'Onbekende fout'));
     } finally {
       setLoading(false);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -219,7 +220,7 @@ export function UniversalDocumentGenerator({
       setOpen(false);
       onGenerated?.();
     } catch (error) {
-      console.error('Error generating document:', error);
+      logger.error('Failed to generate universal document', { documentType, employeeId, error });
       toast.error(error instanceof Error ? error.message : 'Fout bij genereren document');
     } finally {
       setGenerating(false);

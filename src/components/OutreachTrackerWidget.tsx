@@ -11,6 +11,7 @@ import { Video, Mailbox, MessageSquare, TrendingUp, Target } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface OutreachGoal {
   type: 'linkedin_video_audit' | 'physical_mail' | 'call';
@@ -71,7 +72,7 @@ export function OutreachTrackerWidget() {
       .in('type', ['linkedin_video_audit', 'physical_mail', 'call']);
 
     if (error) {
-      console.error('Error fetching weekly stats:', error);
+      logger.error(error, { context: 'outreach_tracker_fetch' });
       setLoading(false);
       return;
     }

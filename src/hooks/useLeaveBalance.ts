@@ -10,6 +10,37 @@ export interface LeaveBalance {
   lastUpdated: Date;
 }
 
+/**
+ * Leave Balance Query Hook
+ * Fetches current user's annual leave balance including total, taken, planned, and available days.
+ * Integrates with sick leave cases and leave requests.
+ * 
+ * @returns Object with balance data and query controls
+ * @returns balance - Leave balance breakdown (null if loading/not found)
+ * @returns balance.totalDays - Total annual leave entitlement
+ * @returns balance.takenDays - Days already taken
+ * @returns balance.plannedDays - Days with approved future requests
+ * @returns balance.availableDays - Remaining available days
+ * @returns isLoading - Query loading state
+ * @returns error - Query error if failed
+ * @returns refetch - Function to manually refresh balance
+ * 
+ * @example
+ * ```tsx
+ * const { balance, isLoading, refetch } = useLeaveBalance();
+ * 
+ * if (isLoading) return <Skeleton />;
+ * 
+ * return (
+ *   <Card>
+ *     <h3>Leave Balance</h3>
+ *     <p>Total: {balance?.totalDays} days</p>
+ *     <p>Available: {balance?.availableDays} days</p>
+ *     <Button onClick={() => refetch()}>Refresh</Button>
+ *   </Card>
+ * );
+ * ```
+ */
 export function useLeaveBalance() {
   const { user } = useAuth();
 

@@ -11,6 +11,7 @@ import { nl } from 'date-fns/locale';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
 import {
   Dialog,
   DialogContent,
@@ -33,10 +34,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   FileText,
-  Receipt,
-  Briefcase,
-  Shield,
-  MessageSquare,
   Download,
   Upload,
   Loader2,
@@ -53,8 +50,7 @@ import {
   type NDAData,
   type MeetingNotesData,
 } from '@/lib/crmDocumentTemplates';
-
-export type DocumentType = 'contract' | 'invoice' | 'proposal' | 'nda' | 'meeting_notes';
+import { DOCUMENT_TYPES, type DocumentType } from '@/config/documentTypes';
 
 interface CRMDocumentGeneratorProps {
   companyId?: string;
@@ -63,39 +59,6 @@ interface CRMDocumentGeneratorProps {
   defaultType?: DocumentType;
   onGenerated?: (documentUrl: string) => void;
 }
-
-const documentTypes = [
-  {
-    type: 'contract' as DocumentType,
-    name: 'Contract',
-    description: 'Overeenkomst van opdracht',
-    icon: FileText,
-  },
-  {
-    type: 'invoice' as DocumentType,
-    name: 'Factuur',
-    description: 'Professionele factuur',
-    icon: Receipt,
-  },
-  {
-    type: 'proposal' as DocumentType,
-    name: 'Projectvoorstel',
-    description: 'Uitgebreid projectvoorstel',
-    icon: Briefcase,
-  },
-  {
-    type: 'nda' as DocumentType,
-    name: 'NDA',
-    description: 'Geheimhoudingsovereenkomst',
-    icon: Shield,
-  },
-  {
-    type: 'meeting_notes' as DocumentType,
-    name: 'Gespreksverslag',
-    description: 'Meeting notities',
-    icon: MessageSquare,
-  },
-];
 
 export function CRMDocumentGenerator({
   companyId,
@@ -153,7 +116,7 @@ export function CRMDocumentGenerator({
         description: 'Je kunt het document nu downloaden of uploaden.',
       });
     } catch (error) {
-      console.error('Error generating document:', error);
+      logger.error(error, { context: 'crm_document_generate', document_type: selectedType });
       toast({
         title: t('errors.errorGenerating'),
         description: error instanceof Error ? error.message : 'Onbekende fout',
@@ -227,7 +190,7 @@ export function CRMDocumentGenerator({
 
       setOpen(false);
     } catch (error) {
-      console.error('Error uploading document:', error);
+      logger.error(error, { context: 'crm_document_upload', document_type: selectedType, project_id: projectId, company_id: companyId });
       toast({
         title: t('errors.errorUploading'),
         description: error instanceof Error ? error.message : 'Onbekende fout',
@@ -295,7 +258,7 @@ export function CRMDocumentGenerator({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {documentTypes.map((type) => (
+                  {DOCUMENT_TYPES.map((type) => (
                     <SelectItem key={type.type} value={type.type}>
                       <div className="flex items-center gap-2">
                         <type.icon className="h-4 w-4" />

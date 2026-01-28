@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -91,7 +92,7 @@ export function ConversationNotesList({ caseId, refreshTrigger }: ConversationNo
 
       setNotes(notesWithCreators);
     } catch (error) {
-      console.error('Error loading conversation notes:', error);
+      logger.error('Failed to load conversation notes', { employeeId, error });
       toast.error('Fout bij laden gespreksnotities');
     } finally {
       setLoading(false);
@@ -115,7 +116,7 @@ export function ConversationNotesList({ caseId, refreshTrigger }: ConversationNo
       toast.success('Notitie verwijderd');
       loadNotes();
     } catch (error) {
-      console.error('Error deleting note:', error);
+      logger.error('Failed to delete note', { noteId, error });
       toast.error('Fout bij verwijderen notitie');
     }
   };

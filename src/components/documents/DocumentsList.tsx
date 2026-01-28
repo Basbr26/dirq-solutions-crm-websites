@@ -48,6 +48,7 @@ import {
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Document {
@@ -213,12 +214,12 @@ export const DocumentsList = ({
         });
 
         if (emailError) {
-          console.error('Email send error:', emailError);
+          logger.error(emailError, { context: 'document_sign_email_send', document_id: docId, email });
           // Don't fail the entire operation if email fails
           toast.warning('Link gegenereerd, maar email kon niet worden verzonden');
         }
       } catch (emailError) {
-        console.error('Email send error:', emailError);
+        logger.error(emailError, { context: 'document_sign_email_catch', document_id: docId, email });
         toast.warning('Link gegenereerd, maar email kon niet worden verzonden');
       }
 
@@ -276,7 +277,7 @@ export const DocumentsList = ({
 
       toast.success('Document gedownload');
     } catch (error) {
-      console.error('Download error:', error);
+      logger.error(error, { context: 'document_download', document_id: doc.id, file_name: doc.file_name });
       toast.error('Download mislukt');
     }
   };

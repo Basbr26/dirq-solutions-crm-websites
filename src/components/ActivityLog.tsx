@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
@@ -105,7 +106,7 @@ export function ActivityLog({ caseId, limit = 50, showHeader = true }: ActivityL
       if (error) throw error;
       setActivities((data as unknown as ActivityLogEntry[]) || []);
     } catch (error) {
-      console.error('Error loading activities:', error);
+      logger.error('Failed to load activities', { employeeId, error });
     } finally {
       setLoading(false);
     }

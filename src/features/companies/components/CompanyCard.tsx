@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Phone, Mail, Globe, MapPin, TrendingUp, Clock, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Company } from '@/types/crm';
@@ -50,7 +50,7 @@ const priorityConfig = {
   high: { label: 'Hoog', color: 'bg-orange-500/10 text-orange-500' }
 };
 
-export function CompanyCard({ company }: CompanyCardProps) {
+export const CompanyCard = memo(function CompanyCard({ company }: CompanyCardProps) {
   const { t } = useTranslation();
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -380,4 +380,6 @@ export function CompanyCard({ company }: CompanyCardProps) {
     </AlertDialog>
   </>
   );
-}
+});
+
+CompanyCard.displayName = 'CompanyCard';

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { toast } from 'sonner';
 
 export interface Department {
@@ -24,13 +25,51 @@ export interface DepartmentForm {
   manager_id?: string;
 }
 
+/**
+ * Departments Query Hook
+ * Fetches all departments with manager information and employee counts.
+ * Includes mutation functions for CRUD operations.
+ * 
+ * @returns Object with query data and mutation functions
+ * @returns data - Array of departments with manager and employee_count
+ * @returns isLoading - Loading state
+ * @returns error - Error object if query failed
+ * @returns createDepartment - Mutation to create new department
+ * @returns updateDepartment - Mutation to update department
+ * @returns deleteDepartment - Mutation to delete department
+ * 
+ * @example
+ * ```tsx
+ * const { 
+ *   data: departments, 
+ *   isLoading,
+ *   createDepartment,
+ *   updateDepartment 
+ * } = useDepartments();
+ * 
+ * // Create department
+ * createDepartment.mutate({
+ *   name: 'Sales',
+ *   description: 'Sales team',
+ *   manager_id: 'user-123'
+ * });
+ * 
+ * // Display departments
+ * {departments?.map(dept => (
+ *   <div key={dept.id}>
+ *     {dept.name} - {dept.employee_count} employees
+ *     Manager: {dept.manager?.voornaam}
+ *   </div>
+ * ))}
+ * ```
+ */
 export function useDepartments() {
   const queryClient = useQueryClient();
 
   const departmentsQuery = useQuery({
     queryKey: ['departments'],
     queryFn: async () => {
-      console.log('🔍 Fetching departments...');
+      logger.debug('Fetching departments list');
       
       const { data, error } = await supabase
         .from('departments')
@@ -45,7 +84,7 @@ export function useDepartments() {
         .order('name');
 
       if (error) {
-        console.error('❌ Error fetching departments:', error);
+        logger.error('Failed to fetch departments', { error });
         throw error;
       }
 
@@ -64,14 +103,14 @@ export function useDepartments() {
         })
       );
 
-      console.log('✅ Departments loaded:', departmentsWithCounts.length);
+      logger.info('Departments loaded successfully', { count: departmentsWithCounts.length });
       return departmentsWithCounts as Department[];
     },
   });
 
   const createDepartment = useMutation({
     mutationFn: async (department: DepartmentForm) => {
-      console.log('➕ Creating department:', department);
+      logger.info('Creating new department', { name: department.name });
       
       const { data, error } = await supabase
         .from('departments')
@@ -84,11 +123,11 @@ export function useDepartments() {
         .single();
 
       if (error) {
-        console.error('❌ Error creating department:', error);
+        logger.error('Failed to create department', { department, error });
         throw error;
       }
 
-      console.log('✅ Department created:', data);
+      logger.info('Department created successfully', { departmentId: data.id, name: data.name });
       return data;
     },
     onSuccess: () => {
@@ -102,7 +141,7 @@ export function useDepartments() {
 
   const updateDepartment = useMutation({
     mutationFn: async ({ id, ...updates }: DepartmentForm & { id: string }) => {
-      console.log('📝 Updating department:', id, updates);
+      logger.info('Updating department', { departmentId: id });
       
       const { data, error } = await supabase
         .from('departments')
@@ -117,11 +156,11 @@ export function useDepartments() {
         .single();
 
       if (error) {
-        console.error('❌ Error updating department:', error);
+        logger.error('Failed to update department', { departmentId: id, error });
         throw error;
       }
 
-      console.log('✅ Department updated:', data);
+      logger.info('Department updated successfully', { departmentId: data.id });
       return data;
     },
     onSuccess: () => {
@@ -135,7 +174,7 @@ export function useDepartments() {
 
   const deleteDepartment = useMutation({
     mutationFn: async (id: string) => {
-      console.log('🗑️ Deleting department:', id);
+      logger.info('Deleting department', { departmentId: id });
       
       // First, unlink employees
       const { error: unlinkError } = await supabase
@@ -144,7 +183,7 @@ export function useDepartments() {
         .eq('department_id', id);
 
       if (unlinkError) {
-        console.error('❌ Error unlinking employees:', unlinkError);
+        logger.error('Failed to unlink employees from department', { departmentId: id, error: unlinkError });
         throw unlinkError;
       }
 
@@ -155,11 +194,11 @@ export function useDepartments() {
         .eq('id', id);
 
       if (error) {
-        console.error('❌ Error deleting department:', error);
+        logger.error('Failed to delete department', { departmentId: id, error });
         throw error;
       }
 
-      console.log('✅ Department deleted');
+      logger.info('Department deleted successfully', { departmentId: id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
@@ -184,7 +223,7 @@ export function useManagers() {
   return useQuery({
     queryKey: ['managers'],
     queryFn: async () => {
-      console.log('🔍 Fetching managers...');
+      logger.debug('Fetching managers list');
       
       // Get users with manager, hr or super_admin roles
       const { data: roleData, error: roleError } = await supabase
@@ -193,14 +232,14 @@ export function useManagers() {
         .in('role', ['MANAGER', 'ADMIN', 'super_admin']);
 
       if (roleError) {
-        console.error('❌ Error fetching roles:', roleError);
+        logger.error('Failed to fetch manager roles', { error: roleError });
         throw roleError;
       }
 
       const managerIds = roleData?.map((r) => r.id) || [];
 
       if (managerIds.length === 0) {
-        console.log('⚠️ No managers found');
+        logger.warn('No managers found in system');
         return [];
       }
 
@@ -212,11 +251,11 @@ export function useManagers() {
         .order('voornaam');
 
       if (error) {
-        console.error('❌ Error fetching manager profiles:', error);
+        logger.error('Failed to fetch manager profiles', { error });
         throw error;
       }
 
-      console.log('✅ Managers loaded:', data?.length || 0);
+      logger.info('Managers loaded successfully', { count: data?.length || 0 });
       return data || [];
     },
   });

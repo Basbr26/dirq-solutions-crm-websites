@@ -1,9 +1,10 @@
 // Email Drafts Review Page
 // Review and send AI-generated email drafts from automation workflows
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +38,7 @@ export default function EmailDraftsPage() {
   const [editedDraft, setEditedDraft] = useState<EmailDraft | null>(null);
 
   // Fetch drafts from Supabase
-  async function fetchDrafts() {
+  const fetchDrafts = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('email_drafts')
@@ -51,16 +52,16 @@ export default function EmailDraftsPage() {
 
     if (error) {
       toast.error(t('emailDrafts.errorLoading') || 'Failed to load drafts');
-      console.error(error);
+      logger.error(error, { context: 'email_drafts_fetch' });
     } else {
       setDrafts(data || []);
     }
     setLoading(false);
-  }
+  }, [t]);
 
   useEffect(() => {
     fetchDrafts();
-  }, []);
+  }, [fetchDrafts]);
 
   // When selecting a draft, initialize edited version
   useEffect(() => {
@@ -99,7 +100,7 @@ export default function EmailDraftsPage() {
       fetchDrafts(); // Refresh list
       setSelectedDraft(null);
     } catch (error) {
-      console.error('Send error:', error);
+      logger.error(error, { context: 'email_draft_send', draft_id: draft.id });
       toast.error(t('emailDrafts.errorSending'));
       
       // Update draft with error
@@ -130,7 +131,7 @@ export default function EmailDraftsPage() {
 
     if (error) {
       toast.error(t('emailDrafts.errorSaving') || 'Failed to save changes');
-      console.error(error);
+      logger.error('Failed to save email draft', { draftId: editedDraft.id, error });
     } else {
       toast.success(t('emailDrafts.draftSaved') || 'Draft updated');
       setSelectedDraft(editedDraft);

@@ -1,19 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { format } from 'date-fns';
 import { 
-  Phone, 
-  Mail, 
-  Calendar, 
-  FileText, 
-  CheckSquare, 
-  Presentation,
   Clock,
   ArrowDownCircle,
   ArrowUpCircle,
   Building2,
-  Mailbox,
-  Video
+  FileText,
 } from 'lucide-react';
 import {
   Dialog,
@@ -41,6 +34,7 @@ import { useContact } from '@/features/contacts/hooks/useContacts';
 import { useProjects, useProject } from '@/features/projects/hooks/useProjects';
 import { useQuotes, useQuote } from '@/features/quotes/hooks/useQuotes';
 import { useTranslation } from 'react-i18next';
+import { getInteractionTypes } from '@/config/interactionTypes';
 
 interface AddInteractionDialogProps {
   open: boolean;
@@ -84,16 +78,8 @@ export function AddInteractionDialog({
     effectiveCompanyId ? { company_id: effectiveCompanyId } : undefined
   );
   
-  const interactionTypes = [
-    { value: 'call', label: t('interactions.types.call'), icon: Phone, color: 'text-blue-500' },
-    { value: 'email', label: t('interactions.types.email'), icon: Mail, color: 'text-purple-500' },
-    { value: 'meeting', label: t('interactions.types.meeting'), icon: Calendar, color: 'text-green-500' },
-    { value: 'note', label: t('interactions.types.note'), icon: FileText, color: 'text-gray-500' },
-    { value: 'task', label: t('interactions.types.task'), icon: CheckSquare, color: 'text-orange-500' },
-    { value: 'demo', label: t('interactions.types.demo'), icon: Presentation, color: 'text-teal-500' },
-    { value: 'physical_mail', label: t('interactions.physicalMail'), icon: Mailbox, color: 'text-pink-500' },
-    { value: 'linkedin_video_audit', label: t('interactions.linkedinVideoAudit'), icon: Video, color: 'text-red-500' },
-  ];
+  const interactionTypes = useMemo(() => getInteractionTypes(t), [t]);
+  
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm({
     defaultValues: {
       type: defaultType,

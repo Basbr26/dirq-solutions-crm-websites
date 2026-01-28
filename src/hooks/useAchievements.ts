@@ -24,6 +24,36 @@ export interface PointsHistory {
   }>;
 }
 
+/**
+ * Employee Achievements Hook
+ * Fetches gamification achievements and points history for current user.
+ * Part of employee engagement/HR gamification system.
+ * 
+ * @returns Object with achievements and points queries
+ * @returns achievementsQuery - Query for earned achievements
+ * @returns pointsQuery - Query for points balance and history
+ * 
+ * @example
+ * ```tsx
+ * const { achievementsQuery, pointsQuery } = useAchievements();
+ * const achievements = achievementsQuery.data || [];
+ * const points = pointsQuery.data;
+ * 
+ * return (
+ *   <div>
+ *     <h2>Total Points: {points?.totalPoints}</h2>
+ *     {achievements.map(achievement => (
+ *       <AchievementBadge 
+ *         key={achievement.id}
+ *         icon={achievement.icon}
+ *         name={achievement.name}
+ *         points={achievement.points}
+ *       />
+ *     ))}
+ *   </div>
+ * );
+ * ```
+ */
 export function useAchievements() {
   const { user } = useAuth();
 

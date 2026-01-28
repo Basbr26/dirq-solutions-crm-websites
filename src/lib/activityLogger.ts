@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export type ActionType = 
   | 'case_created'
@@ -45,7 +46,7 @@ export async function logActivity({
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      console.warn('Cannot log activity: No user logged in');
+      logger.warn('Cannot log activity: No user logged in');
       return;
     }
 
@@ -62,10 +63,10 @@ export async function logActivity({
       }]);
 
     if (error) {
-      console.error('Failed to log activity:', error);
+      logger.error('Failed to log activity', { actionType, entityType, entityId, error });
     }
   } catch (err) {
-    console.error('Error in logActivity:', err);
+    logger.error('Error in logActivity function', { actionType, entityType, error: err });
   }
 }
 

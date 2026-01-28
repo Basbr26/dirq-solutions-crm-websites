@@ -31,6 +31,7 @@ import { Upload, CheckCircle2, XCircle, AlertCircle, FileText } from 'lucide-rea
 import { toast } from 'sonner';
 import Papa from 'papaparse';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 
 interface CSVImportDialogProps {
   open: boolean;
@@ -174,7 +175,7 @@ export function CSVImportDialog({
 
       setStep('complete');
     } catch (error: any) {
-      console.error('Import error:', error);
+      logger.error(error, { context: 'csv_import', field_count: Object.keys(fieldMapping).length });
       toast.error(t('errors.importFailed') + ': ' + error.message);
       setStep('mapping');
     }

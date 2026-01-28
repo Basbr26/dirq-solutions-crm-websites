@@ -5,6 +5,28 @@ interface UseLongPressOptions {
   delay?: number
 }
 
+/**
+ * Long press gesture hook for touch and mouse events
+ * Triggers callback after user holds down for specified duration.
+ * 
+ * @param onLongPress - Callback fired after long press duration
+ * @param onClick - Optional callback for regular click (before long press)
+ * @param options - Configuration options
+ * @param options.shouldPreventDefault - Prevent default touch behavior (default: true)
+ * @param options.delay - Long press duration in milliseconds (default: 500)
+ * @returns Event handlers to spread on target element
+ * 
+ * @example
+ * ```tsx
+ * const longPressHandlers = useLongPress(
+ *   () => console.log('Long pressed!'),
+ *   () => console.log('Regular click'),
+ *   { delay: 800 }
+ * );
+ * 
+ * return <button {...longPressHandlers}>Hold me</button>;
+ * ```
+ */
 export const useLongPress = (
   onLongPress: () => void,
   onClick?: () => void,

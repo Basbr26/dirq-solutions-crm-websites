@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Pencil } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface EditEventDialogProps {
   event: any;
@@ -52,7 +53,7 @@ export function EditEventDialog({ event, open, onOpenChange }: EditEventDialogPr
         try {
           await updateGoogleCalendarEvent(event.google_event_id, googleEventData);
         } catch (error) {
-          console.error('Error updating Google Calendar event:', error);
+          logger.error('Failed to update Google Calendar event', { eventId: event.google_event_id, error });
           throw new Error('Kon event niet bijwerken in Google Calendar. Zorg dat je bent ingelogd.');
         }
       }

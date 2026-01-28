@@ -1,4 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
+import { logger } from '@/lib/logger';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -59,7 +60,7 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
 
       toast.success(t('success.documentDownloaded'));
     } catch (error) {
-      console.error('Error downloading document:', error);
+      logger.error('Failed to download document', { documentId: document.id, error });
       toast.error(t('errors.downloadFailed'));
     }
   };
@@ -79,7 +80,7 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
 
       window.open(data.signedUrl, '_blank');
     } catch (error) {
-      console.error('Error viewing document:', error);
+      logger.error('Failed to view document', { documentId: document.id, error });
       toast.error(t('errors.openFailed'));
     }
   };
@@ -106,7 +107,7 @@ export function DocumentCard({ document, onDelete }: DocumentCardProps) {
       toast.success(t('success.documentDeleted'));
       onDelete?.();
     } catch (error) {
-      console.error('Error deleting document:', error);
+      logger.error('Failed to delete document', { documentId: document.id, error });
       toast.error(t('errors.deleteFailed'));
     }
   };

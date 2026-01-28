@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,27 +11,12 @@ import { MessageSquarePlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { CONVERSATION_TYPES, MOOD_OPTIONS } from '@/config/documentTypes';
 
 interface ConversationNotesDialogProps {
   caseId: string;
   onNoteAdded: () => void;
 }
-
-const conversationTypes = [
-  { value: 'telefonisch', label: 'Telefonisch' },
-  { value: 'video', label: 'Videogesprek' },
-  { value: 'persoonlijk', label: 'Persoonlijk gesprek' },
-  { value: 'email', label: 'Per e-mail' },
-  { value: 'whatsapp', label: 'WhatsApp/SMS' },
-];
-
-const moodOptions = [
-  { value: 'positief', label: '😊 Positief' },
-  { value: 'neutraal', label: '😐 Neutraal' },
-  { value: 'bezorgd', label: '😟 Bezorgd' },
-  { value: 'gestrest', label: '😰 Gestrest' },
-  { value: 'gefrustreerd', label: '😤 Gefrustreerd' },
-];
 
 export function ConversationNotesDialog({ caseId, onNoteAdded }: ConversationNotesDialogProps) {
   const { user } = useAuth();
@@ -81,7 +67,7 @@ export function ConversationNotesDialog({ caseId, onNoteAdded }: ConversationNot
       setOpen(false);
       onNoteAdded();
     } catch (error) {
-      console.error('Error saving conversation note:', error);
+      logger.error('Failed to save conversation note', { employeeId, error });
       toast.error('Fout bij opslaan notitie');
     } finally {
       setLoading(false);
@@ -130,7 +116,7 @@ export function ConversationNotesDialog({ caseId, onNoteAdded }: ConversationNot
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {conversationTypes.map((type) => (
+                    {CONVERSATION_TYPES.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -195,7 +181,7 @@ export function ConversationNotesDialog({ caseId, onNoteAdded }: ConversationNot
                   <SelectValue placeholder="Selecteer stemming (optioneel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  {moodOptions.map((mood) => (
+                  {MOOD_OPTIONS.map((mood) => (
                     <SelectItem key={mood.value} value={mood.value}>
                       {mood.label}
                     </SelectItem>

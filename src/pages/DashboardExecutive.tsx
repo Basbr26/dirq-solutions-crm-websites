@@ -34,6 +34,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format, subMonths, startOfMonth, formatDistanceToNow } from 'date-fns';
@@ -156,7 +157,7 @@ export default function DashboardExecutive() {
         .on('postgres_changes', 
           { event: '*', schema: 'public', table: 'projects' },
           () => {
-            console.log('Projects data changed, reloading dashboard...');
+            // Projects data changed, reloading dashboard silently
             loadExecutiveData();
           }
         )
@@ -167,7 +168,7 @@ export default function DashboardExecutive() {
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'companies' },
           () => {
-            console.log('Companies data changed, reloading dashboard...');
+            // Companies data changed, reloading dashboard silently
             loadExecutiveData();
           }
         )
@@ -178,7 +179,7 @@ export default function DashboardExecutive() {
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'contacts' },
           () => {
-            console.log('Contacts data changed, reloading dashboard...');
+            // Contacts data changed, reloading dashboard silently
             loadExecutiveData();
           }
         )
@@ -189,7 +190,7 @@ export default function DashboardExecutive() {
         .on('postgres_changes',
           { event: '*', schema: 'public', table: 'quotes' },
           () => {
-            console.log('Quotes data changed, reloading dashboard...');
+            // Quotes data changed, reloading dashboard silently
             loadExecutiveData();
           }
         )
@@ -323,7 +324,7 @@ export default function DashboardExecutive() {
       await loadCRMStats();
 
     } catch (error) {
-      console.error('Error loading executive data:', error);
+      logger.error(error, { context: 'executive_dashboard_load' });
       toast.error(t('errors.loadingDashboard'));
     } finally {
       setLoading(false);
@@ -432,7 +433,7 @@ export default function DashboardExecutive() {
       setRecentActivity(recentActivities.slice(0, 3));
 
     } catch (error) {
-      console.error('Error loading CRM stats:', error);
+      logger.error('Failed to load CRM statistics', { error });
     }
   };
 
@@ -481,7 +482,7 @@ export default function DashboardExecutive() {
       }
 
     } catch (error) {
-      console.error('Error loading MRR data:', error);
+      logger.error('Failed to load MRR data', { error });
     }
   };
 

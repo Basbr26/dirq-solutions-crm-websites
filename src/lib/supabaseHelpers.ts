@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { defaultTaskTemplates } from './taskTemplates';
 import { logActivity } from './activityLogger';
 
@@ -15,7 +16,7 @@ export async function generateInitialTasks(caseId: string, startDate: string, em
     .single();
 
   if (empError) {
-    console.error('Error fetching employee manager:', empError);
+    logger.error('Failed to fetch employee manager', { employeeId, error: empError });
   }
 
   // Gebruik de manager als die bestaat, anders de persoon die de case aanmaakt (HR)

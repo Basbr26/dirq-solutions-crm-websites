@@ -1,6 +1,7 @@
 import { ErrorBoundary } from 'react-error-boundary';
 import { ErrorFallback } from './ErrorFallback';
 import { captureException } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
 
 interface GlobalErrorBoundaryProps {
   children: React.ReactNode;
@@ -8,9 +9,12 @@ interface GlobalErrorBoundaryProps {
 
 // Error logging functie (integreert met Sentry)
 const logError = (error: Error, info: { componentStack: string }) => {
-  // Log naar console in development
-  console.error('Uncaught error:', error);
-  console.error('Component stack:', info.componentStack);
+  // Log naar logger (development & production)
+  logger.error(error, { 
+    context: 'global_error_boundary',
+    component_stack: info.componentStack,
+    error_boundary: 'global'
+  });
   
   // Log naar Sentry in production
   if (import.meta.env.PROD) {

@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useContacts } from "./hooks/useContacts";
 import { useContactMutations } from "./hooks/useContactMutations";
 import { ContactCard } from "./components/ContactCard";
@@ -26,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCompanies } from "@/features/companies/hooks/useCompanies";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { toast } from "sonner";
+import { logger } from '@/lib/logger';
 import {
   UserPlus,
   Search,
@@ -48,6 +51,7 @@ import { PaginationControls } from '@/components/ui/pagination-controls';
 
 export function ContactsPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [filterCompanyId, setFilterCompanyId] = useState<string | undefined>();
@@ -90,12 +94,12 @@ export function ContactsPage() {
 
   const { createContact } = useContactMutations();
 
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     pagination.resetPage();
-  };
+  }, [pagination]);
 
-  const handleCreateContact = (formData: ContactCreateData) => {
+  const handleCreateContact = useCallback((formData: ContactCreateData) => {
     // Handle "none" value from company dropdown
     const contactData = {
       ...formData,
@@ -111,9 +115,9 @@ export function ContactsPage() {
         toast.error(t('errors.createFailed') + ': ' + error.message);
       },
     });
-  };
+  }, [createContact, t, setShowCreateDialog]);
 
-  const handleExportCSV = async () => {
+  const handleExportCSV = useCallback(async () => {
     try {
       toast.info(t('contacts.exporting'));
       
@@ -175,14 +179,29 @@ export function ContactsPage() {
 
       toast.success(t('contacts.contactsExported', { count: contacts.length }));
     } catch (error: any) {
-      console.error('Export error:', error);
+      logger.error(error, { context: 'contacts_export' });
       toast.error(t('errors.exportFailed') + ': ' + error.message);
     }
-  };
+  }, [filterCompanyId, filterIsPrimary, filterIsDecisionMaker, debouncedSearch, t]);
 
-  const handleImport = async (data: any[], fieldMapping: Record<string, string>) => {
+  const handleImport = useCallback(async (data: any[], fieldMapping: Record<string, string>) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+
+    // Validation schema to prevent SQL injection and XSS
+    const contactImportSchema = z.object({
+      first_name: z.string().min(1, 'Voornaam is verplicht').max(100).trim(),
+      last_name: z.string().min(1, 'Achternaam is verplicht').max(100).trim(),
+      email: z.string().email('Ongeldig email formaat').max(255).optional().or(z.literal('')),
+      phone: z.string().regex(/^\+?[0-9\s\-()]+$/, 'Ongeldig telefoonnummer').max(50).optional().or(z.literal('')),
+      mobile: z.string().regex(/^\+?[0-9\s\-()]+$/, 'Ongeldig mobiel nummer').max(50).optional().or(z.literal('')),
+      position: z.string().max(100).optional(),
+      department: z.string().max(100).optional(),
+      company_name: z.string().max(200).optional(),
+      notes: z.string().max(1000).optional(),
+      is_primary: z.boolean().optional(),
+      is_decision_maker: z.boolean().optional(),
+    });
 
     // Get all companies for lookup
     const { data: companies } = await supabase
@@ -195,28 +214,54 @@ export function ContactsPage() {
 
     let successCount = 0;
     let errorCount = 0;
+    const errors: Array<{ row: number; error: string }> = [];
 
-    for (const row of data) {
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
       try {
-        // Map CSV fields to database fields
-        const contactData: any = {
-          first_name: row.first_name || row.Voornaam,
-          last_name: row.last_name || row.Achternaam,
-          email: row.email || row.Email || undefined,
-          phone: row.phone || row.Telefoon || undefined,
-          mobile: row.mobile || row.Mobiel || undefined,
-          position: row.position || row.Functie || undefined,
-          department: row.department || row.Afdeling || undefined,
+        // Prepare data for validation
+        const rawData = {
+          first_name: (row.first_name || row.Voornaam || '').toString().trim(),
+          last_name: (row.last_name || row.Achternaam || '').toString().trim(),
+          email: (row.email || row.Email || '').toString().trim(),
+          phone: (row.phone || row.Telefoon || '').toString().trim(),
+          mobile: (row.mobile || row.Mobiel || '').toString().trim(),
+          position: (row.position || row.Functie || '').toString().trim(),
+          department: (row.department || row.Afdeling || '').toString().trim(),
+          company_name: (row.company || row.Bedrijf || '').toString().trim(),
+          notes: (row.notes || row.Notities || '').toString().trim(),
           is_primary: row.is_primary === 'Ja' || row.is_primary === 'true' || row.is_primary === true,
           is_decision_maker: row.is_decision_maker === 'Ja' || row.is_decision_maker === 'true' || row.is_decision_maker === true,
-          notes: row.notes || row.Notities || undefined,
+        };
+
+        // Validate with Zod schema
+        const validated = contactImportSchema.safeParse(rawData);
+        
+        if (!validated.success) {
+          const errorMessages = validated.error.errors.map((e: { message: string }) => e.message).join(', ');
+          errors.push({ row: i + 1, error: errorMessages });
+          errorCount++;
+          continue;
+        }
+
+        // Map validated fields to database fields
+        const contactData: any = {
+          first_name: validated.data.first_name,
+          last_name: validated.data.last_name,
+          email: validated.data.email || undefined,
+          phone: validated.data.phone || undefined,
+          mobile: validated.data.mobile || undefined,
+          position: validated.data.position || undefined,
+          department: validated.data.department || undefined,
+          is_primary: validated.data.is_primary || false,
+          is_decision_maker: validated.data.is_decision_maker || false,
+          notes: validated.data.notes || undefined,
           owner_id: user.id,
         };
 
-        // Try to match company by name
-        const companyName = row.company || row.Bedrijf;
-        if (companyName) {
-          const companyId = companyMap.get(companyName.toLowerCase());
+        // Try to match company by name (safely)
+        if (validated.data.company_name) {
+          const companyId = companyMap.get(validated.data.company_name.toLowerCase());
           if (companyId) {
             contactData.company_id = companyId;
           }
@@ -228,27 +273,41 @@ export function ContactsPage() {
           .insert([contactData]);
 
         if (error) {
-          console.error('Insert error for row:', row, error);
+          errors.push({ row: i + 1, error: error.message });
           errorCount++;
         } else {
           successCount++;
         }
-      } catch (error) {
-        console.error('Row processing error:', error);
+      } catch (error: any) {
+        errors.push({ row: i + 1, error: error?.message || 'Unknown error' });
         errorCount++;
       }
     }
 
+    // Show detailed error messages
+    if (successCount > 0) {
+      toast.success(`${successCount} contacten succesvol geïmporteerd`);
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+    }
+    if (errorCount > 0) {
+      const errorSummary = errors.slice(0, 3).map(e => `Rij ${e.row}: ${e.error}`).join('\n');
+      const moreErrors = errors.length > 3 ? `\n... en ${errors.length - 3} meer` : '';
+      toast.error(`${errorCount} contacten konden niet worden geïmporteerd:\n${errorSummary}${moreErrors}`, {
+        duration: 8000,
+      });
+      logger.error(new Error('Contact import errors'), { context: 'contacts_import', error_count: errorCount, errors: errors.slice(0, 10) });
+    }
+
     return { success: successCount, errors: errorCount };
-  };
+  }, [queryClient]);
 
   // Calculate stats
-  const stats = {
+  const stats = useMemo(() => ({
     total: totalCount || 0,
     primary: contacts.filter((c) => c.is_primary).length || 0,
     decisionMakers: contacts.filter((c) => c.is_decision_maker).length || 0,
     withCompany: contacts.filter((c) => c.company_id).length || 0,
-  };
+  }), [contacts, totalCount]);
 
   return (
     <AppLayout

@@ -1,7 +1,32 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tantml:parameter name="query">@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import type { EmployeeStatus } from '@/components/ui/status-avatar'
 
+/**
+ * Employee Status Query Hook
+ * Determines employee's current status (present, sick, on leave) by checking
+ * active sick leave cases and approved leave requests for today.
+ * 
+ * @param employeeId - The employee's user ID
+ * @returns React Query result with employee status
+ * @returns data - Status: 'present' | 'sick' | 'leave'
+ * 
+ * @example
+ * ```tsx
+ * const { data: status } = useEmployeeStatus(employee.id);
+ * 
+ * return (
+ *   <StatusAvatar 
+ *     status={status} 
+ *     name={employee.name}
+ *   />
+ * );
+ * 
+ * // Status badge
+ * {status === 'sick' && <Badge variant="destructive">Sick Leave</Badge>}
+ * {status === 'leave' && <Badge variant="secondary">On Leave</Badge>}
+ * ```
+ */
 export const useEmployeeStatus = (employeeId: string) => {
   return useQuery({
     queryKey: ['employee-status', employeeId],

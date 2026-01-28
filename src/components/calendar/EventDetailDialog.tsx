@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -44,7 +45,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
         try {
           await deleteGoogleCalendarEvent(event.google_event_id);
         } catch (error) {
-          console.error('Error deleting from Google Calendar:', error);
+          logger.error('Failed to delete event from Google Calendar', { googleEventId: event.google_event_id, error });
           // Continue with local delete even if Google delete fails
           toast({ 
             title: t('common.warning'), 

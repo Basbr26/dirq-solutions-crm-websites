@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { handleInteractionCreated } from '@/lib/followUpAutomation';
 import { InteractionType, InteractionDirection, TaskStatus } from '@/types/crm';
+import { useTranslation } from 'react-i18next';
 
 export interface Interaction {
   id: string;
@@ -75,6 +77,39 @@ export interface CreateInteractionData {
   tags?: string[];
 }
 
+/**
+ * Interactions Query Hook
+ * Fetches paginated list of interactions (calls, emails, meetings, tasks) with RBAC filtering.
+ * SALES role users only see their own interactions; ADMIN/MANAGER see all.
+ * 
+ * @param filters - Optional filters to refine results
+ * @param filters.companyId - Filter by company ID
+ * @param filters.contactId - Filter by contact ID
+ * @param filters.leadId - Filter by project/lead ID
+ * @param filters.quoteId - Filter by quote ID
+ * @param filters.type - Filter by interaction type (call, email, meeting, note)
+ * @param filters.isTask - Filter for tasks only
+ * @param filters.taskStatus - Filter by task status (pending, in_progress, completed, cancelled)
+ * @param filters.search - Search in subject/description
+ * @param filters.page - Page number (default: 1)
+ * @param filters.pageSize - Items per page (default: 20)
+ * @returns Query result with interactions data and metadata
+ * 
+ * @example
+ * ```tsx
+ * // Company's interactions
+ * const { data } = useInteractions({ companyId: 'company-123' });
+ * 
+ * // Pending tasks only
+ * const { data } = useInteractions({ 
+ *   isTask: true, 
+ *   taskStatus: 'pending' 
+ * });
+ * 
+ * // Quote-related communications
+ * const { data } = useInteractions({ quoteId: 'quote-123', type: 'email' });
+ * ```
+ */
 export function useInteractions(filters: InteractionFilters = {}) {
   const { user, role } = useAuth();
   const page = filters.page || 1;
@@ -152,6 +187,7 @@ export function useInteractions(filters: InteractionFilters = {}) {
 export function useCreateInteraction() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (data: CreateInteractionData) => {
@@ -181,16 +217,17 @@ export function useCreateInteraction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interactions'] });
-      toast.success('Interactie succesvol aangemaakt');
+      toast.success(t('toast.interaction.created'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij aanmaken interactie: ${error.message}`);
+      toast.error(t('toast.interaction.createError', { message: error.message }));
     },
   });
 }
 
 export function useUpdateInteraction() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateInteractionData> }) => {
@@ -206,16 +243,17 @@ export function useUpdateInteraction() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interactions'] });
-      toast.success('Interactie bijgewerkt');
+      toast.success(t('toast.interaction.updated'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij bijwerken: ${error.message}`);
+      toast.error(t('toast.interaction.updateError', { message: error.message }));
     },
   });
 }
 
 export function useDeleteInteraction() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -227,7 +265,7 @@ export function useDeleteInteraction() {
         .eq('interaction_id', id);
 
       if (calendarError) {
-        console.warn('Could not delete linked calendar events:', calendarError);
+        logger.warn('Could not delete linked calendar events', { interactionId: id, error: calendarError });
         // Don't throw - continue with interaction delete
       }
 
@@ -242,10 +280,10 @@ export function useDeleteInteraction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['interactions'] });
       queryClient.invalidateQueries({ queryKey: ['calendar-events'] }); // Also refresh calendar
-      toast.success('Interactie verwijderd');
+      toast.success(t('toast.interaction.deleted'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij verwijderen: ${error.message}`);
+      toast.error(t('toast.interaction.deleteError', { message: error.message }));
     },
   });
 }

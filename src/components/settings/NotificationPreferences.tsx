@@ -11,6 +11,8 @@ import { toast } from '@/hooks/use-toast';
 import { getNotificationPreferences, updateNotificationPreferences } from '@/lib/notifications/aiNotifications';
 import { Loader2, Bell, Mail, Smartphone, Clock, Bot, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { NOTIFICATION_TYPES, DEFAULT_ENABLED_NOTIFICATION_TYPES, type DigestFrequency } from '@/config/notificationTypes';
+import { logger } from '@/lib/logger';
 
 interface NotificationPrefs {
   channels: {
@@ -20,21 +22,12 @@ interface NotificationPrefs {
   };
   enabled_types: string[];
   digest_enabled: boolean;
-  digest_frequency: 'hourly' | 'daily' | 'weekly';
+  digest_frequency: DigestFrequency;
   ai_notifications_enabled: boolean;
   ai_digest_only: boolean;
   ai_failure_notify: boolean;
   dnd_enabled: boolean;
 }
-
-const NOTIFICATION_TYPES = [
-  { value: 'deadline', label: 'Deadlines & Verlopen', description: 'Taken en offertes die verlopen zijn' },
-  { value: 'approval', label: 'Goedkeuringen', description: 'Quote acceptaties en belangrijke beslissingen' },
-  { value: 'update', label: 'Updates', description: 'Status wijzigingen van leads, projecten en bedrijven' },
-  { value: 'reminder', label: 'Herinneringen', description: 'Aankomende afspraken en taken' },
-  { value: 'escalation', label: 'Escalaties', description: 'Urgente zaken die aandacht vereisen' },
-  { value: 'digest', label: 'Samenvattingen', description: 'Dagelijkse of wekelijkse overzichten' },
-];
 
 export function NotificationPreferences() {
   const { t } = useTranslation();
@@ -43,7 +36,7 @@ export function NotificationPreferences() {
   const [saving, setSaving] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPrefs>({
     channels: { in_app: true, email: false, sms: false },
-    enabled_types: ['deadline', 'approval', 'update', 'reminder', 'escalation', 'digest'],
+    enabled_types: DEFAULT_ENABLED_NOTIFICATION_TYPES,
     digest_enabled: true,
     digest_frequency: 'daily',
     ai_notifications_enabled: true,
@@ -71,7 +64,7 @@ export function NotificationPreferences() {
         });
       }
     } catch (error: any) {
-      console.error('Error loading preferences:', error);
+      logger.error(error, { context: 'notification_preferences_load', user_id: user.id });
     } finally {
       setLoading(false);
     }

@@ -11,6 +11,33 @@ interface QueuedAction {
 const DB_NAME = 'dirq_offline_queue';
 const STORE_NAME = 'actions';
 
+/**
+ * Offline Queue Hook
+ * Manages offline-first action queue using IndexedDB.
+ * Automatically syncs queued actions when connection is restored.
+ * 
+ * @returns Object with queue management functions
+ * @returns queue - Array of queued actions
+ * @returns isOnline - Current online/offline status
+ * @returns addToQueue - Add action to offline queue
+ * @returns syncQueue - Manually trigger queue sync
+ * @returns clearQueue - Clear all queued actions
+ * 
+ * @example
+ * ```tsx
+ * const { addToQueue, isOnline, queue } = useOfflineQueue();
+ * 
+ * // Queue action when offline
+ * if (!isOnline) {
+ *   addToQueue('approval', { documentId: '123', approved: true });
+ * }
+ * 
+ * // Show offline indicator
+ * {!isOnline && (
+ *   <div>Offline - {queue.length} actions queued</div>
+ * )}
+ * ```
+ */
 export function useOfflineQueue() {
   const [queue, setQueue] = useState<QueuedAction[]>([]);
   const [isOnline, setIsOnline] = useState(navigator.onLine);

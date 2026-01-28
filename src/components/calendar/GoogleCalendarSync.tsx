@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 
 export function GoogleCalendarSync() {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ export function GoogleCalendarSync() {
   const addDebugLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setDebugInfo(prev => [...prev.slice(-9), `[${timestamp}] ${message}`]);
-    console.log(`[GoogleCalendarSync] ${message}`);
+    // Silent debug info for UI only
   }, []);
 
   const initializeGoogle = useCallback(async () => {
@@ -61,7 +62,7 @@ export function GoogleCalendarSync() {
       const errorMsg = error instanceof Error ? error.message : String(error);
       addDebugLog(`❌ Error during initialization: ${errorMsg}`);
       setConnectionError(`Initialisatie fout: ${errorMsg}`);
-      console.error('Failed to initialize Google Calendar:', error);
+      logger.error(error, { context: 'google_calendar_init' });
       toast.error('Google Calendar kon niet worden geïnitialiseerd');
     } finally {
       setIsLoading(false);
@@ -139,7 +140,7 @@ export function GoogleCalendarSync() {
             const errorMsg = error instanceof Error ? error.message : String(error);
             addDebugLog(`❌ Error restoring session: ${errorMsg}`);
             setConnectionError(`Sessie herstel fout: ${errorMsg}`);
-            console.error('Error restoring Google session:', error);
+            logger.error(error, { context: 'google_calendar_session_restore', user_id: user.id });
           }
         } else {
           addDebugLog('⚠️ Token expired, clearing from database...');
@@ -239,7 +240,7 @@ export function GoogleCalendarSync() {
 
     if (error) {
       addDebugLog(`❌ Error saving settings: ${error.message}`);
-      console.error('Error saving sync settings:', error);
+      logger.error(error, { context: 'google_calendar_save_settings', user_id: user.id });
       toast.error('Kon instellingen niet opslaan');
     } else {
       addDebugLog('✅ Settings saved successfully');
@@ -273,7 +274,7 @@ export function GoogleCalendarSync() {
         if (updateError) {
           addDebugLog(`❌ Database error: ${updateError.message}`);
           setConnectionError(`Token opslaan mislukt: ${updateError.message}`);
-          console.error('Error storing Google tokens:', updateError);
+          logger.error(updateError, { context: 'google_calendar_store_tokens', user_id: user.id });
           toast.error('Kon tokens niet opslaan in database');
           return;
         }
@@ -308,10 +309,10 @@ export function GoogleCalendarSync() {
                 webhook_expiration: new Date(parseInt(webhookResult.expiration)).toISOString(),
               })
               .eq('id', user.id);
-            console.log('Google Calendar webhook registered successfully');
+            addDebugLog('✅ Webhook registered successfully');
           }
         } catch (webhookError) {
-          console.error('Error registering webhook:', webhookError);
+          logger.error(webhookError, { context: 'google_calendar_register_webhook', user_id: user.id });
           // Don't fail sign-in if webhook fails
           toast.warning('Webhook registratie mislukt, fallback naar polling');
         }
@@ -324,7 +325,7 @@ export function GoogleCalendarSync() {
         toast.error('Kon niet verbinden met Google Calendar');
       }
     } catch (error) {
-      console.error('Sign in error:', error);
+      logger.error(error, { context: 'google_calendar_signin', user_id: user?.id });
       toast.error(t('errors.errorSigning'));
     } finally {
       setIsLoading(false);
@@ -363,7 +364,7 @@ export function GoogleCalendarSync() {
 
           if (updateError) {
             addDebugLog(`❌ Failed to update token: ${updateError.message}`);
-            console.error('Error updating refreshed token:', updateError);
+            logger.error(updateError, { context: 'google_calendar_token_refresh_update', user_id: user.id });
           } else {
             addDebugLog('✅ Token auto-refreshed successfully');
             // Schedule next refresh
@@ -374,7 +375,7 @@ export function GoogleCalendarSync() {
           setConnectionError('Token vernieuwen mislukt - herverbind alsjeblieft');
         }
       } catch (error) {
-        console.error('Error auto-refreshing token:', error);
+        logger.error(error, { context: 'google_calendar_token_refresh', user_id: user.id });
         addDebugLog('❌ Auto-refresh error');
       }
     }, refreshTime);
@@ -395,10 +396,10 @@ export function GoogleCalendarSync() {
 
       if (data?.webhook_channel_id && data?.webhook_resource_id) {
         await stopGoogleCalendarWebhook(data.webhook_channel_id, data.webhook_resource_id);
-        console.log('Google Calendar webhook stopped');
+        addDebugLog('✅ Webhook stopped');
       }
     } catch (webhookError) {
-      console.error('Error stopping webhook:', webhookError);
+      logger.error(webhookError, { context: 'google_calendar_signout_webhook', user_id: user.id });
       // Continue with sign out even if webhook stop fails
     }
 
@@ -420,7 +421,7 @@ export function GoogleCalendarSync() {
       .eq('id', user.id);
 
     if (error) {
-      console.error('Error clearing Google tokens:', error);
+      logger.error(error, { context: 'google_calendar_clear_tokens', user_id: user.id });
     }
 
     setIsSignedIn(false);
@@ -450,7 +451,7 @@ export function GoogleCalendarSync() {
           .eq('id', syncedEvent.localId);
 
         if (updateError) {
-          console.error('Error updating google_event_id:', updateError);
+          logger.error(updateError, { context: 'google_calendar_update_event_id', event_id: syncedEvent.localId, user_id: user.id });
         }
       }
 
@@ -465,7 +466,7 @@ export function GoogleCalendarSync() {
               .eq('google_event_id', googleEvent.google_event_id);
             
             if (deleteError) {
-              console.error('Error deleting event:', deleteError);
+              logger.error(deleteError, { context: 'google_calendar_delete_event', google_event_id: googleEvent.google_event_id, user_id: user.id });
             }
             return;
           }
@@ -478,7 +479,7 @@ export function GoogleCalendarSync() {
             .maybeSingle();
 
           if (checkError) {
-            console.error('Error checking existing event:', checkError);
+            logger.error(checkError, { context: 'google_calendar_check_existing', google_event_id: googleEvent.google_event_id, user_id: user.id });
             return;
           }
 
@@ -503,10 +504,10 @@ export function GoogleCalendarSync() {
             });
 
           if (insertError) {
-            console.error('Error inserting event:', insertError);
+            logger.error(insertError, { context: 'google_calendar_insert_event', google_event_id: googleEvent.google_event_id, user_id: user.id });
           }
         } catch (err) {
-          console.error('Error processing event:', err);
+          logger.error(err, { context: 'google_calendar_process_event', user_id: user.id });
         }
       });
 
@@ -522,7 +523,7 @@ export function GoogleCalendarSync() {
         .eq('id', user.id);
 
       if (updateError) {
-        console.error('Error updating last sync time:', updateError);
+        logger.error(updateError, { context: 'google_calendar_update_sync_time', user_id: user.id });
       }
 
       const totalSynced = syncToResults.synced + syncFromResults.imported;
@@ -536,7 +537,7 @@ export function GoogleCalendarSync() {
         toast.success(`${totalSynced} gebeurtenissen succesvol gesynchroniseerd`);
       }
     } catch (error) {
-      console.error('Sync error:', error);
+      logger.error(error, { context: 'google_calendar_sync', user_id: user.id });
       toast.error(t('errors.errorSending'));
     } finally {
       setIsSyncing(false);
@@ -609,7 +610,7 @@ export function GoogleCalendarSync() {
           if (error) {
             addDebugLog(`❌ Error updating refreshed token in DB: ${error.message}`);
             setConnectionError(`Token update fout: ${error.message}`);
-            console.error('Error updating refreshed token:', error);
+            logger.error(error, { context: 'google_calendar_auto_refresh_token', user_id: user.id });
           } else {
             // Update gapi client
             window.gapi?.client?.setToken({
@@ -623,7 +624,7 @@ export function GoogleCalendarSync() {
         } else {
           addDebugLog('❌ Token refresh failed - refresh token may be revoked');
           setConnectionError('Token refresh gefaald - mogelijk ingetrokken door Google');
-          console.error('Token refresh failed, user needs to re-authenticate');
+          logger.error(new Error('Token refresh failed'), { context: 'google_calendar_token_refresh_failed', user_id: user.id });
           toast.error('Google Calendar sessie verlopen, log opnieuw in');
           setIsSignedIn(false);
         }
@@ -641,12 +642,12 @@ export function GoogleCalendarSync() {
     if (!autoSync || !isSignedIn) return;
 
     const syncInterval = setInterval(() => {
-      console.log('Automatic sync triggered');
+      addDebugLog('⌛ Automatic sync triggered');
       handleSync();
     }, 15 * 60 * 1000); // Every 15 minutes
 
     return () => clearInterval(syncInterval);
-  }, [autoSync, isSignedIn, handleSync]); // Added handleSync to dependencies
+  }, [autoSync, isSignedIn, handleSync, addDebugLog]);
 
   // Check and renew webhook if needed (check every hour)
   useEffect(() => {
@@ -685,7 +686,7 @@ export function GoogleCalendarSync() {
           }
         }
       } catch (error) {
-        console.error('Error checking webhook expiration:', error);
+        logger.error(error, { context: 'google_calendar_webhook_expiration_check', user_id: user.id });
       }
     };
 

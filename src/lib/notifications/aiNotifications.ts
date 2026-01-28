@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface AIBulkOperationResult {
   success_count: number;
@@ -39,7 +40,7 @@ export async function notifyAIBulkOperation(
 
     return { success: true };
   } catch (error: any) {
-    console.error('Error sending AI bulk operation notification:', error);
+    logger.error('Failed to send AI bulk operation notification', { userId, error });
     return {
       success: false,
       error: error.message,
@@ -71,7 +72,7 @@ export async function notifyAIFailure(
 
     return { success: true };
   } catch (error: any) {
-    console.error('Error sending AI failure notification:', error);
+    logger.error('Failed to send AI failure notification', { userId, operation, entityType, entityId, errorMessage, error });
     return {
       success: false,
       error: error.message,
@@ -154,7 +155,7 @@ export async function getNotificationPreferences(userId: string) {
     .single();
 
   if (error) {
-    console.error('Error fetching notification preferences:', error);
+    logger.error('Failed to fetch notification preferences', { userId, error });
     return null;
   }
 
@@ -187,7 +188,7 @@ export async function updateNotificationPreferences(
     .single();
 
   if (error) {
-    console.error('Error updating notification preferences:', error);
+    logger.error('Failed to update notification preferences', { userId, preferences, error });
     return { success: false, error: error.message };
   }
 

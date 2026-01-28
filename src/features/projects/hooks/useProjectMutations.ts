@@ -9,9 +9,12 @@ import { toast } from 'sonner';
 import type { CreateProjectInput, UpdateProjectInput, ProjectStage } from '@/types/projects';
 import { notifyDealClosed, notifyProjectStageChanged, createDealWonNotification } from '@/lib/crmNotifications';
 import { haptics } from '@/lib/haptics';
+import { logger } from '@/lib/logger';
+import { useTranslation } from 'react-i18next';
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (input: CreateProjectInput) => {
@@ -38,17 +41,18 @@ export function useCreateProject() {
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
       queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
       haptics.success();
-      toast.success('Project aangemaakt');
+      toast.success(t('toast.project.created'));
     },
     onError: (error: Error) => {
       haptics.error();
-      toast.error(`Fout bij aanmaken project: ${error.message}`);
+      toast.error(t('toast.project.createError', { message: error.message }));
     },
   });
 }
 
 export function useUpdateProject(id: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (input: UpdateProjectInput) => {
@@ -68,16 +72,17 @@ export function useUpdateProject(id: string) {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
       queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
-      toast.success('Project bijgewerkt');
+      toast.success(t('toast.project.updated'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij bijwerken project: ${error.message}`);
+      toast.error(t('toast.project.updateError', { message: error.message }));
     },
   });
 }
 
 export function useUpdateProjectStage(id: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (stage: ProjectStage) => {
@@ -141,13 +146,14 @@ export function useUpdateProjectStage(id: string) {
       }
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij stage wijziging: ${error.message}`);
+      toast.error(t('toast.project.stageError', { message: error.message }));
     },
   });
 }
 
 export function useDeleteProject() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -163,10 +169,10 @@ export function useDeleteProject() {
       queryClient.invalidateQueries({ queryKey: ['pipeline-stats'] });
       queryClient.invalidateQueries({ queryKey: ['projects-by-stage'] });
       queryClient.invalidateQueries({ queryKey: ['executive-dashboard'] });
-      toast.success('Project verwijderd');
+      toast.success(t('toast.project.deleted'));
     },
     onError: (error: Error) => {
-      toast.error(`Fout bij verwijderen project: ${error.message}`);
+      toast.error(t('toast.project.deleteError', { message: error.message }));
     },
   });
 }
@@ -195,6 +201,7 @@ export function useProjectMutations(id?: string) {
  */
 export function useConvertLeadToCustomer(projectId: string) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async () => {
@@ -259,18 +266,18 @@ export function useConvertLeadToCustomer(projectId: string) {
 
       // Success toast with context
       if (wasAlreadyCustomer) {
-        toast.success('🎉 Project omgezet naar "Offerte Getekend"!', {
+        toast.success(t('toast.project.convertedToQuoteSigned'), {
           description: `${project.title} is nu in development fase.`,
         });
       } else {
-        toast.success('🎉 Lead succesvol omgezet naar klant!', {
+        toast.success(t('toast.project.converted'), {
           description: `${project.companies?.name} is nu een actieve klant met project "${project.title}".`,
         });
       }
     },
     onError: (error: Error) => {
-      console.error('Conversion error:', error);
-      toast.error('Fout bij conversie', {
+      logger.error(error, { context: 'project_conversion', project_id: projectId });
+      toast.error(t('toast.project.conversionError'), {
         description: error.message,
       });
     },

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ export function ChangePasswordDialog({ open, onOpenChange, onPasswordChanged }: 
           .eq('id', user.id);
 
         if (profileError) {
-          console.error('Error updating profile:', profileError);
+          logger.error('Failed to update profile after password change', { userId: user.id, error: profileError });
         }
       }
 

@@ -5,6 +5,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 interface EmailTemplate {
   subject: string;
@@ -193,19 +194,19 @@ export const sendEmailViaResend = async (params: SendEmailParams): Promise<boole
     });
 
     if (error) {
-      console.error('[Email] Edge Function error:', error);
+      logger.error('Edge Function error sending email', { params, error });
       return false;
     }
 
     if (!data?.success) {
-      console.error('[Email] Failed to send:', data?.error);
+      logger.error('Failed to send email', { params, error: data?.error });
       return false;
     }
 
-    console.log('[Email] Sent successfully:', data);
+    logger.info('Email sent successfully', { to: params.to, subject: params.subject });
     return true;
   } catch (err) {
-    console.error('[Email] Exception:', err);
+    logger.error('Exception sending email', { params, error: err });
     return false;
   }
 };

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -61,7 +62,7 @@ export function CaseDocumentsList({
       if (error) throw error;
       setDocuments((data || []) as VerzuimDocument[]);
     } catch (error) {
-      console.error('Error loading case documents:', error);
+      logger.error('Failed to load case documents', { caseId, error });
       toast({
         variant: 'destructive',
         title: 'Fout bij laden documenten',
@@ -119,7 +120,7 @@ export function CaseDocumentsList({
         title: 'Document gedownload',
       });
     } catch (error) {
-      console.error('Error downloading document:', error);
+      logger.error('Failed to download document', { documentId: doc.id, error });
       toast({
         variant: 'destructive',
         title: 'Fout bij downloaden',
@@ -233,7 +234,7 @@ export function CaseDocumentsList({
       loadDocuments();
       onRefresh?.();
     } catch (error) {
-      console.error('Error signing document:', error);
+      logger.error('Failed to sign document', { documentId: selectedDocument?.id, error });
       toast({
         variant: 'destructive',
         title: 'Fout bij ondertekenen',

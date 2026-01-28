@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Phone, Building2, Briefcase, Linkedin, Star, Crown, Clock, Edit, Trash2, MoreVertical } from 'lucide-react';
 import { Contact } from '@/types/crm';
@@ -44,7 +44,7 @@ interface ContactCardProps {
   contact: Contact;
 }
 
-export function ContactCard({ contact }: ContactCardProps) {
+export const ContactCard = memo(function ContactCard({ contact }: ContactCardProps) {
   const { t } = useTranslation();
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -385,4 +385,6 @@ export function ContactCard({ contact }: ContactCardProps) {
       </AlertDialog>
     </>
   );
-}
+});
+
+ContactCard.displayName = 'ContactCard';

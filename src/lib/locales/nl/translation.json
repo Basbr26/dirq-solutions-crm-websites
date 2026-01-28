@@ -587,10 +587,10 @@
     "quickStartFinance": "Snel starten met een Finance template:",
     "financeStarterTitle": "Finance Starter Offerte",
     "financeStarterPrice": "€799,99 + €99/maand",
-    "financeStarterDesc": "Complete offerte met juridische voorwaarden",
+    "financeStarterDesc": "Basis pakket met support",
     "financeGrowthTitle": "Finance Growth Offerte",
     "financeGrowthPrice": "€1.299,99 + €149/maand",
-    "financeGrowthDesc": "Premium offerte met SLA en uitgebreide voorwaarden",
+    "financeGrowthDesc": "Premium met SLA garantie",
     "generalInfo": "Algemene Informatie",
     "lineItemsSection": "Regel Items",
     "requiredCompany": "Bedrijf *",
@@ -1104,6 +1104,173 @@
     "internalNotes": "Interne notities",
     "internalNotesDescription": "Deze notities zijn alleen intern zichtbaar",
     "pasteBusinessData": "Plak hier de bedrijfsgegevens van KVK, Drimble, of andere bron..."
+  },
+  "toast": {
+    "success": {
+      "created": "{{entity}} aangemaakt",
+      "updated": "{{entity}} bijgewerkt",
+      "deleted": "{{entity}} verwijderd",
+      "saved": "Opgeslagen",
+      "copied": "Gekopieerd naar klembord",
+      "sent": "Verzonden",
+      "uploaded": "Geüpload",
+      "downloaded": "Gedownload",
+      "exported": "{{count}} {{entity}} geëxporteerd",
+      "imported": "{{count}} {{entity}} succesvol geïmporteerd"
+    },
+    "error": {
+      "create": "Fout bij aanmaken {{entity}}: {{message}}",
+      "update": "Fout bij bijwerken {{entity}}: {{message}}",
+      "delete": "Fout bij verwijderen {{entity}}: {{message}}",
+      "save": "Fout bij opslaan",
+      "upload": "Upload mislukt: {{message}}",
+      "download": "Download mislukt",
+      "export": "Fout bij exporteren",
+      "import": "{{count}} {{entity}} konden niet worden geïmporteerd",
+      "failed": "{{action}} mislukt",
+      "generic": "Er is een fout opgetreden"
+    },
+    "warning": {
+      "noData": "Geen {{entity}} om te {{action}}",
+      "fillRequired": "Vul eerst {{field}} in"
+    },
+    "project": {
+      "created": "Project aangemaakt",
+      "updated": "Project bijgewerkt",
+      "deleted": "Project verwijderd",
+      "stageChanged": "{{projectName}} ({{companyName}}) verplaatst naar {{stage}}",
+      "converted": "🎉 Lead succesvol omgezet naar klant!",
+      "convertedToQuoteSigned": "🎉 Project omgezet naar \"Offerte Getekend\"!",
+      "createError": "Fout bij aanmaken project: {{message}}",
+      "updateError": "Fout bij bijwerken project: {{message}}",
+      "deleteError": "Fout bij verwijderen project: {{message}}",
+      "stageError": "Fout bij stage wijziging: {{message}}",
+      "conversionError": "Fout bij conversie"
+    },
+    "quote": {
+      "created": "Offerte aangemaakt",
+      "updated": "Offerte bijgewerkt",
+      "deleted": "Offerte verwijderd",
+      "signed": "✅ Offerte succesvol ondertekend!",
+      "rejected": "Offerte afgewezen. Bedankt voor uw feedback.",
+      "statusChanged": "Offerte status: {{status}}",
+      "downloaded": "PDF gedownload",
+      "signedDownloaded": "Getekend document gedownload",
+      "createError": "Fout bij aanmaken offerte: {{message}}",
+      "updateError": "Fout bij bijwerken offerte: {{message}}",
+      "deleteError": "Fout bij verwijderen offerte: {{message}}",
+      "statusError": "Fout bij status wijziging: {{message}}",
+      "signError": "Fout bij ondertekenen",
+      "noSignedDocument": "Geen getekend document beschikbaar",
+      "missingData": "Offerte data ontbreekt",
+      "pdfError": "PDF export mislukt",
+      "authError": "Authenticatie mislukt",
+      "permissionError": "Geen toestemming om te tekenen als opdrachtnemer. Alleen de eigenaar of admin kan deze offerte tekenen."
+    },
+    "company": {
+      "created": "Bedrijf succesvol aangemaakt",
+      "updated": "Bedrijf succesvol bijgewerkt",
+      "deleted": "Bedrijf succesvol verwijderd",
+      "createError": "Fout bij aanmaken bedrijf",
+      "updateError": "Fout bij bijwerken bedrijf",
+      "deleteError": "Fout bij verwijderen bedrijf"
+    },
+    "contact": {
+      "created": "Contact succesvol aangemaakt",
+      "updated": "Contact succesvol bijgewerkt",
+      "deleted": "Contact succesvol verwijderd",
+      "createError": "Fout bij aanmaken contact",
+      "updateError": "Fout bij bijwerken contact",
+      "deleteError": "Fout bij verwijderen contact",
+      "openingDialer": "Opening dialer..."
+    },
+    "interaction": {
+      "created": "Interactie succesvol aangemaakt",
+      "updated": "Interactie bijgewerkt",
+      "deleted": "Interactie verwijderd",
+      "createError": "Fout bij aanmaken interactie: {{message}}",
+      "updateError": "Fout bij bijwerken: {{message}}",
+      "deleteError": "Fout bij verwijderen: {{message}}"
+    },
+    "document": {
+      "uploaded": "Document geüpload",
+      "downloaded": "Document gedownload",
+      "deleted": "Document verwijderd",
+      "signed": "Document succesvol ondertekend!",
+      "refused": "U heeft het document geweigerd te ondertekenen.",
+      "linkGenerated": "Sign link gegenereerd en email verzonden! 📧",
+      "linkCopied": "Link gekopieerd naar klembord",
+      "uploadError": "Upload mislukt: {{message}}",
+      "downloadError": "Kon document niet downloaden",
+      "deleteError": "Verwijderen mislukt: {{message}}",
+      "linkError": "Genereren mislukt: {{message}}",
+      "linkWarning": "Link gegenereerd, maar email kon niet worden verzonden",
+      "fileTooLarge": "Bestand te groot. Maximum: 10MB",
+      "fileTypeNotAllowed": "Bestandstype niet toegestaan. Ondersteunde types: PDF, Word, Excel, afbeeldingen, tekst."
+    },
+    "calendar": {
+      "exported": "Calendar geëxporteerd",
+      "noEvents": "Geen events om te exporteren"
+    },
+    "googleCalendar": {
+      "initError": "Google Calendar kon niet worden geïnitialiseerd",
+      "loadError": "Kon synchronisatie-instellingen niet laden",
+      "connectionRestored": "Google Calendar verbinding hersteld",
+      "sessionExpired": "Google Calendar sessie verlopen, log opnieuw in",
+      "saveError": "Kon instellingen niet opslaan",
+      "storeTokensError": "Kon tokens niet opslaan in database",
+      "connectedPersistent": "Verbonden met Google Calendar met persistente authenticatie",
+      "connectedTemporary": "Verbonden - Maar sessie verloopt na 1 uur (geen refresh token)",
+      "webhookWarning": "Webhook registratie mislukt, fallback naar polling",
+      "connectError": "Kon niet verbinden met Google Calendar",
+      "disconnected": "Verbinding met Google Calendar verbroken - Tokens verwijderd",
+      "synced": "{{count}} gebeurtenissen succesvol gesynchroniseerd",
+      "autoSyncEnabled": "Automatische synchronisatie ingeschakeld",
+      "autoSyncDisabled": "Automatische synchronisatie uitgeschakeld",
+      "reloginWarning": "Google Calendar: log opnieuw in voor automatische vernieuwing",
+      "connectionRenewed": "Google Calendar verbinding automatisch vernieuwd",
+      "sessionExpiredRelogin": "Google Calendar sessie verlopen, log opnieuw in",
+      "realtimeSyncExtended": "Google Calendar real-time sync verlengd",
+      "webhookExtendError": "Kon webhook niet verlengen - real-time sync mogelijk beperkt"
+    },
+    "department": {
+      "created": "Afdeling aangemaakt",
+      "updated": "Afdeling bijgewerkt",
+      "deleted": "Afdeling verwijderd",
+      "createError": "Fout bij aanmaken: {{message}}",
+      "updateError": "Fout bij bijwerken: {{message}}",
+      "deleteError": "Fout bij verwijderen: {{message}}"
+    },
+    "note": {
+      "added": "Notitie toegevoegd",
+      "updated": "Notitie bijgewerkt",
+      "deleted": "Notitie verwijderd",
+      "pinChanged": "Pin wijzigen mislukt",
+      "followUpCompleted": "Follow-up voltooid",
+      "addError": "Notitie toevoegen mislukt",
+      "updateError": "Notitie bijwerken mislukt",
+      "deleteError": "Notitie verwijderen mislukt",
+      "followUpError": "Follow-up voltooien mislukt",
+      "loadError": "Fout bij laden gespreksnotities"
+    },
+    "user": {
+      "updated": "Gebruiker bijgewerkt",
+      "loadError": "Fout bij laden van gebruikers"
+    },
+    "ai": {
+      "copied": "Gekopieerd naar klembord",
+      "copyError": "Kopiëren mislukt",
+      "feedbackSaved": "Bedankt voor je feedback!",
+      "feedbackError": "Feedback opslaan mislukt"
+    },
+    "command": {
+      "processed": "Commando verwerkt",
+      "failed": "Commando mislukt"
+    },
+    "template": {
+      "applied": "{{templateType}} template toegepast! 🎉"
+    },
+    "dealWon": "🎉 Deal Gewonnen!"
   }
 }
 

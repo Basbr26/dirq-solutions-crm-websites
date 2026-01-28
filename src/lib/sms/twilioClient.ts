@@ -3,6 +3,8 @@
  * Handles sending notifications via SMS for critical alerts
  */
 
+import { logger } from '@/lib/logger';
+
 interface SendSmsParams {
   to: string;
   body: string;
@@ -83,13 +85,13 @@ export const sendSmsViaTwilio = async (params: SendSmsParams): Promise<boolean> 
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('Twilio API error:', error);
+      logger.error('Twilio API error', { params, error });
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error sending SMS via Twilio:', error);
+    logger.error('Failed to send SMS via Twilio', { params, error });
     return false;
   }
 };
@@ -179,7 +181,7 @@ export const handleTwilioSmsBackend = async (to: string, body: string, from: str
       timestamp: new Date().toISOString()
     };
   } catch (error) {
-    console.error('Twilio backend error:', error);
+    logger.error('Twilio backend error', { to, body, error });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error'

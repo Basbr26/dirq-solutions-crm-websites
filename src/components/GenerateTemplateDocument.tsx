@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -138,7 +139,7 @@ export function GenerateTemplateDocument({
       setPreviewUrl(url);
       setActiveTab('preview');
     } catch (error) {
-      console.error('Preview error:', error);
+      logger.error('Failed to generate template preview', { templateId: selectedTemplate, error });
       toast.error('Fout bij genereren preview');
     } finally {
       setGenerating(false);
@@ -183,7 +184,7 @@ export function GenerateTemplateDocument({
         onGenerated?.();
       }, 2000);
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Failed to upload generated template document', { templateId: selectedTemplate, error });
       toast.error('Fout bij uploaden document');
     } finally {
       setGenerating(false);

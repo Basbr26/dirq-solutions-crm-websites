@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export type DocumentCategory =
   | 'arbeidscontract'
@@ -517,7 +518,7 @@ export async function saveDocumentAnalysis(
   });
 
   if (error) {
-    console.error('Failed to save document analysis:', error);
+    logger.error('Failed to save document analysis', { documentId, userId, error });
     throw error;
   }
 }

@@ -4,6 +4,33 @@ import { Company, CompanyFilters } from '@/types/crm';
 import { useAuth } from '@/hooks/useAuth';
 import { usePagination } from '@/hooks/usePagination';
 
+/**
+ * Companies Query Hook
+ * Fetches paginated list of companies with filtering and RBAC enforcement.
+ * 
+ * @param filters - Optional filters to apply to the query
+ * @param filters.search - Search by company name or email
+ * @param filters.status - Filter by company status (prospect, active, inactive, churned)
+ * @param filters.industry_id - Filter by industry IDs
+ * @param filters.owner_id - Filter by owner user IDs
+ * @param filters.priority - Filter by priority (low, medium, high)
+ * @returns Query result with companies data, pagination controls, and loading state
+ * 
+ * @example
+ * ```tsx
+ * const { companies, isLoading, pagination, totalCount } = useCompanies({
+ *   status: ['active'],
+ *   search: 'Tech'
+ * });
+ * 
+ * // Navigate pages
+ * pagination.nextPage();
+ * pagination.setPageSize(50);
+ * 
+ * // Display results
+ * {companies.map(company => <CompanyCard key={company.id} company={company} />)}
+ * ```
+ */
 export function useCompanies(filters?: CompanyFilters) {
   const { role } = useAuth();
   const pagination = usePagination({ initialPageSize: 25 });

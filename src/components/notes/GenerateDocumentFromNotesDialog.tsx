@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -161,7 +162,7 @@ export function GenerateDocumentFromNotesDialog({
       setPeriod('');
       setAdditionalNotes('');
     } catch (error) {
-      console.error('Generate document error:', error);
+      logger.error('Failed to generate document from notes', { employeeId, noteCount: selectedNoteIds.length, error });
       toast.error('Document genereren mislukt');
     } finally {
       setGenerating(false);

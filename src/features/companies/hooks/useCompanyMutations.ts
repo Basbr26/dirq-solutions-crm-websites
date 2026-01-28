@@ -3,9 +3,38 @@ import { supabase } from '@/integrations/supabase/client';
 import { CompanyFormData, Company } from '@/types/crm';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
+import { useTranslation } from 'react-i18next';
 
+/**
+ * Create Company Mutation Hook
+ * Creates a new company record with automatic owner assignment and duplicate prevention.
+ * 
+ * @returns React Query mutation for creating companies
+ * 
+ * @example
+ * ```tsx
+ * const createCompany = useCreateCompany();
+ * 
+ * createCompany.mutate(
+ *   { name: 'Acme Corp', email: 'info@acme.com', status: 'prospect' },
+ *   {
+ *     onSuccess: (company) => {
+ *       console.log('Created:', company.id);
+ *       navigate(`/companies/${company.id}`);
+ *     },
+ *     onError: (error) => {
+ *       console.error('Failed:', error.message);
+ *     }
+ *   }
+ * );
+ * ```
+ * 
+ * @throws {Error} 'Dit KVK nummer is al in gebruik' - Duplicate KVK number
+ * @throws {Error} 'Een bedrijf met deze naam bestaat al' - Duplicate name
+ */
 export function useCreateCompany() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (data: CompanyFormData) => {
@@ -43,7 +72,7 @@ export function useCreateCompany() {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
       haptics.success();
-      toast.success('Bedrijf succesvol aangemaakt');
+      toast.success(t('toast.company.created'));
     },
     onError: (error: Error) => {
       haptics.error();
@@ -51,7 +80,7 @@ export function useCreateCompany() {
       if (error.message.includes('bestaat al') || error.message.includes('is al in gebruik')) {
         return;
       }
-      toast.error('Fout bij aanmaken bedrijf', {
+      toast.error(t('toast.company.createError'), {
         description: error.message,
       });
     },
@@ -60,6 +89,7 @@ export function useCreateCompany() {
 
 export function useUpdateCompany() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CompanyFormData> }) => {
@@ -81,10 +111,10 @@ export function useUpdateCompany() {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company', data.id] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
-      toast.success('Bedrijf succesvol bijgewerkt');
+      toast.success(t('toast.company.updated'));
     },
     onError: (error: Error) => {
-      toast.error('Fout bij bijwerken bedrijf', {
+      toast.error(t('toast.company.updateError'), {
         description: error.message,
       });
     },
@@ -94,6 +124,7 @@ export function useUpdateCompany() {
 
 export function useDeleteCompany() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -113,10 +144,10 @@ export function useDeleteCompany() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
-      toast.success('Bedrijf succesvol verwijderd');
+      toast.success(t('toast.company.deleted'));
     },
     onError: (error: Error) => {
-      toast.error('Fout bij verwijderen bedrijf', {
+      toast.error(t('toast.company.deleteError'), {
         description: error.message,
       });
     },

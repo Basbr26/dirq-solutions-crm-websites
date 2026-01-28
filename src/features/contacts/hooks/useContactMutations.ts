@@ -3,8 +3,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { ContactFormData, Contact } from '@/types/crm';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
+import { useTranslation } from 'react-i18next';
 
-// Combined hook for all contact mutations
+/**
+ * Combined Contact Mutations Hook
+ * Provides all contact mutation operations (create, update, delete) in one hook.
+ * Convenience wrapper around individual mutation hooks.
+ * 
+ * @returns Object with mutation hooks
+ * @returns createContact - Create contact mutation
+ * @returns updateContact - Update contact mutation
+ * @returns deleteContact - Delete contact mutation
+ * 
+ * @example
+ * ```tsx
+ * const { createContact, updateContact, deleteContact } = useContactMutations();
+ * 
+ * const handleCreate = (data) => {
+ *   createContact.mutate(data, {
+ *     onSuccess: () => console.log('Created!')
+ *   });
+ * };
+ * ```
+ */
 export function useContactMutations() {
   const createContact = useCreateContact();
   const updateContact = useUpdateContact();
@@ -17,8 +38,32 @@ export function useContactMutations() {
   };
 }
 
+/**
+ * Create Contact Mutation Hook
+ * Creates a new contact with automatic owner assignment.
+ * 
+ * @returns React Query mutation for creating contacts
+ * 
+ * @example
+ * ```tsx
+ * const createContact = useCreateContact();
+ * 
+ * createContact.mutate(
+ *   {
+ *     first_name: 'John',
+ *     last_name: 'Doe',
+ *     email: 'john@example.com',
+ *     company_id: 'company-123'
+ *   },
+ *   {
+ *     onSuccess: (contact) => navigate(`/contacts/${contact.id}`)
+ *   }
+ * );
+ * ```
+ */
 export function useCreateContact() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (data: ContactFormData) => {
@@ -56,8 +101,30 @@ export function useCreateContact() {
   });
 }
 
+/**
+ * Update Contact Mutation Hook
+ * Updates existing contact information.
+ * 
+ * @returns React Query mutation for updating contacts
+ * 
+ * @example
+ * ```tsx
+ * const updateContact = useUpdateContact();
+ * 
+ * updateContact.mutate(
+ *   {
+ *     id: 'contact-123',
+ *     data: { position: 'CTO', is_decision_maker: true }
+ *   },
+ *   {
+ *     onSuccess: () => toast.success('Updated')
+ *   }
+ * );
+ * ```
+ */
 export function useUpdateContact() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ContactFormData> }) => {
@@ -79,18 +146,37 @@ export function useUpdateContact() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact', data.id] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
-      toast.success('Contact succesvol bijgewerkt');
+      toast.success(t('toast.contact.updated'));
     },
     onError: (error: Error) => {
-      toast.error('Fout bij bijwerken contact', {
+      toast.error(t('toast.contact.updateError'), {
         description: error.message,
       });
     },
   });
 }
 
+/**
+ * Delete Contact Mutation Hook
+ * Permanently deletes a contact record.
+ * 
+ * @returns React Query mutation for deleting contacts
+ * 
+ * @example
+ * ```tsx
+ * const deleteContact = useDeleteContact();
+ * 
+ * deleteContact.mutate('contact-123', {
+ *   onSuccess: () => {
+ *     toast.success('Deleted');
+ *     navigate('/contacts');
+ *   }
+ * });
+ * ```
+ */
 export function useDeleteContact() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -113,11 +199,11 @@ export function useDeleteContact() {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
       haptics.success();
-      toast.success('Contact succesvol verwijderd');
+      toast.success(t('toast.contact.deleted'));
     },
     onError: (error: Error) => {
       haptics.error();
-      toast.error('Fout bij verwijderen contact', {
+      toast.error(t('toast.contact.deleteError'), {
         description: error.message,
       });
     },

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Interaction } from '../hooks/useInteractions';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -27,7 +28,7 @@ interface InteractionCardProps {
   interaction: Interaction;
 }
 
-const getTypeConfig = (type: string, t: any) => {
+const getTypeConfig = (type: string, t: (key: string) => string) => {
   const configs = {
     call: { icon: Phone, label: t('interactions.types.call'), color: 'bg-blue-500' },
     email: { icon: Mail, label: t('interactions.types.email'), color: 'bg-purple-500' },
@@ -39,7 +40,7 @@ const getTypeConfig = (type: string, t: any) => {
   return configs[type as keyof typeof configs] || configs.note;
 };
 
-const getTaskStatusConfig = (status: string, t: any) => {
+const getTaskStatusConfig = (status: string, t: (key: string) => string) => {
   const configs = {
     pending: { label: t('interactions.taskStatus.pending'), color: 'bg-yellow-500' },
     completed: { label: t('interactions.taskStatus.completed'), color: 'bg-green-500' },
@@ -48,7 +49,7 @@ const getTaskStatusConfig = (status: string, t: any) => {
   return configs[status as keyof typeof configs];
 };
 
-export function InteractionCard({ interaction }: InteractionCardProps) {
+export const InteractionCard = memo(function InteractionCard({ interaction }: InteractionCardProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [showDetail, setShowDetail] = useState(false);
@@ -191,4 +192,6 @@ export function InteractionCard({ interaction }: InteractionCardProps) {
       />
     </>
   );
-}
+});
+
+InteractionCard.displayName = 'InteractionCard';

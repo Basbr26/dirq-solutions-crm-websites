@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -139,7 +140,7 @@ export function CaseDocumentUpload({
           if (inviteError) throw inviteError;
 
           // TODO: Verstuur email met verificatiecode
-          console.log(`Verificatiecode voor ${employee.email}: ${verificationCode}`);
+          logger.info('Verification code generated for employee', { email: employee.email, verificationCode });
         }
       }
 
@@ -175,7 +176,7 @@ export function CaseDocumentUpload({
         onUploadComplete?.();
       }, 2000);
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Failed to upload case document', { documentType, error });
       toast.error('Upload mislukt');
     } finally {
       setUploading(false);

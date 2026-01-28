@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { logger } from '@/lib/logger';
 import { Bell, Check, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,7 +51,7 @@ export function NotificationBell() {
         .limit(20);
 
       if (error) {
-        console.error("Error fetching notifications:", error);
+        logger.error('Failed to fetch notifications', { userId: user.id, error });
         return;
       }
 

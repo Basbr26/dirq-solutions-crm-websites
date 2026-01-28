@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { logger } from '@/lib/logger';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import {
@@ -81,12 +82,12 @@ export function DepartmentDialog({
 
   const handleSubmit = async (data: DepartmentFormValues) => {
     try {
-      console.log('📝 Submitting department data:', data);
+      logger.debug('Submitting department data', { departmentName: data.name });
       await onSubmit(data);
       form.reset();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('❌ Error submitting department:', error);
+      logger.error('Failed to submit department', { departmentName: data.name, error });
       // Error will be handled by parent component
       throw error;
     }

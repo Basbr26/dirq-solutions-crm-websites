@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 // CRM Roles: ADMIN (full access), SALES (sales team), MANAGER (sales managers), SUPPORT (support team)
 export type AppRole = 'ADMIN' | 'SALES' | 'MANAGER' | 'SUPPORT' | 'super_admin';
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Handle auth errors (expired/invalid tokens)
       if (event === 'TOKEN_REFRESHED' && !session) {
-        console.warn('Token refresh failed, clearing session');
+        logger.warn('Token refresh failed, clearing session');
         localStorage.clear();
         setSession(null);
         setUser(null);
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       if (error) {
-        console.error('Session error, clearing tokens:', error);
+        logger.error('Session initialization error, clearing tokens', { error });
         localStorage.clear();
         setSession(null);
         setUser(null);
@@ -110,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     }).catch((error) => {
-      console.error('Fatal auth error, clearing all data:', error);
+      logger.error('Fatal auth error, clearing all data', { error });
       localStorage.clear();
       setSession(null);
       setUser(null);
@@ -131,10 +132,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (profileError) {
-        console.error('Error fetching profile/role:', profileError);
+        logger.error('Failed to fetch user profile/role', { userId, error: profileError });
         // If profile fetch fails due to auth error, sign out
         if (profileError.message?.includes('JWT') || profileError.message?.includes('token') || profileError.code === '42P17') {
-          console.error('Auth error or RLS recursion detected, signing out:', profileError);
+          logger.error('Auth error or RLS recursion detected, signing out', { userId, error: profileError });
           await signOut();
           return;
         }
@@ -165,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const mappedRole = roleMap[profileData?.role] || 'SUPPORT';
       setRole(mappedRole as AppRole);
     } catch (error) {
-      console.error('Error fetching profile/role:', error);
+      logger.error('Exception while fetching profile/role', { userId, error });
       setProfile(null);
       setRole(null);
     } finally {
@@ -175,7 +176,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 Attempting sign in for:', email);
+      logger.info('Attempting user sign in', { email });
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -183,19 +184,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       
       if (error) {
-        console.error('❌ Sign in error:', error.message);
-        console.error('Error details:', {
+        logger.error('Sign in failed', {
+          email,
           status: error.status,
           code: error.code,
-          name: error.name
+          name: error.name,
+          message: error.message
         });
       } else {
-        console.log('✅ Sign in successful:', data.user?.email);
+        logger.info('User signed in successfully', { email: data.user?.email, userId: data.user?.id });
       }
       
       return { error };
     } catch (error) {
-      console.error('❌ Sign in exception:', error);
+      logger.error('Sign in exception', { email, error });
       return { error: error as Error };
     }
   };
@@ -225,7 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.error('Error during sign out:', error);
+      logger.error('Sign out failed', { error });
     } finally {
       // Clear only auth-related items from localStorage
       const authKeys = ['supabase.auth.token', 'sb-', 'supabase-auth-token'];

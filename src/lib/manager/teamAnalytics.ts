@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
 
 export interface TeamPerformanceMetrics {
   memberId: string;
@@ -100,7 +101,7 @@ export class TeamAnalyticsService {
         criticalAlerts: alerts,
       };
     } catch (error) {
-      console.error('Failed to get team summary:', error);
+      logger.error('Failed to get team summary', { managerId, error });
       return {
         totalMembers: 0,
         availableToday: 0,
@@ -213,7 +214,7 @@ export class TeamAnalyticsService {
         },
       };
     } catch (error) {
-      console.error('Failed to get member metrics for:', memberId, error);
+      logger.error('Failed to get member metrics', { memberId, error });
       return {
         memberId,
         memberName: 'Unknown',

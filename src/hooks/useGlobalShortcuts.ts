@@ -8,6 +8,35 @@ interface UseGlobalShortcutsOptions {
   onNewItem?: () => void;
 }
 
+/**
+ * Global keyboard shortcuts for CRM navigation
+ * Provides vim-style navigation (g + key) and action shortcuts.
+ * 
+ * Shortcuts:
+ * - `g,h` - Go to Dashboard
+ * - `g,c` - Go to Companies
+ * - `g,n` - Go to Contacts
+ * - `g,p` - Go to Projects
+ * - `g,q` - Go to Quotes
+ * - `g,a` - Go to Calendar
+ * - `/` - Focus search
+ * - `shift+?` - Show keyboard shortcuts help
+ * - `n` - Create new item (context-dependent)
+ * 
+ * @param options - Callback handlers for action shortcuts
+ * @param options.onShowHelp - Handler for shift+? (show help dialog)
+ * @param options.onOpenSearch - Handler for / (focus search input)
+ * @param options.onNewItem - Handler for n (create new item)
+ * 
+ * @example
+ * ```tsx
+ * useGlobalShortcuts({
+ *   onShowHelp: () => setHelpDialogOpen(true),
+ *   onOpenSearch: () => searchInputRef.current?.focus(),
+ *   onNewItem: () => setCreateDialogOpen(true)
+ * });
+ * ```
+ */
 export function useGlobalShortcuts(options: UseGlobalShortcutsOptions = {}) {
   const navigate = useNavigate();
 

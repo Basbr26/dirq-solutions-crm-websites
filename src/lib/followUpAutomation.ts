@@ -5,6 +5,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { addDays } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 interface CreateFollowUpTaskParams {
   interactionId: string;
@@ -35,7 +36,7 @@ export async function createPhysicalMailFollowUp({
       .single();
 
     if (fetchError) {
-      console.error('Error fetching original interaction:', fetchError);
+      logger.error('Failed to fetch original interaction', { interactionId, error: fetchError });
       return { success: false, error: fetchError };
     }
 
@@ -60,14 +61,14 @@ export async function createPhysicalMailFollowUp({
       .single();
 
     if (createError) {
-      console.error('Error creating follow-up task:', createError);
+      logger.error('Failed to create follow-up task', { interactionId, error: createError });
       return { success: false, error: createError };
     }
 
-    console.log('✅ Follow-up task created:', followUpTask);
+    logger.info('Follow-up task created successfully', { taskId: followUpTask?.id, companyId });
     return { success: true, data: followUpTask };
   } catch (error) {
-    console.error('Unexpected error in createPhysicalMailFollowUp:', error);
+    logger.error('Unexpected error creating follow-up task', { interactionId, error });
     return { success: false, error };
   }
 }
@@ -113,12 +114,12 @@ export async function processOverdueFollowUps() {
       .lte('created_at', fourDaysAgo.toISOString());
 
     if (error) {
-      console.error('Error fetching physical mail interactions:', error);
+      logger.error('Failed to fetch physical mail interactions', { error });
       return { success: false, error };
     }
 
     if (!physicalMailInteractions || physicalMailInteractions.length === 0) {
-      console.log('No physical mail interactions requiring follow-ups');
+      logger.info('No physical mail interactions requiring follow-ups');
       return { success: true, processed: 0 };
     }
 
@@ -137,7 +138,7 @@ export async function processOverdueFollowUps() {
         .single();
 
       if (existingFollowUp) {
-        console.log(`Follow-up already exists for interaction ${interaction.id}`);
+        logger.debug('Follow-up already exists', { interactionId: interaction.id });
         continue;
       }
 
@@ -156,13 +157,15 @@ export async function processOverdueFollowUps() {
       }
     }
 
-    console.log(`✅ Processed ${physicalMailInteractions.length} physical mail interactions`);
-    console.log(`   Created: ${created} follow-ups`);
-    console.log(`   Failed: ${failed} follow-ups`);
+    logger.info('Processed physical mail interactions', {
+      total: physicalMailInteractions.length,
+      created,
+      failed
+    });
 
     return { success: true, processed: physicalMailInteractions.length, created, failed };
   } catch (error) {
-    console.error('Unexpected error in processOverdueFollowUps:', error);
+    logger.error('Unexpected error processing overdue follow-ups', { error });
     return { success: false, error };
   }
 }

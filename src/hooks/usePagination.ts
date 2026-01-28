@@ -19,6 +19,37 @@ interface UsePaginationReturn {
   getRange: (totalCount: number) => { from: number; to: number };
 }
 
+/**
+ * Pagination Hook
+ * Manages pagination state for lists with page number, page size, and navigation controls.
+ * 
+ * @param options - Configuration options
+ * @param options.initialPage - Starting page number (default: 1)
+ * @param options.initialPageSize - Number of items per page (default: 25)
+ * @param options.pageSizeOptions - Available page sizes for user selection (default: [10, 25, 50, 100])
+ * @returns Pagination state and controls
+ * 
+ * @example
+ * ```tsx
+ * const pagination = usePagination({ initialPageSize: 50 });
+ * 
+ * // Use in query
+ * const { data } = useQuery(['items', pagination.page, pagination.pageSize], 
+ *   () => fetchItems({ offset: pagination.offset, limit: pagination.pageSize })
+ * );
+ * 
+ * // Navigation controls
+ * <button onClick={pagination.prevPage}>Previous</button>
+ * <button onClick={pagination.nextPage}>Next</button>
+ * <select onChange={(e) => pagination.setPageSize(Number(e.target.value))}>
+ *   {pagination.pageSizeOptions.map(size => <option value={size}>{size}</option>)}
+ * </select>
+ * 
+ * // Display range
+ * const { from, to } = pagination.getRange(totalCount);
+ * // Shows "Showing 26-50 of 100"
+ * ```
+ */
 export function usePagination({
   initialPage = 1,
   initialPageSize = 25,

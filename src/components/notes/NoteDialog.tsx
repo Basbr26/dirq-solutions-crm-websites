@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { logger } from '@/lib/logger';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Pin } from 'lucide-react';
@@ -119,7 +120,7 @@ export function NoteDialog({ open, onOpenChange, employeeId, note }: NoteDialogP
       }
       onOpenChange(false);
     } catch (error) {
-      console.error('Submit note error:', error);
+      logger.error('Failed to submit note', { employeeId, error });
     }
   };
 

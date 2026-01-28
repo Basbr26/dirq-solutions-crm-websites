@@ -6,6 +6,42 @@ interface UsePullToRefreshOptions {
   maxPull?: number;
 }
 
+/**
+ * Pull-to-Refresh Hook
+ * Implements mobile-style pull-to-refresh gesture for touch devices.
+ * Triggers callback when user pulls down past threshold.
+ * 
+ * @param options - Configuration options
+ * @param options.onRefresh - Async function to call when refresh is triggered
+ * @param options.threshold - Pull distance required to trigger refresh in pixels (default: 80)
+ * @param options.maxPull - Maximum pull distance in pixels (default: 120)
+ * @returns Ref and state for implementing pull-to-refresh UI
+ * 
+ * @example
+ * ```tsx
+ * const { 
+ *   containerRef, 
+ *   pullDistance, 
+ *   isRefreshing 
+ * } = usePullToRefresh({
+ *   onRefresh: async () => {
+ *     await refetch();
+ *   },
+ *   threshold: 100
+ * });
+ * 
+ * return (
+ *   <div ref={containerRef}>
+ *     {pullDistance > 0 && (
+ *       <div style={{ height: pullDistance }}>
+ *         {isRefreshing ? 'Refreshing...' : 'Pull to refresh'}
+ *       </div>
+ *     )}
+ *     {/* Content */}
+ *   </div>
+ * );
+ * ```
+ */
 export function usePullToRefresh({
   onRefresh,
   threshold = 80,

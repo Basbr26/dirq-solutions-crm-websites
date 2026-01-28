@@ -61,6 +61,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 import { notifyDealClosed } from '@/lib/crmNotifications';
 import confetti from 'canvas-confetti';
 
@@ -136,7 +137,7 @@ export function useConvertLead() {
       triggerConfetti();
     },
     onError: (error: Error) => {
-      console.error('[useConvertLead] Conversion error:', error);
+      logger.error('Lead conversion failed', { error });
       toast.error('Fout bij conversie', {
         description: error.message,
       });

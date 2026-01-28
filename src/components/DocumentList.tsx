@@ -1,4 +1,5 @@
 import { Document } from '@/types/sickLeave';
+import { logger } from '@/lib/logger';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export function DocumentList({ documents, onDelete }: DocumentListProps) {
       window.open(url, '_blank');
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (error) {
-      console.error('Error viewing document:', error);
+      logger.error('Failed to view document', { documentId: doc.id, error });
       toast.error('Kon document niet openen');
     }
   };
@@ -89,7 +90,7 @@ export function DocumentList({ documents, onDelete }: DocumentListProps) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading document:', error);
+      logger.error('Failed to download document', { documentId: doc.id, error });
       toast.error('Kon document niet downloaden');
     }
   };

@@ -4,6 +4,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
+import { logger } from '@/lib/logger';
 import { Upload, FileText, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -172,7 +173,7 @@ export function SmartDocumentUpload({
 
         onUploadComplete?.(documentData.id);
       } catch (error) {
-        console.error('File processing error:', error);
+        logger.error('Failed to process uploaded file', { fileName: file.name, employeeId, error });
         updateFileStatus(uploadId, {
           status: 'error',
           progress: 0,

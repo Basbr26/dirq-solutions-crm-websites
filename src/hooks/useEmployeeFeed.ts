@@ -14,6 +14,43 @@ export interface FeedUpdate {
   read: boolean;
 }
 
+/**
+ * Employee Feed Query Hook
+ * Fetches personalized activity feed for current user including:
+ * - Leave approvals
+ * - Birthdays/anniversaries
+ * - Training opportunities
+ * - Document notifications
+ * - Team news
+ * - Certifications
+ * - Goal achievements
+ * 
+ * @returns Object with feed data and controls
+ * @returns feed - Array of feed updates sorted by timestamp (newest first)
+ * @returns isLoading - Initial loading state
+ * @returns isRefetching - Refresh loading state
+ * @returns error - Error object if query failed
+ * @returns markAsRead - Mark specific feed item as read
+ * @returns refresh - Manually trigger feed refresh
+ * 
+ * @example
+ * ```tsx
+ * const { feed, isLoading, markAsRead, refresh } = useEmployeeFeed();
+ * 
+ * return (
+ *   <div>
+ *     <Button onClick={refresh}>Refresh</Button>
+ *     {feed.map(item => (
+ *       <FeedCard 
+ *         key={item.id}
+ *         {...item}
+ *         onRead={() => markAsRead(item.id)}
+ *       />
+ *     ))}
+ *   </div>
+ * );
+ * ```
+ */
 export function useEmployeeFeed() {
   const { user } = useAuth();
 

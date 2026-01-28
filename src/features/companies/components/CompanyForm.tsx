@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Company, CompanyFormData } from '@/types/crm';
 import { getIndustryName } from '@/lib/industry-translations';
+import { logger } from '@/lib/logger';
 import {
   Dialog,
   DialogContent,
@@ -254,7 +255,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
         }
       }
     } catch (error) {
-      console.error('Error checking duplicates:', error);
+      logger.error(error, { context: 'duplicate_check', company_name: data.name });
     }
     
     onSubmit(data);

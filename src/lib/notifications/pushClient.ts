@@ -3,6 +3,8 @@
  * Handles web push notifications and service worker registration
  */
 
+import { logger } from '@/lib/logger';
+
 interface PushSubscriptionJSON {
   endpoint: string;
   keys: {
@@ -26,7 +28,7 @@ export class PushNotificationClient {
    */
   static async init(): Promise<boolean> {
     if (!this.isSupported()) {
-      console.log('Push notifications not supported');
+      logger.info('Push notifications not supported in this browser');
       return false;
     }
 
@@ -36,13 +38,13 @@ export class PushNotificationClient {
         scope: '/'
       });
 
-      console.log('Service worker registered:', this.serviceWorkerRegistration);
+      logger.info('Service worker registered successfully', { scope: this.serviceWorkerRegistration.scope });
 
       // Request permission
       if (Notification.permission === 'default') {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-          console.log('Notification permission denied');
+          logger.info('Notification permission denied by user');
           return false;
         }
       }
@@ -55,7 +57,7 @@ export class PushNotificationClient {
 
       return true;
     } catch (error) {
-      console.error('Error initializing push notifications:', error);
+      logger.error('Failed to initialize push notifications', { error });
       return false;
     }
   }
@@ -71,7 +73,7 @@ export class PushNotificationClient {
 
       const vapidPublicKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {
-        console.error('VAPID public key not configured');
+        logger.error('VAPID public key not configured in environment variables');
         return false;
       }
 
@@ -83,10 +85,10 @@ export class PushNotificationClient {
       // Send subscription to backend
       await this.sendSubscriptionToBackend(subscription);
 
-      console.log('Push subscription created:', subscription);
+      logger.info('Push subscription created successfully');
       return true;
     } catch (error) {
-      console.error('Error subscribing to push:', error);
+      logger.error('Failed to subscribe to push notifications', { error });
       return false;
     }
   }
@@ -103,12 +105,12 @@ export class PushNotificationClient {
       const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
       if (subscription) {
         await subscription.unsubscribe();
-        console.log('Push subscription removed');
+        logger.info('Push subscription removed successfully');
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Error unsubscribing from push:', error);
+      logger.error('Failed to unsubscribe from push notifications', { error });
       return false;
     }
   }
@@ -125,7 +127,7 @@ export class PushNotificationClient {
       const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
       return !!subscription;
     } catch (error) {
-      console.error('Error checking push subscription:', error);
+      logger.error('Failed to check push subscription status', { error });
       return false;
     }
   }
@@ -149,7 +151,7 @@ export class PushNotificationClient {
 
       return response.ok;
     } catch (error) {
-      console.error('Error sending subscription to backend:', error);
+      logger.error('Failed to send push subscription to backend', { error });
       return false;
     }
   }
@@ -223,7 +225,7 @@ export class PushNotificationClient {
       const subscription = await this.serviceWorkerRegistration.pushManager.getSubscription();
       return subscription ? (subscription.toJSON() as any) : null;
     } catch (error) {
-      console.error('Error getting subscription:', error);
+      logger.error('Failed to get push subscription', { error });
       return null;
     }
   }
@@ -255,15 +257,15 @@ export class PushNotificationClient {
 
       // Check if Background Sync API is available
       if (!('sync' in this.serviceWorkerRegistration)) {
-        console.log('Background Sync API not available');
+        logger.info('Background Sync API not available in this browser');
         return false;
       }
 
       await (this.serviceWorkerRegistration as any).sync.register('sync-notifications');
-      console.log('Background sync registered');
+      logger.info('Background sync registered successfully');
       return true;
     } catch (error) {
-      console.error('Error enabling background sync:', error);
+      logger.error('Failed to enable background sync', { error });
       return false;
     }
   }
@@ -279,7 +281,7 @@ export class PushNotificationClient {
 
       // Check if Periodic Background Sync API is available
       if (!('periodicSync' in this.serviceWorkerRegistration)) {
-        console.log('Periodic Background Sync API not available');
+        logger.info('Periodic Background Sync API not available in this browser');
         return false;
       }
 
@@ -288,10 +290,10 @@ export class PushNotificationClient {
         minInterval: 12 * 60 * 60 * 1000 // 12 hours
       });
 
-      console.log('Periodic sync registered');
+      logger.info('Periodic sync registered successfully', { interval: '12 hours' });
       return true;
     } catch (error) {
-      console.error('Error enabling periodic sync:', error);
+      logger.error('Failed to enable periodic sync', { error });
       return false;
     }
   }
@@ -311,7 +313,7 @@ export class PushNotificationClient {
       }
       return success;
     } catch (error) {
-      console.error('Error unregistering service worker:', error);
+      logger.error('Failed to unregister service worker', { error });
       return false;
     }
   }
