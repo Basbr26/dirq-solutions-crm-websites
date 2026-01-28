@@ -26,21 +26,21 @@ Complete technical architecture voor Dirq Solutions CRM applicatie.
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | **React** | 18.3.1 | UI library met hooks |
-| **TypeScript** | 5.7.2 | Type-safe development |
-| **Vite** | 6.0.11 | Build tool & dev server |
+| **TypeScript** | 5.8.3 | Type-safe development |
+| **Vite** | 5.4.19 | Build tool & dev server |
 | **TailwindCSS** | 3.4.17 | Utility-first styling |
 | **Shadcn/ui** | Latest | Component library |
-| **React Query** | 5.64.2 | Server state management |
-| **React Router** | 7.1.3 | Client-side routing |
-| **React Hook Form** | 7.54.2 | Form management |
-| **Zod** | 3.24.1 | Schema validation |
+| **React Query** | 5.83.0 | Server state management |
+| **React Router** | 6.30.1 | Client-side routing |
+| **React Hook Form** | 7.61.1 | Form management |
+| **Zod** | 3.25.76 | Schema validation |
 
 ### Backend & Services
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | **Supabase** | Latest | PostgreSQL database + Auth + RLS |
-| **Supabase JS** | 2.48.1 | Database client |
+| **Supabase JS** | 2.81.1 | Database client |
 | **PostgreSQL** | 15+ | Relational database |
 | **PostgREST** | - | Auto-generated REST API |
 
@@ -49,37 +49,41 @@ Complete technical architecture voor Dirq Solutions CRM applicatie.
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | **Vitest** | 4.0.17 | Unit & integration testing |
-| **React Testing Library** | 16.1.0 | Component testing |
-| **ESLint** | 9.19.0 | Code linting |
+| **React Testing Library** | 16.3.1 | Component testing |
+| **ESLint** | 9.32.0 | Code linting |
 | **Prettier** | - | Code formatting |
 
 ### Internationalization
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| **react-i18next** | 15.2.0 | i18n framework |
-| **i18next** | 24.2.0 | Translation engine |
+| **react-i18next** | 16.5.3 | i18n framework |
+| **i18next** | 25.7.4 | Translation engine |
 
 ---
+
+## 📁 Project Structure
 
 ## 📁 Project Structure
 
 ```
 dirq-solutions-crmwebsite/
 ├── public/                          # Static assets
-│   ├── images/
-│   └── lovable-uploads/
 │
 ├── src/
 │   ├── components/                  # Shared components
 │   │   ├── ui/                      # Shadcn/ui components
-│   │   ├── layout/                  # Layout components (Header, Sidebar)
-│   │   └── common/                  # Shared business components
+│   │   ├── layout/                  # AppLayout, Sidebar, Header
+│   │   ├── calendar/                # Calendar & Google sync
+│   │   ├── documents/               # Document handling
+│   │   ├── settings/                # Settings panels
+│   │   └── ai/                      # AI integrations
 │   │
 │   ├── features/                    # Feature modules (domain-driven)
 │   │   ├── companies/               # Companies CRUD
 │   │   │   ├── components/
 │   │   │   ├── hooks/
+│   │   │   ├── __tests__/
 │   │   │   ├── CompaniesPage.tsx
 │   │   │   └── README.md
 │   │   │
@@ -87,81 +91,69 @@ dirq-solutions-crmwebsite/
 │   │   ├── projects/                # Pipeline management
 │   │   ├── quotes/                  # Quote generation & signing
 │   │   ├── interactions/            # Communication tracking
-│   │   ├── hr/                      # HR module (employees, leave, etc.)
-│   │   └── finance/                 # Finance module (packages, billing)
+│   │   ├── dashboard/               # Dashboard components
+│   │   ├── leads/                   # Lead management
+│   │   └── pipeline/                # Kanban board
 │   │
-│   ├── hooks/                       # Global hooks
-│   │   ├── useAuth.tsx              # Authentication
+│   ├── hooks/                       # Global hooks (~25 hooks)
+│   │   ├── useAuth.tsx              # Authentication context
 │   │   ├── useProfile.ts            # User profile
-│   │   ├── usePagination.ts         # Pagination logic
-│   │   ├── useDebounce.ts           # Input debouncing
-│   │   ├── useMediaQuery.tsx        # Responsive breakpoints
+│   │   ├── usePagination.ts         # Server-side pagination
 │   │   ├── useGlobalShortcuts.ts    # Keyboard shortcuts
-│   │   ├── useOfflineQueue.ts       # IndexedDB offline support
-│   │   └── ...                      # 40+ utility hooks
+│   │   ├── usePullToRefresh.tsx     # Mobile pull-to-refresh
+│   │   └── ...
 │   │
-│   ├── integrations/                # External integrations
-│   │   ├── supabase/                # Supabase client & types
-│   │   │   ├── client.ts            # Configured client
-│   │   │   └── types.ts             # Database types (auto-generated)
-│   │   │
-│   │   ├── kvk/                     # KVK API (Dutch Chamber of Commerce)
-│   │   ├── google-calendar/         # Google Calendar sync
-│   │   └── openai/                  # AI features
+│   ├── integrations/
+│   │   └── supabase/                # Supabase client & types
+│   │       ├── client.ts            # Configured client
+│   │       └── types.ts             # Database types (auto-generated)
 │   │
-│   ├── lib/                         # Utility libraries
+│   ├── lib/                         # Utilities & helpers
 │   │   ├── logger.ts                # Structured logging
-│   │   ├── config.ts                # Centralized config
-│   │   ├── utils.ts                 # Helper functions
-│   │   └── pdf.ts                   # PDF generation
+│   │   ├── googleCalendar.ts        # Google Calendar API
+│   │   ├── crmNotifications.ts      # Notification helpers
+│   │   ├── financialCalculations.ts # MRR/ARR calculations
+│   │   ├── i18n.ts                  # i18n setup
+│   │   └── locales/                 # Translation files
+│   │       ├── nl/                  # Dutch translations
+│   │       └── en/                  # English translations
 │   │
-│   ├── locales/                     # i18n translations
-│   │   ├── nl/                      # Dutch (primary)
-│   │   │   ├── common.json
-│   │   │   ├── companies.json
-│   │   │   ├── contacts.json
-│   │   │   └── ...
-│   │   └── en/                      # English (secondary)
+│   ├── config/                      # Configuration
+│   │   ├── pricing.ts               # Package pricing
+│   │   ├── pipeline.ts              # Pipeline stages
+│   │   └── ...
 │   │
 │   ├── pages/                       # Route pages
-│   │   ├── Index.tsx                # Dashboard
-│   │   ├── Login.tsx                # Authentication
+│   │   ├── DashboardCRM.tsx         # Main dashboard
+│   │   ├── CalendarPage.tsx         # Calendar
+│   │   ├── PublicSignQuotePage.tsx  # Public quote signing
 │   │   └── ...
 │   │
 │   ├── types/                       # TypeScript types
-│   │   ├── database.types.ts        # Supabase generated types
-│   │   └── custom.types.ts          # Custom types
-│   │
-│   ├── App.tsx                      # App root with providers
-│   ├── main.tsx                     # Entry point
-│   └── i18n.ts                      # i18n configuration
-│
-├── supabase/                        # Supabase configuration
-│   ├── migrations/                  # Database migrations
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_rls_policies.sql
+│   │   ├── crm.ts                   # Main CRM types
+│   │   ├── projects.ts              # Project types
+│   │   ├── quotes.ts                # Quote types
 │   │   └── ...
 │   │
-│   ├── functions/                   # Edge functions
-│   │   ├── openai-chat/
-│   │   └── google-oauth/
-│   │
-│   └── config.toml                  # Supabase config
+│   ├── App.tsx                      # App root with routes
+│   └── main.tsx                     # Entry point
+│
+├── supabase/
+│   ├── migrations/                  # Database migrations
+│   └── functions/                   # Edge functions
+│       ├── google-oauth-exchange/   # OAuth token exchange
+│       ├── google-calendar-refresh/ # Token refresh
+│       ├── send-sign-email/         # Sign link emails
+│       └── ingest-prospect/         # API gateway
 │
 ├── docs/                            # Documentation
 │   ├── ARCHITECTURE.md              # This file
-│   ├── API_KEYS_PRIVATE.md          # API keys guide
-│   ├── GOOGLE_CALENDAR_SETUP.md     # Integration guides
-│   └── ...
+│   └── N8N_WORKFLOWS.md             # Automation workflows
 │
-├── tests/                           # Test files
-│   ├── unit/
-│   ├── integration/
-│   └── e2e/
+├── scripts/
+│   └── sql/                         # SQL scripts
 │
-├── .github/                         # GitHub configuration
-│   └── copilot-instructions.md      # AI coding guidelines
-│
+├── CLAUDE.md                        # AI assistant context
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
@@ -1053,6 +1045,6 @@ CREATE TABLE audit_log (
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 28 Januari 2026  
+**Document Version:** 1.1  
+**Last Updated:** 29 Januari 2026  
 **Maintained By:** Development Team

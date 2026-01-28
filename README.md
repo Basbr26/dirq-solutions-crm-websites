@@ -79,7 +79,7 @@
 [![Completion](https://img.shields.io/badge/completion-100%25-success)]()
 [![Code Quality](https://img.shields.io/badge/quality-10/10-gold)]()
 [![Tests](https://img.shields.io/badge/tests-316/316%20passing-success)]()
-[![TypeScript](https://img.shields.io/badge/typescript-5.7-blue)]()
+[![TypeScript](https://img.shields.io/badge/typescript-5.8-blue)]()
 [![React](https://img.shields.io/badge/react-18.3-blue)]()
 [![Mobile-First](https://img.shields.io/badge/mobile--first-ready-green)]()
 [![Enterprise](https://img.shields.io/badge/architecture-enterprise--grade-purple)]()
@@ -242,8 +242,8 @@ Default super admin account:
 ## 🏗️ Tech Stack
 
 ### Frontend
-- **Framework:** React 18 + TypeScript 5.7
-- **Build Tool:** Vite 6
+- **Framework:** React 18.3 + TypeScript 5.8
+- **Build Tool:** Vite 5.4
 - **UI Library:** shadcn/ui + Tailwind CSS
 - **State:** React Query (TanStack Query v5)
 - **Forms:** React Hook Form + Zod
