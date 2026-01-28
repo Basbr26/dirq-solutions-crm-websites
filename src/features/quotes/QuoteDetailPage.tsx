@@ -561,7 +561,7 @@ export default function QuoteDetailPage() {
           status: 'accepted',
           // Invalidate sign token to prevent replay attacks
           sign_token: null,
-          sign_token_expires_at: null,
+          sign_link_expires_at: null,
         })
         .eq('id', quote.id);
 
