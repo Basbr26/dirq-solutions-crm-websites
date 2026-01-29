@@ -1121,6 +1121,17 @@
     "internalNotesDescription": "Deze notities zijn alleen intern zichtbaar",
     "pasteBusinessData": "Plak hier de bedrijfsgegevens van KVK, Drimble, of andere bron..."
   },
+  "chat": {
+    "title": "CRM Assistent",
+    "subtitle": "Powered by Gemini AI",
+    "openChat": "Open AI Chat",
+    "newSession": "Nieuwe conversatie",
+    "placeholder": "Typ je vraag...",
+    "welcome": "Hallo! Hoe kan ik je helpen?",
+    "examples": "Vraag me over klanten, offertes, of projecten",
+    "errorSending": "Bericht versturen mislukt",
+    "shortcut": "om te openen"
+  },
   "toast": {
     "success": {
       "created": "{{entity}} aangemaakt",

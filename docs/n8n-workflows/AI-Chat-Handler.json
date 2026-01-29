@@ -1,0 +1,189 @@
+{
+  "name": "AI Chat Handler - CRM Assistent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Chat Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "webhookId": "chat-webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "Je bent de CRM Assistent voor Dirq Solutions. Je helpt gebruikers met vragen over hun CRM data.\n\n**Context:**\n- Gebruiker: {{ $json.body.user_name }}\n- Rol: {{ $json.body.user_role }}\n- Huidige pagina: {{ $json.body.context.current_page }}\n- Timestamp: {{ $json.body.timestamp }}\n\n**Richtlijnen:**\n1. Antwoord ALTIJD in het Nederlands\n2. Wees behulpzaam, professioneel en beknopt\n3. Als je iets niet weet, zeg dat eerlijk\n4. Geef concrete, actionable antwoorden\n5. Bij CRM-specifieke vragen, leg uit waar de gebruiker de info kan vinden\n6. Maximaal 200 woorden per antwoord\n\n**Je kunt helpen met:**\n- Uitleg over CRM functies\n- Tips voor sales en lead management\n- Uitleg over offertes en projecten\n- Algemene vragen over het systeem",
+          "maxTokensToSample": 500,
+          "temperature": 0.7
+        }
+      },
+      "id": "gemini-chat",
+      "name": "Gemini Chat",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [500, 300],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "GEMINI_CREDENTIAL_ID",
+          "name": "Google Gemini API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}"
+      },
+      "id": "basic-chain",
+      "name": "AI Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [500, 300]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"response\": \"{{ $json.text }}\",\n  \"tokens_used\": {{ $json.metadata?.totalTokens || 0 }},\n  \"model\": \"gemini-2.5-flash\",\n  \"session_id\": \"{{ $('Chat Webhook').item.json.body.session_id }}\",\n  \"success\": true\n}",
+        "options": {}
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "send-response",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"response\": \"Sorry, er ging iets mis bij het verwerken van je vraag. Probeer het later opnieuw.\",\n  \"error\": true,\n  \"success\": false\n}",
+        "options": {}
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [750, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 500,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "send-error",
+      "name": "Send Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1000, 500]
+    }
+  ],
+  "connections": {
+    "Chat Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Chain": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "dirq-solutions-crm"
+  },
+  "tags": [
+    {
+      "name": "AI",
+      "id": "ai"
+    },
+    {
+      "name": "Chat",
+      "id": "chat"
+    }
+  ]
+}

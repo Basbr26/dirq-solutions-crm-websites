@@ -4,6 +4,7 @@ import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { QuickActionSheet } from './QuickActionSheet';
 import { CommandBar } from '@/components/CommandBar';
+import { ChatWidget } from '@/components/ai/ChatWidget';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -60,6 +61,9 @@ export function AppLayout({
       
       {/* AI Command Bar - accessible via Cmd/Ctrl+K */}
       <CommandBar variant="floating" />
+
+      {/* AI Chat Widget - accessible via Cmd/Ctrl+J */}
+      <ChatWidget />
     </div>
   );
 }

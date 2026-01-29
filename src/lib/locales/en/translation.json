@@ -1055,6 +1055,17 @@
       "user": "User"
     }
   },
+  "chat": {
+    "title": "CRM Assistant",
+    "subtitle": "Powered by Gemini AI",
+    "openChat": "Open AI Chat",
+    "newSession": "New conversation",
+    "placeholder": "Type your question...",
+    "welcome": "Hello! How can I help you?",
+    "examples": "Ask me about customers, quotes, or projects",
+    "errorSending": "Failed to send message",
+    "shortcut": "to open"
+  },
   "toast": {
     "success": {
       "created": "{{entity}} created",
