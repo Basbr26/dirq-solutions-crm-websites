@@ -316,15 +316,14 @@ async function createNotification(params: {
 }) {
   try {
     await supabase.from("notifications").insert({
-      recipient_id: params.recipient_id,
+      user_id: params.recipient_id,  // Use user_id, not recipient_id
       type: params.type,
       title: params.title,
-      body: params.body,
+      message: params.body,  // Use message, not body
       priority: params.priority,
-      channels: params.channels,
       deep_link: params.deep_link,
-      actions: params.actions,
-      scheduled_send: new Date().toISOString(),
+      read_at: null,
+      is_digest: false,
     });
   } catch (error) {
     console.error("Error creating notification:", error);

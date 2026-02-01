@@ -265,11 +265,14 @@ async function executeAction(config: any, context: any, supabase: any) {
     case 'send_notification':
       const recipients = Array.isArray(resolved.user_id) ? resolved.user_id : [resolved.user_id];
       const notifications = recipients.map((userId: string) => ({
-        recipient_id: userId,
+        user_id: userId,  // Use user_id, not recipient_id
         type: resolved.type || 'info',
         title: resolved.title,
         message: resolved.message,
-        link: resolved.link || null,
+        deep_link: resolved.link || null,
+        priority: 'normal',  // Add required priority field
+        read_at: null,
+        is_digest: false,
       }));
 
       await supabase.from('notifications').insert(notifications);
