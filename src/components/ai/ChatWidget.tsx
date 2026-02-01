@@ -70,7 +70,7 @@ const quickActions = [
 ];
 
 const DEFAULT_WEBHOOK_URL = import.meta.env.VITE_N8N_CHAT_WEBHOOK_URL ||
-  'https://dirqsolutions.app.n8n.cloud/webhook/chat';
+  'https://dirqsolutions.app.n8n.cloud/webhook/af0281c2-177e-4f17-b89c-6fea1caedf83/chat';
 
 export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps) {
   const { t } = useTranslation();
