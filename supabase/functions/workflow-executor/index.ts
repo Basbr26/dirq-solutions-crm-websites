@@ -283,7 +283,7 @@ async function executeAction(config: any, context: any, supabase: any) {
           description: resolved.description,
           assigned_to: resolved.assigned_to,
           case_id: resolved.case_id,
-          priority: resolved.priority || 'medium',
+          priority: resolved.priority || 'normal',
           status: 'open',
         })
         .select()

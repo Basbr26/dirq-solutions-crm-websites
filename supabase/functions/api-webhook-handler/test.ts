@@ -149,7 +149,7 @@ Deno.test('should create company with valid payload', async () => {
       phone: '+31201234567',
       website: 'https://testcompany.com',
       status: 'prospect',
-      priority: 'medium',
+      priority: 'normal',
       tags: ['test'],
     }
   });

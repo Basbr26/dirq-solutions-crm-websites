@@ -140,7 +140,7 @@ serve(async (req) => {
         phone: payload.phone,
         address: payload.address,
         status: "prospect",
-        priority: "medium",
+        priority: "normal",
         owner_id: defaultOwnerId,
         source: payload.source,
         custom_fields: {

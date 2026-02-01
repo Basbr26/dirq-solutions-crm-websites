@@ -59,7 +59,7 @@ interface LeadPayload {
   owner_id?: string; // Sales rep to assign to
   source?: string;
   tags?: string[];
-  priority?: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'normal' | 'high';
 }
 
 interface CompanyPayload {
@@ -70,7 +70,7 @@ interface CompanyPayload {
   industry_id?: string;
   company_size?: '1-10' | '11-50' | '51-200' | '201-500' | '501+';
   status?: 'prospect' | 'active' | 'inactive' | 'churned';
-  priority?: 'low' | 'medium' | 'high';
+  priority?: 'low' | 'normal' | 'high';
   owner_id?: string;
   tags?: string[];
   notes?: string;
@@ -331,7 +331,7 @@ async function handleCreateLead(
         name: data.company_name,
         email: data.contact_email,
         status: 'prospect',
-        priority: data.priority || 'medium',
+        priority: data.priority || 'normal',
         owner_id: data.owner_id || await getDefaultSalesRep(supabase),
         tags: data.tags || [],
         notes: `Created via ${source} webhook`,
@@ -472,7 +472,7 @@ async function handleCreateCompany(
       industry_id: data.industry_id,
       company_size: data.company_size,
       status: data.status || 'prospect',
-      priority: data.priority || 'medium',
+      priority: data.priority || 'normal',
       owner_id: ownerId,
       tags: data.tags || [],
       notes: data.notes || `Created via ${source} webhook`,
