@@ -3,7 +3,6 @@ import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { QuickActionSheet } from './QuickActionSheet';
-import { CommandBar } from '@/components/CommandBar';
 import { ChatWidget } from '@/components/ai/ChatWidget';
 
 interface AppLayoutProps {
@@ -58,11 +57,8 @@ export function AppLayout({
           onClose={() => setShowQuickActions(false)}
         />
       )}
-      
-      {/* AI Command Bar - accessible via Cmd/Ctrl+K */}
-      <CommandBar variant="floating" />
 
-      {/* AI Chat Widget - accessible via Cmd/Ctrl+J */}
+      {/* AI Chat Widget - For conversations and commands */}
       <ChatWidget />
     </div>
   );

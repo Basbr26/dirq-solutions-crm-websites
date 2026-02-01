@@ -195,10 +195,14 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
 
       const webhookPayload = {
         message,
-        session_id: sessionId,
+        sessionId: sessionId, // n8n Chat Memory expects camelCase
+        session_id: sessionId, // Keep for backward compatibility
         user_id: user.id,
+        userId: user.id, // n8n compatibility
         user_name: profile ? `${profile.voornaam || ''} ${profile.achternaam || ''}`.trim() : 'Gebruiker',
+        userName: profile ? `${profile.voornaam || ''} ${profile.achternaam || ''}`.trim() : 'Gebruiker',
         user_role: profile?.role || 'SALES',
+        userRole: profile?.role || 'SALES',
         timestamp: new Date().toISOString(),
         context: {
           current_page: window.location.pathname,
