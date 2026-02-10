@@ -43,6 +43,8 @@ import {
   Users,
   TrendingUp,
   X,
+  Mic,
+  MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -82,6 +84,7 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -120,7 +123,7 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
         .from('chat_sessions')
         .insert({
           user_id: user.id,
-          title: 'CRM Assistent',
+          title: 'Dirq',
         })
         .select('id')
         .single();
@@ -288,7 +291,7 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
       .from('chat_sessions')
       .insert({
         user_id: user.id,
-        title: 'CRM Assistent',
+        title: 'Dirq',
       })
       .select('id')
       .single();
@@ -345,10 +348,24 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
 
   // Focus textarea when opening
   useEffect(() => {
-    if (open && textareaRef.current) {
+    if (open && textareaRef.current && !isVoiceMode) {
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  }, [open]);
+  }, [open, isVoiceMode]);
+
+  // Load ElevenLabs script when voice mode is activated
+  useEffect(() => {
+    if (isVoiceMode) {
+      const existingScript = document.querySelector('script[src*="elevenlabs.io/convai-widget"]');
+      if (!existingScript) {
+        const script = document.createElement('script');
+        script.src = 'https://elevenlabs.io/convai-widget/index.js';
+        script.async = true;
+        script.type = 'text/javascript';
+        document.body.appendChild(script);
+      }
+    }
+  }, [isVoiceMode]);
 
   const messages = messagesQuery.data || [];
   const isLoading = sessionQuery.isLoading || messagesQuery.isLoading;
@@ -363,28 +380,22 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
         className="fixed z-40"
         style={{
           right: '1.5rem',
-          bottom: 'calc(6rem + 4rem + env(safe-area-inset-bottom, 0px))',
+          bottom: '1.5rem',
         }}
       >
         <Button
           onClick={() => setOpen(true)}
           className={cn(
-            "h-14 w-14 rounded-full shadow-xl",
-            "bg-gradient-to-br from-[#06BDC7] via-[#06BDC7] to-[#0891B2]",
-            "hover:shadow-2xl hover:shadow-[#06BDC7]/25",
-            "transition-all duration-300 hover:scale-110",
-            "border-2 border-white/20"
+            "h-12 w-12 rounded-full shadow-lg",
+            "bg-[#06BDC7] hover:bg-[#05a8b1]",
+            "hover:shadow-xl hover:shadow-[#06BDC7]/20",
+            "transition-all duration-200 hover:scale-105",
+            "border border-white/10"
           )}
-          aria-label={t('chat.openChat', 'Open AI Chat')}
+          aria-label={t('chat.openChat', 'Open Dirq')}
         >
-          <Sparkles className="h-6 w-6 text-white" />
+          <MessageCircle className="h-5 w-5 text-white" />
         </Button>
-
-        {/* Pulse animation */}
-        <span className="absolute -top-1 -right-1 flex h-4 w-4">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#06BDC7] opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-4 w-4 bg-[#06BDC7]"></span>
-        </span>
       </motion.div>
 
       {/* Chat Sheet */}
@@ -402,25 +413,40 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#06BDC7] to-[#0891B2] flex items-center justify-center shadow-lg">
-                    <Sparkles className="h-5 w-5 text-white" />
+                  <div className="h-10 w-10 rounded-xl bg-[#06BDC7] flex items-center justify-center shadow-md">
+                    <span className="text-white font-bold text-lg">D</span>
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-background" />
                 </div>
                 <div>
                   <SheetTitle className="text-lg font-semibold flex items-center gap-2">
-                    {t('chat.title', 'CRM Assistent')}
+                    Dirq
                     <Badge variant="secondary" className="text-[10px] font-normal">
                       AI
                     </Badge>
                   </SheetTitle>
                   <p className="text-xs text-muted-foreground">
-                    {t('chat.subtitle', 'Powered by Gemini AI')} • Online
+                    {isVoiceMode ? 'Voice Assistant' : 'CRM Assistant'} • Online
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
+                {/* Voice/Text Toggle */}
+                <Button
+                  variant={isVoiceMode ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setIsVoiceMode(!isVoiceMode)}
+                  title={isVoiceMode ? t('chat.switchToText', 'Schakel naar tekst') : t('chat.switchToVoice', 'Schakel naar spraak')}
+                  className={cn(
+                    "h-9 w-9 transition-all duration-200",
+                    isVoiceMode
+                      ? "bg-gradient-to-r from-[#06BDC7] to-[#0891B2] text-white hover:opacity-90"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {isVoiceMode ? <Mic className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -465,14 +491,14 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
                   className="flex flex-col items-center py-8"
                 >
                   {/* Welcome message */}
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#06BDC7]/20 to-[#0891B2]/20 flex items-center justify-center mb-4">
-                    <Sparkles className="h-8 w-8 text-[#06BDC7]" />
+                  <div className="h-16 w-16 rounded-2xl bg-[#06BDC7]/10 flex items-center justify-center mb-4">
+                    <span className="text-[#06BDC7] font-bold text-3xl">D</span>
                   </div>
                   <h3 className="text-lg font-semibold mb-2">
-                    {t('chat.welcome', 'Hallo! Hoe kan ik je helpen?')}
+                    Hoi! Ik ben Dirq
                   </h3>
                   <p className="text-sm text-muted-foreground text-center mb-6 max-w-sm">
-                    Ik ben je AI-assistent voor het CRM. Stel me vragen over klanten, offertes, projecten of vraag om hulp.
+                    Je persoonlijke CRM-assistent. Vraag me over klanten, offertes, projecten of pipeline.
                   </p>
 
                   {/* Quick Actions */}
@@ -530,8 +556,8 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
                     exit={{ opacity: 0, y: -10 }}
                     className="flex gap-3"
                   >
-                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#06BDC7]/20 to-[#0891B2]/20 flex items-center justify-center">
-                      <Sparkles className="h-4 w-4 text-[#06BDC7]" />
+                    <div className="h-9 w-9 rounded-xl bg-[#06BDC7]/10 flex items-center justify-center">
+                      <span className="text-[#06BDC7] font-bold text-sm">D</span>
                     </div>
                     <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3 border border-border/50">
                       <div className="flex gap-1.5">
@@ -548,43 +574,78 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
 
           {/* Input Area */}
           <div className="px-4 py-4 border-t bg-background/80 backdrop-blur-sm">
-            <div className="flex gap-2 items-end">
-              <div className="flex-1 relative">
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={t('chat.placeholder', 'Typ je vraag...')}
-                  disabled={sendMessageMutation.isPending || isLoading}
-                  className={cn(
-                    "min-h-[48px] max-h-[120px] resize-none pr-12",
-                    "rounded-xl border-border/50 bg-muted/50",
-                    "focus:ring-2 focus:ring-[#06BDC7]/20 focus:border-[#06BDC7]",
-                    "transition-all duration-200"
-                  )}
-                  rows={1}
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  onClick={handleSubmit}
-                  disabled={!input.trim() || sendMessageMutation.isPending || isLoading}
-                  className={cn(
-                    "absolute right-2 bottom-2 h-8 w-8 rounded-lg",
-                    "bg-gradient-to-r from-[#06BDC7] to-[#0891B2]",
-                    "hover:opacity-90 disabled:opacity-50",
-                    "transition-all duration-200"
-                  )}
+            <AnimatePresence mode="wait">
+              {isVoiceMode ? (
+                /* Voice Mode - ElevenLabs Widget */
+                <motion.div
+                  key="voice-mode"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center gap-3"
                 >
-                  {sendMessageMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  ) : (
-                    <Send className="h-4 w-4 text-white" />
-                  )}
-                </Button>
-              </div>
-            </div>
+                  {/* ElevenLabs Widget Container */}
+                  <div
+                    id="elevenlabs-widget-container"
+                    className="w-full min-h-[120px] rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center overflow-hidden"
+                  >
+                    <elevenlabs-convai agent-id="agent_7401kh4wm601fe2bh6vrtpdnpvww"></elevenlabs-convai>
+                  </div>
+
+                  {/* Voice mode hint */}
+                  <p className="text-xs text-muted-foreground text-center">
+                    Klik op de microfoon om te praten met Dirq
+                  </p>
+                </motion.div>
+              ) : (
+                /* Text Mode - Regular Input */
+                <motion.div
+                  key="text-mode"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex gap-2 items-end"
+                >
+                  <div className="flex-1 relative">
+                    <Textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={t('chat.placeholder', 'Typ je vraag...')}
+                      disabled={sendMessageMutation.isPending || isLoading}
+                      className={cn(
+                        "min-h-[48px] max-h-[120px] resize-none pr-12",
+                        "rounded-xl border-border/50 bg-muted/50",
+                        "focus:ring-2 focus:ring-[#06BDC7]/20 focus:border-[#06BDC7]",
+                        "transition-all duration-200"
+                      )}
+                      rows={1}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={handleSubmit}
+                      disabled={!input.trim() || sendMessageMutation.isPending || isLoading}
+                      className={cn(
+                        "absolute right-2 bottom-2 h-8 w-8 rounded-lg",
+                        "bg-gradient-to-r from-[#06BDC7] to-[#0891B2]",
+                        "hover:opacity-90 disabled:opacity-50",
+                        "transition-all duration-200"
+                      )}
+                    >
+                      {sendMessageMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      ) : (
+                        <Send className="h-4 w-4 text-white" />
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Footer info */}
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
@@ -593,8 +654,17 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
                 <span className="hidden sm:inline">{t('chat.shortcut', 'om te openen')}</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <Zap className="h-3 w-3 text-[#06BDC7]" />
-                <span>Gemini AI</span>
+                {isVoiceMode ? (
+                  <>
+                    <Mic className="h-3 w-3 text-[#06BDC7]" />
+                    <span>Dirq Voice</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-3 w-3 text-[#06BDC7]" />
+                    <span>Dirq AI</span>
+                  </>
+                )}
                 {messages.length > 0 && (
                   <Badge variant="outline" className="text-[10px] ml-1">
                     {messages.length} berichten
