@@ -277,8 +277,25 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
 
         const result = await response.json();
 
-        const assistantContent = result.output || result.response || result.message || result.content ||
+        // Strip n8n agent tool traces: [Used tools: Tool: ..., Input: ..., Result: ...]
+        // These can contain nested brackets, so we use depth-counting to find the closing bracket
+        const stripToolTraces = (text: string): string => {
+          let cleaned = text.trimStart();
+          while (cleaned.startsWith('[Used tools:')) {
+            let depth = 0;
+            let i = 0;
+            for (; i < cleaned.length; i++) {
+              if (cleaned[i] === '[') depth++;
+              else if (cleaned[i] === ']') { depth--; if (depth === 0) { i++; break; } }
+            }
+            cleaned = cleaned.slice(i).trimStart();
+          }
+          return cleaned;
+        };
+
+        const rawContent = result.output || result.response || result.message || result.content ||
           'Sorry, ik kon geen antwoord genereren. Probeer het opnieuw.';
+        const assistantContent = stripToolTraces(rawContent);
 
         const { error: assistantMsgError } = await supabase
           .from('chat_messages')
