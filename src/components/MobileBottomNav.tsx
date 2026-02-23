@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Home, Building2, Workflow, CheckSquare, BarChart3, Plus } from 'lucide-react';
+import { Home, Building2, Workflow, Calendar, BarChart3, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
@@ -41,9 +41,9 @@ export function MobileBottomNav({ onPrimaryAction }: MobileBottomNavProps) {
       path: '/pipeline',
       roles: ['ADMIN', 'SALES', 'MANAGER']
     },
-    { 
-      icon: CheckSquare, 
-      label: 'Taken', 
+    {
+      icon: Calendar,
+      label: 'Agenda',
       path: '/calendar',
       roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT']
     },
@@ -54,7 +54,7 @@ export function MobileBottomNav({ onPrimaryAction }: MobileBottomNavProps) {
     { icon: BarChart3, label: 'Executive', path: '/dashboard/executive' },
     { icon: Building2, label: 'Bedrijven', path: '/companies' },
     { icon: Workflow, label: 'Pipeline', path: '/pipeline' },
-    { icon: CheckSquare, label: 'Taken', path: '/calendar' },
+    { icon: Calendar, label: 'Agenda', path: '/calendar' },
   ];
 
   // Filter nav items based on user role

@@ -4,6 +4,7 @@ import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { QuickActionSheet } from './QuickActionSheet';
 import { ChatWidget } from '@/components/ai/ChatWidget';
+import { ChatContextProvider } from '@/contexts/ChatContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export function AppLayout({
   
   return (
     // Layout with fixed sidebar and sticky header
+    <ChatContextProvider>
     <div className="min-h-screen flex w-full bg-background overflow-hidden">
       <AppSidebar />
       
@@ -61,5 +63,6 @@ export function AppLayout({
       {/* AI Chat Widget - For conversations and commands */}
       <ChatWidget />
     </div>
+    </ChatContextProvider>
   );
 }

@@ -106,7 +106,7 @@ export function ContactForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Name Fields */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="first_name"
@@ -114,10 +114,11 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>{t('formLabels.firstName')} *</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Jan" 
+                  <Input
+                    data-testid="contact-name-input"
+                    placeholder="Jan"
                     autoComplete="given-name"
-                    {...field} 
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
@@ -380,7 +381,7 @@ export function ContactForm({
               {t('common.cancel')}
             </Button>
           )}
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" data-testid="contact-submit-btn" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {contact ? t('common.save') : t('common.create')}
           </Button>

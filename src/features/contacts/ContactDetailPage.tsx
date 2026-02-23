@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -16,6 +16,7 @@ import { AddInteractionDialog } from '@/features/interactions/components/AddInte
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { useChatContext } from '@/contexts/ChatContext';
 import { ContactFormData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -85,6 +86,21 @@ export default function ContactDetailPage() {
 
   // All hooks must be called unconditionally before any early returns
   const { data: contact, isLoading } = useContact(id!);
+  const { setChatContext, clearChatContext } = useChatContext();
+  useEffect(() => {
+    if (contact) {
+      setChatContext({
+        type: 'contact',
+        id: contact.id,
+        name: `${contact.first_name} ${contact.last_name}`,
+        metadata: {
+          email: contact.email ?? null,
+          company: contact.company?.name ?? null,
+        },
+      });
+    }
+    return () => clearChatContext();
+  }, [contact, setChatContext, clearChatContext]);
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
   const { data: interactionsData, isLoading: isLoadingInteractions } = useInteractions({

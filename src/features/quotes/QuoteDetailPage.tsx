@@ -3,7 +3,7 @@
  * Full quote detail page with line items, status management, and PDF export
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -73,6 +73,7 @@ import { toast } from 'sonner';
 import type { Quote, QuoteStatus } from '@/types/quotes';
 import { pdf } from '@react-pdf/renderer';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { useChatContext } from '@/contexts/ChatContext';
 import SignatureCanvas from '@/components/SignatureCanvas';
 import { PDFDocument, rgb } from 'pdf-lib';
 import dirqLogo from '@/assets/dirq-logo.png';
@@ -84,6 +85,7 @@ export default function QuoteDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { role, profile } = useAuth();
+  const { setChatContext, clearChatContext } = useChatContext();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [signDialogOpen, setSignDialogOpen] = useState(false);
@@ -212,6 +214,22 @@ export default function QuoteDetailPage() {
     },
     enabled: !!id,
   });
+
+  useEffect(() => {
+    if (quote) {
+      setChatContext({
+        type: 'quote',
+        id: quote.id,
+        name: quote.title ?? quote.quote_number ?? 'Offerte',
+        metadata: {
+          status: quote.status ?? null,
+          company: (quote as any).company?.name ?? null,
+          amount: quote.total_amount ?? null,
+        },
+      });
+    }
+    return () => clearChatContext();
+  }, [quote, setChatContext, clearChatContext]);
 
   // Fetch quote items
   const { data: items } = useQuery({

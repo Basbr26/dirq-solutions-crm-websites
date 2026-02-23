@@ -5,7 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { startOfMonth, subMonths, format, startOfWeek, endOfWeek } from 'date-fns';
+import { startOfMonth, subMonths, format, startOfWeek, endOfWeek, addDays, subDays } from 'date-fns';
 
 interface MonthlyRevenue {
   month: string;
@@ -253,6 +253,49 @@ export function useDealsThisWeek() {
       };
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+/**
+ * Proactieve inzichten: vervallende offertes + stagnerende deals
+ */
+export interface DashboardInsights {
+  expiringQuotes: { id: string; title: string | null; quote_number: string }[];
+  staleDeals: { id: string; title: string; updated_at: string }[];
+}
+
+export function useDashboardInsights() {
+  return useQuery({
+    queryKey: ['dashboard', 'insights'],
+    queryFn: async () => {
+      const today = new Date().toISOString();
+      const sevenDaysFromNow = addDays(new Date(), 7).toISOString();
+      const fourteenDaysAgo = subDays(new Date(), 14).toISOString();
+
+      const [quotesResult, dealsResult] = await Promise.all([
+        supabase
+          .from('quotes')
+          .select('id, title, quote_number')
+          .eq('status', 'sent')
+          .gte('valid_until', today)
+          .lte('valid_until', sevenDaysFromNow),
+        supabase
+          .from('projects')
+          .select('id, title, updated_at')
+          .in('stage', ['lead', 'quote_requested', 'quote_sent', 'negotiation',
+                        'quote_signed', 'in_development', 'review'])
+          .lt('updated_at', fourteenDaysAgo),
+      ]);
+
+      if (quotesResult.error) throw quotesResult.error;
+      if (dealsResult.error) throw dealsResult.error;
+
+      return {
+        expiringQuotes: quotesResult.data ?? [],
+        staleDeals: dealsResult.data ?? [],
+      } as DashboardInsights;
+    },
+    staleTime: 1000 * 60 * 5,
   });
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -21,6 +21,7 @@ import { AddInteractionDialog } from '@/features/interactions/components/AddInte
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { useChatContext } from '@/contexts/ChatContext';
 import { CompanyFormData, ContactCreateData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -96,6 +97,21 @@ export default function CompanyDetailPage() {
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
   const { data: company, isLoading } = useCompany(id!);
+  const { setChatContext, clearChatContext } = useChatContext();
+  useEffect(() => {
+    if (company) {
+      setChatContext({
+        type: 'company',
+        id: company.id,
+        name: company.name,
+        metadata: {
+          status: company.status ?? null,
+          industry: company.industry?.name ?? null,
+        },
+      });
+    }
+    return () => clearChatContext();
+  }, [company, setChatContext, clearChatContext]);
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
   const { createContact } = useContactMutations();

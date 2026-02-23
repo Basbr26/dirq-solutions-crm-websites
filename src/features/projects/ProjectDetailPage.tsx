@@ -3,7 +3,7 @@
  * Full project detail page with management functionality
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -41,6 +41,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { useChatContext } from '@/contexts/ChatContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,6 +81,7 @@ export default function ProjectDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { role } = useAuth();
+  const { setChatContext, clearChatContext } = useChatContext();
   const projectStageConfig = useProjectStageConfig();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -163,6 +165,22 @@ export default function ProjectDetailPage() {
       projectValue: project.value || 0,
     });
   };
+
+  useEffect(() => {
+    if (project) {
+      setChatContext({
+        type: 'project',
+        id: project.id,
+        name: project.title,
+        metadata: {
+          stage: project.stage ?? null,
+          company: project.companies?.name ?? null,
+          value: project.value ?? null,
+        },
+      });
+    }
+    return () => clearChatContext();
+  }, [project, setChatContext, clearChatContext]);
 
   // Fetch related quotes
   const { data: quotes } = useQuery({

@@ -4,7 +4,7 @@
  */
 
 import { useMemo, lazy, Suspense } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,7 +26,7 @@ import {
 import { usePipelineStats } from '@/features/projects/hooks/useProjects';
 import { useQuoteStats } from '@/features/quotes/hooks/useQuotes';
 import { ProjectStage } from '@/types/projects';
-import { 
+import {
   useMonthlyRevenue,
   useQuoteAcceptanceTrend,
   usePipelineTrend,
@@ -34,7 +34,9 @@ import {
   useQuoteAcceptanceRateTrend,
   useDealsThisWeek,
   useEntityCounts,
+  useDashboardInsights,
 } from './hooks/useDashboardStats';
+import { SmartAlerts, SmartAlert } from '@/components/executive/SmartAlerts';
 import { format } from 'date-fns';
 import { nl, enUS } from 'date-fns/locale';
 
@@ -144,6 +146,10 @@ export default function DashboardCRM() {
   const { data: dealsThisWeek } = useDealsThisWeek();
   const { data: entityCounts } = useEntityCounts();
 
+  // Proactieve inzichten
+  const { data: insights } = useDashboardInsights();
+  const navigate = useNavigate();
+
   // Get locale for date-fns
   const dateLocale = i18n.language === 'nl' ? nl : enUS;
 
@@ -173,9 +179,44 @@ export default function DashboardCRM() {
     [pipelineStats]
   );
 
-  const quoteAcceptanceRate = quoteStats 
+  const quoteAcceptanceRate = quoteStats
     ? Math.round((quoteStats.accepted / quoteStats.total) * 100) || 0
     : 0;
+
+  const smartAlerts = useMemo((): SmartAlert[] => {
+    const alerts: SmartAlert[] = [];
+
+    const expiring = insights?.expiringQuotes ?? [];
+    if (expiring.length > 0) {
+      alerts.push({
+        id: 'expiring-quotes',
+        type: 'deadline',
+        severity: expiring.length >= 3 ? 'critical' : 'warning',
+        title: `${expiring.length} offerte${expiring.length > 1 ? 's' : ''} verloopt deze week`,
+        description: expiring.map(q => q.title ?? q.quote_number).join(', '),
+        metric: `${expiring.length} open`,
+        actionLabel: 'Bekijk offertes',
+        actionUrl: '/quotes',
+      });
+    }
+
+    const stale = insights?.staleDeals ?? [];
+    if (stale.length > 0) {
+      alerts.push({
+        id: 'stale-deals',
+        type: 'capacity',
+        severity: 'info',
+        title: `${stale.length} deal${stale.length > 1 ? 's' : ''} zonder update (>14 dagen)`,
+        description: stale.map(d => d.title).slice(0, 3).join(', ') +
+          (stale.length > 3 ? ` +${stale.length - 3} meer` : ''),
+        metric: `${stale.length} stagneren`,
+        actionLabel: 'Open pipeline',
+        actionUrl: '/pipeline',
+      });
+    }
+
+    return alerts;
+  }, [insights]);
 
   return (
     <AppLayout 
@@ -183,6 +224,14 @@ export default function DashboardCRM() {
       subtitle={format(new Date(), 'EEEE d MMMM yyyy', { locale: dateLocale })}
     >
       <div className="space-y-4 sm:space-y-6">
+        {/* Proactieve inzichten */}
+        {smartAlerts.length > 0 && (
+          <SmartAlerts
+            alerts={smartAlerts}
+            onAction={(alert) => { if (alert.actionUrl) navigate(alert.actionUrl); }}
+          />
+        )}
+
         {/* KPI Cards - 2 columns on mobile, 4 on desktop */}
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           <KPICard
