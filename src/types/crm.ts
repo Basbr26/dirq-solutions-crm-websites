@@ -521,6 +521,8 @@ export interface CompanyFilters {
   industry_id?: string[];
   owner_id?: string[];
   priority?: CompanyPriority[];
+  sortBy?: 'name' | 'updated_at' | 'created_at';
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Advanced multi-dimensional filtering for companies

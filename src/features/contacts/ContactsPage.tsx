@@ -40,6 +40,11 @@ import {
   Loader2,
   Download,
   Upload,
+  Trash2,
+  CheckSquare,
+  Save,
+  Bookmark,
+  X,
 } from "lucide-react";
 import { SkeletonList } from "@/components/ui/skeleton-card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -48,6 +53,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { CSVImportDialog } from '@/components/CSVImportDialog';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { useFilterPresets } from '@/hooks/useFilterPresets';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function ContactsPage() {
   const { t } = useTranslation();
@@ -61,8 +73,23 @@ export function ContactsPage() {
   >();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'last_name' | 'first_name' | 'updated_at'>('last_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [preselectedCompanyId, setPreselectedCompanyId] = useState<string | undefined>();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
 
   // Check for company_id in URL parameters
   useEffect(() => {
@@ -88,11 +115,57 @@ export function ContactsPage() {
     companyId: filterCompanyId,
     isPrimary: filterIsPrimary,
     isDecisionMaker: filterIsDecisionMaker,
+    sortBy,
+    sortOrder,
   });
 
   const { companies } = useCompanies();
 
   const { createContact } = useContactMutations();
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(contacts.map(c => c.id)));
+  }, [contacts]);
+
+  const handleBulkDelete = useCallback(async () => {
+    const ids = [...selectedIds];
+    const { error } = await supabase.from('contacts').delete().in('id', ids);
+    if (error) {
+      toast.error('Verwijderen mislukt: ' + error.message);
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['contacts'] });
+      clearSelection();
+      toast.success(`${ids.length} ${ids.length === 1 ? 'contact' : 'contacten'} verwijderd`);
+    }
+  }, [selectedIds, queryClient, clearSelection]);
+
+  const { presets, savePreset, deletePreset } = useFilterPresets<{
+    companyId?: string;
+    isPrimary?: boolean;
+    isDecisionMaker?: boolean;
+    sortBy?: 'last_name' | 'first_name' | 'updated_at';
+    sortOrder?: 'asc' | 'desc';
+  }>('contacts');
+
+  const handleSavePreset = useCallback(() => {
+    const name = window.prompt('Naam voor preset:');
+    if (name?.trim()) savePreset(name.trim(), {
+      companyId: filterCompanyId,
+      isPrimary: filterIsPrimary,
+      isDecisionMaker: filterIsDecisionMaker,
+      sortBy,
+      sortOrder,
+    });
+  }, [filterCompanyId, filterIsPrimary, filterIsDecisionMaker, sortBy, sortOrder, savePreset]);
+
+  const handleApplyPreset = useCallback((preset: typeof presets[string]) => {
+    if (preset.companyId !== undefined) setFilterCompanyId(preset.companyId);
+    if (preset.isPrimary !== undefined) setFilterIsPrimary(preset.isPrimary);
+    if (preset.isDecisionMaker !== undefined) setFilterIsDecisionMaker(preset.isDecisionMaker);
+    if (preset.sortBy) setSortBy(preset.sortBy);
+    if (preset.sortOrder) setSortOrder(preset.sortOrder);
+    pagination.resetPage();
+  }, [pagination]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -315,7 +388,7 @@ export function ContactsPage() {
       subtitle={t('contacts.subtitle')}
       onPrimaryAction={() => setShowCreateDialog(true)}
       actions={
-        <Button onClick={() => setShowCreateDialog(true)}>
+        <Button data-testid="create-contact-btn" onClick={() => setShowCreateDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           {t('contacts.newContact')}
         </Button>
@@ -379,6 +452,7 @@ export function ContactsPage() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            data-testid="contacts-search-input"
             placeholder={t('contacts.searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -393,6 +467,56 @@ export function ContactsPage() {
             <Filter className="mr-2 h-4 w-4" />
             {t('common.filter')}
           </Button>
+          <Select
+            value={`${sortBy}-${sortOrder}`}
+            onValueChange={(v) => {
+              const idx = v.lastIndexOf('-');
+              setSortBy(v.slice(0, idx) as typeof sortBy);
+              setSortOrder(v.slice(idx + 1) as 'asc' | 'desc');
+              pagination.resetPage();
+            }}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="last_name-asc">{t('common.sortNameAsc', 'Naam A→Z')}</SelectItem>
+              <SelectItem value="last_name-desc">{t('common.sortNameDesc', 'Naam Z→A')}</SelectItem>
+              <SelectItem value="first_name-asc">{t('common.sortFirstNameAsc', 'Voornaam A→Z')}</SelectItem>
+              <SelectItem value="updated_at-desc">{t('common.sortUpdatedNewest', 'Bijgewerkt (nieuwst)')}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" size="sm" onClick={handleSavePreset} title="Filter opslaan als preset">
+            <Save className="h-4 w-4" />
+          </Button>
+
+          {Object.keys(presets).length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" title="Opgeslagen presets">
+                  <Bookmark className="h-4 w-4 mr-1" />
+                  {Object.keys(presets).length}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {Object.entries(presets).map(([name, preset]) => (
+                  <DropdownMenuItem key={name} className="flex items-center justify-between gap-2 pr-1">
+                    <span className="flex-1 truncate" onClick={() => handleApplyPreset(preset)}>{name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0 shrink-0 hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); deletePreset(name); }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
             {t('common.export')}
@@ -513,6 +637,24 @@ export function ContactsPage() {
         </Card>
       )}
 
+      {/* Bulk Action Toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/20 rounded-lg">
+          <span className="text-sm font-medium">{selectedIds.size} {selectedIds.size === 1 ? 'contact' : 'contacten'} geselecteerd</span>
+          <Button variant="ghost" size="sm" onClick={clearSelection}>Deselecteer</Button>
+          <div className="ml-auto flex gap-2">
+            <Button variant="ghost" size="sm" onClick={selectAll}>
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Alles ({contacts.length})
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Trash2 className="h-4 w-4 mr-1" />
+              Verwijderen
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       {isLoading ? (
         <SkeletonList count={8} />
@@ -545,7 +687,12 @@ export function ContactsPage() {
           {/* Contacts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {contacts.map((contact) => (
-              <ContactCard key={contact.id} contact={contact} />
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                isSelected={selectedIds.has(contact.id)}
+                onToggleSelect={() => toggleSelect(contact.id)}
+              />
             ))}
           </div>
 

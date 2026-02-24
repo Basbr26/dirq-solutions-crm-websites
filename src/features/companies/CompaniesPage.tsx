@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Filter, Download, Upload } from 'lucide-react';
+import { Plus, Search, Filter, Download, Upload, Trash2, CheckSquare, Save, Bookmark, X } from 'lucide-react';
 import { useCompanies, useCompanyStats } from './hooks/useCompanies';
 import { useCreateCompany } from './hooks/useCompanyMutations';
 import { CompanyCard } from './components/CompanyCard';
@@ -32,6 +32,13 @@ import { format } from 'date-fns';
 import { CSVImportDialog } from '@/components/CSVImportDialog';
 import { z } from 'zod';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { useFilterPresets } from '@/hooks/useFilterPresets';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function CompaniesPage() {
   const { t } = useTranslation();
@@ -40,10 +47,25 @@ export default function CompaniesPage() {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<CompanyFiltersType>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'updated_at' | 'created_at'>('updated_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const createCompany = useCreateCompany();
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
 
   // Debounce search to prevent excessive API calls
   const debouncedSearch = useDebounce(search, 500);
@@ -52,7 +74,9 @@ export default function CompaniesPage() {
   const activeFilters: CompanyFiltersType = useMemo(() => ({
     ...filters,
     search: debouncedSearch || undefined,
-  }), [filters, debouncedSearch]);
+    sortBy,
+    sortOrder,
+  }), [filters, debouncedSearch, sortBy, sortOrder]);
 
   const {
     companies,
@@ -63,6 +87,22 @@ export default function CompaniesPage() {
   } = useCompanies(activeFilters);
   const { data: stats } = useCompanyStats();
 
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(companies.map(c => c.id)));
+  }, [companies]);
+
+  const handleBulkDelete = useCallback(async () => {
+    const ids = [...selectedIds];
+    const { error } = await supabase.from('companies').delete().in('id', ids);
+    if (error) {
+      toast.error('Verwijderen mislukt: ' + error.message);
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      clearSelection();
+      toast.success(`${ids.length} ${ids.length === 1 ? 'bedrijf' : 'bedrijven'} verwijderd`);
+    }
+  }, [selectedIds, queryClient, clearSelection]);
+
   // Reset to page 1 when search or filters change
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
@@ -70,6 +110,23 @@ export default function CompaniesPage() {
   }, [pagination]);
 
   const canCreateCompany = role && ['ADMIN', 'SALES', 'MANAGER'].includes(role);
+
+  const { presets, savePreset, deletePreset } = useFilterPresets<CompanyFiltersType>('companies');
+
+  const handleSavePreset = useCallback(() => {
+    const name = window.prompt('Naam voor preset:');
+    if (name?.trim()) savePreset(name.trim(), activeFilters);
+  }, [activeFilters, savePreset]);
+
+  const handleApplyPreset = useCallback((preset: CompanyFiltersType) => {
+    setFilters({
+      status: preset.status,
+      priority: preset.priority,
+    });
+    if (preset.sortBy) setSortBy(preset.sortBy);
+    if (preset.sortOrder) setSortOrder(preset.sortOrder);
+    pagination.resetPage();
+  }, [pagination]);
 
   const handleExportCSV = useCallback(async () => {
     try {
@@ -233,7 +290,7 @@ export default function CompaniesPage() {
       subtitle={t('companies.subtitle')}
       onPrimaryAction={() => setCreateDialogOpen(true)}
       actions={
-        <Button size="lg" onClick={() => setCreateDialogOpen(true)}>
+        <Button size="lg" data-testid="create-company-btn" onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           {t('companies.newCompany')}
         </Button>
@@ -295,6 +352,7 @@ export default function CompaniesPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            data-testid="search-input"
             placeholder={t('companies.searchPlaceholder')}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
@@ -315,6 +373,57 @@ export default function CompaniesPage() {
               </Badge>
             )}
           </Button>
+
+          <Select
+            value={`${sortBy}-${sortOrder}`}
+            onValueChange={(v) => {
+              const idx = v.lastIndexOf('-');
+              setSortBy(v.slice(0, idx) as typeof sortBy);
+              setSortOrder(v.slice(idx + 1) as 'asc' | 'desc');
+              pagination.resetPage();
+            }}
+          >
+            <SelectTrigger className="w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updated_at-desc">{t('common.sortUpdatedNewest', 'Bijgewerkt (nieuwst)')}</SelectItem>
+              <SelectItem value="updated_at-asc">{t('common.sortUpdatedOldest', 'Bijgewerkt (oudst)')}</SelectItem>
+              <SelectItem value="name-asc">{t('common.sortNameAsc', 'Naam A→Z')}</SelectItem>
+              <SelectItem value="name-desc">{t('common.sortNameDesc', 'Naam Z→A')}</SelectItem>
+              <SelectItem value="created_at-desc">{t('common.sortCreatedNewest', 'Aangemaakt (nieuwst)')}</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button variant="outline" size="sm" onClick={handleSavePreset} title="Filter opslaan als preset">
+            <Save className="h-4 w-4" />
+          </Button>
+
+          {Object.keys(presets).length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" title="Opgeslagen presets">
+                  <Bookmark className="h-4 w-4 mr-1" />
+                  {Object.keys(presets).length}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {Object.entries(presets).map(([name, preset]) => (
+                  <DropdownMenuItem key={name} className="flex items-center justify-between gap-2 pr-1">
+                    <span className="flex-1 truncate" onClick={() => handleApplyPreset(preset)}>{name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-5 w-5 p-0 shrink-0 hover:text-destructive"
+                      onClick={(e) => { e.stopPropagation(); deletePreset(name); }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <Button variant="outline" onClick={handleExportCSV}>
             <Download className="h-4 w-4 mr-2" />
@@ -415,6 +524,24 @@ export default function CompaniesPage() {
         </Card>
       )}
 
+      {/* Bulk Action Toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 px-4 py-2 bg-primary/5 border border-primary/20 rounded-lg">
+          <span className="text-sm font-medium">{selectedIds.size} {selectedIds.size === 1 ? 'bedrijf' : 'bedrijven'} geselecteerd</span>
+          <Button variant="ghost" size="sm" onClick={clearSelection}>Deselecteer</Button>
+          <div className="ml-auto flex gap-2">
+            <Button variant="ghost" size="sm" onClick={selectAll}>
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Alles ({companies.length})
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Trash2 className="h-4 w-4 mr-1" />
+              Verwijderen
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Companies Grid */}
       {isLoading ? (
         <SkeletonList count={6} />
@@ -422,7 +549,12 @@ export default function CompaniesPage() {
         <>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {companies.map((company) => (
-              <CompanyCard key={company.id} company={company} />
+              <CompanyCard
+                key={company.id}
+                company={company}
+                isSelected={selectedIds.has(company.id)}
+                onToggleSelect={() => toggleSelect(company.id)}
+              />
             ))}
           </div>
 

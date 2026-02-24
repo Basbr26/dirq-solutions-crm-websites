@@ -20,6 +20,7 @@ import { InteractionTimeline } from '@/features/interactions/components/Interact
 import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
+import { CrmActivityLog } from '@/components/CrmActivityLog';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useChatContext } from '@/contexts/ChatContext';
 import { CompanyFormData, ContactCreateData } from '@/types/crm';
@@ -41,6 +42,7 @@ import {
   StickyNote,
   Upload,
   Plus,
+  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -331,6 +333,10 @@ export default function CompanyDetailPage() {
           <ScrollableTabTrigger value="notes">
             <StickyNote className="h-4 w-4 mr-2 hidden sm:inline-block" />
             Notities
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="activity">
+            <Clock className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Activiteit
           </ScrollableTabTrigger>
         </ScrollableTabsList>
 
@@ -764,6 +770,19 @@ export default function CompanyDetailPage() {
                 </div>
               )}
             </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Activity Tab */}
+        <TabsContent value="activity">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Activiteit
+              </CardTitle>
+            </CardHeader>
+            <CrmActivityLog entityId={id!} entityType="company" />
           </Card>
         </TabsContent>
       </Tabs>

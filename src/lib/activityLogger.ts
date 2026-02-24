@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
 
-export type ActionType = 
+export type ActionType =
   | 'case_created'
   | 'case_updated'
   | 'case_closed'
@@ -16,14 +16,23 @@ export type ActionType =
   | 'status_changed'
   | 'recovery_reported'
   | 'user_login'
-  | 'user_logout';
+  | 'user_logout'
+  | 'company_created'
+  | 'company_updated'
+  | 'company_deleted'
+  | 'contact_created'
+  | 'contact_updated'
+  | 'contact_deleted'
+  | 'bulk_deleted';
 
-export type EntityType = 
+export type EntityType =
   | 'sick_leave_case'
   | 'task'
   | 'document'
   | 'conversation_note'
-  | 'user';
+  | 'user'
+  | 'company'
+  | 'contact';
 
 interface LogActivityParams {
   caseId?: string;

@@ -6,7 +6,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, Search, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { DirqLogo } from '@/components/DirqLogo';
+import { GlobalSearch } from '@/components/GlobalSearch';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
@@ -41,6 +42,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
   const { t } = useTranslation();
   const { profile, signOut, role } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -142,13 +144,23 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
             {actions}
           </div>
           
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 w-9 p-0"
+            onClick={() => setSearchOpen(true)}
+            title="Zoeken (Ctrl+/)"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+          <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
           <LanguageSwitcher />
           <ThemeToggle />
           <NotificationBell />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 px-2">
+              <Button variant="ghost" size="sm" data-testid="user-menu" className="gap-2 px-2">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={`${profile?.voornaam} ${profile?.achternaam}`} />
                   <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
@@ -167,7 +179,7 @@ export function AppHeader({ title, subtitle, actions }: AppHeaderProps) {
                 <p className="text-xs text-muted-foreground">{profile?.email}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()} className="text-destructive cursor-pointer">
+              <DropdownMenuItem onClick={() => signOut()} data-testid="logout-btn" className="text-destructive cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 {t('auth.logout')}
               </DropdownMenuItem>

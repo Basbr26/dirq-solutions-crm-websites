@@ -1,6 +1,7 @@
 import { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Phone, Building2, Briefcase, Linkedin, Star, Crown, Clock, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Contact } from '@/types/crm';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,9 +43,11 @@ import { cn } from '@/lib/utils';
 
 interface ContactCardProps {
   contact: Contact;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export const ContactCard = memo(function ContactCard({ contact }: ContactCardProps) {
+export const ContactCard = memo(function ContactCard({ contact, isSelected, onToggleSelect }: ContactCardProps) {
   const { t } = useTranslation();
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -89,11 +92,24 @@ export const ContactCard = memo(function ContactCard({ contact }: ContactCardPro
   };
 
   const cardContent = (
-    <Card className={cn(
+    <Card data-testid="contact-card" className={cn(
       "transition-shadow cursor-pointer relative",
-      !isMobile && "hover:shadow-lg"
+      !isMobile && "hover:shadow-lg",
+      isSelected && "ring-2 ring-primary"
     )}>
-      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+      {onToggleSelect && (
+        <div className="absolute top-3 left-3 z-10">
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={onToggleSelect}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      <CardHeader className={cn(
+        "flex flex-row items-start justify-between space-y-0 pb-2",
+        onToggleSelect && "pl-10"
+      )}>
             <div className="flex items-start space-x-3 flex-1 min-w-0">
               <Avatar className="h-12 w-12 flex-shrink-0">
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">

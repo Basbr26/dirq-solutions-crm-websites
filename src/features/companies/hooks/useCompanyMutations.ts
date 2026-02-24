@@ -4,6 +4,7 @@ import { CompanyFormData, Company } from '@/types/crm';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
 import { useTranslation } from 'react-i18next';
+import { logActivity } from '@/lib/activityLogger';
 
 /**
  * Create Company Mutation Hook
@@ -68,11 +69,12 @@ export function useCreateCompany() {
       }
       return company as Company;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
       haptics.success();
       toast.success(t('toast.company.created'));
+      logActivity({ actionType: 'company_created', entityType: 'company', entityId: data.id, description: `Bedrijf '${data.name}' aangemaakt` });
     },
     onError: (error: Error) => {
       haptics.error();
@@ -112,6 +114,7 @@ export function useUpdateCompany() {
       queryClient.invalidateQueries({ queryKey: ['company', data.id] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
       toast.success(t('toast.company.updated'));
+      logActivity({ actionType: 'company_updated', entityType: 'company', entityId: data.id, description: `Bedrijf '${data.name}' bijgewerkt` });
     },
     onError: (error: Error) => {
       toast.error(t('toast.company.updateError'), {
@@ -141,10 +144,11 @@ export function useDeleteCompany() {
       }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
       toast.success(t('toast.company.deleted'));
+      logActivity({ actionType: 'company_deleted', entityType: 'company', entityId: id, description: 'Bedrijf verwijderd' });
     },
     onError: (error: Error) => {
       toast.error(t('toast.company.deleteError'), {
