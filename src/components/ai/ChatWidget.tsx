@@ -352,9 +352,9 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
     }
   }, [open]);
 
-  // Load ElevenLabs script when voice mode is activated
+  // Pre-load ElevenLabs script when chat opens so it's ready when voice mode is activated
   useEffect(() => {
-    if (isVoiceMode) {
+    if (open) {
       const existing = document.querySelector('script[src*="elevenlabs.io/convai-widget"]');
       if (!existing) {
         const script = document.createElement('script');
@@ -364,7 +364,7 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
         document.body.appendChild(script);
       }
     }
-  }, [isVoiceMode]);
+  }, [open]);
 
   const messages = messagesQuery.data || [];
   const isLoading = sessionQuery.isLoading || messagesQuery.isLoading;
