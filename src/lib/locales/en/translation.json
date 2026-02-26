@@ -758,6 +758,7 @@
       "fontSizeDescription": "Adjust the font size"
     },
     "integrations": {
+      "title": "Integrations",
       "googleCalendar": "Google Calendar",
       "googleCalendarDescription": "Synchronize your appointments with Google Calendar"
     }

@@ -3,12 +3,11 @@
  * Clean, sectioned pipeline for website development projects
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Plus, TrendingUp, DollarSign, MoreVertical, Target, Briefcase, Code } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { useChatContext } from '@/contexts/ChatContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,12 +47,6 @@ export default function PipelinePage() {
   const [focusedStage, setFocusedStage] = useState<ProjectStage | null>(null);
   
   const createProject = useCreateProject();
-  const { setChatContext, clearChatContext } = useChatContext();
-
-  useEffect(() => {
-    setChatContext({ type: 'pipeline' });
-    return () => clearChatContext();
-  }, [setChatContext, clearChatContext]);
 
   const formatCurrency = useMemo(
     () => (amount: number) =>
@@ -200,7 +193,6 @@ export default function PipelinePage() {
             return (
               <div
                 key={stage}
-                data-testid={`pipeline-stage-${stage}`}
                 className={isMobile ? "flex-shrink-0" : "relative"}
                 style={isMobile ? {
                   width: '85vw',
@@ -246,7 +238,7 @@ export default function PipelinePage() {
                               className="block"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Card data-testid="project-card" className={`p-3 transition-shadow duration-150
+                              <Card className={`p-3 transition-shadow duration-150
                                 ${isMobile ? 'active:opacity-90' : 'hover:shadow-md cursor-move'}`}>
                                 <div className="flex items-start justify-between gap-2 mb-2">
                                   <h4 className="font-medium text-sm line-clamp-2 flex-1">
@@ -324,7 +316,7 @@ export default function PipelinePage() {
       title={t('pipeline.title')}
       subtitle={t('pipeline.subtitle')}
       actions={
-        <Button data-testid="create-project-btn" onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           {t('projects.newProject')}
         </Button>

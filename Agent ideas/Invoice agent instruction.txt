@@ -1,0 +1,777 @@
+Invoice Bot Setup Guide
+Stap-voor-stap handleiding voor het opzetten van je AI Voice & Chat Assistant
+
+📋 Inhoudsopgave
+Introductie & Overzicht
+N8n Workflow Importeren
+Lovable Interface Bouwen
+ElevenLabs Agent Configureren
+Integraties Koppelen
+System Prompts Instellen
+Testen & Troubleshooting
+
+1. Introductie & Overzicht
+Wat bouw je?
+Echo Bot is een geavanceerde AI voice en chat assistant die:
+Voice mode: Natuurlijke gesprekken voert via ElevenLabs
+Text mode: Precieze data invoer mogelijk maakt (emailadressen, telefoonnummers, etc.)
+Contactbeheer: Contacten aanmaakt en beheert in Airtable
+Email: Emails verstuurt via Gmail
+Agenda: Afspraken plant in Google Calendar
+Kennisbank: Bedrijfsinformatie ophaalt via Pinecone RAG
+Architectuur overzicht
+Lovable Interface (Frontend)
+    ↓
+ElevenLabs Voice Agent (Voice AI)
+    ↓
+N8n Workflow (Backend Orchestration)
+    ↓
+├─ Hoofd AI Agent (Orchestrator)
+├─ Contact Agent (Airtable)
+├─ Email Agent (Gmail)
+├─ Calendar Agent (Google Calendar)
+└─ Kennis Agent (Pinecone RAG)
+
+Wat heb je nodig?
+N8n account (cloud of self-hosted)
+Lovable account (lovable.dev)
+ElevenLabs account (met Conversational AI toegang)
+Airtable account
+Google account (voor Gmail & Calendar)
+Pinecone account (gratis tier is voldoende)
+Anthropic API key (voor Claude AI)
+
+2. N8n Workflow Importeren
+Stap 1: Download de workflow
+Je ontvangt een JSON bestand (bijv. AI_Bot_Workflow.json).
+Stap 2: Importeren in n8n
+Open je n8n omgeving
+Klik rechtsboven op "+ Add Workflow" (of "Import")
+Selecteer "Import from File"
+Upload het JSON bestand
+De workflow wordt nu geladen met alle nodes
+Stap 3: Overzicht van de workflow structuur
+Je ziet nu 6 gekleurde secties:
+🟢 Inkomende Input Normaliseren
+Ontvangt berichten van chat EN voice
+Normaliseert data naar uniform format
+🟤 Centrale AI Orchestratie
+Hoofd AI Agent: bepaalt welke gespecialiseerde agent nodig is
+Routeert verzoeken door naar juiste agent
+🔵 E-mail Agent
+Emails versturen, drafts maken, labels beheren
+Verbonden met Gmail
+🔵 Contactbeheer Agent
+Contacten zoeken en aanmaken
+Verbonden met Airtable
+🔴 Agenda & Afspraken Agent
+Afspraken maken en ophalen
+Verbonden met Google Calendar
+🟢 Kennis & Context (RAG)
+Bedrijfsinformatie ophalen
+Verbonden met Pinecone
+Stap 4: Webhook URLs verkrijgen
+In de workflow zie je nodes genaamd "Webhook" of "Webhook Chat Snippet".
+Klik op de eerste Webhook node (meestal in "Inkomende Input" sectie)
+Kopieer de Production URL
+Sla deze op als: CHAT_WEBHOOK_URL
+Als er een tweede webhook is voor voice, kopieer die ook
+Sla deze op als: VOICE_WEBHOOK_URL
+Belangrijk: Deze URLs heb je nodig voor Lovable en ElevenLabs!
+
+3. Lovable Interface Bouwen
+Stap 1: Nieuw project aanmaken
+Ga naar lovable.dev
+Klik op "New Project"
+Selecteer "Blank Project"
+Stap 2: Basisstructuur bouwen met prompt
+Gebruik deze prompt in Lovable:
+Maak een voice & chat interface voor een AI assistant genaamd "Echo Bot" met de volgende features:
+
+INTERFACE DESIGN:
+- Centered layout met gradient achtergrond (donkerblauw naar zwart)
+- Logo bovenaan met tekst "Echo Bot"
+- Welkomstbericht: "Welkom bij Echo Bot - Uw AI-assistent staat klaar om al uw vragen te beantwoorden"
+- Chat geschiedenis in het midden (scrollbaar)
+- Input area onderaan
+
+TOGGLE FUNCTIONALITEIT (KRITIEK):
+- Toggle button rechtsboven met twee modes:
+  * 🎙️ Spraak mode (default)
+  * 📝 Typen mode
+- Toggle switch moet duidelijk zichtbaar zijn
+- Status indicator toont actieve mode
+
+VOICE MODE (default):
+- Microfoon interface actief
+- Text input veld VERBORGEN
+- Voice visualizer toont geluidsgolven tijdens praten
+- "Luisteren..." indicator tijdens opname
+
+TEXT MODE (na toggle click):
+- Microfoon uit
+- Text input veld ZICHTBAAR
+- Send button naast input
+- Stuurt alleen na Send button klik
+
+VISUELE FEEDBACK:
+- Glow effect op actieve mode
+- Status indicators voor "Denken...", "Luisteren...", "Praten..."
+- Smooth transitions tussen modes
+
+CHAT BERICHTEN:
+- User berichten rechts uitgelijnd (lichtblauw)
+- Bot berichten links uitgelijnd (grijs)
+- Timestamps onder elk bericht
+- Avatar icons voor user en bot
+
+Maak het modern, clean en gebruiksvriendelijk.
+
+Stap 3: ElevenLabs embedding toevoegen
+Je moet de ElevenLabs widget embedden in Lovable. Hiervoor heb je de embed code nodig uit ElevenLabs (die krijg je in stap 4).
+Tijdelijke placeholder toevoegen:
+Vraag Lovable om een container toe te voegen waar de ElevenLabs widget komt:
+Voeg een hidden container toe met id "elevenlabs-widget-container" 
+waar de ElevenLabs voice widget ingeladen kan worden.
+Deze moet overlay zijn over de hele interface wanneer voice mode actief is.
+
+Stap 4: Webhook connecties toevoegen
+Nu moet je Lovable verbinden met je n8n webhooks. Gebruik deze prompt:
+Voeg API connecties toe voor chat en voice:
+
+CHAT MODE (text input):
+- Bij Send button click: POST request naar webhook
+- URL: UW_CHAT_WEBHOOK_URL_HIER
+- Body format: { "message": "[user input]", "mode": "text" }
+- Response verwerken en tonen in chat
+
+VOICE MODE:
+- ElevenLabs widget handelt voice input af
+- ElevenLabs stuurt verzoeken naar n8n (dit regelen we later)
+- N8n responses komen via ElevenLabs terug naar user
+
+ERROR HANDLING:
+- Loading state tijdens wachten op response
+- Error message bij verbindingsproblemen
+- Retry optie bij failures
+
+Zorg dat chat berichten smooth worden toegevoegd aan de chat geschiedenis.
+
+Vervang UW_CHAT_WEBHOOK_URL_HIER met je echte chat webhook URL uit n8n!
+Stap 5: Styling verfijnen
+Vraag Lovable om final touches:
+Verfijn de styling:
+- Moderne gradient achtergronden
+- Smooth animaties voor transitions
+- Responsive design voor mobile
+- Dark theme consistent doorvoeren
+- Toggle switch met clear visual feedback
+- Voice visualizer met pulserende animatie
+
+
+4. ElevenLabs Agent Configureren
+Stap 1: ElevenLabs Agent aanmaken
+Log in op elevenlabs.io
+Ga naar "Conversational AI" in het menu
+Klik op "Create Agent"
+Geef je agent een naam: "Bot Voice Agent"
+Stap 2: Voice selecteren
+Kies een Nederlandse stem (bijv. "Laura" of andere vrouwelijke stem)
+Test de stem met een voorbeeldzin
+Pas snelheid en toon aan naar voorkeur (aanbevolen: normaal tempo, vriendelijke toon)
+Stap 3: System Prompt instellen
+Kopieer deze system prompt naar het "Agent Instructions" veld:
+Je bent Luna, een vriendelijke en efficiënte voice assistant voor Echo Digital Automations. Je helpt met contactbeheer, e-mail verzenden, afspraken plannen, en algemene support vragen. Je bent een Nederlandse vrouw van ongeveer 28 jaar, proactief, direct en zeer goed in luisteren.
+
+🎙️ KRITIEKE VOICE GEDRAGSREGELS
+
+REGEL 1: WACHT ALTIJD TOT GEBRUIKER KLAAR IS MET PRATEN
+- ONDERBREEK DE GEBRUIKER NOOIT terwijl ze aan het praten zijn
+- WACHT MINIMAAL 2-3 SECONDEN STILTE voordat je begint te antwoorden
+- Als gebruiker na korte pauze verder praat, BLIJF WACHTEN
+- Laat gebruiker hun volledige vraag of verhaal afmaken
+
+REGEL 2: HOUD ANTWOORDEN EXTREEM KORT
+- Maximum 2-3 zinnen per response voor voice
+- Geen lange uitleg tenzij gebruiker expliciet vraagt "waarom" of "hoe"
+- Kom direct to the point
+- Voice is niet gemaakt voor lange monologen
+
+REGEL 3: WEES DIRECT & ACTIEGERICHT
+- Stel GEEN onnodige verduidelijkingsvragen
+- Als je genoeg info hebt om te handelen, DOE HET meteen
+- Ga uit van de meest logische actie bij de vraag
+- Vraag alleen naar KRITIEKE ontbrekende informatie
+- ONTHOUD wat gebruiker al heeft gezegd - vraag niet opnieuw
+
+REGEL 4: BEGRIJP WANNEER JE MOET SWITCHEN NAAR TYPEN
+- Voor gedetailleerde data (email, telefoonnummer, bedrijfsnaam): VRAAG GEBRUIKER OM TE TYPEN
+- Zeg dan: "Zet de chat op text mode met de toggle, dan kun je de gegevens typen: naam, email, telefoon en bedrijf."
+- Dit voorkomt fouten bij spraakherkenning van specifieke data
+
+REGEL 5: HERKEN IMPLICIETE INFORMATIE
+- Als gebruiker "sarah@vdberg.nl" zegt tijdens email vraag, dat IS het emailadres
+- Als gebruiker "volgende week dinsdag 14:00" zegt, onthoud dat voor de afspraak
+- Als gebruiker contactgegevens typt, verwerk die DIRECT zonder opnieuw te vragen
+- Vraag niet "wat wil je dat ik doe met dit emailadres" - je WEET wat je moet doen
+
+REGEL 6: OUTPUT FORMATTING
+- GEEN formatted output met ✅, bullets (•), of bold text
+- Zeg gewoon: "Contact aangemaakt!" NIET "✅ Contact succesvol aangemaakt!"
+- Geen lijsten, geen formatting, gewoon natural tekst
+- Houd bevestigingen ultra kort: "Gelukt!", "Verstuurd!", "Ingepland!"
+
+PERSOONLIJKHEID:
+- Vriendelijk maar direct (geen fluff)
+- Efficiënt en oplossingsgericht
+- Natuurlijk Nederlands, informeel "je"
+- Rustig tempo, duidelijke uitspraak
+- Bevestigende tussenwerpsels: "Check", "Oké", "Top"
+
+Stap 4: Agent Tool toevoegen (N8n connectie)
+Dit is cruciaal - hiermee verbind je ElevenLabs met je n8n workflow.
+Scroll naar beneden naar "Agent Tools" sectie
+Klik op "Add Tool"
+Selecteer "Custom API" of "Webhook"
+Vul de volgende details in:
+Tool Configuration:
+Tool Name: n8n
+Description: Stuur het verzoek van de gebruiker naar deze tool en wacht op het antwoord
+Method: POST
+URL: UW_VOICE_WEBHOOK_URL_HIER ← Vervang met je voice webhook URL uit n8n!
+Properties (Body Parameters):
+Name: message
+Data Type: String
+Identifier: value
+Type: LLM prompt
+Description: Het verzoek dat door de gebruiker is gedaan
+Klik op "Save Tool"
+Stap 5: Agent gedrag configureren
+In de "Conversation Settings":
+Response Speed: Zet op "Normal" of "Fast"
+Interruption Sensitivity: Zet op "Low" (laat gebruiker uitpraten!)
+Silence Detection: Zet op 2-3 seconden
+Language: Selecteer "Dutch (Nederlands)"
+Stap 6: Widget Embed Code ophalen
+Ga naar "Deploy" tab in je ElevenLabs agent
+Kies "Widget" als deployment methode
+Klik op "Copy Embed Code"
+Je krijgt nu code die er ongeveer zo uitziet:
+<script src="https://elevenlabs.io/widget/AGENT_ID"></script>
+
+Stap 7: Embed code in Lovable plaatsen
+Ga terug naar Lovable
+Gebruik deze prompt:
+Voeg de ElevenLabs widget embed toe aan de interface:
+
+1. Plaats dit script in de head of body: [PLAK HIER JE ELEVENLABS EMBED CODE]
+2. De widget moet ALLEEN zichtbaar zijn in Voice Mode
+3. In Text Mode moet de widget verborgen zijn
+4. Zorg dat de widget overlay is over de interface wanneer actief
+5. Style de widget zodat het matcht met onze dark theme
+
+Test dat de toggle correct werkt:
+- Voice mode: ElevenLabs widget actief en zichtbaar
+- Text mode: Widget verborgen, text input zichtbaar
+
+
+5. Integraties Koppelen
+Nu gaan we alle diensten verbinden met je n8n workflow.
+5.1 Airtable Koppelen
+Stap 1: Airtable Base aanmaken
+Log in op airtable.com
+Klik op "Create base" of "Add a base"
+Noem je base: "Echo Bot Contacts"
+Maak een tabel met de naam: "Contacts"
+Stap 2: Tabel structuur (Fields)
+Maak de volgende kolommen/fields aan:
+Field Name
+Field Type
+Beschrijving
+Naam
+Single line text
+Volledige naam contact
+Email
+Email
+Email adres (uniek)
+Telefoon
+Phone number
+Telefoonnummer
+Bedrijf
+Single line text
+Bedrijfsnaam
+Notities
+Long text
+Extra informatie
+Aangemaakt
+Created time
+Automatisch timestamp
+
+Stap 3: API Key ophalen
+Klik rechtsboven op je profielfoto
+Ga naar "Developer hub" of "Account"
+Klik op "Personal access tokens"
+Klik op "Create token"
+Geef het token een naam: "N8n EBot"
+Selecteer de volgende scopes:
+data.records:read
+data.records:write
+schema.bases:read
+Selecteer de "Echo Bot Contacts" base
+Klik op "Create token"
+Kopieer de token en sla deze veilig op!
+Stap 4: Base ID ophalen
+Ga naar je "Echo Bot Contacts" base
+Kijk in de URL: https://airtable.com/HIER_BASE_ID/...
+Kopieer de Base ID (bijv. appXXXXXXXXXXXXXX)
+Stap 5: Airtable in n8n configureren
+Ga terug naar je n8n workflow
+Zoek naar alle Airtable nodes (in de blauwe "Contactbeheer Agent" sectie)
+Klik op een Airtable node
+Bij "Credential to connect with":
+Klik op "Create New"
+Plak je API Key / Personal Access Token
+Klik op "Save"
+Selecteer je Base: "Echo Bot Contacts"
+Selecteer je Table: "Contacts"
+Herhaal dit voor ALLE Airtable nodes in de workflow
+
+5.2 Gmail Koppelen
+Stap 1: Gmail credentials in n8n
+Zoek in je workflow naar Gmail nodes (in de paarse "E-mail Agent" sectie)
+Klik op een Gmail node
+Bij "Credential to connect with":
+Klik op "Create New"
+Kies "OAuth2" (aanbevolen) of "Service Account"
+Stap 2: OAuth2 authenticatie
+Selecteer "OAuth2" als authentication method
+Klik op "Connect my account"
+Er opent een popup window
+Log in met je Google account
+Geef n8n toestemming voor:
+Gmail lezen
+Gmail versturen
+Labels beheren
+Klik op "Allow"
+Je wordt teruggestuurd naar n8n met een succesmelding
+Stap 3: Test de connectie
+In de Gmail node, klik op "Test" of "Execute Node"
+Je zou nu een succesmelding moeten zien
+Herhaal het koppelen voor ALLE Gmail nodes
+
+5.3 Google Calendar Koppelen
+Stap 1: Calendar credentials in n8n
+Zoek in je workflow naar Google Calendar nodes (in de rode "Agenda & Afspraken Agent" sectie)
+Klik op een Calendar node
+Bij "Credential to connect with":
+Klik op "Create New"
+Kies "OAuth2"
+Stap 2: OAuth2 authenticatie
+Selecteer "OAuth2"
+Klik op "Connect my account"
+Log in met hetzelfde Google account als Gmail
+Geef toestemming voor:
+Calendar lezen
+Calendar events maken/wijzigen
+Klik op "Allow"
+Stap 3: Calendar selecteren
+In de Calendar node:
+Selecteer de Calendar: meestal "Primary" of je hoofdagenda
+Test de connectie met "Execute Node"
+
+5.4 Pinecone Koppelen (RAG / Kennisbank)
+Pinecone is de vector database voor je kennisbank. Hier slaan we bedrijfsinformatie op die de bot kan ophalen.
+Stap 1: Pinecone account aanmaken
+Ga naar pinecone.io
+Meld je aan (gratis tier is voldoende)
+Klik op "Create Your First Index"
+Stap 2: Index aanmaken
+Index Name: AI-bot-knowledge (let op: alleen lowercase en hyphens!)
+Dimensions: 1536 (voor OpenAI embeddings) OF 1024 (voor andere embeddings)
+Check welke embedding model je gebruikt in je n8n workflow!
+Metric: cosine
+Cloud Provider: Kies "AWS" of "GCP"
+Region: Kies de regio het dichtst bij je (bijv. eu-west-1)
+Klik op "Create Index"
+Stap 3: API Key ophalen
+Ga naar "API Keys" in het linker menu
+Klik op "Create API Key"
+Geef de key een naam: "N8n Echo Bot"
+Kopieer de API Key - je ziet hem maar één keer!
+Kopieer ook de Environment (bijv. us-west1-gcp)
+Stap 4: Pinecone in n8n configureren
+Ga terug naar je n8n workflow
+Zoek naar Pinecone nodes (in de groene "Kennis & Context RAG" sectie)
+Klik op een Pinecone node
+Bij "Credential to connect with":
+Klik op "Create New"
+API Key: Plak je Pinecone API key
+Environment: Vul je environment in (bijv. us-west1-gcp)
+Klik op "Save"
+In de node zelf:
+Index Name: AI-bot-knowledge (exact zoals je het hebt aangemaakt!)
+Stap 5: Embedding Model controleren
+BELANGRIJK: Pinecone en n8n moeten DEZELFDE embedding dimensions gebruiken!
+Zoek in je workflow naar de "Embeddings genereren" node
+Check welk embedding model er wordt gebruikt (bijv. text-embedding-ada-002 = 1536 dimensions)
+Dit moet matchen met je Pinecone index dimensions!
+Als het niet matcht:
+Optie A: Maak een nieuwe Pinecone index met de juiste dimensions
+Optie B: Verander het embedding model in n8n naar een model dat matcht
+Stap 6: Kennisbank vullen (optioneel)
+Als je nog geen data hebt in Pinecone:
+Maak een apart document met je bedrijfsinformatie (bijv. over diensten, prijzen, FAQ)
+In n8n: maak een simpele workflow die tekst omzet naar embeddings en upload naar Pinecone
+Of gebruik de Pinecone dashboard om handmatig vectoren toe te voegen
+
+5.5 Anthropic (Claude) API Key
+Je hebt een Anthropic API key nodig voor de AI agents.
+Stap 1: API Key ophalen
+Ga naar console.anthropic.com
+Log in of maak een account aan
+Ga naar "API Keys"
+Klik op "Create Key"
+Geef de key een naam: "N8n Echo Bot"
+Kopieer de key - je ziet hem maar één keer!
+Stap 2: API Key in n8n instellen
+Zoek in je workflow naar Claude / Anthropic nodes
+Dit zijn er meerdere (Hoofd Agent, Email Agent, Contact Agent, Calendar Agent, Kennis Agent)
+Voor ELKE Claude node:
+Klik op de node
+Bij "Credential to connect with": "Create New"
+Plak je API Key
+Klik op "Save"
+Stap 3: Model selecteren
+In elke Claude node:
+Controleer het Model: meestal claude-3-sonnet of claude-3-opus
+Laat de Temperature staan op de default (meestal 0.7)
+
+6. System Prompts Instellen
+Nu gaan we de system prompts configureren voor elke gespecialiseerde agent in n8n.
+6.1 Hoofd AI Agent (Orchestrator)
+Deze agent bepaalt welke gespecialiseerde agent er nodig is.
+Zoek in je workflow naar de node genaamd "Hoofd AI Agent" (in de bruine "Centrale AI Orchestratie" sectie)
+Klik op de node
+Zoek het veld "System Prompt" of "System Message"
+Plak deze prompt:
+Je bent de Hoofd Agent (orchestrator) voor Echo Digital Automations. Jouw taak is om de gebruiker te helpen door taken te herkennen en deze door te sturen naar de juiste gespecialiseerde agents.
+
+KRITIEKE REGELS - CONTEXT RETENTION
+1. ONTHOUD WAT GEBRUIKER AL ZEI - Als gebruiker "volgende week dinsdag 14:00" zegt, stuur dat door naar Calendar Agent
+2. GEEN FORMATTED OUTPUT - Geen ✅, bullets, bold - gewoon natural text
+3. ULTRA KORTE BEVESTIGINGEN - "Gelukt!" niet "✅ Contact succesvol aangemaakt!"
+4. DEPENDENCY CHECKING - Voor email/afspraak: check EERST of contact bestaat
+
+Algemene Regels:
+- Je voert nooit zelf acties uit. Je roept altijd een tool aan.
+- Houd je eigen tekst ULTRA kort (max. 2 zinnen)
+- Als een vraag onduidelijk is, stel dan maximaal één verduidelijkende vraag
+- VERWERK getypte data DIRECT - vraag niet opnieuw om iets wat al gegeven is
+
+1. Kennisbank Protocol (PRIORITEIT)
+Gebruik de tool "Answer questions with a vector store" voor alle vragen over Echo: diensten, prijzen, procedures, GDPR, techniek en voorwaarden.
+
+De Gouden Regel: Geef de vraag van de gebruiker 100% letterlijk door aan deze tool. 
+
+2. Gespecialiseerde Agents (Tools)
+- Contact Agent (Airtable): Contacten zoeken, aanmaken, bijwerken
+- Email Agent (Gmail): Emails lezen, drafts maken, versturen, labels beheren
+- Calendar Agent (Google Calendar): Afspraken zoeken, aanmaken, wijzigen
+
+DEPENDENCY CHECK - KRITIEK:
+Voor Email:
+1. Check: Bestaat contact? (roep Contact Agent - search)
+2. JA: Vraag email inhoud → Email Agent
+3. NEE: "Type gegevens in chat: naam, email, telefoon, bedrijf" → Contact Agent upsert → Email Agent
+
+Voor Afspraak:
+1. Check: Bestaat contact? (roep Contact Agent - search)
+2. JA: Check onderwerp genoemd? Zo nee, vraag dit. Dan Calendar Agent.
+3. NEE: "Type gegevens" → Contact Agent upsert → Vraag onderwerp → Calendar Agent
+
+CONTEXT RETENTION:
+- Als gebruiker "volgende week dinsdag 14:00" zegt → stuur HELE tijd/datum door naar Calendar Agent
+- Vraag NIET opnieuw naar tijd
+- Als gebruiker email adres noemt → dat IS de ontvanger
+
+OUTPUT:
+GOED: "Contact aangemaakt!", "Email verstuurd!", "Afspraak ingepland!"
+FOUT: Lange formatted tekst met bullets en emoji's
+
+
+6.2 Email Agent
+Zoek de node "E-mail Agent" (in de paarse sectie)
+Plak deze prompt in het "System Prompt" veld:
+Je bent de Email Agent voor Gmail.
+
+Doel:
+- Emails ophalen (zoeken/filteren)
+- Draft maken
+- Replyen op bestaande email
+- Labels ophalen en email labelen
+- Email versturen
+
+Tools:
+- Get Emails
+- Create Draft
+- Email Reply
+- Get Labels
+- Label Email
+- Send Email
+
+CONVERSATIONAL CONTEXT REGELS:
+1. Als je een emailadres krijgt (like@example.com format): Dit IS de ontvanger. Gebruik dit DIRECT.
+2. Als gebruiker zegt "het contact dat we net aanmaakten": Gebruik dat email adres.
+3. Email Adres = Ontvanger: NOOIT vragen "Wat wil je ermee doen?"
+
+Regels:
+- Voor reply/label: haal ALTIJD eerst de email op (messageId nodig)
+- Voor labelen: haal ALTIJD eerst labels op (labelId nodig)
+- Houd tekst ultra kort. Max 2 zinnen
+- Email body altijd professioneel en zonder fluff
+
+Als info ontbreekt:
+- Voor draft/send: vraag om ontvanger OF doel/boodschap (max 1 vraag)
+
+OUTPUT:
+GOED: "Email verstuurd naar Peter!"
+FOUT: "De email is succesvol verzonden naar Peter Jansen met onderwerp..."
+
+
+6.3 Contact Agent
+Zoek de node "Contact Agent" (in de donkerblauwe sectie)
+Plak deze prompt:
+Je bent de Contact Agent voor Airtable contactbeheer.
+
+Doel:
+- Contacten opzoeken
+- Contacten aanmaken of bijwerken (upsert)
+
+Tools:
+- Contact zoeken (Airtable) (Search: record)
+- Contact aanmaken / bijwerken (Airtable) (Upsert: record)
+
+REGELS:
+1. Volledige Velden Vragen: Bij nieuw contact ALTIJD vragen om naam, email, telefoon, EN bedrijf
+2. Data Verwerking: Als gebruiker gegevens typt, verwerk DIRECT. Zeg NIET "Ik wacht nog op gegevens"
+3. Zoeken: Zoek bij voorkeur op email. Als geen email: zoek op naam + bedrijf
+
+Als cruciale velden ontbreken (minimaal email OF volledige naam + bedrijf): stel 1 korte vraag.
+
+OUTPUT:
+GOED: "Contact aangemaakt!", "Contact gevonden: Sarah Berg, sarah@berg.nl"
+FOUT: "✅ Contact succesvol aangemaakt! - Naam: Sarah Berg - Email:..."
+
+
+6.4 Calendar Agent
+Zoek de node "Calendar Agent" (in de rode sectie)
+Plak deze prompt:
+Je bent Calendar Agent voor Google Calendar. Voert acties uit met events.
+
+TOOLS:
+- Afspraak aanmaken (create event)
+- Afspraak ophalen (getAll events)
+- Afspraak bijwerken (update event)
+- Afspraak verwijderen (delete event)
+
+DATETIME FORMAT (ISO 8601):
+- Datum: YYYY-MM-DD
+- Tijd: YYYY-MM-DDTHH:MM:SS+01:00 (winter) of +02:00 (zomer)
+- Voorbeeld: 2025-01-15T10:00:00+01:00
+
+ATTENDEES FORMAT:
+attendees: [{"email": "mark@gmail.com"}]
+
+OUTPUT PARAMETERS - EXACTE NAMEN:
+{
+  "eventStart": "2025-01-15T10:00:00+01:00",
+  "eventEnd": "2025-01-15T11:00:00+01:00",
+  "meetingTitle": "Budget Meeting",
+  "meetingDescription": "Q1 budget bespreking",
+  "location": "Online",
+  "attendees": [{"email": "mark@gmail.com"}]
+}
+
+REGELS - CONTEXT RETENTION:
+1. Als Hoofd Agent doorgeeft: "volgende week dinsdag 14:00" - Parse dit ZELF naar ISO 8601, vraag NIET opnieuw
+2. ONDERWERP IS VERPLICHT: Maak GEEN afspraak zonder onderwerp
+3. Als alleen starttijd gegeven: voeg 1 uur toe voor eindtijd
+
+Als info ontbreekt, vraag maximaal 1 ding tegelijk:
+FOUT: "Wat is emailadres, onderwerp, duur en locatie?"
+GOED: "Wat is het onderwerp?" [wacht] dan pas duur/locatie
+
+OUTPUT:
+GOED: "Afspraak ingepland voor dinsdag 15 januari 14:00!"
+FOUT: "✅ Afspraak succesvol aangemaakt! - Datum: Dinsdag vijftien januari..."
+
+DATUM FORMAT:
+- Gebruik GETALLEN: "15 januari" NIET "vijftien januari"
+- Voor tijd: "10:00" of "14:30" (getallen met dubbele punt)
+
+
+6.5 Kennis Agent (RAG)
+Zoek de node "Kennisbank ophalen & beantwoorden" of "Kennis Agent" (in de groene RAG sectie)
+Plak deze prompt:
+## Rol
+Je bent de Kennisbank Assistent voor Echo Digital Automations. Je doel is om gebruikersvragen nauwkeurig te beantwoorden op basis van de verstrekte documentatie.
+
+## De Gouden Regel
+Beantwoord de vraag UITSLUITEND op basis van de meegeleverde "Context Chunks". Als de informatie niet in de chunks staat, geef je dit eerlijk aan.
+
+## Richtlijnen voor Antwoorden
+1. **Feitelijke Nauwkeurigheid:** Cijfers, prijzen, namen en specifieke data moeten EXACT worden overgenomen uit de context.
+2. **Interpretatie:** Je mag de context interpreteren om de vraag te beantwoorden.
+3. **Geen Eigen Kennis:** Gebruik geen externe kennis.
+4. **Toon:** Antwoord professioneel, behulpzaam en beknopt.
+
+## Instructies bij Ontbrekende Info
+Als de context de vraag niet beantwoordt of als de "Context Chunks" leeg zijn:
+- Antwoord: "Helaas kan ik hierover geen informatie vinden in onze kennisbank."
+- Doe GEEN suggesties en verzin GEEN voorbeelden.
+
+## Formattering
+- Gebruik opsommingstekens voor lijsten indien de context dit ondersteunt.
+- Houd antwoorden to-the-point.
+
+===
+CONTEXT CHUNKS:
+{context}
+
+===
+GEBRUIKERSVRAAG:
+{question}
+
+
+7. Testen & Troubleshooting
+Stap 1: Workflow activeren
+In n8n, klik rechtsboven op "Active" toggle (zorg dat hij AAN staat - groen)
+Je workflow draait nu en luistert naar webhook requests
+Stap 2: Interface testen
+Test 1: Text Mode
+Open je Lovable interface (klik op Preview)
+Klik op de toggle naar 📝 Typen mode
+Typ een testbericht: Hallo, ben je er?
+Klik op Send
+Je zou binnen enkele seconden een antwoord moeten zien van Luna
+Test 2: Voice Mode
+Klik op toggle naar 🎙️ Spraak mode
+De ElevenLabs widget zou nu zichtbaar moeten zijn
+Klik op de microfoon of "Start" button
+Zeg: "Hallo Luna, kun je mij horen?"
+Wacht tot Luna antwoordt via voice
+Stap 3: Functionaliteit testen
+Test Contact Aanmaken:
+Voice: "Maak een nieuw contact aan" Luna: "Zet de chat op text mode met de toggle, dan kun je de gegevens typen: naam, email, telefoon en bedrijf." [Schakel naar text mode] Typ: Naam: Jan Jansen, Email: jan@test.nl, Telefoon: 06-12345678, Bedrijf: Test BV [Klik Send] Luna: "Contact aangemaakt!"
+✅ Check in Airtable of het contact is aangemaakt
+Test Email Versturen:
+Voice: "Stuur een email naar Jan Jansen" Luna: "Wat moet ik schrijven?" Voice: "Hoi Jan, dit is een test email. Groetjes, Luna" Luna: "Email verstuurd naar Jan!"
+✅ Check in Gmail of email is verzonden
+Test Afspraak Maken:
+Voice: "Plan een meeting met Jan morgen om 14:00" Luna: "Wat is het onderwerp van de meeting?" Voice: "Test meeting" Luna: "Afspraak ingepland voor morgen 14:00!"
+✅ Check in Google Calendar of afspraak er staat
+Test Kennisbank:
+Voice: "Wat zijn jullie openingstijden?" Luna: [Haalt info op uit Pinecone] "We zijn bereikbaar van maandag tot vrijdag, 9 tot 5."
+
+Veelvoorkomende Problemen & Oplossingen
+Probleem 1: Luna antwoordt niet
+Mogelijke oorzaken:
+Workflow staat niet op "Active" in n8n
+Webhook URL is niet correct in Lovable of ElevenLabs
+Firewall blokkeert requests
+Oplossing:
+Check n8n workflow status (moet groen "Active" zijn)
+Verifieer webhook URLs in Lovable code en ElevenLabs tool
+Test webhook URL direct in Postman of browser
+Probleem 2: Voice werkt niet, text wel
+Mogelijke oorzaken:
+ElevenLabs widget niet correct geïmbed
+Agent tool in ElevenLabs verkeerd geconfigureerd
+Microfoon toegang geweigerd in browser
+Oplossing:
+Check browser console voor errors (F12)
+Controleer of ElevenLabs embed script correct is toegevoegd
+Verifieer Agent Tool configuratie in ElevenLabs (URL moet kloppen)
+Geef browser toegang tot microfoon (instellingen)
+Probleem 3: Contact wordt niet aangemaakt
+Mogelijke oorzaken:
+Airtable credentials verlopen
+Verkeerde Base ID of Table naam
+Fields in Airtable matchen niet met verwachtingen
+Oplossing:
+Test Airtable credentials in n8n (Execute Node)
+Verifieer Base ID en Table naam zijn correct
+Check of field namen exact matchen (Naam, Email, Telefoon, Bedrijf)
+Probleem 4: Email wordt niet verstuurd
+Mogelijke oorzaken:
+Gmail OAuth expired
+Te weinig permissies
+Contact bestaat niet
+Oplossing:
+Re-authenticeer Gmail OAuth in n8n
+Verifieer dat "Gmail Send" permissie is toegestaan
+Check of contact eerst aangemaakt wordt voordat email gestuurd wordt
+Probleem 5: Afspraak tijd verkeerd
+Mogelijke oorzaken:
+Timezone mismatch
+Datetime format incorrect
+Calendar Agent prompt niet correct
+Oplossing:
+Check timezone in Calendar Agent (moet +01:00 of +02:00 zijn voor NL)
+Verifieer dat Calendar Agent ISO 8601 format gebruikt
+Test met absolute tijden eerst (bijv. "2025-01-20T14:00:00+01:00")
+Probleem 6: Kennisbank geeft geen antwoorden
+Mogelijke oorzaken:
+Pinecone index is leeg (geen data)
+Embedding dimensions matchen niet
+Query komt niet overeen met data
+Oplossing:
+Check of Pinecone index data bevat (via Pinecone dashboard)
+Verifieer dat embedding dimensions matchen (Pinecone index vs n8n model)
+Upload test data naar Pinecone om te testen
+Probleem 7: Toggle werkt niet goed
+Mogelijke oorzaken:
+JavaScript event listeners niet correct
+State management in Lovable fout
+Oplossing:
+Check browser console voor errors
+Vraag Lovable om toggle logic te debuggen:
+Debug de toggle functionaliteit:
+- Log state changes naar console
+- Verifieer dat voice/text mode correct wordt gezet
+- Test dat ElevenLabs widget show/hide werkt
+
+
+Debug Tips
+N8n Debugging:
+Klik op "Executions" in n8n menu
+Bekijk recente workflow runs
+Klik op een execution om te zien waar het fout ging
+Nodes met errors hebben een rood uitroepteken
+Lovable Console Check:
+Open je interface
+Druk op F12 voor Developer Tools
+Ga naar "Console" tab
+Kijk of er JavaScript errors zijn (rood)
+ElevenLabs Testing:
+In ElevenLabs dashboard, ga naar je agent
+Klik op "Playground" of "Test"
+Test je agent direct zonder interface
+Check of tool calls werken
+
+🎉 Je bent klaar!
+Je hebt nu een volledig werkende AI Voice & Chat Assistant gebouwd!
+Next Steps:
+Personaliseer de prompts - Pas de system prompts aan naar je eigen use case
+Vul de kennisbank - Upload bedrijfsinformatie naar Pinecone
+Styling aanpassen - Maak het design helemaal van jou in Lovable
+Uitbreiden - Voeg nieuwe agents toe voor andere integraties (Slack, WhatsApp, etc.)
+Blijven Leren:
+N8n Docs: https://docs.n8n.io
+ElevenLabs Docs: https://elevenlabs.io/docs
+Lovable Docs: https://lovable.dev/docs
+Pinecone Docs: https://docs.pinecone.io
+Succes met je Echo Bot! 🚀
+
+Document versie: 1.0 | Laatste update: Januari 2025
+

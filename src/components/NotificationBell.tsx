@@ -7,10 +7,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { formatDistanceToNow } from "date-fns";
 import { nl } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -36,6 +38,7 @@ export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMediaQuery('(max-width: 767px)');
 
   const unreadCount = notifications.filter((n) => n.read_at === null).length;
 
@@ -180,111 +183,137 @@ export function NotificationBell() {
     }
   };
 
-  return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-            >
-              {unreadCount > 9 ? "9+" : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notificaties</h3>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-              className="text-xs text-muted-foreground hover:text-foreground"
-            >
-              <Check className="h-3 w-3 mr-1" />
-              Alles gelezen
-            </Button>
-          )}
-        </div>
-        <ScrollArea className="h-[300px]">
-          {notifications.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">
-              Geen notificaties
-            </div>
-          ) : (
-            <div className="divide-y">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
-                    notification.read_at === null ? "bg-primary/5" : ""
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-lg">
-                      {getNotificationIcon(notification.type, notification.is_digest)}
-                    </span>
-                    <div
-                      className="flex-1 min-w-0"
-                      onClick={() => handleNotificationClick(notification)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-sm truncate">
-                          {notification.title}
-                        </p>
-                        {notification.priority === 'high' && (
-                          <Badge variant="outline" className="text-xs">Belangrijk</Badge>
-                        )}
-                        {notification.priority === 'urgent' && (
-                          <Badge variant="destructive" className="text-xs">Urgent</Badge>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {notification.message}
+  const triggerButton = (
+    <Button variant="ghost" size="icon" className="relative" onClick={() => setIsOpen(true)}>
+      <Bell className="h-5 w-5" />
+      {unreadCount > 0 && (
+        <Badge
+          variant="destructive"
+          className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+        >
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </Badge>
+      )}
+    </Button>
+  );
+
+  const notificationList = (
+    <>
+      <div className="flex items-center justify-between p-4 border-b">
+        <h3 className="font-semibold">Notificaties</h3>
+        {unreadCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={markAllAsRead}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            <Check className="h-3 w-3 mr-1" />
+            Alles gelezen
+          </Button>
+        )}
+      </div>
+      <ScrollArea className="h-[60vh] md:h-[300px]">
+        {notifications.length === 0 ? (
+          <div className="p-4 text-center text-muted-foreground">
+            Geen notificaties
+          </div>
+        ) : (
+          <div className="divide-y">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
+                  notification.read_at === null ? "bg-primary/5" : ""
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">
+                    {getNotificationIcon(notification.type, notification.is_digest)}
+                  </span>
+                  <div
+                    className="flex-1 min-w-0"
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-sm truncate">
+                        {notification.title}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(new Date(notification.created_at), {
-                          addSuffix: true,
-                          locale: nl,
-                        })}
-                      </p>
-                    </div>
-                    <div className="flex gap-1">
-                      {notification.read_at === null && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            markAsRead(notification.id);
-                          }}
-                        >
-                          <Check className="h-3 w-3" />
-                        </Button>
+                      {notification.priority === 'high' && (
+                        <Badge variant="outline" className="text-xs">Belangrijk</Badge>
                       )}
+                      {notification.priority === 'urgent' && (
+                        <Badge variant="destructive" className="text-xs">Urgent</Badge>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDistanceToNow(new Date(notification.created_at), {
+                        addSuffix: true,
+                        locale: nl,
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    {notification.read_at === null && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                        className="h-6 w-6"
                         onClick={(e) => {
                           e.stopPropagation();
-                          deleteNotification(notification.id);
+                          markAsRead(notification.id);
                         }}
                       >
-                        <X className="h-3 w-3" />
+                        <Check className="h-3 w-3" />
                       </Button>
-                    </div>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        {triggerButton}
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetContent side="bottom" className="p-0 rounded-t-2xl max-h-[85vh]">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Notificaties</SheetTitle>
+            </SheetHeader>
+            {notificationList}
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        {triggerButton}
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        {notificationList}
       </PopoverContent>
     </Popover>
   );

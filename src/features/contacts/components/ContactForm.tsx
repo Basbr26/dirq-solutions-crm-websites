@@ -27,16 +27,18 @@ import { Contact } from "@/types/crm";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
+// Note: Zod schema validation messages can't use t() directly
+// So we keep English messages here and translate in FormMessage components
 const contactFormSchema = z.object({
-  first_name: z.string().min(1),
-  last_name: z.string().min(1),
-  email: z.string().email().optional().or(z.literal("")),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().optional(),
   mobile: z.string().optional(),
   position: z.string().optional(),
   department: z.string().optional(),
-  linkedin_url: z.string().url().optional().or(z.literal("")),
-  company_id: z.string().uuid().optional(),
+  linkedin_url: z.string().url("Invalid URL").optional().or(z.literal("")),
+  company_id: z.string().uuid("Select a company").optional(),
   is_primary: z.boolean().default(false),
   is_decision_maker: z.boolean().default(false),
   notes: z.string().optional(),
@@ -104,7 +106,7 @@ export function ContactForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Name Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="first_name"
@@ -112,11 +114,10 @@ export function ContactForm({
               <FormItem>
                 <FormLabel>{t('formLabels.firstName')} *</FormLabel>
                 <FormControl>
-                  <Input
-                    data-testid="contact-name-input"
-                    placeholder="Jan"
+                  <Input 
+                    placeholder="Jan" 
                     autoComplete="given-name"
-                    {...field}
+                    {...field} 
                   />
                 </FormControl>
                 <FormMessage />
@@ -379,7 +380,7 @@ export function ContactForm({
               {t('common.cancel')}
             </Button>
           )}
-          <Button type="submit" data-testid="contact-submit-btn" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {contact ? t('common.save') : t('common.create')}
           </Button>

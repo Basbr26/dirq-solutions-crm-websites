@@ -1,0 +1,23 @@
+-- ============================================================
+-- BASELINE MIGRATION - Dirq Solutions CRM
+-- Created: 2026-02-01
+-- ============================================================
+-- This is a baseline migration representing the consolidated state
+-- of all previous migrations. The actual schema already exists in
+-- the database.
+--
+-- Previous migrations (80 files) have been consolidated and archived
+-- in supabase/migrations_backup/
+--
+-- Tables included in this baseline:
+-- - profiles, companies, contacts, projects, quotes, quote_items
+-- - interactions, notifications, industries, calendar_events
+-- - email_drafts, email_logs, google_oauth_tokens
+-- - chat_conversations, chat_messages
+-- - atc_processed_events, atc_failed_events, atc_circuit_breaker
+-- - crm_audit_log, intake_checklists, subscriptions
+--
+-- This file is intentionally empty as schema already exists.
+-- ============================================================
+
+SELECT 1; -- Placeholder to make migration valid

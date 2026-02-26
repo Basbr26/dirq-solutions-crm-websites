@@ -358,14 +358,14 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                   <FormItem>
                     <FormLabel>{t('formLabels.companyName')} *</FormLabel>
                     <FormControl>
-                      <Input data-testid="company-name-input" placeholder="Acme Corporation" {...field} />
+                      <Input placeholder="Acme Corporation" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="industry_id"
@@ -417,7 +417,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="status"
@@ -498,7 +498,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             <div className="space-y-4">
               <h3 className="text-sm font-semibold">Contactgegevens</h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="email"
@@ -562,7 +562,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
             <div className="space-y-4">
               <h3 className="text-sm font-semibold">Externe Data (optioneel)</h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="kvk_number"
@@ -625,7 +625,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="address.postal_code"
@@ -703,7 +703,7 @@ export function CompanyForm({ open, onOpenChange, company, onSubmit, isLoading }
               >
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" data-testid="company-submit-btn" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {company ? t('common.save') : t('common.create')}
               </Button>

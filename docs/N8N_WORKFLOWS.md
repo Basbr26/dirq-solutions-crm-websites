@@ -2,13 +2,88 @@
 
 ## Overzicht
 
-Dit document beschrijft de 28 n8n workflows die zijn ingericht voor de Dirq Websites CRM automatisering.
+Dit document beschrijft alle n8n workflows voor de Dirq Websites CRM automatisering.
 
 **n8n Instance:** https://dirqsolutions.app.n8n.cloud/
 
+**Actieve Workflows:** 2 hoofd + 8 sub-workflows
+- ✅ **CRM AI Chatbot** - Natural language CRM queries met 8 tool sub-workflows  
+- ✅ **ATC Orchestrator** - Event-driven pipeline automation met AI notifications
+
+**Gearchiveerde Workflows:** 28 inactieve workflows (Fase 1-2 planning, niet geactiveerd)
+
 ---
 
-## Geinstalleerde Workflows
+## 🟢 ACTIEVE PRODUCTIE WORKFLOWS (2 + 8 tools)
+
+### CRM AI Chatbot (`lo0RW5Sw4UHXnMpr`) - ACTIEF
+
+**Doel:** Intelligente AI-chatbot voor natural language CRM queries. Gebruikers kunnen in natuurlijke taal vragen stellen over bedrijven, deals, offertes, contacten en activiteiten.
+
+**Architectuur:**
+- **Trigger:** Chat Trigger (chatTrigger) met CORS webhook
+- **AI Agent:** Google Vertex AI (gemini-2.0-flash) met 8 tools
+- **Memory:** Postgres Chat Memory (chat_sessions/chat_messages tabellen)
+- **Model:** `@n8n/n8n-nodes-langchain.lmChatGoogleVertex` (project: `dirq-solutions-crm-website`)
+
+**8 Tool Sub-Workflows:**
+
+| # | Tool | Workflow ID | Functie | Query |
+|---|------|-------------|---------|-------|
+| 1 | Company Searcher | `3WcnIawEzSfOKiss` | Zoek bedrijven | GET /rest/v1/companies?name=ilike.*{query}* |
+| 2 | Project Searcher | `rpbHzxjBd0OPQnh2` | Zoek deals/projecten | GET /rest/v1/projects?select=*,companies!fk_project_company(name) |
+| 3 | Contact Searcher | `fvCEfhk3lCGtAzFJ` | Zoek contactpersonen | GET /rest/v1/contacts?select=*,companies(name) |
+| 4 | Quote Searcher | `o2HhV82OXqHvF1oH` | Zoek offertes | GET /rest/v1/quotes?select=*,projects(title,companies(name)) |
+| 5 | Activity Searcher | `yO5DrnZuMuTWk2Be` | Zoek activiteiten | GET /rest/v1/interactions?order=created_at.desc&limit=20 |
+| 6 | Deal Manager | `58WpdsvPp6r7nd73` | Deal details | GET /rest/v1/projects?select=*,companies(name) |
+| 7 | Stage Transitioner | `OXoHn2dPYWc1mPXm` | Pipeline stage wijzigen | PATCH /rest/v1/projects?id=eq.{id} |
+| 8 | Note Logger | `gZvPPvNlvvXS6hOA` | Notities loggen | POST /rest/v1/interactions |
+
+**Elke sub-workflow volgt het pattern:**
+```
+Execute Workflow Trigger → HTTP Request (Supabase PostgREST + service_role) → Return data
+```
+
+**Webhook URL:** `https://dirqsolutions.app.n8n.cloud/webhook/af0281c2-177e-4f17-b89c-6fea1caedf83/chat`
+
+---
+
+### Air Traffic Control - CRM Orchestrator (`IGMxMoXs4v04waOb`) - ACTIEF
+
+**Doel:** Event-driven pipeline orchestratie. Verwerkt CRM events (stage changes, new projects, etc.), genereert AI-notificaties en beheert een Dead Letter Queue.
+
+**Architectuur:**
+- **Trigger:** Webhook (POST) met Header Auth
+- **AI:** Google Vertex AI (gemini-2.0-flash) voor notificatie generatie
+- **Database:** HTTP Request naar Supabase PostgREST (service_role key)
+- **Nodes:** 21 totaal (16 enabled, 5 disabled)
+
+**Flow:**
+```
+Webhook → Parse Payload → Idempotency Check → Event Router (5-case Switch)
+  → Get Context (HTTP) → Priority Calculator → AI Notification Generator (Vertex)
+  → Insert Notification (HTTP) → Mark Processed (HTTP)
+  → Error: DLQ Insert (HTTP)
+```
+
+**Disabled Nodes:**
+- Postgres Stage Changes trigger (IPv6 incompatibel)
+- DLQ Retry chain (placeholder logic, needs implementation)
+
+**v2.0 Refactoring (3 feb 2026):**
+- 4x Supabase node → HTTP Request met PostgREST API
+- Google Gemini Chat Model → Google Vertex AI
+- Postgres trigger disabled (IPv6)
+
+---
+
+## 🔴 ARCHIVED WORKFLOWS (Fase 1-2 - INACTIEF)
+
+**⚠️ BELANGRIJK:** De onderstaande 28 workflows zijn **geïmporteerd maar NIET actief**. Deze workflows waren onderdeel van Fase 1-2 planning maar zijn niet geactiveerd in productie. Ze blijven in n8n als referentie/templates voor toekomstige implementatie.
+
+**Huidige Focus:** Alleen Chatbot + ATC zijn actief en in productie gebruik.
+
+---
 
 ### Fase 1 - Basis Automatisering (01-10)
 
@@ -76,17 +151,19 @@ Dit document beschrijft de 28 n8n workflows die zijn ingericht voor de Dirq Webs
 
 Ga naar n8n > **Credentials** en configureer de volgende credentials:
 
-#### 1.1 Supabase
-- **Type:** Supabase
-- **Name:** `Dirq Supabase`
-- **Host:** [jouw-supabase-url].supabase.co
-- **Service Role Key:** Te vinden in Supabase > Settings > API
-
-#### 1.2 Gemini API
+#### 1.1 Supabase (HTTP Header Auth)
 - **Type:** HTTP Header Auth
-- **Name:** `Gemini API`
-- **Header Name:** `x-goog-api-key`
-- **Header Value:** [jouw Gemini API key van aistudio.google.com]
+- **Name:** `Supabase Service Role`
+- **Header Name:** `apikey`
+- **Header Value:** [service_role key uit Supabase > Settings > API]
+- **BELANGRIJK:** NOOIT de native Supabase node gebruiken (IPv6 incompatibel met n8n Cloud)
+
+#### 1.2 Google Vertex AI
+- **Type:** Google Cloud Service Account
+- **Name:** `Google Vertex AI`
+- **Project:** `dirq-solutions-crm-website`
+- **Model:** `gemini-2.0-flash`
+- **Credential ID:** `9SZVBhI8ZWjav8KD`
 
 #### 1.3 Resend Email
 - **Type:** Resend API
@@ -495,17 +572,19 @@ ADD COLUMN IF NOT EXISTS lead_score INTEGER DEFAULT 0;
 
 ## Webhook URLs Overzicht
 
-| Workflow | Webhook URL |
-|----------|-------------|
-| 05 - Calendar Sync | `/webhook/crm-to-calendar` |
-| 07 - Onboarding | `/webhook/project-won` |
-| 09 - Quote Builder | `/webhook/generate-quote` |
-| 10 - Enrichment | `/webhook/company-created` |
-| 13 - Lead Scoring | `/webhook/calculate-lead-score` |
-| 15 - Deal Won | `/webhook/deal-won` |
-| 16 - Deal Lost | `/webhook/deal-lost` |
-| 24 - Website Launch | `/webhook/website-launched` |
-| 28 - NPS Received | `/webhook/nps-received` |
+| Workflow | Webhook URL | Status |
+|----------|-------------|--------|
+| CRM AI Chatbot | `/webhook/af0281c2.../chat` | ACTIEF |
+| ATC Orchestrator | `/webhook/...` (Header Auth) | ACTIEF |
+| 05 - Calendar Sync | `/webhook/crm-to-calendar` | Inactief |
+| 07 - Onboarding | `/webhook/project-won` | Inactief |
+| 09 - Quote Builder | `/webhook/generate-quote` | Inactief |
+| 10 - Enrichment | `/webhook/company-created` | Inactief |
+| 13 - Lead Scoring | `/webhook/calculate-lead-score` | Inactief |
+| 15 - Deal Won | `/webhook/deal-won` | Inactief |
+| 16 - Deal Lost | `/webhook/deal-lost` | Inactief |
+| 24 - Website Launch | `/webhook/website-launched` | Inactief |
+| 28 - NPS Received | `/webhook/nps-received` | Inactief |
 
 ---
 
@@ -563,6 +642,52 @@ Voor vragen of problemen:
 
 ---
 
-*Gegenereerd door Claude Code - Dirq Solutions CRM Automation Setup*  
-*Totaal: 28 workflows geïmporteerd*  
-*Datum: 16 januari 2026*
+## n8n Architectuur Regels
+
+### VERPLICHT: HTTP-RPC Patroon
+```
+n8n Workflow → HTTP Request Node → Supabase PostgREST API → PostgreSQL
+```
+
+### VERBODEN
+- Native Supabase node (IPv6 incompatibel met n8n Cloud)
+- Native Postgres node/trigger (IPv6 incompatibel)
+- Directe database credentials in workflows
+
+### Headers voor HTTP Request
+```json
+{
+  "apikey": "{{ $env.SUPABASE_SERVICE_KEY }}",
+  "Authorization": "Bearer {{ $env.SUPABASE_SERVICE_KEY }}",
+  "Content-Type": "application/json",
+  "Prefer": "return=representation"
+}
+```
+
+### AI Model
+- **Provider:** Google Vertex AI
+- **Model:** gemini-2.0-flash
+- **Node type:** `@n8n/n8n-nodes-langchain.lmChatGoogleVertex`
+- **Project:** `dirq-solutions-crm-website`
+
+---
+
+## RAG Vector Store
+
+**Migration:** `20260202000000_rag_vector_store.sql`
+
+**Tabel:** `crm_knowledge`
+- `content` (TEXT) - Kennisbasis tekst
+- `metadata` (JSONB) - Type, company_id, etc.
+- `embedding` (VECTOR 768) - Gemini text-embedding-004
+- IVFFlat index voor snelle similarity search
+
+**RPC Functies:**
+- `match_crm_knowledge(query_embedding, threshold, count)` - Cosine similarity search
+- `upsert_crm_knowledge(content, metadata, embedding)` - Insert/update chunks
+
+---
+
+*Gegenereerd door Claude Code - Dirq Solutions CRM Automation Setup*
+*Totaal: 28 basis workflows + 2 actieve productie workflows + 8 sub-workflows*
+*Laatste update: 4 februari 2026*

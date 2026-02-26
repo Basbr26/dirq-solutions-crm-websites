@@ -1,0 +1,1578 @@
+{
+  "name": "Invoice Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=Je bent de Email Agent voor Gmail.\n\nDoel:\n- Emails ophalen (zoeken/filteren)\n- Draft maken\n- Replyen op bestaande email\n- Labels ophalen en email labelen\n- Email versturen\n\nTools:\n- Get Emails\n- Create Draft\n- Email Reply\n- Get Labels\n- Label Email\n- Send Email\n\nCONVERSATIONAL CONTEXT REGELS\n\n1. Herken Antwoorden op Vragen:\nAls Hoofd Agent doorgeeft dat gebruiker antwoordt op een vraag:\n- \"Naar wie?\" → emailadres of naam = de ontvanger\n- \"Wat schrijven?\" → tekst = email content\n- Gebruik dit DIRECT, vraag NIET \"wat ermee doen\"\n\n2. Email Adres = Ontvanger:\nAls je een emailadres krijgt (like@example.com format):\n- Dit IS de ontvanger\n- Check of bestaat in contacten (via Hoofd Agent)\n- Vraag email content\n- Verstuur\n- NOOIT: \"Wat wil je dat ik doe met dit emailadres?\"\n\n3. Recent Contact Reference:\nAls gebruiker zegt \"het contact dat we net aanmaakten\" of \"naar het nieuwe contact\":\n- Hoofd Agent geeft je het email adres\n- Gebruik dat direct als ontvanger\n\n4. Direct Emailadres in Vraag:\nAls originele vraag was \"stuur email naar peter@test.nl\":\n- peter@test.nl IS de ontvanger\n- Vraag alleen naar email content\n\nRegels:\n- Voor reply/label: haal ALTIJD eerst de email op (messageId nodig)\n- Voor labelen: haal ALTIJD eerst labels op (labelId nodig)\n- Houd tekst ultra kort. Max 2 zinnen + geen overbodige uitleg\n- Email body altijd professioneel, duidelijk, en zonder overbodige fluff\n\nAls info ontbreekt:\n- Voor draft/send: vraag om ontvanger OF doel/boodschap (max 1 vraag)\n- Als de gebruiker \"antwoord op die email\" zegt zonder context: vraag welke email\n\nOutput naar Hoofd Agent\n\nGOED:\n\"Email verstuurd naar Peter!\"\n\"Draft aangemaakt\"\n\"5 emails gevonden van afgelopen week\"\n\nFOUT:\n\"De email is succesvol verzonden naar Peter Jansen met onderwerp 'Offerte' en bevat de volgende inhoud: [lange text]. De email is opgeslagen in verzonden items en gelabeld met 'Zakelijk'.\"\n\nOntbrekende info? Vraag max 1 ding\nOutput kort: max 2 zinnen"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1008,
+        -1408
+      ],
+      "id": "ffe427f7-d76f-4674-9240-bfb01444edcb",
+      "name": "E-mail Agent"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=Je bent de Hoofd Agent (orchestrator) voor Echo Digital Automations. Jouw taak is om de gebruiker te helpen door taken te herkennen en deze door te sturen naar de juiste gespecialiseerde agents.\n\nKRITIEKE NIEUWE REGELS - CONTEXT RETENTION\n1. ONTHOUD WAT GEBRUIKER AL ZEI - Als gebruiker \"volgende week dinsdag 14:00\" zegt, stuur dat door naar Calendar Agent\n2. GEEN FORMATTED OUTPUT - Geen ✅, bullets, bold - gewoon natural text\n3. ULTRA KORTE BEVESTIGINGEN - \"Gelukt!\" niet \"✅ Contact succesvol aangemaakt!\"\n4. DEPENDENCY CHECKING - Voor email/afspraak: check EERST of contact bestaat\n\nAlgemene Regels\n- Je voert nooit zelf acties uit (zoals rekenen of feiten verzinnen). Je roept altijd een tool aan.\n- Houd je eigen tekst ULTRA kort (max. 2 zinnen), tenzij je een antwoord van een tool rapporteert.\n- Als een vraag onduidelijk is, stel dan maximaal één verduidelijkende vraag.\n- VERWERK getypte data DIRECT - vraag niet opnieuw om iets wat al gegeven is\n\n1. Kennisbank Protocol (PRIORITEIT)\n\nGebruik de tool \"Answer questions with a vector store\" voor alle vragen over Echo: diensten, prijzen, procedures, GDPR, techniek en voorwaarden.\n\nDe Gouden Regel: Geef de vraag van de gebruiker 100% letterlijk door aan deze tool. Pas geen woorden aan en vat niet samen. De Vector Store heeft de volledige context nodig voor een succesvolle zoekopdracht in Pinecone.\n\nAntwoorden: Rapporteer het antwoord van de kennisbank direct aan de gebruiker. Als de kennisbank zegt het niet te weten, verzin dan niets zelf. Houd het kort en natural - geen formatted output!\n\n2. Gespecialiseerde Agents (Tools)\n\nRoep de specifieke agent aan op basis van de intentie van de gebruiker:\n\nContact Agent (Airtable)\nGebruik voor: Contacten zoeken, nieuwe contacten aanmaken, gegevens bijwerken\n\nBELANGRIJK:\n- Als gebruiker zegt \"maak contact aan\", stuur door: \"Type in chat: naam, email, telefoon, bedrijf\"\n- Als gebruiker contactgegevens typt, stuur ALLE data door naar Contact Agent (niet opnieuw vragen!)\n- Output naar gebruiker: kort! \"Contact aangemaakt!\" (geen formatted lijst)\n\nEmail Agent (Gmail)\nGebruik voor: Emails lezen, concepten (drafts) maken, antwoorden versturen, labels beheren\n\nDEPENDENCY CHECK - KRITIEK:\nGebruiker: \"Stuur email naar Peter Jansen\"\n↓\n1. Check: Bestaat Peter in contacten? (roep Contact Agent - search)\n   ├─ JA: Vraag email inhoud → Email Agent\n   └─ NEE: \"Peter ken ik nog niet. Type zijn gegevens in de chat: naam, email, telefoon, bedrijf\"\n          ↓ User typt gegevens\n          ↓ Contact Agent - upsert\n          ↓ \"Contact aangemaakt. Wat moet ik in de email zetten?\"\n          ↓ Email Agent - verstuur\n\nCONVERSATIONAL CONTEXT - KRITIEK:\nAls JE ZELF een vraag stelt en gebruiker antwoordt, HERKEN DAT ANTWOORD!\n\nVoorbeeld 1 - User geeft email zonder ontvanger:\nUser: \"Stuur een email\"\nJij: \"Naar wie moet de email?\"\nUser: \"thijs@gmail.com\"\n→ Dit IS het antwoord op je vraag!\n→ Check of thijs@gmail.com in contacten staat\n→ Als NEE: \"Thijs ken ik nog niet. Type naam, telefoon en bedrijf\"\n→ Als JA: \"Wat moet ik schrijven?\"\n→ NOOIT: \"Wat wil je dat ik doe met dit emailadres?\"\n\nVoorbeeld 2 - User refereert naar net aangemaakt contact:\nUser: \"We hebben net een contact aangemaakt, stuur daar een email naartoe\"\n→ Gebruik het LAATST aangemaakte contact\n→ Haal email op uit dat contact\n→ Vraag email content\n→ Verstuur\n\nVoorbeeld 3 - User geeft direct emailadres:\nUser: \"Stuur email naar sarah@vdberg.nl\"\n→ Dit IS het emailadres, gebruik het direct\n→ Check of bestaat in contacten\n→ Vraag email content\n\nContext Tracking Regels:\n1. Track laatste vraag: Onthoud wat je net vroeg (\"naar wie?\", \"wat schrijven?\")\n2. Herken antwoord: Als user reageert na jouw vraag = antwoord op die vraag\n3. Gebruik direct: Ga naar volgende stap, vraag NIET \"wat wil je ermee doen\"\n4. Recent context: Als user zegt \"het contact dat we net aanmaakten\" → gebruik laatst aangemaakte contact\n\nEmail Adres Herkenning:\n- Als gebruiker emailadres noemt → dat IS de ontvanger\n- Als gebruiker zegt \"stuur email naar X\" → X is de ontvanger\n- Vraag NIET \"wat wil je ermee doen\" als het een emailadres is\n\nRegel bevestiging:\n- Voor casual emails: verstuur direct en bevestig \"Email verstuurd!\"\n- Vraag alleen bevestiging bij emails naar meerdere contacten, belangrijke business email, of als gebruiker lijkt onzeker\n\nCalendar Agent (Google Calendar)\nGebruik voor: Afspraken zoeken, beschikbaarheid checken, events aanmaken, events wijzigen\n\nDEPENDENCY CHECK - KRITIEK:\nGebruiker: \"Plan meeting met Lisa dinsdag 14:00\"\n↓\n1. Check: Bestaat Lisa in contacten? (roep Contact Agent - search)\n   ├─ JA: Ga naar stap 2\n   └─ NEE: \"Lisa ken ik nog niet. Type haar gegevens: naam, email, telefoon, bedrijf\"\n          ↓ User typt\n          ↓ Contact Agent - upsert\n          ↓ Ga naar stap 2\n\n2. Check: Is onderwerp genoemd?\n   ├─ JA: Calendar Agent - create event (met tijd die al genoemd is!)\n   └─ NEE: \"Wat is het onderwerp van de meeting?\"\n          ↓ User geeft onderwerp\n          ↓ Calendar Agent - create event\n\nBelangrijk:\n- ALTIJD vragen naar onderwerp als niet gegeven\n- NOOIT afspraak maken zonder onderwerp\n- Tijd/datum uit eerste vraag meenemen naar Calendar Agent\n\nCONTEXT RETENTION - ZEER BELANGRIJK:\n- Als gebruiker zegt \"volgende week dinsdag 14:00\" → stuur HELE tijd/datum door naar Calendar Agent\n- Vraag NIET opnieuw naar tijd als gebruiker het al zei\n- Als gebruiker zegt \"1 uur meeting\" → stuur duur door naar Calendar Agent\n- Als gebruiker zegt \"online\" → stuur locatie door\n- Maar vraag ALTIJD naar onderwerp als dat niet genoemd is!\n\n3. Werkwijze bij complexe vragen\n\nBij gecombineerde verzoeken werk je in stappen:\n\nVoorbeeld: \"Stuur de prijzen naar Jan.\"\nStap 1: Check of Jan bestaat (Contact Agent - search)\n  ├─ Bestaat niet? → Vraag gegevens → Contact Agent upsert → Ga naar stap 2\n  └─ Bestaat wel? → Ga naar stap 2\nStap 2: Roep Kennisbank aan voor prijzen\nStap 3: Roep Email Agent aan om email te versturen met prijzen\nStap 4: Bevestig kort: \"Email met prijzen naar Jan verstuurd!\"\n\n4. Output naar Gebruiker - KRITIEKE REGELS\n\nGOED:\n\"Contact aangemaakt!\"\n\"Email verstuurd naar Peter!\"\n\"Afspraak ingepland voor dinsdag 14:00!\"\n\"Gelukt!\"\n\nFOUT:\n\"✅ Contact succesvol aangemaakt! - Naam: Peter de Vries - Email: peter@devries.nl - Telefoon: 06-12345678\"\n(Te veel formatting, te lang, niet natural)\n\nAls gebruiker gegevens typt:\n- Verwerk DIRECT\n- Zeg NIET \"Ik wacht nog op de gegevens\" - als ze er zijn, gebruik ze!\n- Zeg NIET \"Ben je er nog?\" binnen 10 seconden\n\n5. Voorbeelden van Routering\n\nVraag: \"Wat is jullie opzegtermijn?\"\nActie: Tool-call Answer questions with a vector store met input: \"Wat is jullie opzegtermijn?\"\nOutput: \"De opzegtermijn is 1 maand.\" (kort!)\n\nVraag: \"Plan een call met Peter voor morgenmiddag.\"\nActie:\n1. Check Peter bestaat (Contact search)\n2. Als ja: Calendar create met \"morgenmiddag\" + vraag onderwerp\n3. Als nee: Vraag gegevens → Contact upsert → Calendar create\n\nVraag: \"Maak contact aan voor Sarah\"\nActie: \"Type in de chat: naam, email, telefoon, bedrijf.\"\n[Wacht 10-15 sec]\n[User typt gegevens]\n→ Contact Agent upsert met ALLE getypte data\n→ \"Contact aangemaakt!\"\n\nVraag: \"Stuur email naar mark@gmail.com over de offerte\"\nActie:\n- Herken dat mark@gmail.com het emailadres IS\n- Check of contact bestaat\n- Vraag email content\n- Email Agent verstuur\n- \"Email verstuurd!\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        160,
+        -1344
+      ],
+      "id": "33c38e71-49ad-499a-a37f-498d1211ce9f",
+      "name": "Hoofd AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        -1424
+      ],
+      "id": "fa06ef00-ffbe-4aad-afe7-5b550e5041eb",
+      "name": "Antwoord terugsturen"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "thijs@echo-automations.com",
+          "mode": "list",
+          "cachedResultName": "thijs@echo-automations.com"
+        },
+        "eventId": "={{ $fromAI(\"eventID\") }}",
+        "updateFields": {
+          "end": "",
+          "start": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        -640
+      ],
+      "id": "2ee0e03a-1e77-4e0f-91ee-a607a71fe06b",
+      "name": "Afspraak bijwerken",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "n3TeOSJccgsRyTCI",
+          "name": "Google Calender Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "thijs@echo-automations.com",
+          "mode": "list",
+          "cachedResultName": "thijs@echo-automations.com"
+        },
+        "start": "={{ $fromAI(\"eventStart\") }}",
+        "end": "={{ $fromAI(\"eventEnd\") }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('attendees0_Attendees', ``, 'string') }}"
+          ],
+          "description": "={{ $fromAI(\"meetingDescription\") }}",
+          "location": "={{ $fromAI(\"location\", \"locatie van de meeting\") }}",
+          "summary": "={{ $fromAI(\"meetingTitle\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        -640
+      ],
+      "id": "a15a4c34-1472-4a85-899e-3dad74df727e",
+      "name": "Afspraak aanmaken",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "n3TeOSJccgsRyTCI",
+          "name": "Google Calender Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "thijs@echo-automations.com",
+          "mode": "list",
+          "cachedResultName": "thijs@echo-automations.com"
+        },
+        "eventId": "={{ $fromAI(\"eventID\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1312,
+        -640
+      ],
+      "id": "827d6b33-2bb8-4f65-9a1b-5f74088bf8bb",
+      "name": "Afspraak verwijderen",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "n3TeOSJccgsRyTCI",
+          "name": "Google Calender Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "thijs@echo-automations.com",
+          "mode": "list",
+          "cachedResultName": "thijs@echo-automations.com"
+        },
+        "timeMin": "={{ $fromAI(\"dayBefore\",\"the day before the date the user requested\") }}",
+        "timeMax": "={{ $fromAI(\"dayAfter\",\"the day after the date the user requested\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        -640
+      ],
+      "id": "5b27b606-d398-408f-8968-cd04d2546ba0",
+      "name": "Afspraak ophalen",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "n3TeOSJccgsRyTCI",
+          "name": "Google Calender Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $fromAI('subject') }}",
+        "emailType": "html",
+        "message": "={{ $fromAI('emailBody') }}",
+        "options": {
+          "sendTo": "={{ $fromAI('emailAddress') }}\n"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        -1120
+      ],
+      "id": "d53ee532-e8c4-4de9-8bb1-184e69a6b971",
+      "name": "Draft aanmaken",
+      "webhookId": "b3e8e033-eb27-4319-8066-00988aacd6aa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7f6btTKyoOJQbx9",
+          "name": "Gmail account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ $fromAI(\"limit\",\"how many emails the user wants\") }}",
+        "simple": false,
+        "filters": {
+          "sender": "={{ $fromAI(\"sender\",\"who the emails are from\") }}"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        -1120
+      ],
+      "id": "8d04c551-d9c7-438e-9e4f-ebf53c902fa7",
+      "name": "E-mail ophalen",
+      "webhookId": "b3e8e033-eb27-4319-8066-00988aacd6aa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7f6btTKyoOJQbx9",
+          "name": "Gmail account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $fromAI('emailAddress') }}\n",
+        "subject": "={{ $fromAI('subject') }}",
+        "message": "={{ $fromAI('emailBody') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1328,
+        -1120
+      ],
+      "id": "923344a2-c21a-46f0-9a56-6da214ea85ef",
+      "name": "Bericht Versturen",
+      "webhookId": "f54936a8-0e07-4096-a730-9e1fddb43150",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7f6btTKyoOJQbx9",
+          "name": "Gmail account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $fromAI(\"ID\",\"the ID of the message\") }}",
+        "labelIds": "={{ $fromAI(\"labelID\") }}"
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        -1120
+      ],
+      "id": "b0e3bb60-20f8-4349-b87f-0b4333fd2df9",
+      "name": "Label toevoegen",
+      "webhookId": "827de3eb-ecd4-4794-ba10-68867bce0d6d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7f6btTKyoOJQbx9",
+          "name": "Gmail account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "appRN98QTbkl1zXNs",
+          "mode": "list",
+          "cachedResultName": "Untitled Base",
+          "cachedResultUrl": "https://airtable.com/appRN98QTbkl1zXNs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluacgeNQzkNFBNg",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "https://airtable.com/appRN98QTbkl1zXNs/tbluacgeNQzkNFBNg"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $fromAI(\"name\") }}",
+            "Email": "={{ $fromAI(\"emailAddress\") }}",
+            "Phone": "={{ $fromAI(\"phoneNumber\") }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Lead",
+                  "value": "Lead"
+                },
+                {
+                  "name": "Prospect",
+                  "value": "Prospect"
+                },
+                {
+                  "name": "Client",
+                  "value": "Client"
+                },
+                {
+                  "name": "Partner",
+                  "value": "Partner"
+                },
+                {
+                  "name": "Inactive",
+                  "value": "Inactive"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "LinkedIn",
+                  "value": "LinkedIn"
+                },
+                {
+                  "name": "Website",
+                  "value": "Website"
+                },
+                {
+                  "name": "Referral",
+                  "value": "Referral"
+                },
+                {
+                  "name": "Event",
+                  "value": "Event"
+                },
+                {
+                  "name": "Cold Outreach",
+                  "value": "Cold Outreach"
+                },
+                {
+                  "name": "Other",
+                  "value": "Other"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Tags",
+              "displayName": "Tags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "options": [
+                {
+                  "name": "Hot Lead",
+                  "value": "Hot Lead"
+                },
+                {
+                  "name": "Decision Maker",
+                  "value": "Decision Maker"
+                },
+                {
+                  "name": "Technical",
+                  "value": "Technical"
+                },
+                {
+                  "name": "Budget Approved",
+                  "value": "Budget Approved"
+                },
+                {
+                  "name": "Follow-up Needed",
+                  "value": "Follow-up Needed"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Last Contact Date",
+              "displayName": "Last Contact Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Next Follow-up",
+              "displayName": "Next Follow-up",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "LinkedIn URL",
+              "displayName": "LinkedIn URL",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Website",
+              "displayName": "Website",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Created Date",
+              "displayName": "Created Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Last Modified",
+              "displayName": "Last Modified",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        -656
+      ],
+      "id": "eaff1307-daff-4e69-b2b8-7de4edfa0190",
+      "name": "Contact aanmaken / bijwerken",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "VZcKBv7x9czio5pd",
+          "name": "Thijs Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appRN98QTbkl1zXNs",
+          "mode": "list",
+          "cachedResultName": "Untitled Base",
+          "cachedResultUrl": "https://airtable.com/appRN98QTbkl1zXNs"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tbluacgeNQzkNFBNg",
+          "mode": "list",
+          "cachedResultName": "Contacts",
+          "cachedResultUrl": "https://airtable.com/appRN98QTbkl1zXNs/tbluacgeNQzkNFBNg"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        -656
+      ],
+      "id": "36239f74-0815-47bb-8976-bc03976d6a8f",
+      "name": "Contact zoeken",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "VZcKBv7x9czio5pd",
+          "name": "Thijs Airtable"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        -1168
+      ],
+      "id": "c0719262-6989-479d-bc16-ef9ddb00c3c8",
+      "name": "E-mail Geheugen"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        -752
+      ],
+      "id": "11924996-db3e-48cc-8ae8-54c8b31945d0",
+      "name": "Agenda Geheugen"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -672
+      ],
+      "id": "d4999ffd-f69d-4ba6-8de9-49d895234517",
+      "name": "Contacten Geheugen"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f345f9a7-d0b0-4263-b56c-0179b1c2b9f2",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -832
+      ],
+      "id": "60959252-e60f-4f3e-8dd9-85fbb0bd487a",
+      "name": "Inkomend Voice Message",
+      "webhookId": "f345f9a7-d0b0-4263-b56c-0179b1c2b9f2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a36584f0-e84c-4116-8c9e-61e2efa2ca59",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        -1344
+      ],
+      "id": "3e16cab0-9255-4442-9b17-5fc217bc11d6",
+      "name": "Inkomend Chat bericht",
+      "webhookId": "a36584f0-e84c-4116-8c9e-61e2efa2ca59"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ec9a1d53-d7b0-4fab-930b-921fccdff848",
+              "name": "query",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "4064c22b-ed3f-4286-af67-e8a0d51cc374",
+              "name": "=sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "fe092794-39f8-41a0-8731-0b49d18580fa",
+              "name": "=orginalData",
+              "value": "={{ $json }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        -1344
+      ],
+      "id": "c3b4feae-dbd0-4b16-9020-2299454d0e36",
+      "name": "Data mappen"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b5ad27ec-10b4-4985-88ce-d98c4d594021",
+              "name": "sessionId",
+              "value": "={{ $json.body.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "a1bb7964-6a33-438a-862f-66e341248ff7",
+              "name": "query",
+              "value": "={{ $json.body.query }}",
+              "type": "string"
+            },
+            {
+              "id": "d145692e-757c-4243-9c1f-0ef0e00ed494",
+              "name": "originalData",
+              "value": "={{ $json }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -128,
+        -832
+      ],
+      "id": "6efdbed7-27c6-4f0a-9a41-bf30be9f6cf3",
+      "name": "Data mappen1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        -1056
+      ],
+      "id": "c550c280-2151-4923-a7b6-dd0634800bac",
+      "name": "Denken"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $fromAI(\"ID\",\"the message ID\") }}",
+        "message": "={{ $fromAI(\"emailBody\") }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -1120
+      ],
+      "id": "65e09b5b-6a4c-4fcc-a69a-db25405791d4",
+      "name": "E-mail beantwoorden",
+      "webhookId": "b3e8e033-eb27-4319-8066-00988aacd6aa",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7f6btTKyoOJQbx9",
+          "name": "Gmail account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Inkomende input normaliseren\n",
+        "height": 992,
+        "width": 496,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -1456
+      ],
+      "id": "bd6098d7-9d06-44ea-bb6c-cf6b5f661234",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Centrale AI Orchestratie",
+        "height": 528,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -1456
+      ],
+      "id": "92ade1fe-ffb0-4bcb-863f-0ef944cf8823",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## E-mail Agent ",
+        "height": 512,
+        "width": 912,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -1456
+      ],
+      "id": "dda265c3-2c4a-46c5-a697-b8955fcc3c4e",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Agenda & Afspraken Agent",
+        "height": 480,
+        "width": 912,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -944
+      ],
+      "id": "d9d359fb-95cf-4dfd-a58b-51e2a45f0a35",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Contactbeheer Agent \n",
+        "height": 480,
+        "width": 576,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        -944
+      ],
+      "id": "dedd6edb-dba2-4101-b2ee-bfa74d8ad89b",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=Je bent Calendar Agent voor Google Calendar. Voert acties uit met events.\n\nTOOLS:\n- Afspraak aanmaken (create event)\n- Afspraak ophalen (getAll events)\n- Afspraak bijwerken (update event)\n- Afspraak verwijderen (delete event)\n\nDATETIME FORMAT (ISO 8601):\n- Datum: YYYY-MM-DD\n- Tijd: YYYY-MM-DDTHH:MM:SS+01:00 (winter) of +02:00 (zomer)\n- Voorbeeld: 2025-01-15T10:00:00+01:00\n\nATTENDEES FORMAT - KRITIEK:\nAltijd als array van objecten:\nattendees: [{\"email\": \"mark@gmail.com\"}]\n\nOUTPUT PARAMETERS - EXACTE NAMEN:\nGebruik deze parameter namen (case-sensitive):\n{\n  \"eventStart\": \"2025-01-15T10:00:00+01:00\",\n  \"eventEnd\": \"2025-01-15T11:00:00+01:00\",\n  \"meetingTitle\": \"Budget Meeting\",\n  \"meetingDescription\": \"Q1 budget bespreking\",\n  \"location\": \"Online\",\n  \"attendees\": [{\"email\": \"mark@gmail.com\"}]\n}\n\nKRITIEK - GEBRUIK EXACT DEZE NAMEN:\n- meetingTitle (NIET summary)\n- meetingDescription (NIET description)\n- location (lowercase)\n- eventStart en eventEnd\n- attendees (array van objecten)\n\nNIEUWE REGELS - CONTEXT RETENTION\n\n1. Tijd/Datum van Hoofd Agent Gebruiken:\nAls Hoofd Agent doorgeeft: \"volgende week dinsdag 14:00\"\n- Parse dit ZELF naar ISO 8601 format\n- Vraag NIET opnieuw naar tijd\n- Als alleen starttijd gegeven: voeg 1 uur toe voor eindtijd\n\n2. ONDERWERP IS VERPLICHT:\nKRITIEK: Een afspraak MOET altijd een onderwerp/titel hebben.\nAls Hoofd Agent het onderwerp NIET doorgeeft:\nReturn naar Hoofd Agent: \"Onderwerp ontbreekt - vraag gebruiker: 'Wat is het onderwerp van de afspraak?'\"\nMaak GEEN afspraak zonder onderwerp. Het is beter om te vragen dan een lege titel.\n\n3. Alle Details Verzamelen voor Create:\nAls Hoofd Agent doorgeeft: \"meeting met Lisa dinsdag 14:00, 1 uur, online, project review\"\n- Gebruik ALLES wat gegeven is\n- Vraag NIET opnieuw naar duur (1 uur is gegeven)\n- Vraag NIET opnieuw naar locatie (online is gegeven)\n- Check: Is onderwerp gegeven? Zo nee → vraag dit EERST\n\n4. Stapsgewijze Info Gathering:\nAls info ontbreekt, vraag maximaal 1 ding tegelijk:\nFOUT: \"Wat is het emailadres, onderwerp, duur en locatie?\"\nGOED: \"Wat is het onderwerp?\" [wacht] dan pas duur/locatie als nodig\n\nVolgorde van vragen als info ontbreekt:\n1. EERST: Onderwerp (altijd verplicht!)\n2. DAN: Duur (als niet gegeven, gebruik 1 uur default)\n3. DAN: Locatie (als niet gegeven, gebruik \"Online\" of leeg)\n\nEINDTIJD BEREKENEN:\n- User zegt \"10:00 tot 10:30\" → gebruik exact deze tijden\n- User zegt \"10:00\" zonder eindtijd → voeg 1 uur toe (11:00)\n- User zegt \"30 minuten meeting om 10:00\" → eind = 10:30\n- User zegt \"1 uur\" → eind = start + 1 uur\n\nAFSPRAAK OPHALEN:\n- Input: datum/periode\n- Output: lijst met tijd, titel, locatie (max 8 events)\n- Format: \"Dinsdag 14:00 - Budget Meeting met Lisa (Online)\"\n\nAFSPRAAK WIJZIGEN/VERWIJDEREN:\n- Eerst ophalen → verkrijg eventId → dan bijwerken/verwijderen\n\nOutput naar Hoofd Agent\n\nGOED:\n\"Afspraak ingepland voor dinsdag 15 januari 14:00!\"\n\"Je hebt 3 meetings morgen: 10:00 TechCorp, 14:00 Budget, 16:00 Review\"\n\nFOUT:\n\"✅ Afspraak succesvol aangemaakt!\n- Datum: Dinsdag vijftien januari 2025\n- Tijd: 14:00 - 15:00\n- Met: Lisa Vermeulen (lisa@tech.nl)\n- Onderwerp: Budget bespreking\n- Locatie: Online via Google Meet\n- Event ID: evt_12345\"\n\nDATUM FORMAT REGELS:\n- Gebruik GETALLEN voor datums: \"15 januari\" NIET \"vijftien januari\"\n- Gebruik \"dinsdag 15 januari 14:00\" formaat\n- Voor tijd: \"10:00\" of \"14:30\" (getallen met dubbele punt)\n- NOOIT voluit schrijven: \"tien uur\" → gebruik \"10:00\"\n\nREGELS:\n- Ontbrekende info? Vraag max 1 ding tegelijk (NIET alles in één keer!)\n- Output ultra kort: max 2 zinnen\n- Gebruik ALTIJD correcte parameter namen\n- Check eindtijd berekening\n- Parse natuurlijke taal (zoals \"volgende week dinsdag\") naar ISO 8601"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1008,
+        -912
+      ],
+      "id": "cb007228-7bcb-485d-b316-9a127d5d8e85",
+      "name": "Calendar Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI-agent die andere tools kan aanroepen",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=Je bent de Contact Agent voor Airtable contactbeheer.\n\nDoel:\n- Contacten opzoeken\n- Contacten aanmaken of bijwerken (upsert)\n\nTools:\n- Contact zoeken (Airtable) (Search: record)\n- Contact aanmaken / bijwerken (Airtable) (Upsert: record)\n\nNIEUWE REGELS\n\n1. Volledige Velden Vragen:\nBij nieuw contact ALTIJD vragen om: naam, email, telefoon, EN bedrijf\n\nInput van Hoofd Agent: \"Type in chat: naam, email, telefoon, bedrijf\"\nUser typt: \"Naam: Sarah Berg, Email: sarah@berg.nl, Telefoon: 06-12345678, Bedrijf: Berg Consulting\"\n→ VERWERK ALLES in één keer - upsert met alle 4 velden\n→ Return naar Hoofd Agent: \"Contact aangemaakt!\"\n\n2. Data Verwerking:\n- Als gebruiker gegevens typt, verwerk DIRECT\n- Zeg NIET \"Ik wacht nog op gegevens\" als ze er al zijn\n- Return KORTE bevestiging (geen formatted output)\n\n3. Zoeken:\n- Zoek bij voorkeur op email (meest uniek)\n- Als geen email: zoek op naam + bedrijf\n- Als niet gevonden: return \"Contact niet gevonden\" (niet \"Ik kan X niet vinden\")\n\nRegels:\n- Zoek eerst (bij voorkeur op email). Als geen email: zoek op naam + bedrijf\n- Upsert alleen met betrouwbare identifiers\n- Als cruciale velden ontbreken (minimaal email OF volledige naam + bedrijf): stel 1 korte vraag\n- Houd je antwoord ULTRA kort: max 2 zinnen\n\nOutput naar de Hoofd Agent\n\nGOED:\n\"Contact aangemaakt!\"\n\"Contact gevonden: Sarah Berg, sarah@berg.nl\"\n\"Contact niet gevonden\"\n\nFOUT:\n\"✅ Contact succesvol aangemaakt!\n- Naam: Sarah Berg\n- Email: sarah@berg.nl\n- Telefoon: 06-12345678\n- Bedrijf: Berg Consulting\n- Record ID: rec12345\""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        -864
+      ],
+      "id": "1b40c408-2477-4d7f-a297-ba6159a335ac",
+      "name": "Contact Agent"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 480,
+        "width": 496,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        -944
+      ],
+      "id": "5d7ac169-2d68-4e01-9e47-c83d4bfaed91",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "maxTokensToSample": 800
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        -1120
+      ],
+      "id": "6c52dead-fc4b-428f-bdee-5769f3d3f453",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "sBkw4Cp1GedHJsoa",
+          "name": "Claude Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "maxTokensToSample": 800
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        -1168
+      ],
+      "id": "fa9befc9-be9a-463b-b749-8edc1d483d3a",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "sBkw4Cp1GedHJsoa",
+          "name": "Claude Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "maxTokensToSample": 800
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        784,
+        -752
+      ],
+      "id": "dced0fca-0ef1-40c7-96a9-d933315afc8b",
+      "name": "Anthropic Chat Model2",
+      "credentials": {
+        "anthropicApi": {
+          "id": "sBkw4Cp1GedHJsoa",
+          "name": "Claude Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-5-20250929",
+          "cachedResultName": "Claude Sonnet 4.5"
+        },
+        "options": {
+          "maxTokensToSample": 800
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        -672
+      ],
+      "id": "a110498f-a47d-4ced-8d99-31b37c22171b",
+      "name": "Anthropic Chat Model3",
+      "credentials": {
+        "anthropicApi": {
+          "id": "sBkw4Cp1GedHJsoa",
+          "name": "Claude Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        -1104
+      ],
+      "id": "a5eb13ae-55d0-444b-ba24-f321d07f1f92",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "content": "## Kennis & Context (RAG)",
+        "height": 576,
+        "width": 912,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -464
+      ],
+      "id": "01f860a0-6e87-43c9-9936-688ed6759871",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "echokennisbank",
+          "mode": "list",
+          "cachedResultName": "echokennisbank"
+        },
+        "options": {
+          "pineconeNamespace": "echokennisbank"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        -144
+      ],
+      "id": "e7fccb72-b038-41a7-a3dc-3785e560435e",
+      "name": "Kennisbank(Pinecone)",
+      "credentials": {
+        "pineconeApi": {
+          "id": "7E6LPtHGAY0DzhhI",
+          "name": "Pinecone Thijs"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "=## Rol\nJe bent de Kennisbank Assistent voor Echo Digital Automations. Je doel is om gebruikersvragen nauwkeurig te beantwoorden op basis van de verstrekte documentatie.\n\n## De Gouden Regel\nBeantwoord de vraag UITSLUITEND op basis van de meegeleverde \"Context Chunks\". Als de informatie niet in de chunks staat, geef je dit eerlijk aan.\n\n## Richtlijnen voor Antwoorden\n1. **Feitelijke Nauwkeurigheid:** Cijfers, prijzen, namen en specifieke data moeten EXACT worden overgenomen uit de context.\n2. **Interpretatie:** Je mag de context interpreteren om de vraag te beantwoorden. (Voorbeeld: Als de context spreekt over \"tarieven\" en de klant vraagt naar \"kosten\", dan koppel je deze aan elkaar).\n3. **Geen Eigen Kennis:** Gebruik geen externe kennis of informatie die je buiten de context om hebt geleerd.\n4. **Toon:** Antwoord professioneel, behulpzaam en beknopt.\n\n## Instructies bij Ontbrekende Info\nAls de context de vraag niet beantwoordt of als de \"Context Chunks\" leeg zijn:\n- Antwoord: \"Helaas kan ik hierover geen informatie vinden in onze kennisbank.\"\n- Doe GEEN suggesties en verzin GEEN voorbeelden die niet in de tekst staan.\n\n## Formattering\n- Gebruik opsommingstekens voor lijsten indien de context dit ondersteunt.\n- Houd antwoorden to-the-point.\n\n===\nCONTEXT CHUNKS:\n{context}\n===\nGEBRUIKERSVRAAG:\n{question}",
+        "topK": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolVectorStore",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -336
+      ],
+      "id": "e91a87d0-1104-4cfc-9ff0-96882ccf577c",
+      "name": "Kennis ophalen & beantwoorden"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "chatgpt-4o-latest"
+        },
+        "builtInTools": {
+          "webSearch": {
+            "searchContextSize": "medium"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        -160
+      ],
+      "id": "ca412cd4-34ba-40c5-b456-40a19830c6ac",
+      "name": "Antwoord genereren (Taalmodel)",
+      "credentials": {
+        "openAiApi": {
+          "id": "HWR47ajgKtRi7t8q",
+          "name": "Thijs OpenAi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        -32
+      ],
+      "id": "a8619ec7-2c1a-4b8d-b298-aac2292e30c5",
+      "name": "Embeddings genereren",
+      "credentials": {
+        "openAiApi": {
+          "id": "HWR47ajgKtRi7t8q",
+          "name": "Thijs OpenAi"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Inkomend Voice Message": [
+      {
+        "json": {
+          "headers": {
+            "host": "echoautomations.app.n8n.cloud",
+            "user-agent": "ElevenLabs/1.0",
+            "content-length": "91",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "34.59.11.47",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9bdad4ca4638dc06-ORD",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "34.59.11.47, 172.70.126.4",
+            "x-forwarded-host": "echoautomations.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-96-57f65f45bd-mctl7",
+            "x-is-trusted": "yes",
+            "x-real-ip": "34.59.11.47"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "query": "plan een afspraak in met Thijs Stevensen op 15 januari om 10 uur in de ochtend"
+          },
+          "webhookUrl": "https://echoautomations.app.n8n.cloud/webhook/f345f9a7-d0b0-4263-b56c-0179b1c2b9f2",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Inkomend Chat bericht": [
+      {
+        "json": {
+          "headers": {
+            "host": "echoautomations.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+            "content-length": "162",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2a02:a211:18b:4d00:387e:13d:b145:31a4",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "NL",
+            "cf-ray": "9bdb0ead40d89fdb-AMS",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://id-preview--eb16ca71-dd86-488b-bb2f-aad426bf515d.lovable.app",
+            "priority": "u=1, i",
+            "referer": "https://id-preview--eb16ca71-dd86-488b-bb2f-aad426bf515d.lovable.app/",
+            "sec-ch-ua": "\"Google Chrome\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2a02:a211:18b:4d00:387e:13d:b145:31a4, 172.71.183.150",
+            "x-forwarded-host": "echoautomations.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-96-57f65f45bd-8jt4k",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2a02:a211:18b:4d00:387e:13d:b145:31a4"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": "thijsstevense10@gmail.com",
+            "sessionId": "session_e7b0126f-c1c1-4d31-aecb-bd376da2a53b",
+            "timestamp": "2026-01-14T06:25:38.019Z",
+            "source": "echo-bot-chat"
+          },
+          "webhookUrl": "https://echoautomations.app.n8n.cloud/webhook/a36584f0-e84c-4116-8c9e-61e2efa2ca59",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "E-mail Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hoofd AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Antwoord terugsturen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Afspraak bijwerken": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Afspraak aanmaken": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Afspraak verwijderen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Afspraak ophalen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft aanmaken": {
+      "ai_tool": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail ophalen": {
+      "ai_tool": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bericht Versturen": {
+      "ai_tool": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Label toevoegen": {
+      "ai_tool": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact aanmaken / bijwerken": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contact Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact zoeken": {
+      "ai_tool": [
+        [
+          {
+            "node": "Contact Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail Geheugen": {
+      "ai_memory": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agenda Geheugen": {
+      "ai_memory": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contacten Geheugen": {
+      "ai_memory": [
+        [
+          {
+            "node": "Contact Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inkomend Voice Message": {
+      "main": [
+        [
+          {
+            "node": "Data mappen1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Inkomend Chat bericht": {
+      "main": [
+        [
+          {
+            "node": "Data mappen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data mappen": {
+      "main": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data mappen1": {
+      "main": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Denken": {
+      "ai_tool": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-mail beantwoorden": {
+      "ai_tool": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calendar Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contact Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "E-mail Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Calendar Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Contact Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kennisbank(Pinecone)": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Kennis ophalen & beantwoorden",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kennis ophalen & beantwoorden": {
+      "ai_tool": [
+        [
+          {
+            "node": "Hoofd AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwoord genereren (Taalmodel)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Kennis ophalen & beantwoorden",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings genereren": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Kennisbank(Pinecone)",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c51b877e-8f34-45fd-a392-961ee80324b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f993bc4974da7e01481d1d829265aaa353f41439d28fc3227522c7fb0a2cec01"
+  },
+  "id": "ieY8zAG3nZbC1d5n",
+  "tags": []
+}

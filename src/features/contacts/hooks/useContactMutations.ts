@@ -4,7 +4,6 @@ import { ContactFormData, Contact } from '@/types/crm';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
 import { useTranslation } from 'react-i18next';
-import { logActivity } from '@/lib/activityLogger';
 
 /**
  * Combined Contact Mutations Hook
@@ -87,12 +86,11 @@ export function useCreateContact() {
       if (error) throw error;
       return contact as Contact;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
       haptics.success();
       toast.success('Contact succesvol aangemaakt');
-      logActivity({ actionType: 'contact_created', entityType: 'contact', entityId: data.id, description: `Contact '${data.first_name} ${data.last_name}' aangemaakt` });
     },
     onError: (error: Error) => {
       haptics.error();
@@ -149,7 +147,6 @@ export function useUpdateContact() {
       queryClient.invalidateQueries({ queryKey: ['contact', data.id] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
       toast.success(t('toast.contact.updated'));
-      logActivity({ actionType: 'contact_updated', entityType: 'contact', entityId: data.id, description: `Contact '${data.first_name} ${data.last_name}' bijgewerkt` });
     },
     onError: (error: Error) => {
       toast.error(t('toast.contact.updateError'), {
@@ -198,12 +195,11 @@ export function useDeleteContact() {
       
       return data;
     },
-    onSuccess: (_, id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] });
       queryClient.invalidateQueries({ queryKey: ['contact-stats'] });
       haptics.success();
       toast.success(t('toast.contact.deleted'));
-      logActivity({ actionType: 'contact_deleted', entityType: 'contact', entityId: id, description: 'Contact verwijderd' });
     },
     onError: (error: Error) => {
       haptics.error();

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -15,9 +15,7 @@ import { InteractionTimeline } from '@/features/interactions/components/Interact
 import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
-import { CrmActivityLog } from '@/components/CrmActivityLog';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { useChatContext } from '@/contexts/ChatContext';
 import { ContactFormData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -38,7 +36,6 @@ import {
   Smartphone,
   Upload,
   Plus,
-  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,21 +85,6 @@ export default function ContactDetailPage() {
 
   // All hooks must be called unconditionally before any early returns
   const { data: contact, isLoading } = useContact(id!);
-  const { setChatContext, clearChatContext } = useChatContext();
-  useEffect(() => {
-    if (contact) {
-      setChatContext({
-        type: 'contact',
-        id: contact.id,
-        name: `${contact.first_name} ${contact.last_name}`,
-        metadata: {
-          email: contact.email ?? null,
-          company: contact.company?.name ?? null,
-        },
-      });
-    }
-    return () => clearChatContext();
-  }, [contact, setChatContext, clearChatContext]);
   const updateContact = useUpdateContact();
   const deleteContact = useDeleteContact();
   const { data: interactionsData, isLoading: isLoadingInteractions } = useInteractions({
@@ -263,10 +245,6 @@ export default function ContactDetailPage() {
             <TabsTrigger value="documents" className={isMobile ? "flex-shrink-0" : ""}>
               <FileText className="mr-2 h-4 w-4" />
               {t('contacts.tabs.documents')}
-            </TabsTrigger>
-            <TabsTrigger value="activity" className={isMobile ? "flex-shrink-0" : ""}>
-              <Clock className="mr-2 h-4 w-4" />
-              Activiteit
             </TabsTrigger>
           </TabsList>
         </div>
@@ -520,19 +498,6 @@ export default function ContactDetailPage() {
             <CardContent>
               <DocumentsList contactId={id} />
             </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Activity Tab */}
-        <TabsContent value="activity" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Activiteit
-              </CardTitle>
-            </CardHeader>
-            <CrmActivityLog entityId={id!} entityType="contact" />
           </Card>
         </TabsContent>
       </Tabs>

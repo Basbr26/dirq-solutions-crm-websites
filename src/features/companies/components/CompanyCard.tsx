@@ -1,7 +1,6 @@
 import { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Building2, Phone, Mail, Globe, MapPin, TrendingUp, Clock, Edit, Trash2, MoreVertical } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Company } from '@/types/crm';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -36,8 +35,6 @@ import { toast } from 'sonner';
 
 interface CompanyCardProps {
   company: Company;
-  isSelected?: boolean;
-  onToggleSelect?: () => void;
 }
 
 const statusConfig = {
@@ -53,7 +50,7 @@ const priorityConfig = {
   high: { label: 'Hoog', color: 'bg-orange-500/10 text-orange-500' }
 };
 
-export const CompanyCard = memo(function CompanyCard({ company, isSelected, onToggleSelect }: CompanyCardProps) {
+export const CompanyCard = memo(function CompanyCard({ company }: CompanyCardProps) {
   const { t } = useTranslation();
   const { role } = useAuth();
   const navigate = useNavigate();
@@ -119,24 +116,11 @@ export const CompanyCard = memo(function CompanyCard({ company, isSelected, onTo
   };
 
   const cardContent = (
-    <Card data-testid="company-card" className={cn(
+    <Card className={cn(
       "transition-shadow cursor-pointer relative",
-      !isMobile && "hover:shadow-lg",
-      isSelected && "ring-2 ring-primary"
+      !isMobile && "hover:shadow-lg"
     )}>
-      {onToggleSelect && (
-        <div className="absolute top-3 left-3 z-10">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={onToggleSelect}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
-      <CardHeader className={cn(
-        "flex flex-row items-start justify-between space-y-0 pb-2",
-        onToggleSelect && "pl-10"
-      )}>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="flex items-start space-x-3 flex-1 min-w-0">
           <Avatar className="h-12 w-12 flex-shrink-0">
             <AvatarFallback className="bg-primary/10 text-primary">

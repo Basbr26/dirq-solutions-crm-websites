@@ -772,6 +772,7 @@
       "fontSizeDescription": "Pas de lettergrootte aan"
     },
     "integrations": {
+      "title": "Integraties",
       "googleCalendar": "Google Calendar",
       "googleCalendarDescription": "Synchroniseer je afspraken met Google Calendar"
     }

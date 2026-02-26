@@ -15,6 +15,57 @@ Alle updates, features, bugfixes en migraties in chronologische volgorde.
 
 ---
 
+## [3.0.0] - 2026-02-04 - AI Chatbot + ATC Refactoring
+
+### AI Chatbot - Productie Launch
+- **CRM AI Chatbot** (`lo0RW5Sw4UHXnMpr`) - Volledig werkende AI chatbot met natural language CRM queries
+  - AI Agent met Google Vertex AI (gemini-2.0-flash)
+  - Postgres Chat Memory voor conversatie persistentie
+  - 8 tool sub-workflows voor CRM data access:
+    - Company Searcher (`3WcnIawEzSfOKiss`) - Bedrijven zoeken
+    - Project Searcher (`rpbHzxjBd0OPQnh2`) - Deals/projecten zoeken
+    - Contact Searcher (`fvCEfhk3lCGtAzFJ`) - Contactpersonen zoeken
+    - Quote Searcher (`o2HhV82OXqHvF1oH`) - Offertes zoeken
+    - Activity Searcher (`yO5DrnZuMuTWk2Be`) - Activiteiten zoeken
+    - Deal Manager (`58WpdsvPp6r7nd73`) - Deal details bekijken
+    - Stage Transitioner (`OXoHn2dPYWc1mPXm`) - Pipeline stages wijzigen
+    - Note Logger (`gZvPPvNlvvXS6hOA`) - Notities loggen
+  - Alle tools gebruiken HTTP Request met PostgREST API + service_role key
+  - Natural language queries: "zoek dirq solutions", "welke offertes staan open?", etc.
+
+### ATC Workflow v2.0 Refactoring
+- **Air Traffic Control** (`IGMxMoXs4v04waOb`) - Volledig gerefactored
+  - 4x Native Supabase node → HTTP Request met PostgREST API
+  - Google Gemini Chat Model → Google Vertex AI
+  - Postgres Stage Changes trigger disabled (IPv6 incompatibel)
+  - DLQ retry chain disabled (placeholder logic)
+  - Alle 18 connecties intact inclusief 5-case Switch router
+  - 0 validatie errors, workflow actief
+
+### RAG Vector Store
+- **Database Migration** (`20260202000000_rag_vector_store.sql`)
+  - pgvector extensie enabled
+  - `crm_knowledge` tabel met 768-dimensionale embeddings
+  - `match_crm_knowledge()` RPC voor cosine similarity search
+  - `upsert_crm_knowledge()` RPC voor content management
+  - IVFFlat index (100 lists) voor snelle ANN search
+  - GIN index op metadata JSONB
+  - RLS: service_role full access, anon read-only
+
+### AI Model Migratie
+- Google AI Studio / Gemini API → **Google Vertex AI**
+  - Project: `dirq-solutions-crm-website`
+  - Model: `gemini-2.0-flash`
+  - Node type: `@n8n/n8n-nodes-langchain.lmChatGoogleVertex`
+
+### Architectuur
+- **n8n ↔ Supabase:** Volledig HTTP-RPC patroon
+  - NOOIT native Supabase/Postgres nodes (IPv6 incompatibel op n8n Cloud)
+  - ALTIJD HTTP Request met PostgREST + service_role key
+  - FK disambiguatie: `companies!fk_project_company(id,name)` syntax
+
+---
+
 ## [2.0.4] - 2026-01-14 - Quick Wins: UX & Code Quality
 
 ### 🧹 Code Quality
@@ -687,4 +738,4 @@ Alle updates, features, bugfixes en migraties in chronologische volgorde.
 
 **Changelog Format:** [Keep a Changelog](https://keepachangelog.com/)  
 **Versioning:** [Semantic Versioning](https://semver.org/)  
-**Last Updated:** 7 Januari 2026
+**Last Updated:** 4 Februari 2026

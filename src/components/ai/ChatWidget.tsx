@@ -10,13 +10,12 @@
  * - Smooth animations
  */
 
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useHotkeys } from 'react-hotkeys-hook';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useChatContext } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { ChatMessage, type ChatMessageProps } from './ChatMessage';
+import { ChatMessage } from './ChatMessage';
 import {
   Send,
   Loader2,
@@ -43,13 +42,8 @@ import {
   Users,
   TrendingUp,
   X,
-  Mail,
+  Mic,
   MessageSquare,
-  Search,
-  Clock,
-  DollarSign,
-  Plus,
-  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -68,8 +62,8 @@ interface StoredMessage {
   created_at: string;
 }
 
-// Default quick actions (used on generic pages)
-const DEFAULT_QUICK_ACTIONS = [
+// Quick action suggestions
+const quickActions = [
   { icon: Users, label: 'Zoek klant', prompt: 'Help me een klant zoeken op naam of KVK nummer' },
   { icon: FileText, label: 'Maak offerte', prompt: 'Ik wil een nieuwe offerte maken' },
   { icon: TrendingUp, label: 'Sales stats', prompt: 'Geef me een overzicht van mijn sales statistieken' },
@@ -82,55 +76,14 @@ const DEFAULT_WEBHOOK_URL = import.meta.env.VITE_N8N_CHAT_WEBHOOK_URL ||
 export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps) {
   const { t } = useTranslation();
   const { user, profile } = useAuth();
-  const { chatContext } = useChatContext();
   const queryClient = useQueryClient();
-
-  // Dynamic quick actions based on current page context
-  const quickActions = useMemo(() => {
-    if (!chatContext?.type) return DEFAULT_QUICK_ACTIONS;
-    const { type, name } = chatContext;
-    const n = name || 'dit record';
-    const actionsMap = {
-      company: [
-        { icon: FileText,      label: 'Maak offerte',   prompt: `Maak een offerte voor ${n}` },
-        { icon: TrendingUp,    label: 'Pipeline',        prompt: `Toon de pipeline projecten voor ${n}` },
-        { icon: MessageSquare, label: 'Log gesprek',     prompt: `Log een activiteit bij ${n}` },
-        { icon: Search,        label: 'KVK verrijking',  prompt: `Verrijk ${n} met KVK data` },
-      ],
-      contact: [
-        { icon: Mail,          label: 'Stuur email',    prompt: `Stuur een email naar ${n}` },
-        { icon: MessageSquare, label: 'Log gesprek',    prompt: `Log een gesprek met ${n}` },
-        { icon: FileText,      label: 'Maak taak',      prompt: `Maak een taak aan voor ${n}` },
-        { icon: TrendingUp,    label: 'Sales stats',    prompt: 'Geef me een overzicht van mijn sales' },
-      ],
-      quote: [
-        { icon: Send,          label: 'Herinnering',    prompt: `Stuur een offerte herinnering voor ${n}` },
-        { icon: CheckCircle2,  label: 'Accepteer',      prompt: `Markeer offerte ${n} als geaccepteerd` },
-        { icon: FileText,      label: 'Nieuwe offerte', prompt: 'Ik wil een nieuwe offerte maken' },
-        { icon: TrendingUp,    label: 'Statistieken',   prompt: 'Geef me een overzicht van mijn offertes' },
-      ],
-      project: [
-        { icon: TrendingUp,    label: 'Volgende fase',  prompt: `Verplaats ${n} naar de volgende pipeline fase` },
-        { icon: MessageSquare, label: 'Log update',     prompt: `Log een project update voor ${n}` },
-        { icon: FileText,      label: 'Toon offertes',  prompt: `Toon de offertes gekoppeld aan ${n}` },
-        { icon: Search,        label: 'Talking points', prompt: `Genereer talking points voor ${n}` },
-      ],
-      pipeline: [
-        { icon: Plus,          label: 'Voeg lead toe',  prompt: 'Voeg een nieuwe lead toe aan de pipeline' },
-        { icon: TrendingUp,    label: 'Overzicht',      prompt: 'Geef een pipeline overzicht' },
-        { icon: Clock,         label: 'Verlopen deals', prompt: 'Welke deals verlopen binnenkort?' },
-        { icon: DollarSign,    label: 'Forecast',       prompt: 'Geef een revenue forecast' },
-      ],
-      dashboard: DEFAULT_QUICK_ACTIONS,
-    } as const;
-    return actionsMap[type] ?? DEFAULT_QUICK_ACTIONS;
-  }, [chatContext]);
 
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -255,10 +208,6 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
         timestamp: new Date().toISOString(),
         context: {
           current_page: window.location.pathname,
-          page_type: chatContext?.type ?? null,
-          resource_id: chatContext?.id ?? null,
-          resource_name: chatContext?.name ?? null,
-          ...(chatContext?.metadata ?? {}),
         },
       };
 
@@ -277,25 +226,8 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
 
         const result = await response.json();
 
-        // Strip n8n agent tool traces: [Used tools: Tool: ..., Input: ..., Result: ...]
-        // These can contain nested brackets, so we use depth-counting to find the closing bracket
-        const stripToolTraces = (text: string): string => {
-          let cleaned = text.trimStart();
-          while (cleaned.startsWith('[Used tools:')) {
-            let depth = 0;
-            let i = 0;
-            for (; i < cleaned.length; i++) {
-              if (cleaned[i] === '[') depth++;
-              else if (cleaned[i] === ']') { depth--; if (depth === 0) { i++; break; } }
-            }
-            cleaned = cleaned.slice(i).trimStart();
-          }
-          return cleaned;
-        };
-
-        const rawContent = result.output || result.response || result.message || result.content ||
+        const assistantContent = result.output || result.response || result.message || result.content ||
           'Sorry, ik kon geen antwoord genereren. Probeer het opnieuw.';
-        const assistantContent = stripToolTraces(rawContent);
 
         const { error: assistantMsgError } = await supabase
           .from('chat_messages')
@@ -420,6 +352,20 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
     }
   }, [open]);
 
+  // Load ElevenLabs script when voice mode is activated
+  useEffect(() => {
+    if (isVoiceMode) {
+      const existing = document.querySelector('script[src*="elevenlabs.io/convai-widget"]');
+      if (!existing) {
+        const script = document.createElement('script');
+        script.src = 'https://elevenlabs.io/convai-widget/index.js';
+        script.async = true;
+        script.type = 'text/javascript';
+        document.body.appendChild(script);
+      }
+    }
+  }, [isVoiceMode]);
+
   const messages = messagesQuery.data || [];
   const isLoading = sessionQuery.isLoading || messagesQuery.isLoading;
 
@@ -461,10 +407,10 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent
           side="right"
+          hideClose
           className={cn(
             "p-0 flex flex-col gap-0 border-l border-border/50",
             "bg-gradient-to-b from-background via-background to-muted/20",
-            "[&>button:first-child]:hidden", // hide SheetContent default close button (we have our own)
             expanded ? "w-full sm:max-w-full" : "w-full sm:max-w-[480px]"
           )}
         >
@@ -492,6 +438,21 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
               </div>
 
               <div className="flex items-center gap-1">
+                {/* Voice/Text Toggle */}
+                <Button
+                  variant={isVoiceMode ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setIsVoiceMode(!isVoiceMode)}
+                  title={isVoiceMode ? t('chat.switchToText', 'Schakel naar tekst') : t('chat.switchToVoice', 'Schakel naar spraak')}
+                  className={cn(
+                    "h-9 w-9 transition-all duration-200",
+                    isVoiceMode
+                      ? "bg-gradient-to-r from-[#06BDC7] to-[#0891B2] text-white hover:opacity-90"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {isVoiceMode ? <Mic className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -572,7 +533,7 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
                 </motion.div>
               ) : (
                 <AnimatePresence mode="popLayout">
-                  {messages.map((msg, index) => (
+                  {messages.map((msg) => (
                     <motion.div
                       key={msg.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -617,45 +578,72 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
             </div>
           </ScrollArea>
 
-          {/* Input Area — pb-20 on mobile clears the fixed bottom nav (h-16 = 4rem) */}
-          <div className="px-4 pt-4 pb-20 md:pb-4 border-t bg-background/80 backdrop-blur-sm">
-            <div className="flex gap-2 items-end">
-              <div className="flex-1 relative">
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={t('chat.placeholder', 'Typ je vraag...')}
-                  disabled={sendMessageMutation.isPending || isLoading}
-                  className={cn(
-                    "min-h-[48px] max-h-[120px] resize-none pr-12",
-                    "rounded-xl border-border/50 bg-muted/50",
-                    "focus:ring-2 focus:ring-[#06BDC7]/20 focus:border-[#06BDC7]",
-                    "transition-all duration-200"
-                  )}
-                  rows={1}
-                />
-                <Button
-                  type="button"
-                  size="icon"
-                  onClick={handleSubmit}
-                  disabled={!input.trim() || sendMessageMutation.isPending || isLoading}
-                  className={cn(
-                    "absolute right-2 bottom-2 h-8 w-8 rounded-lg",
-                    "bg-gradient-to-r from-[#06BDC7] to-[#0891B2]",
-                    "hover:opacity-90 disabled:opacity-50",
-                    "transition-all duration-200"
-                  )}
+          {/* Input Area */}
+          <div className="px-4 py-4 border-t bg-background/80 backdrop-blur-sm">
+            <AnimatePresence mode="wait">
+              {isVoiceMode ? (
+                <motion.div
+                  key="voice-mode"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center gap-3"
                 >
-                  {sendMessageMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  ) : (
-                    <Send className="h-4 w-4 text-white" />
-                  )}
-                </Button>
-              </div>
-            </div>
+                  <div className="w-full min-h-[120px] rounded-xl bg-muted/50 border border-border/50 flex items-center justify-center overflow-hidden">
+                    <elevenlabs-convai agent-id="agent_7401kh4wm601fe2bh6vrtpdnpvww"></elevenlabs-convai>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Klik op de microfoon om te praten met Dirq
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="text-mode"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex gap-2 items-end"
+                >
+                  <div className="flex-1 relative">
+                    <Textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={t('chat.placeholder', 'Typ je vraag...')}
+                      disabled={sendMessageMutation.isPending || isLoading}
+                      className={cn(
+                        "min-h-[48px] max-h-[120px] resize-none pr-12",
+                        "rounded-xl border-border/50 bg-muted/50",
+                        "focus:ring-2 focus:ring-[#06BDC7]/20 focus:border-[#06BDC7]",
+                        "transition-all duration-200"
+                      )}
+                      rows={1}
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={handleSubmit}
+                      disabled={!input.trim() || sendMessageMutation.isPending || isLoading}
+                      className={cn(
+                        "absolute right-2 bottom-2 h-8 w-8 rounded-lg",
+                        "bg-gradient-to-r from-[#06BDC7] to-[#0891B2]",
+                        "hover:opacity-90 disabled:opacity-50",
+                        "transition-all duration-200"
+                      )}
+                    >
+                      {sendMessageMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                      ) : (
+                        <Send className="h-4 w-4 text-white" />
+                      )}
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Footer info */}
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
@@ -664,8 +652,17 @@ export function ChatWidget({ webhookUrl = DEFAULT_WEBHOOK_URL }: ChatWidgetProps
                 <span className="hidden sm:inline">{t('chat.shortcut', 'om te openen')}</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <Zap className="h-3 w-3 text-[#06BDC7]" />
-                <span>Gemini AI</span>
+                {isVoiceMode ? (
+                  <>
+                    <Mic className="h-3 w-3 text-[#06BDC7]" />
+                    <span>Dirq Voice</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-3 w-3 text-[#06BDC7]" />
+                    <span>Dirq AI</span>
+                  </>
+                )}
                 {messages.length > 0 && (
                   <Badge variant="outline" className="text-[10px] ml-1">
                     {messages.length} berichten

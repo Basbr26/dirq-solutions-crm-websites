@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
@@ -20,9 +20,7 @@ import { InteractionTimeline } from '@/features/interactions/components/Interact
 import { AddInteractionDialog } from '@/features/interactions/components/AddInteractionDialog';
 import { DocumentUpload } from '@/components/documents/DocumentUpload';
 import { DocumentsList } from '@/components/documents/DocumentsList';
-import { CrmActivityLog } from '@/components/CrmActivityLog';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { useChatContext } from '@/contexts/ChatContext';
 import { CompanyFormData, ContactCreateData } from '@/types/crm';
 import { toast } from 'sonner';
 import {
@@ -42,7 +40,6 @@ import {
   StickyNote,
   Upload,
   Plus,
-  Clock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,21 +96,6 @@ export default function CompanyDetailPage() {
   const [interactionDefaultType, setInteractionDefaultType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'demo'>('note');
 
   const { data: company, isLoading } = useCompany(id!);
-  const { setChatContext, clearChatContext } = useChatContext();
-  useEffect(() => {
-    if (company) {
-      setChatContext({
-        type: 'company',
-        id: company.id,
-        name: company.name,
-        metadata: {
-          status: company.status ?? null,
-          industry: company.industry?.name ?? null,
-        },
-      });
-    }
-    return () => clearChatContext();
-  }, [company, setChatContext, clearChatContext]);
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
   const { createContact } = useContactMutations();
@@ -333,10 +315,6 @@ export default function CompanyDetailPage() {
           <ScrollableTabTrigger value="notes">
             <StickyNote className="h-4 w-4 mr-2 hidden sm:inline-block" />
             Notities
-          </ScrollableTabTrigger>
-          <ScrollableTabTrigger value="activity">
-            <Clock className="h-4 w-4 mr-2 hidden sm:inline-block" />
-            Activiteit
           </ScrollableTabTrigger>
         </ScrollableTabsList>
 
@@ -770,19 +748,6 @@ export default function CompanyDetailPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Activity Tab */}
-        <TabsContent value="activity">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Activiteit
-              </CardTitle>
-            </CardHeader>
-            <CrmActivityLog entityId={id!} entityType="company" />
           </Card>
         </TabsContent>
       </Tabs>

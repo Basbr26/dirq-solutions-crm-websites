@@ -1,12 +1,12 @@
 # 🚀 Dirq Solutions CRM - Current Status
 
-**Last Updated:** 16 Januari 2026  
-**Version:** 2.0.7 - n8n Automation Suite  
-**Production Status:** ✅ Production Ready + Enterprise Architecture + n8n Automation
+**Last Updated:** 4 Februari 2026
+**Version:** 3.0.0 - AI Chatbot + ATC Orchestrator
+**Production Status:** ✅ Production Ready + AI Chatbot + Event-Driven Automation
 
 ---
 
-## 📊 Overall Maturity: 99% - Enterprise Ready
+## Overall Maturity: 99% - Enterprise Ready
 
 | Category | Score | Status |
 |----------|-------|--------|
@@ -18,79 +18,38 @@
 | Documentation | 10/10 | ✅ Comprehensive + Deployment Guide |
 | Security | 10/10 | ✅ RLS + Audit + Rate Limit |
 | Performance | 10/10 | ✅ Instant Theme Switch + Indexed |
-| Calendar Integration | 10/10 | ✅ Complete |
-| Data Integrity | 10/10 | ✅ Foreign Keys + Constraints |
-| API Integration | 10/10 | ✅ Edge Functions + Webhooks |
-| Error Handling | 10/10 | ✅ Global Error Boundary + Sentry |
+| AI Integration | 10/10 | ✅ Chatbot + RAG + Vertex AI |
+| Data Integrity | 10/10 | ✅ FK + Constraints + pgvector |
+| API Integration | 10/10 | ✅ Edge Functions + Webhooks + n8n |
+| n8n Automation | 10/10 | ✅ Chatbot + ATC + 8 Sub-workflows |
 
 ---
 
-## 🎯 RECENT UPDATES (v2.0.7 - 16 Jan 2026)
+## RECENT UPDATES (v3.0.0 - 4 Feb 2026)
 
-### **🤖 n8n Automation Suite - 28 Workflows** ✅
-**Impact:** Complete workflow automation voor sales, marketing, en customer success
+### **AI Chatbot + ATC Orchestrator** ✅
+**Impact:** Volledig werkende AI chatbot voor CRM + event-driven pipeline automatisering
 
-**Workflow Categories:**
+**1. CRM AI Chatbot** (`lo0RW5Sw4UHXnMpr`)
+- ✅ AI Agent met Google Vertex AI (gemini-2.0-flash)
+- ✅ 8 tool sub-workflows voor natural language CRM queries
+- ✅ Postgres Chat Memory voor conversatie persistentie
+- ✅ Tools: Company/Project/Contact/Quote/Activity Searcher + Deal Manager + Stage Transitioner + Note Logger
+- ✅ HTTP Request + PostgREST API pattern (geen native Supabase nodes)
 
-**Fase 1 - Basis Automatisering (10 workflows):**
-- ✅ Daily Pipeline Health Check - AI-powered deal analysis
-- ✅ Quote Expiration Alerts - Automatische follow-ups
-- ✅ Stale Lead Revival - Re-engagement campaigns
-- ✅ Google Calendar ↔ CRM Sync - Bi-directional sync
-- ✅ Pre-Meeting Reminders - 24h meeting prep
-- ✅ Project Onboarding Sequence - 7 automatische taken
-- ✅ Daily Task Reminders - Dagelijkse notificaties
-- ✅ AI Quote Builder - Gemini-powered offerte generatie
-- ✅ Company Data Enrichment - KVK + logo's ophalen
+**2. ATC Workflow v2.0** (`IGMxMoXs4v04waOb`)
+- ✅ Event-driven pipeline orchestratie met 21 nodes
+- ✅ Refactored: 4x Supabase node → HTTP Request met PostgREST
+- ✅ Refactored: Google Gemini → Google Vertex AI
+- ✅ 5-case Switch router, AI notificatie generatie, DLQ
 
-**Fase 2 - Advanced Automation (18 workflows):**
-- 🎯 **Lead & Sales:** Video audit reminders, discovery call no-shows, lead scoring, hot lead alerts
-- 💰 **Deal Management:** Win/loss automation, probability alerts, revenue forecasting
-- 💳 **Subscription:** Payment reminders, past due alerts, churn prevention, MRR tracking
-- 🚀 **Project & Website:** Milestone checks, launch sequences, maintenance reminders
-- 😊 **Customer Success:** Anniversary emails, NPS surveys, referral requests
+**3. RAG Vector Store**
+- ✅ pgvector + `crm_knowledge` tabel (768-dim embeddings)
+- ✅ `match_crm_knowledge()` cosine similarity search
+- ✅ IVFFlat index voor snelle ANN queries
 
-**Database Extensions:**
-```sql
-- tasks tabel met automation tracking
-- email_drafts voor AI-gegenereerde emails
-- notifications systeem
-- lead_score veld voor scoring algoritme
-- NPS tracking in websites tabel
-- Enrichment fields (logo_url, kvk_number, enrichment_data)
-```
-
-**Webhook Endpoints (9 triggers):**
-- `/webhook/crm-to-calendar` - Calendar sync
-- `/webhook/project-won` - Onboarding trigger
-- `/webhook/generate-quote` - AI quote builder
-- `/webhook/company-created` - Enrichment trigger
-- `/webhook/calculate-lead-score` - Score update
-- `/webhook/deal-won` / `/webhook/deal-lost` - Deal lifecycle
-- `/webhook/website-launched` - Launch automation
-- `/webhook/nps-received` - NPS follow-up
-
-**Features:**
-- ✅ 28 production-ready workflows
-- ✅ AI email generation via Gemini
-- ✅ Automated lead scoring (0-100)
-- ✅ Revenue forecasting & MRR tracking
-- ✅ Churn prevention automation
-- ✅ Complete onboarding sequences
-- ✅ NPS-driven referral requests
-
-**Documentation:**
-- ✅ `N8N_WORKFLOWS.md` - Complete workflow guide met setup instructies
-- ✅ Credential setup voor Supabase, Gemini, Resend, Google Calendar, KVK
-- ✅ Database migrations voor nieuwe tabellen/kolommen
-- ✅ Troubleshooting guide
-
-**Status:** Alle workflows geïmporteerd in n8n instance (https://dirqsolutions.app.n8n.cloud/)
-
-**Next Steps:**
-- Week 1-2: Credentials configureren + workflows testen
-- Week 3-4: AI prompts fine-tunen
-- Maand 2: Workflows activeren in production
+**4. AI Model: Google Vertex AI**
+- ✅ Project: `dirq-solutions-crm-website`, Model: `gemini-2.0-flash`
 
 ---
 
@@ -1120,6 +1079,6 @@ src/
 
 ---
 
-**Document Owner:** Development Team  
-**Review Frequency:** Weekly during active development  
-**Next Review:** 14 Januari 2026
+**Document Owner:** Development Team
+**Review Frequency:** Weekly during active development
+**Next Review:** 11 Februari 2026
