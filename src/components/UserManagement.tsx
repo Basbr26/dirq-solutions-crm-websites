@@ -167,9 +167,11 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
     if (!userToDelete) return;
 
     try {
-      // Delete user via admin API
-      const { error } = await supabase.auth.admin.deleteUser(userToDelete.id);
-      
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userToDelete.id);
+
       if (error) throw error;
 
       toast.success('Gebruiker verwijderd');
@@ -364,6 +366,18 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
                 onChange={(e) => setEditFunctie(e.target.value)}
                 placeholder="Bijv. Software Developer"
               />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleSaveUser}>
+              Opslaan
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -377,7 +391,7 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuleren</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDeleteUser}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
@@ -386,18 +400,6 @@ export function UserManagement({ onRefresh }: UserManagementProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              Annuleren
-            </Button>
-            <Button onClick={handleSaveUser}>
-              Opslaan
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }

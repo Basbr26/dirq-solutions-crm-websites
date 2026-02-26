@@ -28,11 +28,11 @@ export function ProfileSettings() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
+        first_name: profile.first_name || profile.voornaam || '',
+        last_name: profile.last_name || profile.achternaam || '',
         email: profile.email || '',
-        phone: profile.phone || '',
-        avatar_url: profile.avatar_url || '',
+        phone: profile.phone || profile.telefoon || '',
+        avatar_url: profile.avatar_url || profile.foto_url || '',
       });
     }
   }, [profile]);

@@ -81,8 +81,11 @@ export function useUpdateProfile() {
         .update({
           first_name: data.first_name,
           last_name: data.last_name,
+          voornaam: data.first_name,
+          achternaam: data.last_name,
           full_name: `${data.first_name} ${data.last_name}`,
           phone: data.phone,
+          telefoon: data.phone,
           updated_at: new Date().toISOString(),
         })
         .eq('id', userId);
