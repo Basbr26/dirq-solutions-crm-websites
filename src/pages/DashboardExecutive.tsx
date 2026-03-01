@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -147,61 +147,29 @@ export default function DashboardExecutive() {
   const [pipelineData, setPipelineData] = useState<PipelineDataPoint[]>([]);
   const [sourceData, setSourceData] = useState<SourceDataPoint[]>([]);
 
+  // Debounce ref: prevent redundant reloads when multiple tables change at once
+  const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scheduleReload = () => {
+    if (reloadTimer.current) clearTimeout(reloadTimer.current);
+    reloadTimer.current = setTimeout(() => loadExecutiveData(), 500);
+  };
+
   useEffect(() => {
     if (user) {
       loadExecutiveData();
 
-      // Set up real-time subscriptions for automatic updates
-      const projectsSubscription = supabase
-        .channel('projects-changes')
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'projects' },
-          () => {
-            // Projects data changed, reloading dashboard silently
-            loadExecutiveData();
-          }
-        )
+      // Single channel listening to all 4 tables — one reload per batch of changes
+      const dashboardChannel = supabase
+        .channel('dashboard-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, scheduleReload)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, scheduleReload)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, scheduleReload)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'quotes' }, scheduleReload)
         .subscribe();
 
-      const companiesSubscription = supabase
-        .channel('companies-changes')
-        .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'companies' },
-          () => {
-            // Companies data changed, reloading dashboard silently
-            loadExecutiveData();
-          }
-        )
-        .subscribe();
-
-      const contactsSubscription = supabase
-        .channel('contacts-changes')
-        .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'contacts' },
-          () => {
-            // Contacts data changed, reloading dashboard silently
-            loadExecutiveData();
-          }
-        )
-        .subscribe();
-
-      const quotesSubscription = supabase
-        .channel('quotes-changes')
-        .on('postgres_changes',
-          { event: '*', schema: 'public', table: 'quotes' },
-          () => {
-            // Quotes data changed, reloading dashboard silently
-            loadExecutiveData();
-          }
-        )
-        .subscribe();
-
-      // Cleanup subscriptions on unmount
       return () => {
-        projectsSubscription.unsubscribe();
-        companiesSubscription.unsubscribe();
-        contactsSubscription.unsubscribe();
-        quotesSubscription.unsubscribe();
+        if (reloadTimer.current) clearTimeout(reloadTimer.current);
+        dashboardChannel.unsubscribe();
       };
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

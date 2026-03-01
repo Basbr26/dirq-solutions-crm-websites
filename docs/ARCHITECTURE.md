@@ -4,6 +4,88 @@ Complete technical architecture voor Dirq Solutions CRM applicatie.
 
 ---
 
+## 🧭 Snelle Navigatie — Waar vind ik X?
+
+> **Voor Bas:** Open dit bestand als je wilt weten waar iets in de code leeft.
+> Alle paden zijn relatief aan `C:/Dirq apps/dirq-solutions-crmwebsite/`.
+
+### "Waar vind ik...?" Cheatsheet
+
+| Als je iets wilt... | Kijk in |
+|---------------------|---------|
+| Bedrijven ophalen (data) | [src/hooks/useCompanies.ts](../src/hooks/useCompanies.ts) |
+| Bedrijf aanmaken/bewerken | [src/features/companies/hooks/useCompanyMutations.ts](../src/features/companies/hooks/useCompanyMutations.ts) |
+| CompanyCard (kaartje in lijst) | [src/features/companies/components/CompanyCard.tsx](../src/features/companies/components/CompanyCard.tsx) |
+| Bedrijvenpagina (lijst) | [src/features/companies/CompaniesPage.tsx](../src/features/companies/CompaniesPage.tsx) |
+| Offerte genereren/tekenen | [src/features/quotes/QuoteDetailPage.tsx](../src/features/quotes/QuoteDetailPage.tsx) |
+| Ingelogde gebruiker ophalen | [src/hooks/useAuth.tsx](../src/hooks/useAuth.tsx) |
+| Supabase database-client | [src/integrations/supabase/client.ts](../src/integrations/supabase/client.ts) |
+| Notificaties (belletje) | [src/components/NotificationBell.tsx](../src/components/NotificationBell.tsx) |
+| Routes toevoegen | [src/App.tsx](../src/App.tsx) |
+| Nieuwe shadcn component | [src/components/ui/](../src/components/ui/) |
+| Gedeelde TypeScript types | [src/types/crm.ts](../src/types/crm.ts) |
+| Activiteit loggen (audit) | [src/lib/activityLogger.ts](../src/lib/activityLogger.ts) |
+| Nederlandse validatieteksten | [src/lib/validation-messages.ts](../src/lib/validation-messages.ts) |
+| AI ChatWidget (spraak/tekst) | [src/components/ai/ChatWidget.tsx](../src/components/ai/ChatWidget.tsx) |
+| n8n workflow overzicht | [docs/N8N_WORKFLOWS.md](./N8N_WORKFLOWS.md) |
+
+---
+
+### Dataflow — hoe data beweegt
+
+```
+Gebruiker klikt  →  React hook (useQuery)  →  Supabase database
+                                                      ↓
+                                            n8n webhook trigger (ATC)
+                                                      ↓
+                                       AI / e-mail / taken aanmaken
+                                                      ↓
+                    Realtime update  ←  Supabase Realtime  ←  DB-wijziging
+```
+
+**Kort:** Frontend → Supabase → n8n → AI/email → Realtime update → Frontend.
+
+---
+
+### Waar hoort nieuwe code?
+
+**Nieuwe CRM-feature (bijv. "leveranciers"):**
+```
+src/features/suppliers/
+  SuppliersPage.tsx           ← lijstpagina
+  SupplierDetailPage.tsx      ← detailpagina
+  components/
+    SupplierCard.tsx
+    SupplierForm.tsx
+  hooks/
+    useSuppliers.ts            ← data ophalen (useQuery)
+    useSupplierMutations.ts    ← aanmaken/bewerken (useMutation)
+```
+
+**Nieuwe hook:**
+- Alleen voor één feature → `src/features/{feature}/hooks/`
+- Gebruikt door meerdere features → `src/hooks/`
+
+**Nieuwe component:**
+- Alleen in één feature → `src/features/{feature}/components/`
+- Op meerdere plekken → `src/components/`
+- Pure UI-bouwsteen (knop, kaart) → `src/components/ui/`
+
+---
+
+### Bekende technische schuld (bewust gedocumenteerd, niet urgent)
+
+| Bestand | Probleem | Prioriteit |
+|---------|---------|------------|
+| `QuoteDetailPage.tsx` (1577 regels) | Erg groot, moeilijk te wijzigen | Laag — werkt goed |
+| `App.tsx` (510 regels) | Alle routes centraal | Prima voor nu |
+| `components/documents/` | 6 overlappende document-generators | Laag — zelden gewijzigd |
+| `src/integrations/supabase/types.ts` | Leeg — geen DB type-veiligheid | Laag — geen actieve bugs |
+
+> **Advies:** Niets hiervan hoeft nu aangepakt. De app werkt. De winst zit in documentatie bijhouden, niet in refactoring.
+
+---
+
 ## 📋 Table of Contents
 
 1. [Tech Stack](#-tech-stack)
