@@ -148,7 +148,10 @@ async function exchangeGmailCode(code: string) {
       body: JSON.stringify({ code }),
     }
   );
-  if (!response.ok) throw new Error(`Token exchange failed: ${response.statusText}`);
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(`Token exchange failed: ${JSON.stringify(errData)}`);
+  }
   const data = await response.json();
   return {
     access_token: data.access_token,
