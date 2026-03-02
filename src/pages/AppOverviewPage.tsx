@@ -206,8 +206,10 @@ const INTEGRATIONS: Integration[] = [
 
 // ─── Graph: Node Labels & Details ─────────────────────────────────────────────
 const NODE_LABELS: Record<string, string> = {
+  // Architecture view
   user: 'Jij (Dirq Solutions)',
-  'crm-relaties': 'Relatiebeheer',
+  'crm-bedrijven': 'Bedrijven',
+  'crm-contacten': 'Contacten',
   'crm-pipeline': 'Pipeline & Projecten',
   'crm-offertes': 'Offertes',
   'crm-activiteiten': 'Activiteiten & Agenda',
@@ -223,6 +225,15 @@ const NODE_LABELS: Record<string, string> = {
   'ext-gcal': 'Google Calendar',
   'ext-kvk': 'KVK API',
   'ext-apollo': 'Apollo.io',
+  // Data model view
+  'dm-user':        'Gebruiker / Profiel',
+  'dm-companies':   'Bedrijven',
+  'dm-contacts':    'Contacten',
+  'dm-projects':    'Projecten',
+  'dm-quotes':      'Offertes',
+  'dm-quote-items': 'Offerte-regels',
+  'dm-interactions':'Interacties',
+  'dm-calendar':    'Agenda Events',
 };
 
 const NODE_DETAILS: Record<string, NodeDetail> = {
@@ -231,11 +242,17 @@ const NODE_DETAILS: Record<string, NodeDetail> = {
     description: 'De gebruiker die het CRM bedient voor sales, projectbeheer en klantcommunicatie.',
     features: ['Rol-gebaseerde toegang (ADMIN / SALES / MANAGER / SUPPORT)', 'Persoonlijk dashboard op basis van rol', 'Google OAuth2 authenticatie', 'Sessiegeheugen per gebruiker in AI chatbot'],
   },
-  'crm-relaties': {
-    title: 'Relatiebeheer — Bedrijven & Contacten',
-    description: 'Kern van het CRM: alle bedrijven en contactpersonen in één overzicht.',
-    features: ['Bedrijven: CRUD, KVK-verrijking, audit log, bulk ops', 'Contacten: CSV import, primaire contactpersoon, beslissingsmaker-vlag', 'Status: prospect / lead / klant / inactief', 'Filter presets opslaan per gebruiker'],
+  'crm-bedrijven': {
+    title: 'Bedrijven',
+    description: 'Centraal bedrijvenregister voor klanten, prospects en partners.',
+    features: ['CRUD met duplicaatcontrole (naam + KVK)', 'Bulk selectie en verwijdering', 'Filter presets per gebruiker (localStorage)', 'KVK-verrijking via n8n bij aanmaken', 'Audit log — activiteitentijdlijn', 'Status: prospect / lead / klant / inactief'],
     link: '/companies',
+  },
+  'crm-contacten': {
+    title: 'Contacten',
+    description: 'Contactpersonen gekoppeld aan bedrijven, met primaire contactmarkering.',
+    features: ['CRUD met bedrijfskoppeling (company_id)', 'CSV bulk import', 'Primaire contactpersoon markeren', 'Beslissingsmaker-vlag', 'LinkedIn URL opslaan', 'Zoek en filter op naam / bedrijf / functie'],
+    link: '/contacts',
   },
   'crm-pipeline': {
     title: 'Pipeline & Projecten',
@@ -316,62 +333,117 @@ const NODE_DETAILS: Record<string, NodeDetail> = {
     description: 'Lead enrichment platform voor prospect outreach pipeline.',
     features: ['Contactgegevens opvragen bij prospects', 'Email-adressen van beslissingsmakers', 'Integratie in de Google Places outreach pipeline'],
   },
+  // Data model nodes
+  'dm-user': {
+    title: 'Gebruiker / Profiel',
+    description: 'Systeemgebruikers (medewerkers Dirq) met rol-gebaseerde toegang.',
+    features: ['id: uuid (primary key)', 'email: text (Google OAuth)', 'role: enum (admin / sales / manager / support)', 'full_name: text', 'Eigenaar van bedrijven, projecten, agenda-events en interacties'],
+  },
+  'dm-companies': {
+    title: 'Bedrijven',
+    description: 'Hub-entiteit: bijna alles in het CRM is gekoppeld aan een bedrijf.',
+    features: ['id: uuid', 'name: text (required)', 'kvk_number: text', 'status: enum (prospect / lead / klant / inactief)', 'owner_id → profiles', 'industry_id → industries', 'Cascade delete naar contacten, projecten, offertes, interacties'],
+    link: '/companies',
+  },
+  'dm-contacts': {
+    title: 'Contacten',
+    description: 'Contactpersonen bij bedrijven — optioneel, maar bijna altijd aanwezig.',
+    features: ['id: uuid', 'first_name / last_name: text', 'email / phone: text', 'company_id → companies (FK, set NULL bij delete)', 'is_primary: boolean', 'is_decision_maker: boolean', 'Cascade set-null als bedrijf verwijderd wordt'],
+    link: '/contacts',
+  },
+  'dm-projects': {
+    title: 'Projecten (sales pipeline)',
+    description: 'Website-projecten die de volledige sales lifecycle doorlopen.',
+    features: ['id: uuid', 'title: text', 'stage: enum (10 fasen)', 'probability: int (10–100%)', 'company_id → companies (required)', 'contact_id → contacts (optional)', 'estimated_value / actual_value: decimal'],
+    link: '/projects',
+  },
+  'dm-quotes': {
+    title: 'Offertes',
+    description: 'Offertes gekoppeld aan bedrijf, optioneel ook aan contactpersoon en project.',
+    features: ['id: uuid', 'title: text', 'status: enum (draft / sent / viewed / signed / rejected)', 'company_id → companies (required)', 'contact_id → contacts (optional)', 'project_id → projects (optional)', 'valid_until: date', 'Bevat meerdere offerte-regels (cascade delete)'],
+    link: '/quotes',
+  },
+  'dm-quote-items': {
+    title: 'Offerte-regels',
+    description: 'Individuele regels binnen een offerte (producten of diensten).',
+    features: ['id: uuid', 'description: text', 'quantity: numeric', 'unit_price: decimal', 'total_price: decimal', 'quote_id → quotes (cascade delete)'],
+  },
+  'dm-interactions': {
+    title: 'Interacties (contactmomenten)',
+    description: 'Alle contactmomenten: notities, calls, emails, vergaderingen. Koppelbaar aan meerdere entiteiten tegelijk.',
+    features: ['id: uuid', 'type: enum (note / call / email / meeting / demo)', 'company_id → companies', 'contact_id → contacts', 'project_id → projects (optional)', 'user_id → profiles', 'date: timestamptz', 'Kan aan bedrijf én contactpersoon én project tegelijk gelinkt zijn'],
+    link: '/interactions',
+  },
+  'dm-calendar': {
+    title: 'Agenda Events',
+    description: 'Kalenderitems van medewerkers, gekoppeld aan CRM-entiteiten.',
+    features: ['id: uuid', 'title: text', 'type: enum (meeting / call / task / demo / reminder)', 'user_id → profiles (required)', 'company_id → companies (optional)', 'contact_id → contacts (optional)', 'project_id → projects (optional)', 'google_event_id: text (voor sync)', '"No-show melden" knop triggert n8n webhook'],
+    link: '/calendar',
+  },
 };
 
-// ─── Graph: Base Nodes & Edges ─────────────────────────────────────────────────
+// ─── Graph: Architecture Nodes & Edges ────────────────────────────────────────
 const BASE_NODES: Node[] = [
-  { id: 'user', type: 'userNode', position: { x: 500, y: 0 }, data: { label: 'Jij', sub: 'Dirq Solutions' } },
-  { id: 'crm-relaties', type: 'crmNode', position: { x: 0, y: 160 }, data: { label: 'Relatiebeheer', sub: 'Bedrijven · Contacten', icon: 'Building2' } },
-  { id: 'crm-pipeline', type: 'crmNode', position: { x: 220, y: 160 }, data: { label: 'Pipeline', sub: 'Projecten · Kanban', icon: 'TrendingUp' } },
-  { id: 'crm-offertes', type: 'crmNode', position: { x: 440, y: 160 }, data: { label: 'Offertes', sub: 'PDF · E-Sign', icon: 'FileText' } },
-  { id: 'crm-activiteiten', type: 'crmNode', position: { x: 660, y: 160 }, data: { label: 'Activiteiten', sub: 'Agenda · Interacties', icon: 'Calendar' } },
-  { id: 'crm-analytics', type: 'crmNode', position: { x: 880, y: 160 }, data: { label: 'Analytics & AI', sub: 'Dashboards · Chat', icon: 'Brain' } },
-  { id: 'supabase', type: 'backendNode', position: { x: 160, y: 360 }, data: { label: 'Supabase', sub: 'PostgreSQL · Auth · Realtime · Storage · Edge Functions' } },
-  { id: 'wh-company', type: 'webhookNode', position: { x: 100, y: 580 }, data: { label: '/company-created' } },
-  { id: 'wh-milestone', type: 'webhookNode', position: { x: 380, y: 580 }, data: { label: '/milestone-reached' } },
-  { id: 'wh-noshow', type: 'webhookNode', position: { x: 660, y: 580 }, data: { label: '/meeting-missed' } },
-  { id: 'n8n', type: 'automationNode', position: { x: 330, y: 720 }, data: { label: 'n8n Automations', sub: '62 workflows · 4 sprints · 37+ AI tools' } },
-  { id: 'ext-gemini', type: 'externalNode', position: { x: 0, y: 920 }, data: { label: 'Gemini AI', sub: 'gemini-2.0-flash', color: 'violet' } },
-  { id: 'ext-vertexai', type: 'externalNode', position: { x: 200, y: 920 }, data: { label: 'Vertex AI', sub: 'AI Chatbot Agent', color: 'violet' } },
-  { id: 'ext-resend', type: 'externalNode', position: { x: 400, y: 920 }, data: { label: 'Resend', sub: 'Email Service', color: 'orange' } },
-  { id: 'ext-gcal', type: 'externalNode', position: { x: 600, y: 920 }, data: { label: 'Google Calendar', sub: 'Bidirectioneel', color: 'blue' } },
-  { id: 'ext-kvk', type: 'externalNode', position: { x: 800, y: 920 }, data: { label: 'KVK API', sub: 'Verrijking', color: 'teal' } },
-  { id: 'ext-apollo', type: 'externalNode', position: { x: 1000, y: 920 }, data: { label: 'Apollo.io', sub: 'Lead Enrichment', color: 'pink' } },
+  { id: 'user', type: 'userNode', position: { x: 560, y: 0 }, data: { label: 'Jij', sub: 'Dirq Solutions' } },
+  // CRM layer — 6 modules, evenly spaced
+  { id: 'crm-bedrijven',   type: 'crmNode', position: { x: 0,   y: 160 }, data: { label: 'Bedrijven',   sub: 'CRUD · KVK · Audit log',  icon: 'Building2' } },
+  { id: 'crm-contacten',   type: 'crmNode', position: { x: 200, y: 160 }, data: { label: 'Contacten',   sub: 'CSV import · Primair',     icon: 'Users' } },
+  { id: 'crm-pipeline',    type: 'crmNode', position: { x: 400, y: 160 }, data: { label: 'Pipeline',    sub: 'Projecten · Kanban',        icon: 'TrendingUp' } },
+  { id: 'crm-offertes',    type: 'crmNode', position: { x: 600, y: 160 }, data: { label: 'Offertes',    sub: 'PDF · E-Sign',             icon: 'FileText' } },
+  { id: 'crm-activiteiten',type: 'crmNode', position: { x: 800, y: 160 }, data: { label: 'Activiteiten',sub: 'Agenda · Interacties',      icon: 'Calendar' } },
+  { id: 'crm-analytics',   type: 'crmNode', position: { x: 1000,y: 160 }, data: { label: 'Analytics & AI', sub: 'Dashboards · Chat',   icon: 'Brain' } },
+  // Backend
+  { id: 'supabase', type: 'backendNode', position: { x: 200, y: 360 }, data: { label: 'Supabase', sub: 'PostgreSQL · Auth · Realtime · Storage · Edge Functions' } },
+  // Webhooks
+  { id: 'wh-company',   type: 'webhookNode', position: { x: 100, y: 580 }, data: { label: '/company-created' } },
+  { id: 'wh-milestone', type: 'webhookNode', position: { x: 450, y: 580 }, data: { label: '/milestone-reached' } },
+  { id: 'wh-noshow',    type: 'webhookNode', position: { x: 800, y: 580 }, data: { label: '/meeting-missed' } },
+  // Automation
+  { id: 'n8n', type: 'automationNode', position: { x: 390, y: 720 }, data: { label: 'n8n Automations', sub: '62 workflows · 4 sprints · 37+ AI tools' } },
+  // External
+  { id: 'ext-gemini',   type: 'externalNode', position: { x: 0,    y: 940 }, data: { label: 'Gemini AI',      sub: 'gemini-2.0-flash',    color: 'violet' } },
+  { id: 'ext-vertexai', type: 'externalNode', position: { x: 210,  y: 940 }, data: { label: 'Vertex AI',      sub: 'AI Chatbot Agent',    color: 'violet' } },
+  { id: 'ext-resend',   type: 'externalNode', position: { x: 420,  y: 940 }, data: { label: 'Resend',         sub: 'Email Service',       color: 'orange' } },
+  { id: 'ext-gcal',     type: 'externalNode', position: { x: 630,  y: 940 }, data: { label: 'Google Calendar',sub: 'Bidirectioneel',      color: 'blue' } },
+  { id: 'ext-kvk',      type: 'externalNode', position: { x: 840,  y: 940 }, data: { label: 'KVK API',        sub: 'Verrijking',          color: 'teal' } },
+  { id: 'ext-apollo',   type: 'externalNode', position: { x: 1050, y: 940 }, data: { label: 'Apollo.io',      sub: 'Lead Enrichment',     color: 'pink' } },
 ];
 
 const BASE_EDGES: Edge[] = [
-  // User → CRM
-  { id: 'u-rel', source: 'user', target: 'crm-relaties', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  { id: 'u-pip', source: 'user', target: 'crm-pipeline', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  { id: 'u-off', source: 'user', target: 'crm-offertes', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  // User → CRM (6 modules)
+  { id: 'u-bed', source: 'user', target: 'crm-bedrijven',    type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-con', source: 'user', target: 'crm-contacten',    type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-pip', source: 'user', target: 'crm-pipeline',     type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-off', source: 'user', target: 'crm-offertes',     type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   { id: 'u-act', source: 'user', target: 'crm-activiteiten', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  { id: 'u-ana', source: 'user', target: 'crm-analytics', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-ana', source: 'user', target: 'crm-analytics',    type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   // CRM → Supabase
-  { id: 'rel-sb', source: 'crm-relaties', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
-  { id: 'pip-sb', source: 'crm-pipeline', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
-  { id: 'off-sb', source: 'crm-offertes', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'bed-sb', source: 'crm-bedrijven',    target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'con-sb', source: 'crm-contacten',    target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'pip-sb', source: 'crm-pipeline',     target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'off-sb', source: 'crm-offertes',     target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   { id: 'act-sb', source: 'crm-activiteiten', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
-  { id: 'ana-sb', source: 'crm-analytics', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'ana-sb', source: 'crm-analytics',    target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   // Supabase → CRM (realtime)
   { id: 'sb-ana', source: 'supabase', target: 'crm-analytics', type: 'smoothstep', animated: true, style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
   // Google Calendar ↔ activiteiten
   { id: 'act-gcal', source: 'crm-activiteiten', target: 'ext-gcal', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   { id: 'gcal-act', source: 'ext-gcal', target: 'crm-activiteiten', type: 'smoothstep', style: { stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '4,4' } },
   // CRM → Webhooks
-  { id: 'rel-wh1', source: 'crm-relaties', target: 'wh-company', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
-  { id: 'pip-wh2', source: 'crm-pipeline', target: 'wh-milestone', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
-  { id: 'act-wh3', source: 'crm-activiteiten', target: 'wh-noshow', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
+  { id: 'bed-wh1', source: 'crm-bedrijven',    target: 'wh-company',   type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
+  { id: 'pip-wh2', source: 'crm-pipeline',     target: 'wh-milestone', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
+  { id: 'act-wh3', source: 'crm-activiteiten', target: 'wh-noshow',    type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
   // Webhooks → n8n
-  { id: 'wh1-n8n', source: 'wh-company', target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
+  { id: 'wh1-n8n', source: 'wh-company',   target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
   { id: 'wh2-n8n', source: 'wh-milestone', target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
-  { id: 'wh3-n8n', source: 'wh-noshow', target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
+  { id: 'wh3-n8n', source: 'wh-noshow',    target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
   // Supabase → n8n (scheduled triggers)
   { id: 'sb-n8n', source: 'supabase', target: 'n8n', style: { stroke: '#a855f7', strokeWidth: 1.5 } },
   // n8n → External services
-  { id: 'n8n-gem', source: 'n8n', target: 'ext-gemini', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
+  { id: 'n8n-gem', source: 'n8n', target: 'ext-gemini',   animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
   { id: 'n8n-vtx', source: 'n8n', target: 'ext-vertexai', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'n8n-res', source: 'n8n', target: 'ext-resend', animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
-  { id: 'n8n-kvk', source: 'n8n', target: 'ext-kvk', style: { stroke: '#14b8a6', strokeWidth: 1.5 } },
+  { id: 'n8n-res', source: 'n8n', target: 'ext-resend',   animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
+  { id: 'n8n-kvk', source: 'n8n', target: 'ext-kvk',      style: { stroke: '#14b8a6', strokeWidth: 1.5 } },
   // n8n writes back to Supabase
   { id: 'n8n-sb', source: 'n8n', target: 'supabase', type: 'smoothstep', style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
   // CRM Analytics ↔ Vertex AI (chatbot)
@@ -382,7 +454,7 @@ const BASE_EDGES: Edge[] = [
 // ─── Custom Node Types ────────────────────────────────────────────────────────
 function UserNode({ data }: NodeProps) {
   return (
-    <div className="bg-slate-800 text-white rounded-xl px-5 py-3 shadow-lg text-center min-w-[140px]">
+    <div className="bg-gradient-to-br from-slate-700 to-slate-900 text-white rounded-xl px-5 py-3 shadow-lg text-center min-w-[140px]">
       <Handle type="source" position={Position.Bottom} />
       <div className="flex items-center justify-center gap-2 mb-0.5">
         <User className="h-4 w-4 text-slate-300" />
@@ -395,15 +467,15 @@ function UserNode({ data }: NodeProps) {
 
 function CrmNode({ data }: NodeProps) {
   const icons: Record<string, React.ComponentType<{ className?: string }>> = {
-    Building2, TrendingUp, FileText, Calendar, Brain,
+    Building2, Users, TrendingUp, FileText, Calendar, Brain,
   };
   const Icon = icons[String(data.icon)] || Building2;
   return (
-    <div className="bg-blue-600 text-white rounded-xl px-4 py-3 shadow-lg min-w-[160px] text-center">
+    <div className="bg-gradient-to-br from-blue-500 to-blue-700 text-white rounded-xl px-4 py-3 shadow-lg min-w-[160px] text-center">
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
       <div className="flex items-center justify-center gap-1.5 mb-0.5">
-        <Icon className="h-3.5 w-3.5" />
+        <Icon className="h-4 w-4 opacity-90" />
         <span className="font-semibold text-sm">{String(data.label)}</span>
       </div>
       <p className="text-xs text-blue-200">{String(data.sub)}</p>
@@ -413,7 +485,7 @@ function CrmNode({ data }: NodeProps) {
 
 function BackendNode({ data }: NodeProps) {
   return (
-    <div className="bg-emerald-700 text-white rounded-xl px-6 py-3 shadow-lg min-w-[600px] text-center">
+    <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white rounded-xl px-6 py-3 shadow-lg min-w-[600px] text-center">
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
       <div className="flex items-center justify-center gap-2 mb-0.5">
@@ -427,7 +499,7 @@ function BackendNode({ data }: NodeProps) {
 
 function AutomationNode({ data }: NodeProps) {
   return (
-    <div className="bg-purple-700 text-white rounded-xl px-6 py-3 shadow-lg min-w-[320px] text-center">
+    <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-xl px-6 py-3 shadow-lg min-w-[320px] text-center">
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
       <div className="flex items-center justify-center gap-2 mb-0.5">
@@ -441,12 +513,13 @@ function AutomationNode({ data }: NodeProps) {
 
 function ExternalNode({ data }: NodeProps) {
   const colorMap: Record<string, string> = {
-    violet: 'bg-violet-600', orange: 'bg-orange-500', blue: 'bg-blue-600',
-    teal: 'bg-teal-600', pink: 'bg-pink-600', green: 'bg-green-600',
+    violet: 'from-violet-500 to-violet-700', orange: 'from-orange-400 to-orange-600',
+    blue: 'from-blue-500 to-blue-700', teal: 'from-teal-500 to-teal-700',
+    pink: 'from-pink-500 to-pink-700', green: 'from-green-500 to-green-700',
   };
-  const bg = colorMap[String(data.color)] || 'bg-slate-600';
+  const gradient = colorMap[String(data.color)] || 'from-slate-500 to-slate-700';
   return (
-    <div className={`${bg} text-white rounded-xl px-4 py-2.5 shadow-lg min-w-[130px] text-center`}>
+    <div className={`bg-gradient-to-br ${gradient} text-white rounded-xl px-4 py-2.5 shadow-lg min-w-[130px] text-center`}>
       <Handle type="target" position={Position.Top} />
       <Globe className="h-3.5 w-3.5 mx-auto mb-0.5" />
       <p className="font-semibold text-xs">{String(data.label)}</p>
@@ -465,7 +538,37 @@ function WebhookNode({ data }: NodeProps) {
   );
 }
 
-const nodeTypes = { userNode: UserNode, crmNode: CrmNode, backendNode: BackendNode, automationNode: AutomationNode, externalNode: ExternalNode, webhookNode: WebhookNode };
+function DatamodelNode({ data }: NodeProps) {
+  const Icon = data.icon as React.ComponentType<{ className?: string }> | undefined;
+  const gradientMap: Record<string, string> = {
+    blue:   'from-blue-500 to-blue-700',   indigo: 'from-indigo-500 to-indigo-700',
+    violet: 'from-violet-500 to-violet-700', amber: 'from-amber-500 to-amber-700',
+    rose:   'from-rose-500 to-rose-700',   sky:    'from-sky-500 to-sky-700',
+    slate:  'from-slate-600 to-slate-800', orange: 'from-orange-500 to-orange-700',
+  };
+  const gradient = gradientMap[String(data.color)] ?? gradientMap.slate;
+  return (
+    <div className={`bg-gradient-to-br ${gradient} text-white rounded-xl shadow-lg min-w-[190px] overflow-hidden`}>
+      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Right} />
+      <div className="px-3 py-2 flex items-center gap-2 border-b border-white/20">
+        {Icon && <Icon className="h-4 w-4 shrink-0 opacity-90" />}
+        <span className="font-bold text-sm">{String(data.label)}</span>
+      </div>
+      {Array.isArray(data.fields) ? (
+        <div className="px-3 py-1.5 space-y-0.5">
+          {(data.fields as string[]).map((f, i) => (
+            <div key={i} className="text-[10px] font-mono text-white/75 leading-relaxed">{f}</div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+const nodeTypes = { userNode: UserNode, crmNode: CrmNode, backendNode: BackendNode, automationNode: AutomationNode, externalNode: ExternalNode, webhookNode: WebhookNode, datamodelNode: DatamodelNode };
 
 // ─── Edge Descriptions ────────────────────────────────────────────────────────
 const EDGE_DESCRIPTIONS: Record<string, string> = {
@@ -492,26 +595,90 @@ const EDGE_DESCRIPTIONS: Record<string, string> = {
   'n8n-sb':    'n8n schrijft resultaten terug naar Supabase: emailconcepten, health scores en logs.',
   'ana-vtx':   'AI Chat-module stuurt gebruikersvragen naar Vertex AI voor antwoord en tool-aanroepen.',
   'vtx-ana':   'Vertex AI AI-agent-antwoorden en CRM-acties worden teruggegeven aan de chatinterface.',
+  // New arch edges (bedrijven + contacten split)
+  'u-bed':   'Gebruiker beheert bedrijven direct via het CRM (aanmaken, bewerken, filteren).',
+  'u-con':   'Gebruiker beheert contactpersonen direct via het CRM.',
+  'bed-sb':  'Bedrijfsgegevens worden opgeslagen in en geladen uit de Supabase PostgreSQL database.',
+  'con-sb':  'Contactgegevens worden opgeslagen in en geladen uit de Supabase database.',
+  'bed-wh1': 'Nieuw bedrijf aangemaakt → webhook-trigger naar n8n voor KVK-verrijking en lead enrichment.',
+  // Data model edges
+  'dm-user-comp': 'Elke gebruiker is eigenaar (owner_id) van de bedrijven die hij/zij aanmaakt.',
+  'dm-user-proj': 'Projecten worden toegewezen aan de medewerker die ze aanmaakt (owner_id).',
+  'dm-user-int':  'Interacties worden gelogd door een specifieke medewerker (user_id).',
+  'dm-user-cal':  'Agenda-events zijn eigendom van de medewerker die ze aanmaakt (user_id).',
+  'dm-con-comp':  'Elke contactpersoon is (optioneel) gekoppeld aan één bedrijf via company_id. Bij verwijderen van het bedrijf wordt company_id op NULL gezet.',
+  'dm-proj-comp': 'Elk project is verplicht gekoppeld aan een bedrijf (company_id required). Cascade delete als bedrijf verwijderd wordt.',
+  'dm-proj-con':  'Een project kan optioneel gekoppeld zijn aan een primaire contactpersoon (contact_id optional).',
+  'dm-quote-comp':'Elke offerte is verplicht gekoppeld aan een bedrijf (company_id required).',
+  'dm-quote-con': 'Een offerte kan optioneel gericht zijn aan een specifieke contactpersoon (contact_id optional).',
+  'dm-quote-proj':'Een offerte kan optioneel gekoppeld zijn aan een project (project_id optional).',
+  'dm-qi-quote':  'Offerte-regels zijn altijd onderdeel van een offerte (quote_id). Cascade delete als offerte verwijderd wordt.',
+  'dm-int-comp':  'Een interactie/contactmoment is gekoppeld aan een bedrijf (company_id). Zo is alle communicatie per bedrijf zichtbaar.',
+  'dm-int-con':   'Een interactie kan ook gekoppeld zijn aan een specifieke contactpersoon (contact_id). Zo zijn contactmomenten per persoon zichtbaar.',
+  'dm-int-proj':  'Een interactie kan optioneel gekoppeld zijn aan een project (project_id optional).',
+  'dm-cal-comp':  'Een agenda-event kan optioneel gekoppeld zijn aan een bedrijf (company_id optional).',
+  'dm-cal-con':   'Een agenda-event kan optioneel gekoppeld zijn aan een contactpersoon (contact_id optional).',
+  'dm-cal-proj':  'Een agenda-event kan optioneel gekoppeld zijn aan een project (project_id optional).',
 };
 
 interface SelectedEdge { id: string; source: string; target: string; }
 
+// ─── Graph: Data Model Nodes & Edges ──────────────────────────────────────────
+const DM_NODES: Node[] = [
+  { id: 'dm-user',        type: 'datamodelNode', position: { x: 360, y: 0   }, data: { label: 'Gebruiker / Profiel', icon: User,         color: 'slate',  fields: ['id: uuid', 'email: text', 'role: enum', 'full_name: text'] } },
+  { id: 'dm-companies',   type: 'datamodelNode', position: { x: 60,  y: 200 }, data: { label: 'Bedrijven',           icon: Building2,    color: 'blue',   fields: ['id: uuid', 'name: text (req)', 'kvk_number: text', 'status: enum', 'owner_id → profiles'] } },
+  { id: 'dm-contacts',    type: 'datamodelNode', position: { x: 500, y: 200 }, data: { label: 'Contacten',           icon: Users,        color: 'indigo', fields: ['id: uuid', 'first_name / last_name', 'email / phone', 'company_id → companies', 'is_primary: bool'] } },
+  { id: 'dm-projects',    type: 'datamodelNode', position: { x: 0,   y: 450 }, data: { label: 'Projecten',           icon: FolderKanban, color: 'violet', fields: ['id: uuid', 'title: text', 'stage: enum (10)', 'company_id → companies (req)', 'contact_id → contacts (opt)'] } },
+  { id: 'dm-quotes',      type: 'datamodelNode', position: { x: 270, y: 450 }, data: { label: 'Offertes',            icon: FileText,     color: 'amber',  fields: ['id: uuid', 'title: text', 'status: enum', 'company_id → companies (req)', 'contact_id → contacts (opt)', 'project_id → projects (opt)'] } },
+  { id: 'dm-interactions',type: 'datamodelNode', position: { x: 560, y: 450 }, data: { label: 'Interacties',         icon: MessageSquare,color: 'rose',   fields: ['id: uuid', 'type: enum', 'company_id → companies', 'contact_id → contacts', 'project_id → projects (opt)', 'user_id → profiles'] } },
+  { id: 'dm-calendar',    type: 'datamodelNode', position: { x: 840, y: 450 }, data: { label: 'Agenda Events',       icon: Calendar,     color: 'sky',    fields: ['id: uuid', 'title: text', 'user_id → profiles (req)', 'company_id (opt)', 'contact_id (opt)', 'project_id (opt)'] } },
+  { id: 'dm-quote-items', type: 'datamodelNode', position: { x: 270, y: 680 }, data: { label: 'Offerte-regels',      icon: FileText,     color: 'orange', fields: ['id: uuid', 'description: text', 'quantity: num', 'unit_price: decimal', 'quote_id → quotes'] } },
+];
+
+const DM_EDGES: Edge[] = [
+  // User → entities
+  { id: 'dm-user-comp', source: 'dm-user', target: 'dm-companies',   type: 'smoothstep', label: 'owner_id',  style: { stroke: '#64748b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#64748b' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-user-proj', source: 'dm-user', target: 'dm-projects',    type: 'smoothstep', label: 'owner_id',  style: { stroke: '#64748b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#64748b' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-user-int',  source: 'dm-user', target: 'dm-interactions',type: 'smoothstep', label: 'user_id',   style: { stroke: '#64748b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#64748b' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-user-cal',  source: 'dm-user', target: 'dm-calendar',    type: 'smoothstep', label: 'user_id',   style: { stroke: '#64748b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#64748b' }, labelBgStyle: { fill: '#f8fafc' } },
+  // Contacts → Companies
+  { id: 'dm-con-comp',  source: 'dm-contacts', target: 'dm-companies', type: 'smoothstep', label: 'company_id',           style: { stroke: '#3b82f6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#3b82f6' }, labelBgStyle: { fill: '#f8fafc' } },
+  // Projects → Companies & Contacts
+  { id: 'dm-proj-comp', source: 'dm-projects', target: 'dm-companies', type: 'smoothstep', label: 'company_id (req)',      style: { stroke: '#3b82f6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#3b82f6' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-proj-con',  source: 'dm-projects', target: 'dm-contacts',  type: 'smoothstep', label: 'contact_id (opt)',      style: { stroke: '#6366f1', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#6366f1' }, labelBgStyle: { fill: '#f8fafc' } },
+  // Quotes → Companies, Contacts, Projects
+  { id: 'dm-quote-comp',source: 'dm-quotes',   target: 'dm-companies', type: 'smoothstep', label: 'company_id (req)',      style: { stroke: '#3b82f6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#3b82f6' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-quote-con', source: 'dm-quotes',   target: 'dm-contacts',  type: 'smoothstep', label: 'contact_id (opt)',      style: { stroke: '#6366f1', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#6366f1' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-quote-proj',source: 'dm-quotes',   target: 'dm-projects',  type: 'smoothstep', label: 'project_id (opt)',      style: { stroke: '#8b5cf6', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#f8fafc' } },
+  // Quote items → Quotes
+  { id: 'dm-qi-quote',  source: 'dm-quote-items', target: 'dm-quotes', type: 'smoothstep', label: 'quote_id',              style: { stroke: '#f59e0b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#f59e0b' }, labelBgStyle: { fill: '#f8fafc' } },
+  // Interactions → Companies, Contacts, Projects
+  { id: 'dm-int-comp',  source: 'dm-interactions', target: 'dm-companies', type: 'smoothstep', label: 'company_id',         style: { stroke: '#3b82f6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#3b82f6' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-int-con',   source: 'dm-interactions', target: 'dm-contacts',  type: 'smoothstep', label: 'contact_id',         style: { stroke: '#6366f1', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#6366f1' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-int-proj',  source: 'dm-interactions', target: 'dm-projects',  type: 'smoothstep', label: 'project_id (opt)',   style: { stroke: '#8b5cf6', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#f8fafc' } },
+  // Calendar → Companies, Contacts, Projects
+  { id: 'dm-cal-comp',  source: 'dm-calendar', target: 'dm-companies', type: 'smoothstep', label: 'company_id (opt)',       style: { stroke: '#3b82f6', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#3b82f6' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-cal-con',   source: 'dm-calendar', target: 'dm-contacts',  type: 'smoothstep', label: 'contact_id (opt)',       style: { stroke: '#6366f1', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#6366f1' }, labelBgStyle: { fill: '#f8fafc' } },
+  { id: 'dm-cal-proj',  source: 'dm-calendar', target: 'dm-projects',  type: 'smoothstep', label: 'project_id (opt)',       style: { stroke: '#8b5cf6', strokeWidth: 1.5, strokeDasharray: '5,4' }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#f8fafc' } },
+];
+
 // ─── Inline Detail Panel ──────────────────────────────────────────────────────
-function DetailPanel({ selectedNodeId, selectedEdge, onClose, onNavigateToNode }: {
+function DetailPanel({ selectedNodeId, selectedEdge, onClose, onNavigateToNode, activeEdges }: {
   selectedNodeId: string | null;
   selectedEdge: SelectedEdge | null;
   onClose: () => void;
   onNavigateToNode: (id: string) => void;
+  activeEdges: Edge[];
 }) {
   const connectedNodeIds = useMemo(() => {
     if (!selectedNodeId) return [] as string[];
     const ids: string[] = [];
-    BASE_EDGES.forEach(e => {
+    activeEdges.forEach(e => {
       if (e.source === selectedNodeId && !ids.includes(e.target)) ids.push(e.target);
       if (e.target === selectedNodeId && !ids.includes(e.source)) ids.push(e.source);
     });
     return ids;
-  }, [selectedNodeId]);
+  }, [selectedNodeId, activeEdges]);
 
   const nodeDetail = selectedNodeId ? NODE_DETAILS[selectedNodeId] : null;
 
@@ -596,20 +763,29 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
 }) {
+  const [graphView, setGraphView] = useState<'arch' | 'dm'>('arch');
   const [selectedEdge, setSelectedEdge] = useState<SelectedEdge | null>(null);
+
+  const activeNodes = graphView === 'arch' ? BASE_NODES : DM_NODES;
+  const activeEdges = graphView === 'arch' ? BASE_EDGES : DM_EDGES;
 
   const handleClose = () => { onSelectNode(null); setSelectedEdge(null); };
   const handleNavigateToNode = (id: string) => { setSelectedEdge(null); onSelectNode(id); };
+  const handleViewChange = (view: 'arch' | 'dm') => {
+    setGraphView(view);
+    onSelectNode(null);
+    setSelectedEdge(null);
+  };
 
   const connectedNodeIds = useMemo(() => {
     if (!selectedNodeId) return new Set<string>();
     const ids = new Set<string>();
-    BASE_EDGES.forEach(e => {
+    activeEdges.forEach(e => {
       if (e.source === selectedNodeId) ids.add(e.target);
       if (e.target === selectedNodeId) ids.add(e.source);
     });
     return ids;
-  }, [selectedNodeId]);
+  }, [selectedNodeId, activeEdges]);
 
   const edgeEndpoints = useMemo(() => {
     if (!selectedEdge || selectedNodeId) return new Set<string>();
@@ -619,17 +795,17 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
   const connectedEdgeIds = useMemo(() => {
     if (selectedNodeId) {
       const ids = new Set<string>();
-      BASE_EDGES.forEach(e => { if (e.source === selectedNodeId || e.target === selectedNodeId) ids.add(e.id); });
+      activeEdges.forEach(e => { if (e.source === selectedNodeId || e.target === selectedNodeId) ids.add(e.id); });
       return ids;
     }
     if (selectedEdge) return new Set([selectedEdge.id]);
     return new Set<string>();
-  }, [selectedNodeId, selectedEdge]);
+  }, [selectedNodeId, selectedEdge, activeEdges]);
 
   const activeSelection = !!(selectedNodeId || selectedEdge);
 
   const displayNodes = useMemo(() =>
-    BASE_NODES.map(n => {
+    activeNodes.map(n => {
       if (!activeSelection) return { ...n, style: { ...n.style, opacity: 1, boxShadow: 'none', transition: 'all 0.2s ease' } };
       const isSel = n.id === selectedNodeId;
       const isConn = connectedNodeIds.has(n.id) || edgeEndpoints.has(n.id);
@@ -642,25 +818,49 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
           transition: 'all 0.2s ease',
         },
       };
-    }), [activeSelection, selectedNodeId, connectedNodeIds, edgeEndpoints]);
+    }), [activeNodes, activeSelection, selectedNodeId, connectedNodeIds, edgeEndpoints]);
 
   const displayEdges = useMemo(() =>
-    BASE_EDGES.map(e => {
+    activeEdges.map(e => {
       const base = { ...e, style: { ...e.style, cursor: 'pointer' } };
       if (!activeSelection) return base;
       const isConn = connectedEdgeIds.has(e.id);
       return {
         ...base,
-        style: { ...base.style, opacity: isConn ? 1 : 0.06, strokeWidth: isConn ? 3 : e.style?.strokeWidth ?? 1.5, transition: 'all 0.2s ease' },
+        style: { ...base.style, opacity: isConn ? 1 : 0.06, strokeWidth: isConn ? 3 : (e.style?.strokeWidth ?? 1.5), transition: 'all 0.2s ease' },
         animated: isConn ? (e.animated ?? true) : false,
       };
-    }), [activeSelection, connectedEdgeIds]);
+    }), [activeEdges, activeSelection, connectedEdgeIds]);
 
   const showPanel = !!(selectedNodeId || selectedEdge);
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground min-h-[28px]">
+      {/* View toggle */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex rounded-lg border border-border overflow-hidden text-sm">
+          <button
+            onClick={() => handleViewChange('arch')}
+            className={`px-3 py-1.5 font-medium transition-colors ${graphView === 'arch' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}
+          >
+            Systeemarchitectuur
+          </button>
+          <button
+            onClick={() => handleViewChange('dm')}
+            className={`px-3 py-1.5 font-medium transition-colors border-l border-border ${graphView === 'dm' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted text-muted-foreground'}`}
+          >
+            Datamodel (ER)
+          </button>
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {graphView === 'arch'
+            ? 'Hoe componenten samenhangen op infrastructuurniveau'
+            : 'FK-relaties tussen database-entiteiten — klik nodes en lijnen voor details'}
+        </span>
+      </div>
+
+      {/* Selection status bar */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground min-h-[24px]">
         {selectedNodeId && (
           <>
             <span>Geselecteerd: <strong className="text-foreground">{NODE_LABELS[selectedNodeId]}</strong></span>
@@ -686,7 +886,7 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
               edges={displayEdges}
               nodeTypes={nodeTypes}
               fitView
-              fitViewOptions={{ padding: 0.1 }}
+              fitViewOptions={{ padding: 0.15 }}
               proOptions={{ hideAttribution: true }}
               onNodeClick={(_, node) => { setSelectedEdge(null); onSelectNode(selectedNodeId === node.id ? null : node.id); }}
               onEdgeClick={(_, edge) => { onSelectNode(null); setSelectedEdge(prev => prev?.id === edge.id ? null : { id: edge.id, source: edge.source, target: edge.target }); }}
@@ -705,6 +905,7 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
             selectedEdge={selectedEdge}
             onClose={handleClose}
             onNavigateToNode={handleNavigateToNode}
+            activeEdges={activeEdges}
           />
         )}
       </div>
@@ -860,6 +1061,61 @@ function IntegratiesTab() {
   );
 }
 
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+function HeroSection() {
+  const stats = [
+    { label: `${CRM_MODULES.length} modules`, icon: '📦' },
+    { label: `${WORKFLOWS.length}+ automations`, icon: '⚡' },
+    { label: `${INTEGRATIONS.length} integraties`, icon: '🔗' },
+    { label: 'Live', icon: '🟢' },
+  ];
+  const techs = ['React', 'TypeScript', 'Supabase', 'n8n', 'Gemini AI', 'Resend'];
+
+  return (
+    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 p-6 md:p-8 mb-6 text-white shadow-xl">
+      {/* Subtle dot-grid overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-10"
+        style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }}
+      />
+      <div className="relative z-10">
+        <div className="flex items-center gap-2.5 mb-1">
+          <Zap className="h-6 w-6 text-yellow-300 shrink-0" />
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dirq CRM Platform</h1>
+        </div>
+        <p className="text-blue-100 mb-5 max-w-xl text-sm md:text-base leading-relaxed">
+          Full-stack CRM & automation hub voor groeiende bureaus — van lead tot klant, inclusief AI-agents en realtime automations.
+        </p>
+
+        {/* Stat chips */}
+        <div className="flex flex-wrap gap-2 mb-5">
+          {stats.map(stat => (
+            <div
+              key={stat.label}
+              className="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm rounded-full px-3 py-1.5 text-sm font-medium border border-white/20"
+            >
+              <span>{stat.icon}</span>
+              <span>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Tech badges */}
+        <div className="flex flex-wrap gap-1.5">
+          {techs.map(tech => (
+            <span
+              key={tech}
+              className="text-xs bg-white/10 border border-white/20 rounded-md px-2.5 py-1 font-mono tracking-wide hover:bg-white/20 transition-colors"
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AppOverviewPage() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -870,6 +1126,7 @@ export default function AppOverviewPage() {
       subtitle="Interactieve systeemkaart — architectuur, modules, automations en integraties"
       hideQuickAction
     >
+      <HeroSection />
       <Tabs defaultValue="architectuur" className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="architectuur">Architectuurkaart</TabsTrigger>
