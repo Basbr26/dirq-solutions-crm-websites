@@ -40,7 +40,9 @@ import {
   StickyNote,
   Upload,
   Plus,
+  Inbox,
 } from 'lucide-react';
+import { GmailThreadList } from '@/components/gmail/GmailThreadList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -315,6 +317,10 @@ export default function CompanyDetailPage() {
           <ScrollableTabTrigger value="notes">
             <StickyNote className="h-4 w-4 mr-2 hidden sm:inline-block" />
             Notities
+          </ScrollableTabTrigger>
+          <ScrollableTabTrigger value="emails">
+            <Inbox className="h-4 w-4 mr-2 hidden sm:inline-block" />
+            Emails
           </ScrollableTabTrigger>
         </ScrollableTabsList>
 
@@ -747,6 +753,20 @@ export default function CompanyDetailPage() {
                   <p className="text-sm">Klik op 'Bewerken' om notities toe te voegen</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="emails" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Inbox className="h-5 w-5" />
+                Gmail threads
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GmailThreadList companyId={id} />
             </CardContent>
           </Card>
         </TabsContent>

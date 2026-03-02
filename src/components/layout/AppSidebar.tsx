@@ -24,6 +24,7 @@ import {
   Calendar,
   Mail,
   Map,
+  Inbox,
 } from 'lucide-react';
 
 interface NavItem {
@@ -73,6 +74,7 @@ const getNavGroups = (role: string | null, t: (key: string) => string, draftCoun
     {
       title: t('common.automation') || 'Automatisering',
       items: [
+        { title: 'Gmail', icon: Inbox, href: '/gmail', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'] },
         { title: t('navigation.emailDrafts'), icon: Mail, href: '/email-drafts', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'], badge: draftCount },
         { title: t('common.documents') || 'Documenten', icon: FileText, href: '/documents/templates', roles: ['ADMIN', 'MANAGER', 'SALES', 'super_admin'] },
       ],

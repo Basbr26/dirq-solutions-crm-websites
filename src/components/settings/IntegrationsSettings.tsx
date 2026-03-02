@@ -1,10 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { GoogleCalendarSync } from '@/components/calendar/GoogleCalendarSync';
+import { GmailConnect } from '@/components/gmail/GmailConnect';
 import { useTranslation } from 'react-i18next';
 
 export function IntegrationsSettings() {
   const { t } = useTranslation();
-  
+
   return (
     <div className="space-y-6">
       <Card>
@@ -19,20 +20,17 @@ export function IntegrationsSettings() {
         </CardContent>
       </Card>
 
-      {/* Future integrations can be added here */}
-      {/* 
       <Card>
         <CardHeader>
-          <CardTitle>Outlook Calendar</CardTitle>
+          <CardTitle>Gmail</CardTitle>
           <CardDescription>
-            Synchroniseer met Microsoft Outlook Calendar
+            Verbind Gmail om emails te lezen, versturen en automatisch te koppelen aan contacten en bedrijven.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Binnenkort beschikbaar</p>
+          <GmailConnect />
         </CardContent>
       </Card>
-      */}
     </div>
   );
 }

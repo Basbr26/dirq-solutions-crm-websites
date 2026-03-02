@@ -36,7 +36,9 @@ import {
   Smartphone,
   Upload,
   Plus,
+  Inbox,
 } from "lucide-react";
+import { GmailThreadList } from '@/components/gmail/GmailThreadList';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -245,6 +247,10 @@ export default function ContactDetailPage() {
             <TabsTrigger value="documents" className={isMobile ? "flex-shrink-0" : ""}>
               <FileText className="mr-2 h-4 w-4" />
               {t('contacts.tabs.documents')}
+            </TabsTrigger>
+            <TabsTrigger value="emails" className={isMobile ? "flex-shrink-0" : ""}>
+              <Inbox className="mr-2 h-4 w-4" />
+              Emails
             </TabsTrigger>
           </TabsList>
         </div>
@@ -497,6 +503,20 @@ export default function ContactDetailPage() {
             </CardHeader>
             <CardContent>
               <DocumentsList contactId={id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="emails" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Inbox className="h-5 w-5" />
+                Gmail threads
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GmailThreadList contactId={id} />
             </CardContent>
           </Card>
         </TabsContent>

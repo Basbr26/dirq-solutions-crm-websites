@@ -45,6 +45,7 @@ const CostAnalyticsDashboard = lazy(() => import("./pages/CostAnalyticsDashboard
 const CompanySettingsPage = lazy(() => import("./pages/CompanySettingsPage"));
 const GebruikersbeheerPage = lazy(() => import("./pages/GebruikersbeheerPage"));
 const AIChatPage = lazy(() => import("./pages/AIChatPage"));
+const GmailPage = lazy(() => import("./pages/GmailPage"));
 
 // Lazy load utility pages
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -432,8 +433,8 @@ function AnimatedRoutes() {
           } 
         />
 
-        <Route 
-          path="/email-drafts" 
+        <Route
+          path="/email-drafts"
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
@@ -442,7 +443,19 @@ function AnimatedRoutes() {
                 </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
-          } 
+          }
+        />
+        <Route
+          path="/gmail"
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <GmailPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          }
         />
         <Route 
           path="/documents/templates" 

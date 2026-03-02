@@ -39,13 +39,19 @@ export async function initGoogleCalendar(): Promise<boolean> {
     gapi = window.gapi;
 
     // Initialize gapi client
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('gapi.load timeout after 10s')), 10000);
       gapi.load('client', async () => {
-        await gapi.client.init({
-          apiKey: GOOGLE_API_KEY,
-          discoveryDocs: DISCOVERY_DOCS,
-        });
-        resolve();
+        clearTimeout(timeout);
+        try {
+          await gapi.client.init({
+            apiKey: GOOGLE_API_KEY,
+            discoveryDocs: DISCOVERY_DOCS,
+          });
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
       });
     });
 
@@ -88,14 +94,20 @@ export async function signInToGoogle(): Promise<{
   scope: string;
   refresh_token?: string;
 } | null> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    // Timeout fallback — if popup never responds within 5 minutes
+    const timeout = setTimeout(() => {
+      reject(new Error('Google OAuth timeout: geen reactie binnen 5 minuten'));
+    }, 5 * 60 * 1000);
+
     tokenClient.callback = async (response: any) => {
+      clearTimeout(timeout);
       if (response.error) {
         logger.error(new Error(response.error), { context: 'Google sign-in error' });
         resolve(null);
         return;
       }
-      
+
       // With authorization code flow, we receive a 'code' that needs to be exchanged
       // The code exchange happens via a backend endpoint
       if (response.code) {
@@ -115,6 +127,19 @@ export async function signInToGoogle(): Promise<{
           scope: response.scope,
           refresh_token: response.refresh_token,
         });
+      }
+    };
+
+    // Handle popup closed / user cancellation / browser block
+    tokenClient.error_callback = (error: any) => {
+      clearTimeout(timeout);
+      const type = error?.type ?? '';
+      if (type === 'popup_closed' || type === 'popup_blocked_by_browser') {
+        // User closed the popup — not an error, just resolve null
+        resolve(null);
+      } else {
+        logger.error(new Error(error?.message || String(error)), { context: 'Google OAuth error' });
+        resolve(null);
       }
     };
 
