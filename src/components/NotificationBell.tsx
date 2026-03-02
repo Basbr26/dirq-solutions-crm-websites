@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { logger } from '@/lib/logger';
-import { Bell, Check, Trash2, X } from "lucide-react";
+import { Bell, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -34,6 +35,7 @@ interface Notification {
 }
 
 export function NotificationBell() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
@@ -200,7 +202,7 @@ export function NotificationBell() {
   const notificationList = (
     <>
       <div className="flex items-center justify-between p-4 border-b">
-        <h3 className="font-semibold">Notificaties</h3>
+        <h3 className="font-semibold">{t('notifications.title')}</h3>
         {unreadCount > 0 && (
           <Button
             variant="ghost"
@@ -209,14 +211,14 @@ export function NotificationBell() {
             className="text-xs text-muted-foreground hover:text-foreground"
           >
             <Check className="h-3 w-3 mr-1" />
-            Alles gelezen
+            {t('notifications.markAllRead')}
           </Button>
         )}
       </div>
-      <ScrollArea className="h-[60vh] md:h-[300px]">
+      <ScrollArea className="h-[60vh] md:h-[400px]">
         {notifications.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
-            Geen notificaties
+            {t('notifications.noNotifications')}
           </div>
         ) : (
           <div className="divide-y">
@@ -312,7 +314,7 @@ export function NotificationBell() {
       <PopoverTrigger asChild>
         {triggerButton}
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-[420px] p-0" align="end">
         {notificationList}
       </PopoverContent>
     </Popover>

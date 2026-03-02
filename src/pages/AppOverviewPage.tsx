@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -468,9 +467,39 @@ function WebhookNode({ data }: NodeProps) {
 
 const nodeTypes = { userNode: UserNode, crmNode: CrmNode, backendNode: BackendNode, automationNode: AutomationNode, externalNode: ExternalNode, webhookNode: WebhookNode };
 
-// ─── Node Detail Sheet ────────────────────────────────────────────────────────
-function NodeDetailSheet({ selectedNodeId, onClose, onNavigateToNode }: {
+// ─── Edge Descriptions ────────────────────────────────────────────────────────
+const EDGE_DESCRIPTIONS: Record<string, string> = {
+  'user-crm':  'De gebruiker werkt direct met alle CRM-modules via de browser-interface.',
+  'rel-sb':    'Bedrijven en contacten worden opgeslagen in en geladen vanuit Supabase PostgreSQL.',
+  'pip-sb':    'Pipeline-projecten en fase-updates worden gesynchroniseerd met de database.',
+  'off-sb':    'Offertes (inclusief PDF-links en handtekeningen) worden opgeslagen in Supabase.',
+  'act-sb':    'Interacties en kalenderevents worden persistent opgeslagen in de database.',
+  'ana-sb':    'Analytics dashboards halen pipeline-, klant- en interactiedata op uit Supabase.',
+  'sb-ana':    'Supabase Realtime pusht live updates naar de Analytics-dashboards bij wijzigingen.',
+  'act-gcal':  'Agenda-events worden gestuurd naar Google Calendar bij aanmaken of wijzigen.',
+  'gcal-act':  'Wijzigingen in Google Calendar worden teruggesynchroniseerd naar het CRM.',
+  'rel-wh1':   'Nieuw bedrijf aangemaakt → webhook-trigger naar n8n voor KVK-verrijking en lead enrichment.',
+  'pip-wh2':   'Project milestone bereikt (fase-wijziging) → webhook-trigger voor email automations.',
+  'act-wh3':   'No-show gemeld via agenda-event → webhook-trigger voor herplanningsmail.',
+  'wh1-n8n':   'Bedrijfsaanmakings-webhook start de "ATC - Nieuwe Lead Enrichment" workflow in n8n.',
+  'wh2-n8n':   'Milestone-webhook start de "Email - Project Milestone Update" workflow in n8n.',
+  'wh3-n8n':   'No-show-webhook start de "ATC - Meeting No-Show Recovery" workflow in n8n.',
+  'sb-n8n':    'n8n scheduled workflows lezen dagelijks CRM-data uit Supabase voor analyse en alerts.',
+  'n8n-gem':   'n8n stuurt prompts naar Gemini 2.0 Flash voor het schrijven van emails en tekstanalyse.',
+  'n8n-vtx':   'n8n roept Vertex AI aan voor de CRM chatbot (AI-agent met 37+ tools).',
+  'n8n-res':   'n8n verstuurt klant- en interne emails via Resend (transactionele e-mail API).',
+  'n8n-kvk':   'n8n verrijkt nieuwe bedrijven met KVK-gegevens: naam, adres en SBI-code.',
+  'n8n-sb':    'n8n schrijft resultaten terug naar Supabase: emailconcepten, health scores en logs.',
+  'ana-vtx':   'AI Chat-module stuurt gebruikersvragen naar Vertex AI voor antwoord en tool-aanroepen.',
+  'vtx-ana':   'Vertex AI AI-agent-antwoorden en CRM-acties worden teruggegeven aan de chatinterface.',
+};
+
+interface SelectedEdge { id: string; source: string; target: string; }
+
+// ─── Inline Detail Panel ──────────────────────────────────────────────────────
+function DetailPanel({ selectedNodeId, selectedEdge, onClose, onNavigateToNode }: {
   selectedNodeId: string | null;
+  selectedEdge: SelectedEdge | null;
   onClose: () => void;
   onNavigateToNode: (id: string) => void;
 }) {
@@ -484,34 +513,37 @@ function NodeDetailSheet({ selectedNodeId, onClose, onNavigateToNode }: {
     return ids;
   }, [selectedNodeId]);
 
-  const detail = selectedNodeId ? NODE_DETAILS[selectedNodeId] : null;
+  const nodeDetail = selectedNodeId ? NODE_DETAILS[selectedNodeId] : null;
 
   return (
-    <Sheet open={!!selectedNodeId} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="w-[360px] sm:w-[440px] overflow-y-auto">
-        {detail && (
-          <>
-            <SheetHeader className="mb-5">
-              <SheetTitle className="text-lg leading-snug">{detail.title}</SheetTitle>
-              <p className="text-sm text-muted-foreground">{detail.description}</p>
-            </SheetHeader>
+    <div className="w-[300px] xl:w-[340px] shrink-0 rounded-xl border border-border bg-card overflow-y-auto max-h-[640px]">
+      <div className="p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {selectedNodeId ? 'Node detail' : 'Verbinding'}
+          </span>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground text-sm leading-none">✕</button>
+        </div>
 
-            <div className="mb-5">
+        {nodeDetail && (
+          <>
+            <h3 className="font-semibold text-sm leading-snug mb-1">{nodeDetail.title}</h3>
+            <p className="text-xs text-muted-foreground mb-4">{nodeDetail.description}</p>
+            <div className="mb-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Kenmerken</p>
               <ul className="space-y-1.5">
-                {detail.features.map((f, i) => (
-                  <li key={i} className="text-sm flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                {nodeDetail.features.map((f, i) => (
+                  <li key={i} className="text-xs flex items-start gap-2">
+                    <CheckCircle2 className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
                     <span>{f}</span>
                   </li>
                 ))}
               </ul>
             </div>
-
             {connectedNodeIds.length > 0 && (
-              <div className="mb-5">
+              <div className="mb-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Verbonden met</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {connectedNodeIds.map(id => (
                     <Badge
                       key={id} variant="outline"
@@ -524,18 +556,38 @@ function NodeDetailSheet({ selectedNodeId, onClose, onNavigateToNode }: {
                 </div>
               </div>
             )}
-
-            {detail.link && (
-              <Button asChild variant="outline" size="sm">
-                <Link to={detail.link}>
+            {nodeDetail.link && (
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link to={nodeDetail.link}>
                   <ArrowRight className="h-4 w-4 mr-2" /> Open module
                 </Link>
               </Button>
             )}
           </>
         )}
-      </SheetContent>
-    </Sheet>
+
+        {selectedEdge && !selectedNodeId && (
+          <>
+            <div className="flex items-center gap-1.5 flex-wrap mb-3">
+              <Badge variant="secondary" className="text-xs">{NODE_LABELS[selectedEdge.source] || selectedEdge.source}</Badge>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <Badge variant="secondary" className="text-xs">{NODE_LABELS[selectedEdge.target] || selectedEdge.target}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+              {EDGE_DESCRIPTIONS[selectedEdge.id] || `Verbinding van ${NODE_LABELS[selectedEdge.source] || selectedEdge.source} naar ${NODE_LABELS[selectedEdge.target] || selectedEdge.target}.`}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onNavigateToNode(selectedEdge.source)}>
+                {NODE_LABELS[selectedEdge.source] || selectedEdge.source}
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => onNavigateToNode(selectedEdge.target)}>
+                {NODE_LABELS[selectedEdge.target] || selectedEdge.target}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -544,6 +596,11 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
   selectedNodeId: string | null;
   onSelectNode: (id: string | null) => void;
 }) {
+  const [selectedEdge, setSelectedEdge] = useState<SelectedEdge | null>(null);
+
+  const handleClose = () => { onSelectNode(null); setSelectedEdge(null); };
+  const handleNavigateToNode = (id: string) => { setSelectedEdge(null); onSelectNode(id); };
+
   const connectedNodeIds = useMemo(() => {
     if (!selectedNodeId) return new Set<string>();
     const ids = new Set<string>();
@@ -554,68 +611,102 @@ function ArchitectuurTab({ selectedNodeId, onSelectNode }: {
     return ids;
   }, [selectedNodeId]);
 
+  const edgeEndpoints = useMemo(() => {
+    if (!selectedEdge || selectedNodeId) return new Set<string>();
+    return new Set([selectedEdge.source, selectedEdge.target]);
+  }, [selectedEdge, selectedNodeId]);
+
   const connectedEdgeIds = useMemo(() => {
-    if (!selectedNodeId) return new Set<string>();
-    const ids = new Set<string>();
-    BASE_EDGES.forEach(e => {
-      if (e.source === selectedNodeId || e.target === selectedNodeId) ids.add(e.id);
-    });
-    return ids;
-  }, [selectedNodeId]);
+    if (selectedNodeId) {
+      const ids = new Set<string>();
+      BASE_EDGES.forEach(e => { if (e.source === selectedNodeId || e.target === selectedNodeId) ids.add(e.id); });
+      return ids;
+    }
+    if (selectedEdge) return new Set([selectedEdge.id]);
+    return new Set<string>();
+  }, [selectedNodeId, selectedEdge]);
+
+  const activeSelection = !!(selectedNodeId || selectedEdge);
 
   const displayNodes = useMemo(() =>
     BASE_NODES.map(n => {
-      if (!selectedNodeId) return { ...n, style: { ...n.style, opacity: 1, boxShadow: 'none', transition: 'all 0.2s ease' } };
+      if (!activeSelection) return { ...n, style: { ...n.style, opacity: 1, boxShadow: 'none', transition: 'all 0.2s ease' } };
       const isSel = n.id === selectedNodeId;
-      const isConn = connectedNodeIds.has(n.id);
+      const isConn = connectedNodeIds.has(n.id) || edgeEndpoints.has(n.id);
       return {
         ...n,
         style: {
           ...n.style,
-          opacity: isSel || isConn ? 1 : 0.15,
+          opacity: isSel || isConn ? 1 : 0.12,
           boxShadow: isSel ? '0 0 0 3px #3b82f6, 0 0 24px rgba(59,130,246,0.35)' : 'none',
           transition: 'all 0.2s ease',
         },
       };
-    }), [selectedNodeId, connectedNodeIds]);
+    }), [activeSelection, selectedNodeId, connectedNodeIds, edgeEndpoints]);
 
   const displayEdges = useMemo(() =>
     BASE_EDGES.map(e => {
-      if (!selectedNodeId) return e;
+      const base = { ...e, style: { ...e.style, cursor: 'pointer' } };
+      if (!activeSelection) return base;
       const isConn = connectedEdgeIds.has(e.id);
       return {
-        ...e,
-        style: { ...e.style, opacity: isConn ? 1 : 0.06, strokeWidth: isConn ? 3 : 1, transition: 'all 0.2s ease' },
+        ...base,
+        style: { ...base.style, opacity: isConn ? 1 : 0.06, strokeWidth: isConn ? 3 : e.style?.strokeWidth ?? 1.5, transition: 'all 0.2s ease' },
         animated: isConn ? (e.animated ?? true) : false,
       };
-    }), [selectedNodeId, connectedEdgeIds]);
+    }), [activeSelection, connectedEdgeIds]);
+
+  const showPanel = !!(selectedNodeId || selectedEdge);
 
   return (
     <div className="space-y-3">
-      {selectedNodeId && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 rounded-lg px-3 py-2">
-          <span>Geselecteerd: <strong className="text-foreground">{NODE_LABELS[selectedNodeId]}</strong></span>
-          <button onClick={() => onSelectNode(null)} className="ml-auto text-xs hover:text-foreground">✕ Deselecteer</button>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground min-h-[28px]">
+        {selectedNodeId && (
+          <>
+            <span>Geselecteerd: <strong className="text-foreground">{NODE_LABELS[selectedNodeId]}</strong></span>
+            <button onClick={handleClose} className="ml-auto hover:text-foreground">✕ Deselecteer</button>
+          </>
+        )}
+        {selectedEdge && !selectedNodeId && (
+          <>
+            <span>Lijn: <strong className="text-foreground">{NODE_LABELS[selectedEdge.source]} → {NODE_LABELS[selectedEdge.target]}</strong></span>
+            <button onClick={handleClose} className="ml-auto hover:text-foreground">✕ Deselecteer</button>
+          </>
+        )}
+        {!activeSelection && (
+          <span>Klik op een <strong>node</strong> of <strong>lijn</strong> voor details. Klik verbonden nodes om verder te navigeren.</span>
+        )}
+      </div>
+
+      <div className="flex gap-4 items-start">
+        <div className="flex-1 min-w-0">
+          <div className="h-[640px] rounded-xl border border-border overflow-hidden">
+            <ReactFlow
+              nodes={displayNodes}
+              edges={displayEdges}
+              nodeTypes={nodeTypes}
+              fitView
+              fitViewOptions={{ padding: 0.1 }}
+              proOptions={{ hideAttribution: true }}
+              onNodeClick={(_, node) => { setSelectedEdge(null); onSelectNode(selectedNodeId === node.id ? null : node.id); }}
+              onEdgeClick={(_, edge) => { onSelectNode(null); setSelectedEdge(prev => prev?.id === edge.id ? null : { id: edge.id, source: edge.source, target: edge.target }); }}
+              onPaneClick={handleClose}
+            >
+              <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+              <Controls />
+              <MiniMap zoomable pannable />
+            </ReactFlow>
+          </div>
         </div>
-      )}
-      {!selectedNodeId && (
-        <p className="text-xs text-muted-foreground">Klik op een node om verbindingen te zien. Klik op een verbonden node om verder te navigeren.</p>
-      )}
-      <div className="h-[640px] rounded-xl border border-border overflow-hidden">
-        <ReactFlow
-          nodes={displayNodes}
-          edges={displayEdges}
-          nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.1 }}
-          proOptions={{ hideAttribution: true }}
-          onNodeClick={(_, node) => onSelectNode(selectedNodeId === node.id ? null : node.id)}
-          onPaneClick={() => onSelectNode(null)}
-        >
-          <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
-          <Controls />
-          <MiniMap zoomable pannable />
-        </ReactFlow>
+
+        {showPanel && (
+          <DetailPanel
+            selectedNodeId={selectedNodeId}
+            selectedEdge={selectedEdge}
+            onClose={handleClose}
+            onNavigateToNode={handleNavigateToNode}
+          />
+        )}
       </div>
     </div>
   );
@@ -801,12 +892,6 @@ export default function AppOverviewPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Sheet outside tabs so it overlays the full page */}
-      <NodeDetailSheet
-        selectedNodeId={selectedNodeId}
-        onClose={() => setSelectedNodeId(null)}
-        onNavigateToNode={setSelectedNodeId}
-      />
     </AppLayout>
   );
 }
