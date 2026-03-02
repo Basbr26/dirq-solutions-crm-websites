@@ -7,7 +7,6 @@
 import { logger } from './logger';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || window.location.origin;
 const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
 const GMAIL_BASE = 'https://gmail.googleapis.com/gmail/v1';
 
@@ -55,7 +54,6 @@ export async function initGmail(): Promise<boolean> {
       scope: GMAIL_SCOPES,
       ux_mode: 'popup',
       callback: '',
-      redirect_uri: GOOGLE_REDIRECT_URI,
     });
 
     return true;

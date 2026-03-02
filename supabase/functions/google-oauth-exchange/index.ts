@@ -54,18 +54,22 @@ serve(async (req) => {
     }
 
     // Exchange authorization code for tokens
+    // Note: redirect_uri must be omitted when using GIS popup mode (no traditional redirect)
+    const resolvedRedirectUri = redirect_uri || defaultRedirectUri || "";
+    const tokenParams: Record<string, string> = {
+      code: code,
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: "authorization_code",
+    };
+    if (resolvedRedirectUri) tokenParams.redirect_uri = resolvedRedirectUri;
+
     const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        code: code,
-        client_id: clientId,
-        client_secret: clientSecret, // SECRET stays server-side!
-        redirect_uri: redirect_uri || defaultRedirectUri || "",
-        grant_type: "authorization_code",
-      }),
+      body: new URLSearchParams(tokenParams),
     });
 
     if (!tokenResponse.ok) {
