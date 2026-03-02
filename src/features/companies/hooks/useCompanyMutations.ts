@@ -4,6 +4,7 @@ import { CompanyFormData, Company } from '@/types/crm';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptics';
 import { useTranslation } from 'react-i18next';
+import { triggerWebhook } from '@/lib/webhooks';
 
 /**
  * Create Company Mutation Hook
@@ -68,11 +69,12 @@ export function useCreateCompany() {
       }
       return company as Company;
     },
-    onSuccess: () => {
+    onSuccess: (company) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['company-stats'] });
       haptics.success();
       toast.success(t('toast.company.created'));
+      triggerWebhook('company-created', { company_id: company.id });
     },
     onError: (error: Error) => {
       haptics.error();

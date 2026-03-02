@@ -112,7 +112,7 @@
 **Modern CRM speciaal gebouwd voor website ontwikkelaars**
 
 [![Production Excellence](https://img.shields.io/badge/status-production%20excellence-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-3.0.0-blue)]()
+[![Version](https://img.shields.io/badge/version-3.4.0-blue)]()
 [![Completion](https://img.shields.io/badge/completion-100%25-success)]()
 [![AI Chatbot](https://img.shields.io/badge/AI-chatbot%20active-green)]()
 [![Tests](https://img.shields.io/badge/tests-316/316%20passing-success)]()
@@ -173,7 +173,7 @@ Dirq Solutions CRM is een volledig functioneel Customer Relationship Management 
 ✅ **Lead Conversion** - Automated lead → project conversion  
 ✅ **E-Sign Documents** - Digitale handtekeningen met audit trail  
 ✅ **AI Chatbot (37 tools)** - Natural language CRM via Google Vertex AI + n8n (search, create, edit, analytics, enrichment, email, calendar)
-✅ **ATC Automation** - Event-driven orchestrator + scheduled briefings/digests/alerts + 6 email templates
+✅ **ATC Automation** - 62 workflows: cross-sell, referral, win-back, pipeline rapport, velocity alerts, milestone updates, no-show recovery, lead enrichment
 ✅ **Command Bar** - AI-powered command input (Cmd+K)  
 ✅ **API Gateway** - Secure Edge Functions voor n8n/KVK/Apollo webhooks  
 ✅ **System User** - Enterprise ownership tracking voor automation  
@@ -497,9 +497,9 @@ Digitale handtekeningen voor contracten, offertes en overeenkomsten met volledig
 
 ## 📊 Current Status
 
-**Version:** 3.1.0 - Workflow Auth Fix
-**Status:** ✅ Production Ready + AI Chatbot + Event-Driven Automation
-**Last Updated:** 19 Februari 2026
+**Version:** 3.4.0 - Sprint 3 & 4 ATC + Frontend Webhooks
+**Status:** ✅ Production Ready + AI Chatbot + Event-Driven Automation + Frontend Webhooks
+**Last Updated:** 2 Maart 2026
 
 **Completion:** 99%
 

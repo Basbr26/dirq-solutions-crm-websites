@@ -37,6 +37,7 @@ import DashboardCRM from "./pages/DashboardCRM";
 import DocumentTemplatesPage from "./pages/DocumentTemplatesPage";
 
 // Lazy load CRM utility pages
+const AppOverviewPage = lazy(() => import("./pages/AppOverviewPage"));
 const DocumentProcessing = lazy(() => import("./pages/DocumentProcessing"));
 const CalendarPage = lazy(() => import("./pages/CalendarPage"));
 const EmailDraftsPage = lazy(() => import("./pages/EmailDraftsPage"));
@@ -169,6 +170,20 @@ function AnimatedRoutes() {
           } 
         />
         
+        {/* App Overview - node graph van de hele applicatie */}
+        <Route
+          path="/overview"
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['super_admin', 'ADMIN', 'MANAGER', 'SALES', 'SUPPORT']}>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <AppOverviewPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          }
+        />
+
         {/* Alias for /dashboard -> /dashboard/crm */}
         <Route 
           path="/dashboard" 

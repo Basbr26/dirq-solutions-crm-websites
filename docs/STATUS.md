@@ -1,12 +1,12 @@
 # Dirq Solutions CRM - Current Status
 
-**Last Updated:** 1 Maart 2026
-**Version:** 3.3.0 - Sprint 2 ATC & Email Automations
-**Production Status:** ✅ Production Ready + AI Chatbot + Event-Driven Automation + Health Scoring
+**Last Updated:** 2 Maart 2026
+**Version:** 3.4.0 - Sprint 3 & 4 ATC + Frontend Webhook Integratie
+**Production Status:** ✅ Production Ready + AI Chatbot + Event-Driven Automation + Health Scoring + Frontend Webhooks
 
 ---
 
-## Overall Maturity: 97% - Production Ready (Grade: A+)
+## Overall Maturity: 98% - Production Ready (Grade: A+)
 
 | Category | Score | Status |
 |----------|-------|--------|
@@ -21,11 +21,54 @@
 | AI Integration | 10/10 | ✅ Chatbot + RAG + Vertex AI |
 | Data Integrity | 10/10 | ✅ Foreign Keys + Constraints + pgvector |
 | API Integration | 10/10 | ✅ Edge Functions + Webhooks + n8n |
-| n8n Automation | 10/10 | ✅ 50 Workflows + Sprint 1 & 2 ATC |
+| n8n Automation | 10/10 | ✅ 62 Workflows + Sprint 1-4 ATC |
 
 ---
 
-## RECENT UPDATES (v3.3.0 - 1 Maart 2026)
+## RECENT UPDATES (v3.4.0 - 2 Maart 2026)
+
+### **Sprint 3 — Groei Automations** ✅
+**Impact:** 5 nieuwe n8n workflows voor cross-sell, referral en win-back
+
+| Workflow | ID | Trigger | Functie |
+|----------|-----|---------|---------|
+| ATC - Cross-sell Opportunity Finder | `BrRuaGQjeafJKlZB` | Schedule maandag 08:00 | Live/maintenance projecten zonder hosting of onderhoud → Gemini cross-sell email als draft |
+| Email - Cross-sell Introductie | `RdZJrOmirC7ewqzf` | Execute Workflow (sub) | Verstuurt cross-sell email direct via Resend + logt interactie |
+| Email - Referral Uitnodiging | `vLpbhXokZlue9CAE` | Schedule 1e maandag 09:00 | Actieve klanten >90 dagen + MRR > 0 → Gemini referral uitnodiging als draft |
+| ATC - Win-back Campaign | `49PaQYI1JiLTuAns` | Schedule 1e vd maand 10:00 | Churned/inactive >90 dagen → Gemini win-back email als draft |
+| Email - Win-back Reactivatie | `xVh9tWUlSj85loWa` | Execute Workflow (sub) | Verstuurt win-back email direct via Resend + logt interactie |
+
+### **Sprint 4 — Klantcommunicatie Automations** ✅
+**Impact:** 7 nieuwe n8n workflows voor rapportage, alerts en lifecycle-communicatie
+
+| Workflow | ID | Trigger | Functie |
+|----------|-----|---------|---------|
+| ATC - Weekly Pipeline Report | `AnnCqjraP0NxiwCf` | Schedule vrijdag 17:00 | HTML rapport: pipeline per stage, stale deals (>14d ⚠️), gewogen waarde, won this week → Resend |
+| ATC - Lead Velocity Alert | `HhfQ1TFNOuPR7o2c` | Schedule werkdagen 09:30 | Vergelijkt leads deze week vs vorige week. Alert als 0 leads of trend < -50% → warning notification |
+| Email - Project Milestone Update | `FWusCpiCY4BhrD43` | Webhook `/milestone-reached` | Gemini schrijft enthousiaste tussentijdse update-email → direct verstuurd via Resend |
+| Email - Maandelijkse Waarde Samenvatting | `PuJSmQ8t725FvNVX` | Schedule 1e vd maand 09:00 | Per actieve klant: Gemini schrijft maandsamenvatting → draft in notifications |
+| ATC - Meeting No-Show Recovery | `w2o9UnbqpZ4QfbBF` | Webhook `/meeting-missed` | Gemini schrijft herplanningsvoorstel → draft in notifications + interactie gelogd |
+| Email - No-show Herplanning | `XYPTmcLBlSzaPbfZ` | Execute Workflow (sub) | Verstuurt herplanningsemail direct via Resend + logt interactie |
+| ATC - Nieuwe Lead Enrichment Trigger | `bmR4p665e2hkNXuK` | Webhook `/company-created` | KVK API lookup op naam/nummer → PATCH company met adres + KVK-nummer ⚠️ KVK key vereist |
+
+### **Frontend Webhook Integratie** ✅
+**Impact:** React CRM triggert automatisch n8n workflows bij relevante events
+
+| Bestand | Wijziging |
+|---------|-----------|
+| `src/lib/webhooks.ts` | Nieuwe fire-and-forget utility — typed per event, fouten alleen gelogd |
+| `useCompanyMutations.ts` | `useCreateCompany` onSuccess → `company-created` webhook → KVK enrichment start automatisch |
+| `useProjectMutations.ts` | `useUpdateProjectStage` onSuccess → `milestone-reached` webhook bij in_development (50%) / review (90%) / live (100%) |
+| `EventDetailDialog.tsx` | "No-show melden" knop voor afgelopen meetings met bedrijfskoppeling → `meeting-missed` webhook |
+
+**Webhook endpoints actief:**
+- `POST /webhook/company-created` → KVK enrichment
+- `POST /webhook/milestone-reached` → milestone update email naar klant
+- `POST /webhook/meeting-missed` → herplanningsdraft in CRM
+
+---
+
+## PREVIOUS UPDATES (v3.3.0 - 1 Maart 2026)
 
 ### **Sprint 2 — Klantbehoud Automations** ✅
 **Impact:** 3 nieuwe n8n workflows voor klantretentie en onboarding

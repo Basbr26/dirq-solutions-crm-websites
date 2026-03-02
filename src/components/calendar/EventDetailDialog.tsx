@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Calendar, Clock, MapPin, Trash2, Building2, User, Link as LinkIcon, Pencil, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, Trash2, Building2, User, Link as LinkIcon, Pencil, X, AlertTriangle } from 'lucide-react';
+import { triggerWebhook } from '@/lib/webhooks';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 import { EditEventDialog } from './EditEventDialog';
@@ -37,6 +38,7 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [noShowReported, setNoShowReported] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -82,6 +84,21 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
 
   const handleDelete = () => {
     deleteMutation.mutate();
+  };
+
+  const isMissedMeeting =
+    (event.event_type === 'meeting' || event.event_type === 'call') &&
+    event.company_id &&
+    new Date(event.start_time) < new Date();
+
+  const handleNoShow = () => {
+    triggerWebhook('meeting-missed', {
+      company_id: event.company_id,
+      meeting_subject: event.title,
+      meeting_date: event.start_time,
+    });
+    setNoShowReported(true);
+    toast({ title: 'No-show gemeld', description: 'Herplanningsemail wordt klaargezet.' });
   };
 
   return (
@@ -202,6 +219,17 @@ export function EventDetailDialog({ event, open, onOpenChange }: EventDetailDial
           </div>
 
           <DialogFooter className="gap-2">
+            {isMissedMeeting && (
+              <Button
+                variant="outline"
+                className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                onClick={handleNoShow}
+                disabled={noShowReported}
+              >
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {noShowReported ? 'No-show gemeld ✓' : 'No-show melden'}
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

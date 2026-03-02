@@ -11,6 +11,7 @@ import { notifyDealClosed, notifyProjectStageChanged, createDealWonNotification 
 import { haptics } from '@/lib/haptics';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
+import { triggerWebhook } from '@/lib/webhooks';
 
 export function useCreateProject() {
   const queryClient = useQueryClient();
@@ -143,6 +144,21 @@ export function useUpdateProjectStage(id: string) {
           cachedProject.stage,
           newStage
         );
+      }
+
+      // Milestone webhook voor key stages
+      const milestones: Partial<Record<ProjectStage, { name: string; percentage: number }>> = {
+        in_development: { name: 'Ontwikkeling gestart', percentage: 50 },
+        review: { name: 'Review fase', percentage: 90 },
+        live: { name: 'Project live gegaan', percentage: 100 },
+      };
+      const milestone = milestones[newStage];
+      if (milestone) {
+        triggerWebhook('milestone-reached', {
+          project_id: id,
+          milestone_name: milestone.name,
+          milestone_percentage: milestone.percentage,
+        });
       }
     },
     onError: (error: Error) => {

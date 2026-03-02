@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Mail, Send, X, Edit2, Clock } from 'lucide-react';
+import { AppLayout } from '@/components/layout/AppLayout';
 
 interface EmailDraft {
   id: string;
@@ -164,28 +165,23 @@ export default function EmailDraftsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Mail className="w-12 h-12 mx-auto mb-4 text-gray-400 animate-pulse" />
-          <p className="text-gray-600">{t('common.loading')}</p>
+      <AppLayout title={t('emailDrafts.title')} subtitle={t('emailDrafts.subtitle')}>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Mail className="w-12 h-12 mx-auto mb-4 text-gray-400 animate-pulse" />
+            <p className="text-gray-600">{t('common.loading')}</p>
+          </div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Mail className="w-8 h-8" />
-          {t('emailDrafts.title')}
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          {t('emailDrafts.subtitle')} • {drafts.length} {t('emailDrafts.pending')}
-        </p>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <AppLayout
+      title={t('emailDrafts.title')}
+      subtitle={`${t('emailDrafts.subtitle')} • ${drafts.length} ${t('emailDrafts.pending')}`}
+    >
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Drafts List */}
         <div className="space-y-4">
           {drafts.map(draft => (
@@ -326,6 +322,6 @@ export default function EmailDraftsPage() {
           </Card>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 }

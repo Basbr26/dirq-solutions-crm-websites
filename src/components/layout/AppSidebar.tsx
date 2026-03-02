@@ -23,6 +23,7 @@ import {
   Layers,
   Calendar,
   Mail,
+  Map,
 } from 'lucide-react';
 
 interface NavItem {
@@ -43,12 +44,17 @@ const getNavGroups = (role: string | null, t: (key: string) => string, draftCoun
     {
       title: t('common.overview'),
       items: [
-        { 
-          title: t('navigation.dashboard'), 
-          icon: LayoutDashboard, 
-          href: role === 'super_admin' ? '/dashboard/super-admin' 
+        {
+          title: t('navigation.dashboard'),
+          icon: LayoutDashboard,
+          href: role === 'super_admin' ? '/dashboard/super-admin'
                : role === 'ADMIN' ? '/dashboard/executive'
                : '/dashboard/crm'
+        },
+        {
+          title: 'App Overzicht',
+          icon: Map,
+          href: '/overview',
         },
       ],
     },
