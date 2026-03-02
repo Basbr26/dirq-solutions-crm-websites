@@ -1,16 +1,19 @@
 /**
  * Gmail API Integration
- * Handles OAuth and Gmail operations
+ * Uses direct REST calls — no gapi discovery doc required.
+ * Only needs the GIS (google.accounts.oauth2) script for OAuth.
  */
 
 import { logger } from './logger';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || window.location.origin;
-const GMAIL_DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest'];
 const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+const GMAIL_BASE = 'https://gmail.googleapis.com/gmail/v1';
 
 let gmailTokenClient: any = null;
+// Module-level access token for direct REST calls
+let _accessToken: string | null = null;
 
 export interface GmailMessage {
   id: string;
@@ -38,35 +41,15 @@ export interface GmailThread {
 }
 
 /**
- * Initialize Gmail gapi client (loads Gmail discovery doc)
+ * Initialize Gmail OAuth client — no gapi discovery doc needed.
+ * Only loads the GIS script for the OAuth flow.
  */
 export async function initGmail(): Promise<boolean> {
   try {
-    if (!window.gapi) {
-      await loadScript('https://apis.google.com/js/api.js');
-    }
-    if (!window.google) {
+    if (!window.google?.accounts?.oauth2) {
       await loadScript('https://accounts.google.com/gsi/client');
     }
 
-    // Load gapi client with Gmail discovery doc
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('gapi.load timeout after 10s')), 10000);
-      window.gapi.load('client', async () => {
-        clearTimeout(timeout);
-        try {
-          await window.gapi.client.init({
-            apiKey: import.meta.env.VITE_GOOGLE_API_KEY || '',
-            discoveryDocs: GMAIL_DISCOVERY_DOCS,
-          });
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      });
-    });
-
-    // Init token client for Gmail scopes (separate from Calendar)
     gmailTokenClient = window.google.accounts.oauth2.initCodeClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: GMAIL_SCOPES,
@@ -84,14 +67,17 @@ export async function initGmail(): Promise<boolean> {
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    // Don't double-load
     if (document.querySelector(`script[src="${src}"]`)) {
-      resolve();
+      // Already loading — wait for it
+      const existing = document.querySelector(`script[src="${src}"]`) as HTMLScriptElement;
+      if (existing.dataset.loaded) { resolve(); return; }
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)));
       return;
     }
     const script = document.createElement('script');
     script.src = src;
-    script.onload = () => resolve();
+    script.onload = () => { script.dataset.loaded = '1'; resolve(); };
     script.onerror = () => reject(new Error(`Failed to load ${src}`));
     document.head.appendChild(script);
   });
@@ -121,6 +107,7 @@ export async function signInToGmail(): Promise<{
       if (response.code) {
         try {
           const tokenResponse = await exchangeGmailCode(response.code);
+          if (tokenResponse) _accessToken = tokenResponse.access_token;
           resolve(tokenResponse);
         } catch (error) {
           logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Gmail token exchange' });
@@ -174,10 +161,30 @@ async function exchangeGmailCode(code: string) {
 }
 
 /**
- * Set access token on gapi client (used after loading stored token)
+ * Store access token for direct REST calls (called after loading stored token from DB)
  */
-export function setGmailToken(accessToken: string, expiresIn: number) {
-  window.gapi?.client?.setToken({ access_token: accessToken, expires_in: expiresIn });
+export function setGmailToken(accessToken: string, _expiresIn: number) {
+  _accessToken = accessToken;
+}
+
+/**
+ * Direct REST call to Gmail API using stored access token
+ */
+async function gmailFetch(path: string, options: RequestInit = {}): Promise<any> {
+  if (!_accessToken) throw new Error('Geen Gmail access token — verbind eerst via Instellingen');
+  const resp = await fetch(`${GMAIL_BASE}${path}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${_accessToken}`,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`Gmail API ${resp.status}: ${text}`);
+  }
+  return resp.json();
 }
 
 /**
@@ -185,13 +192,8 @@ export function setGmailToken(accessToken: string, expiresIn: number) {
  */
 export async function fetchInboxThreads(maxResults = 50): Promise<GmailThread[]> {
   try {
-    const listResp = await window.gapi.client.gmail.users.threads.list({
-      userId: 'me',
-      maxResults,
-      labelIds: ['INBOX'],
-    });
-
-    const threads = listResp.result.threads || [];
+    const data = await gmailFetch(`/users/me/threads?maxResults=${maxResults}&labelIds=INBOX`);
+    const threads = data.threads || [];
     const fullThreads: GmailThread[] = [];
 
     for (const t of threads) {
@@ -211,13 +213,7 @@ export async function fetchInboxThreads(maxResults = 50): Promise<GmailThread[]>
  */
 export async function fetchThread(threadId: string): Promise<GmailThread | null> {
   try {
-    const resp = await window.gapi.client.gmail.users.threads.get({
-      userId: 'me',
-      id: threadId,
-      format: 'full',
-    });
-
-    const raw = resp.result;
+    const raw = await gmailFetch(`/users/me/threads/${threadId}?format=full`);
     const messages: GmailMessage[] = (raw.messages || []).map(parseMessage);
 
     if (messages.length === 0) return null;
@@ -237,8 +233,42 @@ export async function fetchThread(threadId: string): Promise<GmailThread | null>
 }
 
 /**
- * Parse a raw Gmail API message into GmailMessage
+ * Mark a message as read
  */
+export async function markAsRead(messageId: string): Promise<void> {
+  try {
+    await gmailFetch(`/users/me/messages/${messageId}/modify`, {
+      method: 'POST',
+      body: JSON.stringify({ removeLabelIds: ['UNREAD'] }),
+    });
+  } catch (error) {
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'markAsRead', messageId });
+  }
+}
+
+/**
+ * Fetch sent messages
+ */
+export async function fetchSentMessages(maxResults = 20): Promise<GmailMessage[]> {
+  try {
+    const data = await gmailFetch(`/users/me/messages?maxResults=${maxResults}&labelIds=SENT`);
+    const msgs = data.messages || [];
+    const results: GmailMessage[] = [];
+
+    for (const m of msgs) {
+      const raw = await gmailFetch(`/users/me/messages/${m.id}?format=full`);
+      results.push(parseMessage(raw));
+    }
+
+    return results;
+  } catch (error) {
+    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'fetchSentMessages' });
+    throw error;
+  }
+}
+
+// ── Parsers ──────────────────────────────────────────────────────────────────
+
 function parseMessage(raw: any): GmailMessage {
   const headers: Record<string, string> = {};
   for (const h of (raw.payload?.headers || [])) {
@@ -255,8 +285,6 @@ function parseMessage(raw: any): GmailMessage {
   const { text, html } = extractBody(raw.payload);
   const labels: string[] = raw.labelIds || [];
   const isRead = !labels.includes('UNREAD');
-
-  // Outbound if user sent it (SENT label present)
   const direction: 'inbound' | 'outbound' = labels.includes('SENT') ? 'outbound' : 'inbound';
 
   return {
@@ -286,10 +314,7 @@ function parseEmailAddress(raw: string): { name: string; email: string } {
 
 function parseEmailList(raw: string): string[] {
   if (!raw) return [];
-  return raw.split(',').map(e => {
-    const { email } = parseEmailAddress(e.trim());
-    return email;
-  }).filter(Boolean);
+  return raw.split(',').map(e => parseEmailAddress(e.trim()).email).filter(Boolean);
 }
 
 function extractBody(payload: any): { text: string; html: string } {
@@ -312,55 +337,10 @@ function extractBody(payload: any): { text: string; html: string } {
 
 function decodeBase64(data: string): string {
   try {
-    return decodeURIComponent(
-      escape(atob(data.replace(/-/g, '+').replace(/_/g, '/')))
-    );
+    const binary = atob(data.replace(/-/g, '+').replace(/_/g, '/'));
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
   } catch {
     return '';
-  }
-}
-
-/**
- * Mark a message as read
- */
-export async function markAsRead(messageId: string): Promise<void> {
-  try {
-    await window.gapi.client.gmail.users.messages.modify({
-      userId: 'me',
-      id: messageId,
-      resource: { removeLabelIds: ['UNREAD'] },
-    });
-  } catch (error) {
-    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'markAsRead', messageId });
-  }
-}
-
-/**
- * Fetch sent messages (for outbox view)
- */
-export async function fetchSentMessages(maxResults = 20): Promise<GmailMessage[]> {
-  try {
-    const listResp = await window.gapi.client.gmail.users.messages.list({
-      userId: 'me',
-      maxResults,
-      labelIds: ['SENT'],
-    });
-
-    const msgs = listResp.result.messages || [];
-    const results: GmailMessage[] = [];
-
-    for (const m of msgs) {
-      const resp = await window.gapi.client.gmail.users.messages.get({
-        userId: 'me',
-        id: m.id,
-        format: 'full',
-      });
-      results.push(parseMessage(resp.result));
-    }
-
-    return results;
-  } catch (error) {
-    logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'fetchSentMessages' });
-    throw error;
   }
 }
