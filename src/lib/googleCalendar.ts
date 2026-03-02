@@ -12,6 +12,7 @@ declare global {
 }
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || '';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 const CALENDAR_BASE = 'https://www.googleapis.com/calendar/v3';
 
@@ -65,6 +66,7 @@ export async function initGoogleCalendar(): Promise<boolean> {
       scope: SCOPES,
       ux_mode: 'popup',
       callback: '',
+      ...(GOOGLE_REDIRECT_URI ? { redirect_uri: GOOGLE_REDIRECT_URI } : {}),
     });
 
     return true;
@@ -149,7 +151,7 @@ async function exchangeCodeForTokens(code: string): Promise<{
           'Content-Type': 'application/json',
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, ...(GOOGLE_REDIRECT_URI ? { redirect_uri: GOOGLE_REDIRECT_URI } : {}) }),
       }
     );
     if (!response.ok) {
