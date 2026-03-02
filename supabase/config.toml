@@ -20,8 +20,5 @@ verify_jwt = false
 [functions.google-calendar-refresh]
 verify_jwt = false
 
-[functions.gmail-send]
-verify_jwt = false
-
-[functions.gmail-sync]
-verify_jwt = false
+# gmail-send en gmail-sync: verify_jwt = true (default)
+# user_id wordt uit het JWT gehaald, niet uit de request body

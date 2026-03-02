@@ -6,7 +6,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
 interface SendRequest {
-  user_id: string;
   to: string;
   subject: string;
   body: string;
@@ -24,13 +23,29 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Extract and verify JWT — user_id comes from the token, not the request body
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const user_id = user.id;
+
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const body: SendRequest = await req.json();
-    const { user_id, to, subject, body: emailBody, thread_id, in_reply_to, contact_id, company_id } = body;
+    const { to, subject, body: emailBody, thread_id, in_reply_to, contact_id, company_id } = body;
 
-    if (!user_id || !to || !subject || !emailBody) {
-      return json({ error: "user_id, to, subject en body zijn verplicht" }, 400);
+    if (!to || !subject || !emailBody) {
+      return json({ error: "to, subject en body zijn verplicht" }, 400);
     }
 
     // Fetch user's Gmail tokens
@@ -76,7 +91,8 @@ serve(async (req) => {
     }
     messageParts.push("", emailBody);
 
-    const raw = btoa(unescape(encodeURIComponent(messageParts.join("\r\n"))))
+    const msgBytes = new TextEncoder().encode(messageParts.join("\r\n"));
+    const raw = btoa(String.fromCharCode(...msgBytes))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");

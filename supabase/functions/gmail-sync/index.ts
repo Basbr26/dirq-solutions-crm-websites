@@ -12,10 +12,23 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const { user_id } = await req.json();
-    if (!user_id) return json({ error: "user_id vereist" }, 400);
+    // Extract and verify JWT — user_id comes from the token, not the request body
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user }, error: authError } = await authClient.auth.getUser();
+    if (authError || !user) {
+      return json({ error: "Unauthorized" }, 401);
+    }
+    const user_id = user.id;
+
+    const supabase = createClient(supabaseUrl, serviceKey);
 
     // Fetch tokens
     const { data: profile, error: profileError } = await supabase
@@ -228,7 +241,9 @@ function extractBody(payload: any): { text: string; html: string } {
 
 function decodeB64(data: string): string {
   try {
-    return decodeURIComponent(escape(atob(data.replace(/-/g, "+").replace(/_/g, "/"))));
+    const binary = atob(data.replace(/-/g, "+").replace(/_/g, "/"));
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
   } catch { return ""; }
 }
 
