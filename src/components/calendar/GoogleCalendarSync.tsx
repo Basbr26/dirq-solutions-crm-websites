@@ -7,6 +7,7 @@ import {
   signInToGoogle,
   signOutFromGoogle,
   isGoogleSignedIn,
+  setCalendarToken,
   syncToGoogleCalendar,
   syncFromGoogleCalendar,
   refreshAccessToken,
@@ -110,38 +111,11 @@ export function GoogleCalendarSync() {
         
         if (!isExpired) {
           addDebugLog('✅ Token is still valid, restoring session...');
-          // Token is valid, restore session in gapi client
-          try {
-            let gapiCheckAttempts = 0;
-            // Wait for gapi to be initialized
-            const checkGapi = setInterval(() => {
-              gapiCheckAttempts++;
-              if (window.gapi?.client) {
-                clearInterval(checkGapi);
-                // Restore token in gapi client
-                window.gapi.client.setToken({
-                  access_token: data.google_access_token,
-                  expires_in: Math.floor((expiresAt.getTime() - Date.now()) / 1000),
-                });
-                setIsSignedIn(true);
-                setConnectionError(null);
-                addDebugLog('✅ Google Calendar sessie hersteld uit database');
-                toast.success('Google Calendar verbinding hersteld');
-              } else if (gapiCheckAttempts > 50) {
-                clearInterval(checkGapi);
-                addDebugLog('❌ Timeout: gapi.client niet beschikbaar na 5 seconden');
-                setConnectionError('Google API kon niet worden geladen');
-              }
-            }, 100);
-            
-            // Timeout after 5 seconds
-            setTimeout(() => clearInterval(checkGapi), 5000);
-          } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            addDebugLog(`❌ Error restoring session: ${errorMsg}`);
-            setConnectionError(`Sessie herstel fout: ${errorMsg}`);
-            logger.error(error, { context: 'google_calendar_session_restore', user_id: user.id });
-          }
+          setCalendarToken(data.google_access_token);
+          setIsSignedIn(true);
+          setConnectionError(null);
+          addDebugLog('✅ Google Calendar sessie hersteld uit database');
+          toast.success('Google Calendar verbinding hersteld');
         } else {
           addDebugLog('⚠️ Token expired, clearing from database...');
           // Token expired, clear from database
@@ -612,11 +586,7 @@ export function GoogleCalendarSync() {
             setConnectionError(`Token update fout: ${error.message}`);
             logger.error(error, { context: 'google_calendar_auto_refresh_token', user_id: user.id });
           } else {
-            // Update gapi client
-            window.gapi?.client?.setToken({
-              access_token: newToken.access_token,
-              expires_in: newToken.expires_in,
-            });
+            setCalendarToken(newToken.access_token);
             addDebugLog('✅ Token automatically refreshed and stored');
             setConnectionError(null);            // Update connection status to reflect successful refresh
             setIsSignedIn(true);
