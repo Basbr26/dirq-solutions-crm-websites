@@ -18,8 +18,8 @@ import {
 } from '@xyflow/react';
 import {
   Building2, Users, FolderKanban, FileText, MessageSquare, Database,
-  Zap, Brain, Calendar, Mail, Globe, User, BarChart3, TrendingUp,
-  ExternalLink, CheckCircle2, Clock4, Webhook, ArrowRight,
+  Zap, Brain, Calendar, CalendarDays, Mail, Globe, User, BarChart3, TrendingUp,
+  ExternalLink, CheckCircle2, Clock4, Webhook, ArrowRight, CheckSquare, Bot, Bell,
 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -208,12 +208,17 @@ const INTEGRATIONS: Integration[] = [
 const NODE_LABELS: Record<string, string> = {
   // Architecture view
   user: 'Jij (Dirq Solutions)',
-  'crm-bedrijven': 'Bedrijven',
-  'crm-contacten': 'Contacten',
-  'crm-pipeline': 'Pipeline & Projecten',
-  'crm-offertes': 'Offertes',
-  'crm-activiteiten': 'Activiteiten & Agenda',
-  'crm-analytics': 'Analytics & AI Chat',
+  'crm-bedrijven':    'Bedrijven',
+  'crm-contacten':    'Contactpersonen',
+  'crm-pipeline':     'Pipeline & Projecten',
+  'crm-offertes':     'Offertes',
+  'crm-interacties':  'Contactmomenten',
+  'crm-taken':        'Taken',
+  'crm-agenda':       'Agenda',
+  'crm-analytics':    'Analytics',
+  'crm-ai-chat':      'AI Chat Agent',
+  'crm-email-drafts': 'Email Concepten',
+  'crm-notificaties': 'Notificaties',
   supabase: 'Supabase Backend',
   'wh-company': 'Webhook /company-created',
   'wh-milestone': 'Webhook /milestone-reached',
@@ -273,10 +278,44 @@ const NODE_DETAILS: Record<string, NodeDetail> = {
     link: '/calendar',
   },
   'crm-analytics': {
-    title: 'Analytics & AI Chat',
-    description: 'Dashboards voor inzicht én een AI-assistent die direct in het CRM werkt.',
-    features: ['CRM, Executive en Cost Analytics dashboards', 'AI Chat: Gemini 2.0 Flash met 37+ CRM-tools', 'ElevenLabs spraakinterface (voice-to-AI)', 'RAG kennisbank met dagelijkse sync'],
+    title: 'Analytics & Dashboards',
+    description: 'Realtime inzicht in pipeline, omzet en klantactiviteit via rol-gebaseerde dashboards.',
+    features: ['CRM Dashboard: pipeline per fase, recente activiteit', 'Executive Dashboard: omzettrends, offerte-acceptatieratio', 'Cost Analytics: kosten- en margeoverzicht', 'Realtime updates via Supabase Realtime', 'Rol-gebaseerde weergave (Sales / Admin / Executive)'],
     link: '/dashboard/crm',
+  },
+  'crm-interacties': {
+    title: 'Contactmomenten',
+    description: 'Alle communicatie en contactmomenten met klanten op een chronologische tijdlijn.',
+    features: ['8 interactie-types: notitie, call, email, vergadering, demo, taak, brief, LinkedIn video audit', 'Richting: inbound / outbound', 'Koppelbaar aan bedrijf, contactpersoon én project', 'Duur bijhouden (minuten) voor calls en vergaderingen', 'Auto-gelogd vanuit n8n workflows (emails, milestones)', 'Zoek en filter op type, datum en bedrijf'],
+    link: '/interactions',
+  },
+  'crm-taken': {
+    title: 'Taken',
+    description: 'Opvolgingstaken en to-dos gekoppeld aan bedrijven, contacten en projecten.',
+    features: ['Aanmaken via AI Chat (Tool - Task Creator)', 'Status: pending / completed / cancelled', 'Deadline en prioriteit instellen', 'Gekoppeld aan bedrijf en contactpersoon', 'Overdue taken triggeren dagelijkse n8n alert (ATC - Taak Overdue Alerter)', 'Zichtbaar in interacties-tijdlijn'],
+  },
+  'crm-agenda': {
+    title: 'Agenda',
+    description: 'Volledige agenda met Google Calendar sync en no-show management.',
+    features: ['Bidirectionele Google Calendar sync (OAuth2)', 'Event types: vergadering, call, taak, herinnering, demo', '"No-show melden" knop → webhook → herplanningsmail via n8n', 'Dag / week / maand weergave', 'Koppelbaar aan bedrijf en contactpersoon', 'Google event-ID voor dubbele-sync preventie'],
+    link: '/calendar',
+  },
+  'crm-ai-chat': {
+    title: 'AI Chat Agent',
+    description: 'Volledige AI-assistent met 37+ CRM-tools, spraakinterface en sessiegeheugen.',
+    features: ['Gemini 2.0 Flash via Google Vertex AI', '37+ tools: zoeken, aanmaken, bewerken, analyseren', 'Postgres Chat Memory (sessie-persistentie per gebruiker)', 'ElevenLabs spraakinterface (voice-to-AI)', 'RAG kennisbank met dagelijkse sync (768-dim pgvector)', 'Context-aware op basis van huidige CRM-pagina'],
+    link: '/dashboard/crm',
+  },
+  'crm-email-drafts': {
+    title: 'Email Concepten',
+    description: 'AI-gegenereerde email-concepten vanuit n8n automations — bewerken en versturen vanuit het CRM.',
+    features: ['Automatisch aangemaakt door n8n email workflows', 'Concept bewerken voor verzending', 'Versturen via Resend (Edge Function)', 'Realtime badge-count in sidebar', 'Status: concept → verzonden / geannuleerd', '9 workflow-types genereren concepten (follow-up, onboarding, referral, etc.)'],
+    link: '/email-drafts',
+  },
+  'crm-notificaties': {
+    title: 'Notificaties',
+    description: 'Realtime meldingen voor CRM-events, deadlines en AI-acties — direct klikbaar.',
+    features: ['Realtime via Supabase Realtime (WebSocket)', 'Types: deadline, goedkeuring, update, herinnering, escalatie, digest', 'Prioriteit: normaal / hoog / urgent', 'Deep links naar het relevante CRM-record', 'Markeer als gelezen / verwijder individueel of alles', 'Bell-icon in navbar met ongelezen-badge'],
   },
   supabase: {
     title: 'Supabase Backend',
@@ -384,55 +423,78 @@ const NODE_DETAILS: Record<string, NodeDetail> = {
 
 // ─── Graph: Architecture Nodes & Edges ────────────────────────────────────────
 const BASE_NODES: Node[] = [
-  { id: 'user', type: 'userNode', position: { x: 560, y: 0 }, data: { label: 'Jij', sub: 'Dirq Solutions' } },
-  // CRM layer — 6 modules, evenly spaced
-  { id: 'crm-bedrijven',   type: 'crmNode', position: { x: 0,   y: 160 }, data: { label: 'Bedrijven',   sub: 'CRUD · KVK · Audit log',  icon: 'Building2' } },
-  { id: 'crm-contacten',   type: 'crmNode', position: { x: 200, y: 160 }, data: { label: 'Contacten',   sub: 'CSV import · Primair',     icon: 'Users' } },
-  { id: 'crm-pipeline',    type: 'crmNode', position: { x: 400, y: 160 }, data: { label: 'Pipeline',    sub: 'Projecten · Kanban',        icon: 'TrendingUp' } },
-  { id: 'crm-offertes',    type: 'crmNode', position: { x: 600, y: 160 }, data: { label: 'Offertes',    sub: 'PDF · E-Sign',             icon: 'FileText' } },
-  { id: 'crm-activiteiten',type: 'crmNode', position: { x: 800, y: 160 }, data: { label: 'Activiteiten',sub: 'Agenda · Interacties',      icon: 'Calendar' } },
-  { id: 'crm-analytics',   type: 'crmNode', position: { x: 1000,y: 160 }, data: { label: 'Analytics & AI', sub: 'Dashboards · Chat',   icon: 'Brain' } },
+  { id: 'user', type: 'userNode', position: { x: 660, y: 0 }, data: { label: 'Jij', sub: 'Dirq Solutions' } },
+  // CRM layer rij 1 — 6 modules
+  { id: 'crm-bedrijven',   type: 'crmNode', position: { x: 0,    y: 190 }, data: { label: 'Bedrijven',     sub: 'CRUD · KVK · Audit log',   icon: 'Building2' } },
+  { id: 'crm-contacten',   type: 'crmNode', position: { x: 210,  y: 190 }, data: { label: 'Contactpersonen', sub: 'CSV import · Primair',    icon: 'Users' } },
+  { id: 'crm-pipeline',    type: 'crmNode', position: { x: 420,  y: 190 }, data: { label: 'Pipeline',      sub: 'Projecten · 10 fases',      icon: 'FolderKanban' } },
+  { id: 'crm-offertes',    type: 'crmNode', position: { x: 630,  y: 190 }, data: { label: 'Offertes',      sub: 'PDF · E-Sign',              icon: 'FileText' } },
+  { id: 'crm-interacties', type: 'crmNode', position: { x: 840,  y: 190 }, data: { label: 'Contactmomenten', sub: '8 typen · Timeline',      icon: 'MessageSquare' } },
+  { id: 'crm-taken',       type: 'crmNode', position: { x: 1050, y: 190 }, data: { label: 'Taken',         sub: 'Deadlines · Prioriteit',    icon: 'CheckSquare' } },
+  // CRM layer rij 2 — 5 modules
+  { id: 'crm-agenda',       type: 'crmNode', position: { x: 100,  y: 360 }, data: { label: 'Agenda',        sub: 'Google Sync · No-show',     icon: 'CalendarDays' } },
+  { id: 'crm-analytics',    type: 'crmNode', position: { x: 340,  y: 360 }, data: { label: 'Analytics',     sub: 'Dashboards · Realtime',     icon: 'BarChart3' } },
+  { id: 'crm-ai-chat',      type: 'crmNode', position: { x: 580,  y: 360 }, data: { label: 'AI Chat Agent', sub: '37 tools · Gemini Flash',   icon: 'Bot' } },
+  { id: 'crm-email-drafts', type: 'crmNode', position: { x: 820,  y: 360 }, data: { label: 'Email Concepten', sub: 'AI drafts · Resend',      icon: 'Mail' } },
+  { id: 'crm-notificaties', type: 'crmNode', position: { x: 1060, y: 360 }, data: { label: 'Notificaties',  sub: 'Realtime · Deep links',     icon: 'Bell' } },
   // Backend
-  { id: 'supabase', type: 'backendNode', position: { x: 200, y: 360 }, data: { label: 'Supabase', sub: 'PostgreSQL · Auth · Realtime · Storage · Edge Functions' } },
-  // Webhooks
-  { id: 'wh-company',   type: 'webhookNode', position: { x: 100, y: 580 }, data: { label: '/company-created' } },
-  { id: 'wh-milestone', type: 'webhookNode', position: { x: 450, y: 580 }, data: { label: '/milestone-reached' } },
-  { id: 'wh-noshow',    type: 'webhookNode', position: { x: 800, y: 580 }, data: { label: '/meeting-missed' } },
+  { id: 'supabase', type: 'backendNode', position: { x: 100, y: 540 }, data: { label: 'Supabase', sub: 'PostgreSQL · Auth · Realtime · Storage · Edge Functions' } },
+  // Webhooks (rechts van Supabase)
+  { id: 'wh-company',   type: 'webhookNode', position: { x: 1220, y: 450 }, data: { label: '/company-created' } },
+  { id: 'wh-milestone', type: 'webhookNode', position: { x: 1220, y: 540 }, data: { label: '/milestone-reached' } },
+  { id: 'wh-noshow',    type: 'webhookNode', position: { x: 1220, y: 630 }, data: { label: '/meeting-missed' } },
   // Automation
-  { id: 'n8n', type: 'automationNode', position: { x: 390, y: 720 }, data: { label: 'n8n Automations', sub: '62 workflows · 4 sprints · 37+ AI tools' } },
+  { id: 'n8n', type: 'automationNode', position: { x: 300, y: 700 }, data: { label: 'n8n Automations', sub: '62 workflows · 4 sprints · 37+ AI tools' } },
   // External
-  { id: 'ext-gemini',   type: 'externalNode', position: { x: 0,    y: 940 }, data: { label: 'Gemini AI',      sub: 'gemini-2.0-flash',    color: 'violet' } },
-  { id: 'ext-vertexai', type: 'externalNode', position: { x: 210,  y: 940 }, data: { label: 'Vertex AI',      sub: 'AI Chatbot Agent',    color: 'violet' } },
-  { id: 'ext-resend',   type: 'externalNode', position: { x: 420,  y: 940 }, data: { label: 'Resend',         sub: 'Email Service',       color: 'orange' } },
-  { id: 'ext-gcal',     type: 'externalNode', position: { x: 630,  y: 940 }, data: { label: 'Google Calendar',sub: 'Bidirectioneel',      color: 'blue' } },
-  { id: 'ext-kvk',      type: 'externalNode', position: { x: 840,  y: 940 }, data: { label: 'KVK API',        sub: 'Verrijking',          color: 'teal' } },
-  { id: 'ext-apollo',   type: 'externalNode', position: { x: 1050, y: 940 }, data: { label: 'Apollo.io',      sub: 'Lead Enrichment',     color: 'pink' } },
+  { id: 'ext-gemini',   type: 'externalNode', position: { x: 60,   y: 870 }, data: { label: 'Gemini AI',       sub: 'gemini-2.0-flash',  color: 'violet' } },
+  { id: 'ext-vertexai', type: 'externalNode', position: { x: 250,  y: 870 }, data: { label: 'Vertex AI',       sub: 'AI Chatbot Agent',  color: 'violet' } },
+  { id: 'ext-resend',   type: 'externalNode', position: { x: 440,  y: 870 }, data: { label: 'Resend',          sub: 'Email Service',     color: 'orange' } },
+  { id: 'ext-gcal',     type: 'externalNode', position: { x: 630,  y: 870 }, data: { label: 'Google Calendar', sub: 'Bidirectioneel',    color: 'blue' } },
+  { id: 'ext-kvk',      type: 'externalNode', position: { x: 820,  y: 870 }, data: { label: 'KVK API',         sub: 'Verrijking',        color: 'teal' } },
+  { id: 'ext-apollo',   type: 'externalNode', position: { x: 1010, y: 870 }, data: { label: 'Apollo.io',       sub: 'Lead Enrichment',   color: 'pink' } },
 ];
 
 const BASE_EDGES: Edge[] = [
-  // User → CRM (6 modules)
+  // User → CRM rij 1 (6 modules)
   { id: 'u-bed', source: 'user', target: 'crm-bedrijven',    type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   { id: 'u-con', source: 'user', target: 'crm-contacten',    type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   { id: 'u-pip', source: 'user', target: 'crm-pipeline',     type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   { id: 'u-off', source: 'user', target: 'crm-offertes',     type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  { id: 'u-act', source: 'user', target: 'crm-activiteiten', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-int', source: 'user', target: 'crm-interacties',  type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-tak', source: 'user', target: 'crm-taken',        type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  // User → CRM rij 2 (5 modules)
+  { id: 'u-age', source: 'user', target: 'crm-agenda',       type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
   { id: 'u-ana', source: 'user', target: 'crm-analytics',    type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  // CRM → Supabase
+  { id: 'u-ai',  source: 'user', target: 'crm-ai-chat',      type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-ed',  source: 'user', target: 'crm-email-drafts', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'u-not', source: 'user', target: 'crm-notificaties', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  // CRM → Supabase (alle 11 modules)
   { id: 'bed-sb', source: 'crm-bedrijven',    target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   { id: 'con-sb', source: 'crm-contacten',    target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   { id: 'pip-sb', source: 'crm-pipeline',     target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   { id: 'off-sb', source: 'crm-offertes',     target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
-  { id: 'act-sb', source: 'crm-activiteiten', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'int-sb', source: 'crm-interacties',  target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'tak-sb', source: 'crm-taken',        target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'age-sb', source: 'crm-agenda',       target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   { id: 'ana-sb', source: 'crm-analytics',    target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'ai-sb',  source: 'crm-ai-chat',      target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'ed-sb',  source: 'crm-email-drafts', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
+  { id: 'not-sb', source: 'crm-notificaties', target: 'supabase', style: { stroke: '#10b981', strokeWidth: 1.5 } },
   // Supabase → CRM (realtime)
-  { id: 'sb-ana', source: 'supabase', target: 'crm-analytics', type: 'smoothstep', animated: true, style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
-  // Google Calendar ↔ activiteiten
-  { id: 'act-gcal', source: 'crm-activiteiten', target: 'ext-gcal', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
-  { id: 'gcal-act', source: 'ext-gcal', target: 'crm-activiteiten', type: 'smoothstep', style: { stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '4,4' } },
+  { id: 'sb-ana', source: 'supabase', target: 'crm-analytics',    type: 'smoothstep', animated: true, style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
+  { id: 'sb-not', source: 'supabase', target: 'crm-notificaties', type: 'smoothstep', animated: true, style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
+  // Agenda ↔ Google Calendar
+  { id: 'age-gcal', source: 'crm-agenda', target: 'ext-gcal', type: 'smoothstep', animated: true, style: { stroke: '#3b82f6', strokeWidth: 1.5 } },
+  { id: 'gcal-age', source: 'ext-gcal', target: 'crm-agenda', type: 'smoothstep', style: { stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '4,4' } },
+  // Email Drafts → Resend (direct send)
+  { id: 'ed-res', source: 'crm-email-drafts', target: 'ext-resend', type: 'smoothstep', animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
+  // AI Chat ↔ Vertex AI
+  { id: 'ai-vtx', source: 'crm-ai-chat',  target: 'ext-vertexai', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
+  { id: 'vtx-ai', source: 'ext-vertexai', target: 'crm-ai-chat',  type: 'smoothstep', style: { stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '4,4' } },
   // CRM → Webhooks
-  { id: 'bed-wh1', source: 'crm-bedrijven',    target: 'wh-company',   type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
-  { id: 'pip-wh2', source: 'crm-pipeline',     target: 'wh-milestone', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
-  { id: 'act-wh3', source: 'crm-activiteiten', target: 'wh-noshow',    type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
+  { id: 'bed-wh1', source: 'crm-bedrijven', target: 'wh-company',   type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
+  { id: 'pip-wh2', source: 'crm-pipeline',  target: 'wh-milestone', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
+  { id: 'age-wh3', source: 'crm-agenda',    target: 'wh-noshow',    type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
   // Webhooks → n8n
   { id: 'wh1-n8n', source: 'wh-company',   target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
   { id: 'wh2-n8n', source: 'wh-milestone', target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
@@ -443,12 +505,9 @@ const BASE_EDGES: Edge[] = [
   { id: 'n8n-gem', source: 'n8n', target: 'ext-gemini',   animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
   { id: 'n8n-vtx', source: 'n8n', target: 'ext-vertexai', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
   { id: 'n8n-res', source: 'n8n', target: 'ext-resend',   animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
-  { id: 'n8n-kvk', source: 'n8n', target: 'ext-kvk',      style: { stroke: '#14b8a6', strokeWidth: 1.5 } },
-  // n8n writes back to Supabase
+  { id: 'n8n-kvk', source: 'n8n', target: 'ext-kvk',                      style: { stroke: '#14b8a6', strokeWidth: 1.5 } },
+  // n8n schrijft terug naar Supabase
   { id: 'n8n-sb', source: 'n8n', target: 'supabase', type: 'smoothstep', style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
-  // CRM Analytics ↔ Vertex AI (chatbot)
-  { id: 'ana-vtx', source: 'crm-analytics', target: 'ext-vertexai', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'vtx-ana', source: 'ext-vertexai', target: 'crm-analytics', style: { stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '4,4' } },
 ];
 
 // ─── Custom Node Types ────────────────────────────────────────────────────────
@@ -467,7 +526,8 @@ function UserNode({ data }: NodeProps) {
 
 function CrmNode({ data }: NodeProps) {
   const icons: Record<string, React.ComponentType<{ className?: string }>> = {
-    Building2, Users, TrendingUp, FileText, Calendar, Brain,
+    Building2, Users, FolderKanban, TrendingUp, FileText, MessageSquare,
+    CheckSquare, CalendarDays, BarChart3, Bot, Mail, Bell, Calendar, Brain,
   };
   const Icon = icons[String(data.icon)] || Building2;
   return (
@@ -572,35 +632,57 @@ const nodeTypes = { userNode: UserNode, crmNode: CrmNode, backendNode: BackendNo
 
 // ─── Edge Descriptions ────────────────────────────────────────────────────────
 const EDGE_DESCRIPTIONS: Record<string, string> = {
-  'user-crm':  'De gebruiker werkt direct met alle CRM-modules via de browser-interface.',
-  'rel-sb':    'Bedrijven en contacten worden opgeslagen in en geladen vanuit Supabase PostgreSQL.',
-  'pip-sb':    'Pipeline-projecten en fase-updates worden gesynchroniseerd met de database.',
-  'off-sb':    'Offertes (inclusief PDF-links en handtekeningen) worden opgeslagen in Supabase.',
-  'act-sb':    'Interacties en kalenderevents worden persistent opgeslagen in de database.',
-  'ana-sb':    'Analytics dashboards halen pipeline-, klant- en interactiedata op uit Supabase.',
-  'sb-ana':    'Supabase Realtime pusht live updates naar de Analytics-dashboards bij wijzigingen.',
-  'act-gcal':  'Agenda-events worden gestuurd naar Google Calendar bij aanmaken of wijzigen.',
-  'gcal-act':  'Wijzigingen in Google Calendar worden teruggesynchroniseerd naar het CRM.',
-  'rel-wh1':   'Nieuw bedrijf aangemaakt → webhook-trigger naar n8n voor KVK-verrijking en lead enrichment.',
-  'pip-wh2':   'Project milestone bereikt (fase-wijziging) → webhook-trigger voor email automations.',
-  'act-wh3':   'No-show gemeld via agenda-event → webhook-trigger voor herplanningsmail.',
-  'wh1-n8n':   'Bedrijfsaanmakings-webhook start de "ATC - Nieuwe Lead Enrichment" workflow in n8n.',
-  'wh2-n8n':   'Milestone-webhook start de "Email - Project Milestone Update" workflow in n8n.',
-  'wh3-n8n':   'No-show-webhook start de "ATC - Meeting No-Show Recovery" workflow in n8n.',
-  'sb-n8n':    'n8n scheduled workflows lezen dagelijks CRM-data uit Supabase voor analyse en alerts.',
-  'n8n-gem':   'n8n stuurt prompts naar Gemini 2.0 Flash voor het schrijven van emails en tekstanalyse.',
-  'n8n-vtx':   'n8n roept Vertex AI aan voor de CRM chatbot (AI-agent met 37+ tools).',
-  'n8n-res':   'n8n verstuurt klant- en interne emails via Resend (transactionele e-mail API).',
-  'n8n-kvk':   'n8n verrijkt nieuwe bedrijven met KVK-gegevens: naam, adres en SBI-code.',
-  'n8n-sb':    'n8n schrijft resultaten terug naar Supabase: emailconcepten, health scores en logs.',
-  'ana-vtx':   'AI Chat-module stuurt gebruikersvragen naar Vertex AI voor antwoord en tool-aanroepen.',
-  'vtx-ana':   'Vertex AI AI-agent-antwoorden en CRM-acties worden teruggegeven aan de chatinterface.',
-  // New arch edges (bedrijven + contacten split)
-  'u-bed':   'Gebruiker beheert bedrijven direct via het CRM (aanmaken, bewerken, filteren).',
-  'u-con':   'Gebruiker beheert contactpersonen direct via het CRM.',
-  'bed-sb':  'Bedrijfsgegevens worden opgeslagen in en geladen uit de Supabase PostgreSQL database.',
-  'con-sb':  'Contactgegevens worden opgeslagen in en geladen uit de Supabase database.',
+  // User → CRM
+  'u-bed': 'Gebruiker beheert bedrijven direct via het CRM (aanmaken, bewerken, filteren, bulk-acties).',
+  'u-con': 'Gebruiker beheert contactpersonen via het CRM, inclusief CSV bulk import.',
+  'u-pip': 'Gebruiker beheer de sales pipeline: projecten aanmaken, fases doorlopen, kanban-bord.',
+  'u-off': 'Gebruiker maakt offertes aan, stuurt ze op en volgt de status (draft → ondertekend).',
+  'u-int': 'Gebruiker logt contactmomenten: notities, calls, emails, vergaderingen en demo\'s.',
+  'u-tak': 'Gebruiker maakt taken aan met deadlines en prioriteit, gekoppeld aan klanten en projecten.',
+  'u-age': 'Gebruiker beheert de agenda: events aanmaken, vergaderingen plannen en Google sync.',
+  'u-ana': 'Gebruiker raadpleegt analytics dashboards: pipeline, omzet en klantactiviteit.',
+  'u-ai':  'Gebruiker chat met de AI-assistent die 37+ CRM-acties kan uitvoeren via spraak of tekst.',
+  'u-ed':  'Gebruiker beoordeelt en verstuurt AI-gegenereerde email-concepten vanuit n8n automations.',
+  'u-not': 'Gebruiker ontvangt realtime meldingen over deadlines, goedkeuringen en CRM-events.',
+  // CRM → Supabase
+  'bed-sb': 'Bedrijfsgegevens worden opgeslagen in en geladen uit de Supabase PostgreSQL database.',
+  'con-sb': 'Contactgegevens worden opgeslagen in en geladen uit de Supabase database.',
+  'pip-sb': 'Pipeline-projecten en fase-updates worden gesynchroniseerd met de database.',
+  'off-sb': 'Offertes (inclusief PDF-links en handtekeningen) worden opgeslagen in Supabase.',
+  'int-sb': 'Alle contactmomenten (8 typen) worden persistent opgeslagen per bedrijf en contactpersoon.',
+  'tak-sb': 'Taken worden opgeslagen als interactie-records met type=task, status en deadline.',
+  'age-sb': 'Agenda-events worden opgeslagen inclusief Google event-ID voor sync-tracking.',
+  'ana-sb': 'Analytics dashboards halen pipeline-, klant- en interactiedata op uit Supabase.',
+  'ai-sb':  'AI Chat slaat sessiegeheugen op in Supabase (PostgreSQL Chat Memory) en leest CRM-data.',
+  'ed-sb':  'Email-concepten worden aangemaakt en opgeslagen in Supabase via n8n Edge Function.',
+  'not-sb': 'Notificaties worden opgeslagen in de notifications-tabel, gelezen via Supabase query.',
+  // Supabase → CRM (realtime)
+  'sb-ana': 'Supabase Realtime pusht live updates naar de Analytics-dashboards bij CRM-wijzigingen.',
+  'sb-not': 'Supabase Realtime pusht nieuwe notificaties direct naar de bell-icon in de navigatie.',
+  // Agenda ↔ Google Calendar
+  'age-gcal': 'CRM agenda-events worden geëxporteerd naar Google Calendar bij aanmaken of wijzigen.',
+  'gcal-age': 'Wijzigingen in Google Calendar worden teruggesynchroniseerd naar het CRM.',
+  // Email Drafts → Resend
+  'ed-res': 'Goedgekeurde email-concepten worden direct verstuurd via de Resend Edge Function in Supabase.',
+  // AI Chat ↔ Vertex AI
+  'ai-vtx': 'AI Chat stuurt gebruikersvragen naar Vertex AI (Gemini 2.0 Flash) met 37+ CRM-tools.',
+  'vtx-ai': 'Vertex AI AI-agent-antwoorden en tool-resultaten worden teruggegeven aan de chatinterface.',
+  // CRM → Webhooks
   'bed-wh1': 'Nieuw bedrijf aangemaakt → webhook-trigger naar n8n voor KVK-verrijking en lead enrichment.',
+  'pip-wh2': 'Project milestone bereikt (fase-wijziging) → webhook-trigger voor email automations.',
+  'age-wh3': 'No-show gemeld via agenda-event → webhook-trigger voor herplanningsmail via n8n.',
+  // Webhooks → n8n
+  'wh1-n8n': 'Bedrijfsaanmakings-webhook start de "ATC - Nieuwe Lead Enrichment" workflow in n8n.',
+  'wh2-n8n': 'Milestone-webhook start de "Email - Project Milestone Update" workflow in n8n.',
+  'wh3-n8n': 'No-show-webhook start de "ATC - Meeting No-Show Recovery" workflow in n8n.',
+  // Supabase ↔ n8n
+  'sb-n8n': 'n8n scheduled workflows lezen dagelijks CRM-data uit Supabase voor analyse en alerts.',
+  'n8n-sb': 'n8n schrijft resultaten terug naar Supabase: emailconcepten, health scores en logs.',
+  // n8n → External
+  'n8n-gem': 'n8n stuurt prompts naar Gemini 2.0 Flash voor het schrijven van emails en tekstanalyse.',
+  'n8n-vtx': 'n8n roept Vertex AI aan voor de CRM chatbot (AI-agent met 37+ tools).',
+  'n8n-res': 'n8n verstuurt klant- en interne emails via Resend (transactionele e-mail API).',
+  'n8n-kvk': 'n8n verrijkt nieuwe bedrijven met KVK-gegevens: naam, adres en SBI-code.',
   // Data model edges
   'dm-user-comp': 'Elke gebruiker is eigenaar (owner_id) van de bedrijven die hij/zij aanmaakt.',
   'dm-user-proj': 'Projecten worden toegewezen aan de medewerker die ze aanmaakt (owner_id).',
