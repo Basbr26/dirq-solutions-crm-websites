@@ -11,3 +11,17 @@ verify_jwt = false
 
 [functions.send-quote-email]
 verify_jwt = false
+
+# Google OAuth exchange — JWT uitgeschakeld zodat CORS preflight (OPTIONS) niet geblokkeerd wordt.
+# De code zelf is beschermd via Google's OAuth code (eenmalig, kortstondige geldigheid).
+[functions.google-oauth-exchange]
+verify_jwt = false
+
+[functions.google-calendar-refresh]
+verify_jwt = false
+
+[functions.gmail-send]
+verify_jwt = false
+
+[functions.gmail-sync]
+verify_jwt = false
