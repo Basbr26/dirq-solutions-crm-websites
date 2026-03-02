@@ -220,10 +220,13 @@ const NODE_LABELS: Record<string, string> = {
   'crm-email-drafts': 'Email Concepten',
   'crm-notificaties': 'Notificaties',
   supabase: 'Supabase Backend',
-  'wh-company': 'Webhook /company-created',
-  'wh-milestone': 'Webhook /milestone-reached',
-  'wh-noshow': 'Webhook /meeting-missed',
-  n8n: 'n8n Automations (62)',
+  'wh-company':  'Webhook /company-created',
+  'wh-milestone':'Webhook /milestone-reached',
+  'wh-noshow':   'Webhook /meeting-missed',
+  'n8n-atc':   'ATC / Omzet Automations',
+  'n8n-email': 'Email Workflows',
+  'n8n-ai':    'AI Chatbot Tools',
+  'n8n-infra': 'Infra & Monitoring',
   'ext-gemini': 'Gemini AI',
   'ext-vertexai': 'Vertex AI Chatbot',
   'ext-resend': 'Resend',
@@ -337,10 +340,25 @@ const NODE_DETAILS: Record<string, NodeDetail> = {
     description: 'Getriggerd wanneer de "No-show melden" knop in de agenda wordt ingedrukt.',
     features: ['Bron: EventDetailDialog.tsx → handleNoShow()', 'Alleen zichtbaar voor verlopen meetings met bedrijfskoppeling', 'Doel: ATC - Meeting No-Show Recovery', 'Actie: Gemini schrijft herplanningsvoorstel → concept in CRM'],
   },
-  n8n: {
-    title: 'n8n Automations — 62 Workflows',
-    description: 'Volledig geautomatiseerd salesproces verdeeld over 4 sprints.',
-    features: ['Sprint 1 (Omzetbescherming): contract renewal, offerte follow-up, taak-alerts', 'Sprint 2 (Klantbehoud): health score, klanttevredenheid, onboarding', 'Sprint 3 (Groei): cross-sell, referrals, win-back campagnes', 'Sprint 4 (Inzicht): pipeline report, lead velocity, milestones', '37+ AI chatbot tool sub-workflows', 'Infra: CRM AI Chatbot handler, RAG sync, error alerter'],
+  'n8n-atc': {
+    title: 'ATC / Omzet Automations — 11 Workflows',
+    description: 'Geautomatiseerde omzetbescherming en klantbehoud via dagelijkse en wekelijkse triggers.',
+    features: ['ATC Orchestrator: centrale event-router en DLQ', 'Taak Overdue Alerter: dagelijkse overdue-meldingen', 'Offerte Follow-up: 5+ dagen geen reactie → Gemini email-concept', 'Contract Renewal: 90/60/30 dagen voor verloopdatum', 'Customer Health Score: dagelijkse score 0-100 per klant', 'Cross-sell Opportunity Finder: klanten zonder hosting/maintenance', 'Win-back Campaign: inactieve klanten >90 dagen', 'Weekly Pipeline Report: vrijdag 17:00 via Resend', 'Lead Velocity Alert: dalende lead instroom detectie', 'Meeting No-Show Recovery: herplanningsvoorstel via Gemini', 'Nieuwe Lead Enrichment: KVK-verrijking bij bedrijfsaanmaak'],
+  },
+  'n8n-email': {
+    title: 'Email Workflows — 8 Workflows',
+    description: 'Klantgerichte email-automations voor onboarding, check-ins en opvolging.',
+    features: ['Klanttevredenheid Check-in: 60-120 dagen na live gaan', 'Welkom Na Tekening: direct na offerte-ondertekening', 'Cross-sell Introductie: direct via Resend + interactie-log', 'Referral Uitnodiging: actieve klanten >90 dagen', 'Win-back Reactivatie: direct via Resend + interactie-log', 'Project Milestone Update: 50% / 90% / live status', 'Maandelijkse Waarde Samenvatting: 1e van de maand', 'No-show Herplanning: vriendelijke herplanningsmail'],
+  },
+  'n8n-ai': {
+    title: 'AI Chatbot Tools — 37 Sub-workflows',
+    description: 'De volledige toolset van de CRM AI-agent — elk CRM-actie is een afzonderlijke sub-workflow.',
+    features: ['Zoeken: Company, Contact, Project, Quote, Activity, Deal', 'Aanmaken: Company, Contact, Lead, Project, Quote, Task, Note', 'Bewerken: Company Editor, Contact Editor, Stage Transitioner', 'Analyseren: CRM Dashboard, Pipeline Overview, Revenue Forecast', 'Communiceren: Email Sender, Quote Reminder, Follow-up Reminder', 'Verrijken: KVK Lookup, Apollo.io Enrichment', 'AI specifiek: Knowledge Retriever (RAG), Talking Points Generator', 'CRM AI Chatbot Handler: Gemini 2.0 Flash agent met Postgres geheugen'],
+  },
+  'n8n-infra': {
+    title: 'Infra & Monitoring — 3 Workflows',
+    description: 'Infrastructurele workflows voor kennisbank, chatbot en foutafhandeling.',
+    features: ['CRM AI Chatbot Handler: hoofd-agent met voice interface (ElevenLabs)', 'RAG Daily Sync: dagelijkse kennisbank update (768-dim pgvector)', 'Error Alerter: Dead Letter Queue monitoring + auto-retry logica'],
   },
   'ext-gemini': {
     title: 'Gemini AI (via Vertex AI)',
@@ -443,8 +461,11 @@ const BASE_NODES: Node[] = [
   { id: 'wh-company',   type: 'webhookNode', position: { x: 1220, y: 450 }, data: { label: '/company-created' } },
   { id: 'wh-milestone', type: 'webhookNode', position: { x: 1220, y: 540 }, data: { label: '/milestone-reached' } },
   { id: 'wh-noshow',    type: 'webhookNode', position: { x: 1220, y: 630 }, data: { label: '/meeting-missed' } },
-  // Automation
-  { id: 'n8n', type: 'automationNode', position: { x: 300, y: 700 }, data: { label: 'n8n Automations', sub: '62 workflows · 4 sprints · 37+ AI tools' } },
+  // n8n — 4 categorie-nodes
+  { id: 'n8n-atc',   type: 'automationNode', position: { x: 0,   y: 700 }, data: { label: 'ATC / Omzet',      sub: '11 workflows · Triggers · Health', color: 'amber'  } },
+  { id: 'n8n-email', type: 'automationNode', position: { x: 240, y: 700 }, data: { label: 'Email Flows',       sub: '8 workflows · Onboarding · Opvolging', color: 'sky'    } },
+  { id: 'n8n-ai',    type: 'automationNode', position: { x: 480, y: 700 }, data: { label: 'AI Chatbot Tools',  sub: '37 tools · Vertex AI · Gemini', color: 'violet' } },
+  { id: 'n8n-infra', type: 'automationNode', position: { x: 720, y: 700 }, data: { label: 'Infra & Monitoring',sub: '3 workflows · RAG sync · Errors', color: 'slate'  } },
   // External
   { id: 'ext-gemini',   type: 'externalNode', position: { x: 60,   y: 870 }, data: { label: 'Gemini AI',       sub: 'gemini-2.0-flash',  color: 'violet' } },
   { id: 'ext-vertexai', type: 'externalNode', position: { x: 250,  y: 870 }, data: { label: 'Vertex AI',       sub: 'AI Chatbot Agent',  color: 'violet' } },
@@ -488,26 +509,31 @@ const BASE_EDGES: Edge[] = [
   { id: 'gcal-age', source: 'ext-gcal', target: 'crm-agenda', type: 'smoothstep', style: { stroke: '#3b82f6', strokeWidth: 1, strokeDasharray: '4,4' } },
   // Email Drafts → Resend (direct send)
   { id: 'ed-res', source: 'crm-email-drafts', target: 'ext-resend', type: 'smoothstep', animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
-  // AI Chat ↔ Vertex AI
-  { id: 'ai-vtx', source: 'crm-ai-chat',  target: 'ext-vertexai', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'vtx-ai', source: 'ext-vertexai', target: 'crm-ai-chat',  type: 'smoothstep', style: { stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '4,4' } },
+  // AI Chat response ← Vertex AI (antwoord terug naar chat UI)
+  { id: 'vtx-ai', source: 'ext-vertexai', target: 'crm-ai-chat', type: 'smoothstep', style: { stroke: '#8b5cf6', strokeWidth: 1, strokeDasharray: '4,4' } },
   // CRM → Webhooks
   { id: 'bed-wh1', source: 'crm-bedrijven', target: 'wh-company',   type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
   { id: 'pip-wh2', source: 'crm-pipeline',  target: 'wh-milestone', type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
   { id: 'age-wh3', source: 'crm-agenda',    target: 'wh-noshow',    type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 } },
-  // Webhooks → n8n
-  { id: 'wh1-n8n', source: 'wh-company',   target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
-  { id: 'wh2-n8n', source: 'wh-milestone', target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
-  { id: 'wh3-n8n', source: 'wh-noshow',    target: 'n8n', animated: true, style: { stroke: '#a855f7', strokeWidth: 1.5 } },
-  // Supabase → n8n (scheduled triggers)
-  { id: 'sb-n8n', source: 'supabase', target: 'n8n', style: { stroke: '#a855f7', strokeWidth: 1.5 } },
-  // n8n → External services
-  { id: 'n8n-gem', source: 'n8n', target: 'ext-gemini',   animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'n8n-vtx', source: 'n8n', target: 'ext-vertexai', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 } },
-  { id: 'n8n-res', source: 'n8n', target: 'ext-resend',   animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 } },
-  { id: 'n8n-kvk', source: 'n8n', target: 'ext-kvk',                      style: { stroke: '#14b8a6', strokeWidth: 1.5 } },
-  // n8n schrijft terug naar Supabase
-  { id: 'n8n-sb', source: 'n8n', target: 'supabase', type: 'smoothstep', style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' } },
+  // Webhooks → n8n categorieën (gelabeld)
+  { id: 'wh1-atc',   source: 'wh-company',   target: 'n8n-atc',   label: 'Lead Enrichment',  animated: true, type: 'smoothstep', style: { stroke: '#f59e0b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#f59e0b', fontWeight: 600 }, labelBgStyle: { fill: '#fffbeb' } },
+  { id: 'wh2-email', source: 'wh-milestone', target: 'n8n-email', label: 'Milestone Email',   animated: true, type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#0ea5e9', fontWeight: 600 }, labelBgStyle: { fill: '#f0f9ff' } },
+  { id: 'wh3-atc',   source: 'wh-noshow',    target: 'n8n-atc',   label: 'No-show Recovery', animated: true, type: 'smoothstep', style: { stroke: '#f59e0b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#f59e0b', fontWeight: 600 }, labelBgStyle: { fill: '#fffbeb' } },
+  // Supabase → n8n categorieën (scheduled triggers, gelabeld)
+  { id: 'sb-atc',   source: 'supabase', target: 'n8n-atc',   label: 'Dagelijkse triggers', type: 'smoothstep', style: { stroke: '#f59e0b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#f59e0b', fontWeight: 600 }, labelBgStyle: { fill: '#fffbeb' } },
+  { id: 'sb-email', source: 'supabase', target: 'n8n-email', label: 'Maandelijkse mails',  type: 'smoothstep', style: { stroke: '#0ea5e9', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#0ea5e9', fontWeight: 600 }, labelBgStyle: { fill: '#f0f9ff' } },
+  { id: 'sb-infra', source: 'supabase', target: 'n8n-infra', label: 'RAG sync',            type: 'smoothstep', style: { stroke: '#64748b', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#64748b', fontWeight: 600 }, labelBgStyle: { fill: '#f8fafc' } },
+  // n8n → External services (gelabeld per categorie)
+  { id: 'atc-gem',   source: 'n8n-atc',   target: 'ext-gemini',   label: 'Email schrijven', animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#faf5ff' } },
+  { id: 'atc-res',   source: 'n8n-atc',   target: 'ext-resend',   label: 'Alerts',          animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#f97316' }, labelBgStyle: { fill: '#fff7ed' } },
+  { id: 'atc-kvk',   source: 'n8n-atc',   target: 'ext-kvk',      label: 'KVK verrijking',              style: { stroke: '#14b8a6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#14b8a6' }, labelBgStyle: { fill: '#f0fdfa' } },
+  { id: 'email-gem', source: 'n8n-email', target: 'ext-gemini',   label: 'Email content',   animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#faf5ff' } },
+  { id: 'email-res', source: 'n8n-email', target: 'ext-resend',   label: 'Versturen',       animated: true, style: { stroke: '#f97316', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#f97316' }, labelBgStyle: { fill: '#fff7ed' } },
+  { id: 'ai-vtx',    source: 'n8n-ai',    target: 'ext-vertexai', label: '37 tools',        animated: true, style: { stroke: '#8b5cf6', strokeWidth: 1.5 }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#faf5ff' } },
+  // n8n-infra schrijft terug naar Supabase (RAG, logs)
+  { id: 'infra-sb',  source: 'n8n-infra', target: 'supabase', label: 'Write-back', type: 'smoothstep', style: { stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5,5' }, labelStyle: { fontSize: 10, fill: '#10b981' }, labelBgStyle: { fill: '#f0fdf4' } },
+  // AI Chat → n8n-ai (tool aanroepen via Vertex AI)
+  { id: 'ai-tools',  source: 'crm-ai-chat', target: 'n8n-ai', label: 'Tool aanroepen', type: 'smoothstep', style: { stroke: '#8b5cf6', strokeWidth: 1.5, strokeDasharray: '4,4' }, labelStyle: { fontSize: 10, fill: '#8b5cf6' }, labelBgStyle: { fill: '#faf5ff' } },
 ];
 
 // ─── Custom Node Types ────────────────────────────────────────────────────────
@@ -558,15 +584,30 @@ function BackendNode({ data }: NodeProps) {
 }
 
 function AutomationNode({ data }: NodeProps) {
+  const colorMap: Record<string, string> = {
+    amber:  'from-amber-500 to-amber-700',
+    sky:    'from-sky-500 to-sky-700',
+    violet: 'from-violet-600 to-violet-800',
+    slate:  'from-slate-600 to-slate-800',
+    purple: 'from-purple-600 to-purple-800',
+  };
+  const subColorMap: Record<string, string> = {
+    amber: 'text-amber-200', sky: 'text-sky-200',
+    violet: 'text-violet-200', slate: 'text-slate-300', purple: 'text-purple-300',
+  };
+  const gradient = colorMap[String(data.color)] ?? colorMap.purple;
+  const subColor = subColorMap[String(data.color)] ?? subColorMap.purple;
   return (
-    <div className="bg-gradient-to-br from-purple-600 to-purple-800 text-white rounded-xl px-6 py-3 shadow-lg min-w-[320px] text-center">
+    <div className={`bg-gradient-to-br ${gradient} text-white rounded-xl px-5 py-3 shadow-lg min-w-[200px] text-center`}>
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
+      <Handle type="target" position={Position.Left} />
+      <Handle type="source" position={Position.Right} />
       <div className="flex items-center justify-center gap-2 mb-0.5">
         <Zap className="h-4 w-4" />
         <span className="font-bold text-sm">{String(data.label)}</span>
       </div>
-      <p className="text-xs text-purple-300">{String(data.sub)}</p>
+      <p className={`text-xs ${subColor}`}>{String(data.sub)}</p>
     </div>
   );
 }
@@ -664,8 +705,7 @@ const EDGE_DESCRIPTIONS: Record<string, string> = {
   'gcal-age': 'Wijzigingen in Google Calendar worden teruggesynchroniseerd naar het CRM.',
   // Email Drafts → Resend
   'ed-res': 'Goedgekeurde email-concepten worden direct verstuurd via de Resend Edge Function in Supabase.',
-  // AI Chat ↔ Vertex AI
-  'ai-vtx': 'AI Chat stuurt gebruikersvragen naar Vertex AI (Gemini 2.0 Flash) met 37+ CRM-tools.',
+  // AI Chat response
   'vtx-ai': 'Vertex AI AI-agent-antwoorden en tool-resultaten worden teruggegeven aan de chatinterface.',
   // CRM → Webhooks
   'bed-wh1': 'Nieuw bedrijf aangemaakt → webhook-trigger naar n8n voor KVK-verrijking en lead enrichment.',
@@ -683,6 +723,21 @@ const EDGE_DESCRIPTIONS: Record<string, string> = {
   'n8n-vtx': 'n8n roept Vertex AI aan voor de CRM chatbot (AI-agent met 37+ tools).',
   'n8n-res': 'n8n verstuurt klant- en interne emails via Resend (transactionele e-mail API).',
   'n8n-kvk': 'n8n verrijkt nieuwe bedrijven met KVK-gegevens: naam, adres en SBI-code.',
+  // n8n categorie edges
+  'wh1-atc':   'Nieuw bedrijf aangemaakt → ATC "Nieuwe Lead Enrichment" workflow: KVK lookup + bedrijf verrijken.',
+  'wh2-email': 'Project milestone bereikt → "Email - Project Milestone Update": Gemini schrijft enthousiaste statusupdate → direct via Resend.',
+  'wh3-atc':   'No-show gemeld → ATC "Meeting No-Show Recovery": Gemini schrijft herplanningsvoorstel → concept in CRM.',
+  'sb-atc':    'Supabase triggert dagelijks de ATC-workflows: health score, lead velocity, pipeline report, overdue taken, win-back campagnes.',
+  'sb-email':  'Supabase triggert maandelijkse email-workflows: klanttevredenheid check-in, referral uitnodiging, waarde samenvatting.',
+  'sb-infra':  'Supabase triggert dagelijks de RAG Daily Sync: kennisbank updaten met verse CRM-data (768-dim pgvector embeddings).',
+  'atc-gem':   'ATC workflows sturen prompts naar Gemini 2.0 Flash voor het schrijven van gepersonaliseerde email-concepten.',
+  'atc-res':   'ATC workflows versturen interne alerts rechtstreeks via Resend: taak-overdue, pipeline report, lead velocity waarschuwingen.',
+  'atc-kvk':   'ATC "Nieuwe Lead Enrichment" roept KVK API aan om naam, adres, branche en bedrijfsgrootte op te halen.',
+  'email-gem': 'Email workflows sturen klant- en projectcontext naar Gemini voor het schrijven van gepersonaliseerde email-content.',
+  'email-res': 'Email workflows versturen klantgerichte mails rechtstreeks via Resend: onboarding, milestone updates, check-ins.',
+  'ai-vtx':    'n8n AI Chatbot Tools worden aangeroepen via de Vertex AI agent — elke tool is een aparte n8n sub-workflow.',
+  'infra-sb':  'n8n schrijft resultaten terug naar Supabase: RAG embeddings, health scores, email-concept records en workflow-logs.',
+  'ai-tools':  'Wanneer de gebruiker een actie vraagt aan de AI Chat (bijv. "maak offerte aan"), roept Vertex AI de bijbehorende n8n tool-workflow aan.',
   // Data model edges
   'dm-user-comp': 'Elke gebruiker is eigenaar (owner_id) van de bedrijven die hij/zij aanmaakt.',
   'dm-user-proj': 'Projecten worden toegewezen aan de medewerker die ze aanmaakt (owner_id).',
