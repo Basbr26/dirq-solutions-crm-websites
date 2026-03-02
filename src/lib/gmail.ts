@@ -7,7 +7,6 @@
 import { logger } from './logger';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || '';
 const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
 const GMAIL_BASE = 'https://gmail.googleapis.com/gmail/v1';
 
@@ -50,12 +49,10 @@ export async function initGmail(): Promise<boolean> {
       await loadScript('https://accounts.google.com/gsi/client');
     }
 
-    gmailTokenClient = window.google.accounts.oauth2.initCodeClient({
+    gmailTokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: GMAIL_SCOPES,
-      ux_mode: 'popup',
       callback: '',
-      ...(GOOGLE_REDIRECT_URI ? { redirect_uri: GOOGLE_REDIRECT_URI } : {}),
     });
 
     return true;
@@ -84,43 +81,29 @@ function loadScript(src: string): Promise<void> {
 }
 
 /**
- * Sign in to Google with Gmail scopes
+ * Sign in to Google with Gmail scopes (implicit token flow — no code exchange, no redirect_uri needed).
  */
 export async function signInToGmail(): Promise<{
   access_token: string;
   expires_in: number;
   scope: string;
-  refresh_token?: string;
 } | null> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error('Gmail OAuth timeout: geen reactie binnen 5 minuten'));
-    }, 5 * 60 * 1000);
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => resolve(null), 5 * 60 * 1000);
 
-    gmailTokenClient.callback = async (response: any) => {
+    gmailTokenClient.callback = (response: any) => {
       clearTimeout(timeout);
       if (response.error) {
         logger.error(new Error(response.error), { context: 'Gmail sign-in error' });
         resolve(null);
         return;
       }
-      if (response.code) {
-        try {
-          const tokenResponse = await exchangeGmailCode(response.code);
-          if (tokenResponse) _accessToken = tokenResponse.access_token;
-          resolve(tokenResponse);
-        } catch (error) {
-          logger.error(error instanceof Error ? error : new Error(String(error)), { context: 'Gmail token exchange' });
-          resolve(null);
-        }
-      } else {
-        resolve({
-          access_token: response.access_token,
-          expires_in: response.expires_in || 3600,
-          scope: response.scope,
-          refresh_token: response.refresh_token,
-        });
-      }
+      _accessToken = response.access_token;
+      resolve({
+        access_token: response.access_token,
+        expires_in: response.expires_in || 3600,
+        scope: response.scope,
+      });
     };
 
     gmailTokenClient.error_callback = (error: any) => {
@@ -134,33 +117,8 @@ export async function signInToGmail(): Promise<{
       }
     };
 
-    gmailTokenClient.requestCode();
+    gmailTokenClient.requestAccessToken();
   });
-}
-
-async function exchangeGmailCode(code: string) {
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-oauth-exchange`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-      body: JSON.stringify({ code, ...(GOOGLE_REDIRECT_URI ? { redirect_uri: GOOGLE_REDIRECT_URI } : {}) }),
-    }
-  );
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(`Token exchange failed: ${JSON.stringify(errData)}`);
-  }
-  const data = await response.json();
-  return {
-    access_token: data.access_token,
-    expires_in: data.expires_in || 3600,
-    scope: data.scope,
-    refresh_token: data.refresh_token,
-  };
 }
 
 /**

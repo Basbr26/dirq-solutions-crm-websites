@@ -10,7 +10,7 @@ import {
   setCalendarToken,
   syncToGoogleCalendar,
   syncFromGoogleCalendar,
-  refreshAccessToken,
+  refreshCalendarTokenSilently,
   isTokenExpired,
   registerGoogleCalendarWebhook,
   stopGoogleCalendarWebhook,
@@ -240,7 +240,6 @@ export function GoogleCalendarSync() {
           .update({
             google_access_token: tokenResponse.access_token,
             google_token_expires_at: expiresAt.toISOString(),
-            google_refresh_token: tokenResponse.refresh_token || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', user.id);
@@ -256,19 +255,7 @@ export function GoogleCalendarSync() {
         addDebugLog('✅ Token stored in database');
         setIsSignedIn(true);
         setConnectionError(null);
-        
-        // Check if we have refresh token
-        if (!tokenResponse.refresh_token) {
-          addDebugLog('⚠️ No refresh_token received');
-          setConnectionError('Let op: geen refresh token - sessie verloopt na 1 uur');
-          toast.warning('Verbonden - Maar sessie verloopt na 1 uur (geen refresh token)', { duration: 5000 });
-        } else {
-          addDebugLog('✅ Refresh token ontvangen - persistente authenticatie actief');
-          toast.success('Verbonden met Google Calendar met persistente authenticatie');
-          
-          // Setup automatic token refresh
-          setupTokenRefresh(tokenResponse.refresh_token, expiresAt);
-        }
+        toast.success('Verbonden met Google Calendar');
         
         // Register webhook for real-time sync
         try {
@@ -306,56 +293,6 @@ export function GoogleCalendarSync() {
     }
   };
 
-  // Setup automatic token refresh before expiry
-  const setupTokenRefresh = useCallback((refreshToken: string, expiresAt: Date) => {
-    if (!user) return;
-
-    // Calculate time until token expires (refresh 5 minutes before)
-    const now = new Date();
-    const timeUntilExpiry = expiresAt.getTime() - now.getTime();
-    const refreshTime = Math.max(timeUntilExpiry - (5 * 60 * 1000), 60000); // Min 1 minute
-
-    addDebugLog(`🔄 Setting up auto-refresh in ${Math.round(refreshTime / 1000 / 60)} minutes`);
-
-    const timeoutId = setTimeout(async () => {
-      addDebugLog('🔄 Auto-refreshing access token...');
-      try {
-        const newTokenData = await refreshAccessToken(refreshToken);
-        
-        if (newTokenData) {
-          const newExpiresAt = new Date();
-          newExpiresAt.setSeconds(newExpiresAt.getSeconds() + newTokenData.expires_in);
-          
-          // Update database with new access token
-          const { error: updateError } = await supabase
-            .from('profiles')
-            .update({
-              google_access_token: newTokenData.access_token,
-              google_token_expires_at: newExpiresAt.toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', user.id);
-
-          if (updateError) {
-            addDebugLog(`❌ Failed to update token: ${updateError.message}`);
-            logger.error(updateError, { context: 'google_calendar_token_refresh_update', user_id: user.id });
-          } else {
-            addDebugLog('✅ Token auto-refreshed successfully');
-            // Schedule next refresh
-            setupTokenRefresh(refreshToken, newExpiresAt);
-          }
-        } else {
-          addDebugLog('❌ Token refresh failed');
-          setConnectionError('Token vernieuwen mislukt - herverbind alsjeblieft');
-        }
-      } catch (error) {
-        logger.error(error, { context: 'google_calendar_token_refresh', user_id: user.id });
-        addDebugLog('❌ Auto-refresh error');
-      }
-    }, refreshTime);
-
-    return () => clearTimeout(timeoutId);
-  }, [user, addDebugLog]);
 
   const handleSignOut = async () => {
     if (!user) return;
@@ -539,64 +476,31 @@ export function GoogleCalendarSync() {
       addDebugLog('🔍 Checking if token needs refresh...');
       const { data, error } = await supabase
         .from('profiles')
-        .select('google_refresh_token, google_token_expires_at')
+        .select('google_token_expires_at')
         .eq('id', user.id)
         .single();
 
-      if (error) {
-        addDebugLog(`❌ Error fetching token data: ${error.message}`);
-        return;
-      }
+      if (error || !data?.google_token_expires_at) return;
 
-      if (!data?.google_refresh_token || !data?.google_token_expires_at) {
-        addDebugLog('⚠️ No refresh token available - user needs to re-authenticate');
-        setConnectionError('Geen refresh token - log opnieuw in voor blijvende toegang');
-        toast.warning('Google Calendar: log opnieuw in voor automatische vernieuwing');
-        return;
-      }
-
-      // Check if token needs refresh (expires binnen 10 minuten)
       if (isTokenExpired(data.google_token_expires_at)) {
-        addDebugLog('⏰ Token expiring soon, attempting refresh...');
-        
-        const newToken = await refreshAccessToken(data.google_refresh_token);
-        
-        if (!newToken) {
-          addDebugLog('❌ Token refresh returned null');
-        }
-        
+        addDebugLog('⏰ Token expiring soon, attempting silent refresh...');
+        const newToken = await refreshCalendarTokenSilently();
+
         if (newToken) {
-          // Calculate new expiry
           const expiresAt = new Date();
-          expiresAt.setSeconds(expiresAt.getSeconds() + newToken.expires_in);
-
-          addDebugLog(`✅ New token received, expires at: ${expiresAt.toLocaleString()}`);
-
-          // Update database
-          const { error } = await supabase
+          expiresAt.setSeconds(expiresAt.getSeconds() + 3600);
+          addDebugLog(`✅ Token silently refreshed, expires at: ${expiresAt.toLocaleString()}`);
+          await supabase
             .from('profiles')
-            .update({
-              google_access_token: newToken.access_token,
-              google_token_expires_at: expiresAt.toISOString(),
-            })
+            .update({ google_access_token: newToken, google_token_expires_at: expiresAt.toISOString() })
             .eq('id', user.id);
-
-          if (error) {
-            addDebugLog(`❌ Error updating refreshed token in DB: ${error.message}`);
-            setConnectionError(`Token update fout: ${error.message}`);
-            logger.error(error, { context: 'google_calendar_auto_refresh_token', user_id: user.id });
-          } else {
-            setCalendarToken(newToken.access_token);
-            addDebugLog('✅ Token automatically refreshed and stored');
-            setConnectionError(null);            // Update connection status to reflect successful refresh
-            setIsSignedIn(true);
-            toast.success('Google Calendar verbinding automatisch vernieuwd');          }
+          setConnectionError(null);
+          setIsSignedIn(true);
         } else {
-          addDebugLog('❌ Token refresh failed - refresh token may be revoked');
-          setConnectionError('Token refresh gefaald - mogelijk ingetrokken door Google');
-          logger.error(new Error('Token refresh failed'), { context: 'google_calendar_token_refresh_failed', user_id: user.id });
-          toast.error('Google Calendar sessie verlopen, log opnieuw in');
+          addDebugLog('❌ Silent refresh failed - user needs to re-authenticate');
+          setConnectionError('Sessie verlopen - herverbind alsjeblieft');
           setIsSignedIn(false);
+          toast.error('Google Calendar sessie verlopen, verbind opnieuw');
         }
       } else {
         const minutesRemaining = Math.floor((new Date(data.google_token_expires_at).getTime() - Date.now()) / 60000);

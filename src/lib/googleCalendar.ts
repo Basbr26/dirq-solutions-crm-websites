@@ -12,7 +12,6 @@ declare global {
 }
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
-const GOOGLE_REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI || '';
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
 const CALENDAR_BASE = 'https://www.googleapis.com/calendar/v3';
 
@@ -61,12 +60,10 @@ export async function initGoogleCalendar(): Promise<boolean> {
       await loadGoogleScript('https://accounts.google.com/gsi/client');
     }
 
-    tokenClient = window.google.accounts.oauth2.initCodeClient({
+    tokenClient = window.google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: SCOPES,
-      ux_mode: 'popup',
       callback: '',
-      ...(GOOGLE_REDIRECT_URI ? { redirect_uri: GOOGLE_REDIRECT_URI } : {}),
     });
 
     return true;
@@ -79,46 +76,31 @@ export async function initGoogleCalendar(): Promise<boolean> {
 }
 
 /**
- * Sign in via OAuth popup and exchange code for tokens.
+ * Sign in via OAuth popup (implicit token flow — no code exchange, no redirect_uri needed).
  * Sets the module-level access token on success.
  */
 export async function signInToGoogle(): Promise<{
   access_token: string;
   expires_in: number;
   scope: string;
-  refresh_token?: string;
 } | null> {
   return new Promise((resolve) => {
     const timeout = setTimeout(() => resolve(null), 5 * 60 * 1000);
 
-    tokenClient.callback = async (response: any) => {
+    tokenClient.callback = (response: any) => {
       clearTimeout(timeout);
       if (response.error) {
         logger.error(new Error(response.error), { context: 'Google sign-in error' });
         resolve(null);
         return;
       }
-      if (response.code) {
-        try {
-          const tokenResponse = await exchangeCodeForTokens(response.code);
-          if (tokenResponse) setCalendarToken(tokenResponse.access_token);
-          resolve(tokenResponse);
-        } catch (error) {
-          logger.error(error instanceof Error ? error : new Error(String(error)), {
-            context: 'Token exchange error',
-          });
-          resolve(null);
-        }
-      } else {
-        const t = {
-          access_token: response.access_token,
-          expires_in: response.expires_in || 3600,
-          scope: response.scope,
-          refresh_token: response.refresh_token,
-        };
-        setCalendarToken(t.access_token);
-        resolve(t);
-      }
+      const t = {
+        access_token: response.access_token,
+        expires_in: response.expires_in || 3600,
+        scope: response.scope,
+      };
+      setCalendarToken(t.access_token);
+      resolve(t);
     };
 
     tokenClient.error_callback = (error: any) => {
@@ -132,45 +114,29 @@ export async function signInToGoogle(): Promise<{
       }
     };
 
-    tokenClient.requestCode();
+    tokenClient.requestAccessToken();
   });
 }
 
-async function exchangeCodeForTokens(code: string): Promise<{
-  access_token: string;
-  expires_in: number;
-  scope: string;
-  refresh_token?: string;
-} | null> {
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-oauth-exchange`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({ code, ...(GOOGLE_REDIRECT_URI ? { redirect_uri: GOOGLE_REDIRECT_URI } : {}) }),
-      }
-    );
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(`Token exchange failed: ${JSON.stringify(errData)}`);
-    }
-    const data = await response.json();
-    return {
-      access_token: data.access_token,
-      expires_in: data.expires_in || 3600,
-      scope: data.scope,
-      refresh_token: data.refresh_token,
+/**
+ * Attempt a silent token refresh (no popup, uses existing Google session).
+ * Returns the new access token, or null if user needs to re-authenticate.
+ */
+export async function refreshCalendarTokenSilently(): Promise<string | null> {
+  if (!tokenClient) return null;
+  return new Promise((resolve) => {
+    tokenClient.callback = (response: any) => {
+      if (response.error || !response.access_token) { resolve(null); return; }
+      setCalendarToken(response.access_token);
+      resolve(response.access_token);
     };
-  } catch (error) {
-    logger.error(error instanceof Error ? error : new Error(String(error)), {
-      context: 'Error exchanging code for tokens',
-    });
-    return null;
-  }
+    tokenClient.error_callback = () => resolve(null);
+    try {
+      tokenClient.requestAccessToken({ prompt: '' });
+    } catch {
+      resolve(null);
+    }
+  });
 }
 
 /** Revoke access and clear the module-level token */
