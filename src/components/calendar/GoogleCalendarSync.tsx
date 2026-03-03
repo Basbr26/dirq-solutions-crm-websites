@@ -233,28 +233,39 @@ export function GoogleCalendarSync() {
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
         addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
-        // Check if Supabase session is still valid after OAuth popup
+        // Ensure Supabase session is still valid after OAuth popup
         const { data: { session: sbSession } } = await supabase.auth.getSession();
-        addDebugLog(`🔑 Supabase session after popup: ${sbSession ? 'VALID' : 'MISSING'}`);
+        addDebugLog(`🔑 Supabase session: ${sbSession ? 'VALID' : 'MISSING'}`);
         if (!sbSession) {
-          setConnectionError('Supabase sessie verlopen na OAuth popup — log opnieuw in');
+          setConnectionError('Supabase sessie verlopen — log opnieuw in');
           toast.error('Sessie verlopen, log opnieuw in');
           return;
         }
 
-        // Store tokens via SECURITY DEFINER function (bypasses RLS reliably)
-        addDebugLog('💾 Storing token in database...');
-        const { error: updateError } = await supabase.rpc('save_google_calendar_token', {
-          p_access_token: tokenResponse.access_token,
-          p_expires_at: expiresAt.toISOString(),
-        });
-
-        if (updateError) {
-          const errDetail = JSON.stringify({ code: (updateError as any).code, msg: updateError.message, details: (updateError as any).details, hint: (updateError as any).hint });
-          addDebugLog(`❌ RPC error: ${errDetail}`);
-          setConnectionError(`Token opslaan mislukt: ${errDetail}`);
-          logger.error(updateError, { context: 'google_calendar_store_tokens', user_id: user.id });
-          toast.error('Kon tokens niet opslaan — zie debug info');
+        // Store token via Edge Function (service role — bypasses all RLS/PostgREST issues)
+        addDebugLog('💾 Storing token via Edge Function...');
+        const saveResp = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-token`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${sbSession.access_token}`,
+            },
+            body: JSON.stringify({
+              type: 'google_calendar',
+              access_token: tokenResponse.access_token,
+              expires_at: expiresAt.toISOString(),
+            }),
+          }
+        );
+        const saveResult = await saveResp.json();
+        if (!saveResp.ok || !saveResult.success) {
+          const errMsg = saveResult.error || `HTTP ${saveResp.status}`;
+          addDebugLog(`❌ save-token error: ${errMsg}`);
+          setConnectionError(`Token opslaan mislukt: ${errMsg}`);
+          logger.error(saveResult, { context: 'google_calendar_store_tokens', user_id: user.id });
+          toast.error('Kon tokens niet opslaan in database');
           return;
         }
 
