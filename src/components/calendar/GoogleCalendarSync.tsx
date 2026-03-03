@@ -233,7 +233,8 @@ export function GoogleCalendarSync() {
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
         addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
-        // Store token via Edge Function (service role — bypasses all RLS/PostgREST issues)
+        // Store token via Edge Function.
+        // Edge Function validates via Google's tokeninfo API — no Supabase JWT needed.
         addDebugLog('💾 Storing token via Edge Function...');
         const { data: saveResult, error: saveError } = await supabase.functions.invoke('save-token', {
           body: {
