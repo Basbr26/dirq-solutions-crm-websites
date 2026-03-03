@@ -1,9 +1,12 @@
 // Edge Function: save-token
 // Stores Google Calendar or Gmail OAuth tokens in the profiles table.
 //
-// Auth strategy: validate the Google access_token via Google's tokeninfo API.
-// This avoids the Supabase JWT chain entirely — the Google token is proof of identity
-// (it was just issued by Google for our OAuth client). No COOP/session timing issues.
+// Auth strategy:
+//   1. Validate the Google access_token via Google's tokeninfo API (proof of real OAuth flow)
+//   2. Use the user_id from the request body (provided by the authenticated CRM session)
+//   3. Update the profile using the service role key
+//
+// This avoids the Supabase JWT chain entirely — no COOP/session timing issues.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -18,40 +21,27 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const { type, access_token, expires_at } = await req.json();
-    if (!type || !access_token || !expires_at) {
-      return json({ error: "Missing required fields: type, access_token, expires_at" }, 400);
+    const body = await req.json();
+    const { type, access_token, expires_at, user_id } = body;
+
+    if (!type || !access_token || !expires_at || !user_id) {
+      return json({ error: "Missing required fields: type, access_token, expires_at, user_id" }, 400);
     }
 
-    // Validate the Google token via tokeninfo — most reliable approach,
-    // completely independent of the Supabase session chain.
+    // Validate the Google token via tokeninfo — proves this is a real OAuth flow
     const tokenInfoResp = await fetch(
       `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${encodeURIComponent(access_token)}`
     );
     const tokenInfo = await tokenInfoResp.json();
 
-    if (!tokenInfoResp.ok || !tokenInfo.email) {
+    if (!tokenInfoResp.ok || tokenInfo.error) {
       console.error("Google tokeninfo rejected:", JSON.stringify(tokenInfo));
-      return json({ error: "Google token validation failed" }, 401);
+      return json({ error: "Invalid Google access token", details: tokenInfo.error_description }, 401);
     }
 
-    const googleEmail = tokenInfo.email.toLowerCase();
-
-    // Find the Supabase profile by email (service role bypasses RLS)
+    // Update the profile using the user_id from the body
     const supabase = createClient(supabaseUrl, serviceKey);
 
-    const { data: profile, error: profileErr } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", googleEmail)
-      .single();
-
-    if (profileErr || !profile) {
-      console.error(`No profile found for email ${googleEmail}:`, profileErr);
-      return json({ error: `Geen profiel gevonden voor ${googleEmail}` }, 404);
-    }
-
-    // Update only the token columns — profile row already exists
     let fields: Record<string, unknown>;
     if (type === "google_calendar") {
       fields = {
@@ -72,7 +62,7 @@ serve(async (req) => {
     const { error: updateErr } = await supabase
       .from("profiles")
       .update(fields)
-      .eq("id", profile.id);
+      .eq("id", user_id);
 
     if (updateErr) {
       console.error("save-token update error:", updateErr);

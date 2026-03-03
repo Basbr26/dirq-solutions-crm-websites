@@ -241,6 +241,7 @@ export function GoogleCalendarSync() {
             type: 'google_calendar',
             access_token: tokenResponse.access_token,
             expires_at: expiresAt.toISOString(),
+            user_id: user.id,
           },
         });
         if (saveError || !saveResult?.success) {

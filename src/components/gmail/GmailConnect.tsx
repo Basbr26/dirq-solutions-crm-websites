@@ -116,6 +116,7 @@ export function GmailConnect() {
           type: 'gmail',
           access_token: tokenResponse.access_token,
           expires_at: expiresAt.toISOString(),
+          user_id: user.id,
         },
       });
       if (saveError || !saveResult?.success) {
