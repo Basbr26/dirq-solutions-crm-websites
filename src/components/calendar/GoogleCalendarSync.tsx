@@ -233,38 +233,20 @@ export function GoogleCalendarSync() {
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
         addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
-        // Ensure Supabase session is still valid after OAuth popup
-        const { data: { session: sbSession } } = await supabase.auth.getSession();
-        addDebugLog(`🔑 Supabase session: ${sbSession ? 'VALID' : 'MISSING'}`);
-        if (!sbSession) {
-          setConnectionError('Supabase sessie verlopen — log opnieuw in');
-          toast.error('Sessie verlopen, log opnieuw in');
-          return;
-        }
-
         // Store token via Edge Function (service role — bypasses all RLS/PostgREST issues)
         addDebugLog('💾 Storing token via Edge Function...');
-        const saveResp = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-token`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${sbSession.access_token}`,
-            },
-            body: JSON.stringify({
-              type: 'google_calendar',
-              access_token: tokenResponse.access_token,
-              expires_at: expiresAt.toISOString(),
-            }),
-          }
-        );
-        const saveResult = await saveResp.json();
-        if (!saveResp.ok || !saveResult.success) {
-          const errMsg = saveResult.error || `HTTP ${saveResp.status}`;
+        const { data: saveResult, error: saveError } = await supabase.functions.invoke('save-token', {
+          body: {
+            type: 'google_calendar',
+            access_token: tokenResponse.access_token,
+            expires_at: expiresAt.toISOString(),
+          },
+        });
+        if (saveError || !saveResult?.success) {
+          const errMsg = saveError?.message || saveResult?.error || 'onbekende fout';
           addDebugLog(`❌ save-token error: ${errMsg}`);
           setConnectionError(`Token opslaan mislukt: ${errMsg}`);
-          logger.error(saveResult, { context: 'google_calendar_store_tokens', user_id: user.id });
+          logger.error(saveError || saveResult, { context: 'google_calendar_store_tokens', user_id: user.id });
           toast.error('Kon tokens niet opslaan in database');
           return;
         }

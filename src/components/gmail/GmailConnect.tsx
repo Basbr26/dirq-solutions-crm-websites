@@ -111,30 +111,16 @@ export function GmailConnect() {
       const expiresAt = new Date();
       expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
 
-      const { data: { session: sbSession } } = await supabase.auth.getSession();
-      if (!sbSession) {
-        toast.error('Sessie verlopen, log opnieuw in');
-        return;
-      }
-
-      const saveResp = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/save-token`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${sbSession.access_token}`,
-          },
-          body: JSON.stringify({
-            type: 'gmail',
-            access_token: tokenResponse.access_token,
-            expires_at: expiresAt.toISOString(),
-          }),
-        }
-      );
-      const saveResult = await saveResp.json();
-      if (!saveResp.ok || !saveResult.success) {
-        setConnectionError(`Token opslaan mislukt: ${saveResult.error || saveResp.status}`);
+      const { data: saveResult, error: saveError } = await supabase.functions.invoke('save-token', {
+        body: {
+          type: 'gmail',
+          access_token: tokenResponse.access_token,
+          expires_at: expiresAt.toISOString(),
+        },
+      });
+      if (saveError || !saveResult?.success) {
+        const errMsg = saveError?.message || saveResult?.error || 'onbekende fout';
+        setConnectionError(`Token opslaan mislukt: ${errMsg}`);
         toast.error('Kon Gmail-tokens niet opslaan');
         return;
       }
