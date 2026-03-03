@@ -113,12 +113,12 @@ export function GmailConnect() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id,
           gmail_access_token: tokenResponse.access_token,
           gmail_token_expires_at: expiresAt.toISOString(),
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        }, { onConflict: 'id' });
 
       if (error) {
         setConnectionError('Token opslaan mislukt');

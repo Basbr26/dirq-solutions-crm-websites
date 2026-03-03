@@ -33,23 +33,23 @@ serve(async (req) => {
     // Fetch tokens
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("gmail_access_token, gmail_refresh_token, gmail_token_expires_at, gmail_last_sync")
+      .select("gmail_access_token, gmail_token_expires_at, gmail_last_sync")
       .eq("id", user_id)
       .single();
 
     if (profileError || !profile?.gmail_access_token) {
-      return json({ error: "Geen Gmail-verbinding" }, 401);
+      return json({ error: "Geen Gmail-verbinding — verbind Gmail eerst via Instellingen" }, 401);
     }
 
-    let accessToken = profile.gmail_access_token;
-
-    // Refresh if needed
+    // Check if token is expired — implicit flow has no server-side refresh token
     if (profile.gmail_token_expires_at) {
       const expiresAt = new Date(profile.gmail_token_expires_at);
-      if (expiresAt <= new Date(Date.now() + 5 * 60 * 1000) && profile.gmail_refresh_token) {
-        accessToken = await refreshToken(supabase, user_id, profile.gmail_refresh_token) ?? accessToken;
+      if (expiresAt <= new Date()) {
+        return json({ error: "Gmail token verlopen — open de app en ververs de verbinding" }, 401);
       }
     }
+
+    const accessToken = profile.gmail_access_token;
 
     // Fetch all contact emails for this user to match against
     const { data: contacts } = await supabase
@@ -172,26 +172,6 @@ serve(async (req) => {
   }
 });
 
-async function refreshToken(supabase: any, userId: string, refreshToken: string): Promise<string | null> {
-  const resp = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      refresh_token: refreshToken,
-      client_id: Deno.env.get("GOOGLE_CLIENT_ID")!,
-      client_secret: Deno.env.get("GOOGLE_CLIENT_SECRET")!,
-      grant_type: "refresh_token",
-    }),
-  });
-  if (!resp.ok) return null;
-  const data = await resp.json();
-  const expiresAt = new Date(Date.now() + data.expires_in * 1000).toISOString();
-  await supabase
-    .from("profiles")
-    .update({ gmail_access_token: data.access_token, gmail_token_expires_at: expiresAt })
-    .eq("id", userId);
-  return data.access_token;
-}
 
 function parseMessage(raw: any) {
   const headers: Record<string, string> = {};

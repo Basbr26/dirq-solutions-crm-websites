@@ -233,16 +233,16 @@ export function GoogleCalendarSync() {
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
         addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
-        // Store tokens securely in Supabase profiles table
+        // Store tokens securely in Supabase profiles table (upsert in case row is missing)
         addDebugLog('💾 Storing token in database...');
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({
+          .upsert({
+            id: user.id,
             google_access_token: tokenResponse.access_token,
             google_token_expires_at: expiresAt.toISOString(),
             updated_at: new Date().toISOString(),
-          })
-          .eq('id', user.id);
+          }, { onConflict: 'id' });
 
         if (updateError) {
           addDebugLog(`❌ Database error: ${updateError.message}`);
