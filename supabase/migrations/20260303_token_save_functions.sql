@@ -4,7 +4,7 @@
 -- caller-supplied parameters.
 
 -- ── Google Calendar ──────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION save_google_calendar_token(
+CREATE OR REPLACE FUNCTION public.save_google_calendar_token(
   p_access_token     TEXT,
   p_expires_at       TIMESTAMPTZ
 ) RETURNS void
@@ -32,8 +32,10 @@ BEGIN
 END;
 $$;
 
+GRANT EXECUTE ON FUNCTION public.save_google_calendar_token(TEXT, TIMESTAMPTZ) TO authenticated;
+
 -- ── Gmail ────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE FUNCTION save_gmail_token(
+CREATE OR REPLACE FUNCTION public.save_gmail_token(
   p_access_token TEXT,
   p_expires_at   TIMESTAMPTZ
 ) RETURNS void
@@ -60,3 +62,5 @@ BEGIN
     updated_at             = EXCLUDED.updated_at;
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.save_gmail_token(TEXT, TIMESTAMPTZ) TO authenticated;
