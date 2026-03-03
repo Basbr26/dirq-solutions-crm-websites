@@ -129,6 +129,27 @@ export function setGmailToken(accessToken: string, _expiresIn: number) {
 }
 
 /**
+ * Attempt a silent token refresh (no popup, uses existing Google session).
+ * Returns the new access token, or null if user needs to re-authenticate.
+ */
+export async function refreshGmailTokenSilently(): Promise<string | null> {
+  if (!gmailTokenClient) return null;
+  return new Promise((resolve) => {
+    gmailTokenClient.callback = (response: any) => {
+      if (response.error || !response.access_token) { resolve(null); return; }
+      _accessToken = response.access_token;
+      resolve(response.access_token);
+    };
+    gmailTokenClient.error_callback = () => resolve(null);
+    try {
+      gmailTokenClient.requestAccessToken({ prompt: '' });
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/**
  * Direct REST call to Gmail API using stored access token
  */
 async function gmailFetch(path: string, options: RequestInit = {}): Promise<any> {

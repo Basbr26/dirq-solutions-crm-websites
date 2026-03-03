@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { initGmail, signInToGmail, setGmailToken } from '@/lib/gmail';
+import { initGmail, signInToGmail, setGmailToken, refreshGmailTokenSilently } from '@/lib/gmail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -69,6 +69,36 @@ export function GmailConnect() {
     if (user) loadSettings();
   }, [user, loadSettings]);
 
+  // Silent token refresh every 5 minutes when connected
+  useEffect(() => {
+    if (!user || !isConnected) return;
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('gmail_token_expires_at')
+        .eq('id', user.id)
+        .single();
+      if (!data?.gmail_token_expires_at) return;
+      const expiresAt = new Date(data.gmail_token_expires_at);
+      const fiveMinFromNow = new Date(Date.now() + 5 * 60 * 1000);
+      if (expiresAt <= fiveMinFromNow) {
+        const newToken = await refreshGmailTokenSilently();
+        if (newToken) {
+          const newExpiry = new Date(Date.now() + 3600 * 1000);
+          await supabase
+            .from('profiles')
+            .update({ gmail_access_token: newToken, gmail_token_expires_at: newExpiry.toISOString() })
+            .eq('id', user.id);
+          setConnectionError(null);
+        } else {
+          setIsConnected(false);
+          setConnectionError('Gmail sessie verlopen — verbind opnieuw');
+        }
+      }
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user, isConnected]);
+
   const handleConnect = async () => {
     setIsLoading(true);
     try {
@@ -86,7 +116,6 @@ export function GmailConnect() {
         .update({
           gmail_access_token: tokenResponse.access_token,
           gmail_token_expires_at: expiresAt.toISOString(),
-          gmail_refresh_token: tokenResponse.refresh_token || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -99,12 +128,7 @@ export function GmailConnect() {
 
       setIsConnected(true);
       setConnectionError(null);
-
-      if (!tokenResponse.refresh_token) {
-        toast.warning('Verbonden — sessie verloopt na 1 uur (geen refresh token)');
-      } else {
-        toast.success('Gmail succesvol verbonden');
-      }
+      toast.success('Gmail succesvol verbonden');
     } catch (error) {
       logger.error(error, { context: 'gmail_connect', user_id: user?.id });
       toast.error('Gmail verbinden mislukt');
@@ -119,7 +143,6 @@ export function GmailConnect() {
       .from('profiles')
       .update({
         gmail_access_token: null,
-        gmail_refresh_token: null,
         gmail_token_expires_at: null,
         updated_at: new Date().toISOString(),
       })
