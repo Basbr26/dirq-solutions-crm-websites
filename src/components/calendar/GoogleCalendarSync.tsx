@@ -239,6 +239,8 @@ export function GoogleCalendarSync() {
           .from('profiles')
           .upsert({
             id: user.id,
+            email: user.email,
+            role: 'SUPPORT',
             google_access_token: tokenResponse.access_token,
             google_token_expires_at: expiresAt.toISOString(),
             updated_at: new Date().toISOString(),
