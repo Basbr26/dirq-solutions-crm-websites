@@ -111,16 +111,10 @@ export function GmailConnect() {
       const expiresAt = new Date();
       expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          role: 'SUPPORT',
-          gmail_access_token: tokenResponse.access_token,
-          gmail_token_expires_at: expiresAt.toISOString(),
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'id' });
+      const { error } = await supabase.rpc('save_gmail_token', {
+        p_access_token: tokenResponse.access_token,
+        p_expires_at: expiresAt.toISOString(),
+      });
 
       if (error) {
         setConnectionError('Token opslaan mislukt');
