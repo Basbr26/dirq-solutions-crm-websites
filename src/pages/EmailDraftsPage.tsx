@@ -37,6 +37,7 @@ export default function EmailDraftsPage() {
   const [selectedDraft, setSelectedDraft] = useState<EmailDraft | null>(null);
   const [sending, setSending] = useState(false);
   const [editedDraft, setEditedDraft] = useState<EmailDraft | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   // Fetch drafts from Supabase
   const fetchDrafts = useCallback(async () => {
@@ -265,15 +266,42 @@ export default function EmailDraftsPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">
-                  {t('common.description')}:
-                </label>
-                <textarea 
-                  value={editedDraft.body}
-                  onChange={(e) => setEditedDraft({ ...editedDraft, body: e.target.value })}
-                  rows={12}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium text-gray-700">
+                    {t('common.description')}:
+                  </label>
+                  <div className="flex rounded-md border border-gray-200 overflow-hidden text-xs">
+                    <button
+                      className={`px-3 py-1 ${!previewMode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                      onClick={() => setPreviewMode(false)}
+                    >
+                      Bewerken
+                    </button>
+                    <button
+                      className={`px-3 py-1 ${previewMode ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+                      onClick={() => setPreviewMode(true)}
+                    >
+                      Voorbeeld
+                    </button>
+                  </div>
+                </div>
+                {previewMode ? (
+                  <div className="border border-gray-300 rounded-md overflow-hidden" style={{ height: '300px' }}>
+                    <iframe
+                      srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,sans-serif;padding:20px;font-size:14px;line-height:1.6;color:#333}a{color:#7c3aed}</style></head><body>${editedDraft.body}</body></html>`}
+                      className="w-full h-full"
+                      title="Email preview"
+                      sandbox="allow-same-origin"
+                    />
+                  </div>
+                ) : (
+                  <textarea
+                    value={editedDraft.body}
+                    onChange={(e) => setEditedDraft({ ...editedDraft, body: e.target.value })}
+                    rows={12}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                )}
               </div>
 
               {hasEdits && (
