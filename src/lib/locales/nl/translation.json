@@ -73,9 +73,19 @@
     "lastName": "Achternaam",
     "email": "E-mail",
     "phone": "Telefoon",
-    "uploading": "Uploaden..."
+    "uploading": "Uploaden...",
+    "comingSoon": "Binnenkort beschikbaar",
+    "company": "Bedrijf",
+    "contact": "Contact",
+    "minutes": "minuten",
+    "openingDialer": "Dialer openen...",
+    "role": "Rol",
+    "title": "Titel",
+    "type": "Type",
+    "warning": "Waarschuwing"
   },
   "navigation": {
+    "userManagement": "Gebruikersbeheer",
     "dashboard": "Dashboard",
     "executive": "Executive dashboard",
     "companies": "Bedrijven",
@@ -270,7 +280,9 @@
     "dataFilled": "Bedrijfsgegevens ingevuld!",
     "pasteDataFirst": "Plak eerst bedrijfsgegevens in het tekstveld",
     "companyExists": "Een bedrijf met de naam \"{{name}}\" bestaat al",
-    "kvkInUse": "Dit KVK nummer is al in gebruik bij bedrijf \"{{name}}\""
+    "kvkInUse": "Dit KVK nummer is al in gebruik bij bedrijf \"{{name}}\"",
+    "callDirect": "Bel direct",
+    "selectCompany": "Selecteer een bedrijf"
   },
   "contacts": {
     "title": "Contactpersonen",
@@ -350,7 +362,8 @@
     "notes": "Notities",
     "recentInteractions": "Recente interacties",
     "showAll": "Toon alle contacten",
-    "filterByRole": "Filter op rol"
+    "filterByRole": "Filter op rol",
+    "overdue": "Verlopen"
   },
   "projects": {
     "title": "Projecten",
@@ -444,7 +457,10 @@
       "portfolio": "Portfolio",
       "custom": "Custom",
       "aiAutomation": "AI Automatisering"
-    }
+    },
+    "launch": "Lanceren",
+    "moveTo": "Verplaatsen naar",
+    "noProject": "Geen project"
   },
   "pipeline": {
     "title": "Pipeline",
@@ -706,7 +722,16 @@
     "preferences": "Voorkeuren",
     "emailNotifications": "Email notificaties",
     "pushNotifications": "Push notificaties",
-    "browserNotifications": "Browser notificaties"
+    "browserNotifications": "Browser notificaties",
+    "actioned": "Afgehandeld",
+    "snooze": "Snoozen",
+    "viewDetails": "Details bekijken",
+    "priority": {
+      "critical": "Kritiek",
+      "high": "Hoog",
+      "normal": "Normaal",
+      "low": "Laag"
+    }
   },
   "success": {
     "saved": "Opgeslagen",
@@ -778,6 +803,21 @@
       "title": "Integraties",
       "googleCalendar": "Google Calendar",
       "googleCalendarDescription": "Synchroniseer je afspraken met Google Calendar"
+    },
+    "account": {
+      "changePassword": "Wachtwoord wijzigen",
+      "dangerZone": "Gevarenzone",
+      "dangerZoneDescription": "Pas op: deze acties kunnen niet ongedaan worden gemaakt",
+      "deleteAccount": "Account verwijderen",
+      "deleteAccountDescription": "Je account en alle bijbehorende gegevens permanent verwijderen",
+      "deleteAccountWarning": "Dit kan niet ongedaan worden gemaakt",
+      "enable": "Inschakelen",
+      "password": "Wachtwoord",
+      "passwordDescription": "Wijzig je wachtwoord",
+      "security": "Beveiliging",
+      "securityDescription": "Beheer je beveiligingsinstellingen",
+      "twoFactor": "Tweefactorauthenticatie",
+      "twoFactorDescription": "Voeg een extra beveiligingslaag toe aan je account"
     }
   },
   "auth": {
@@ -846,7 +886,9 @@
     "cancelTask": "Annuleer taak",
     "completedOn": "Voltooid op",
     "physicalMail": "Fysiek Kaartje",
-    "linkedinVideoAudit": "LinkedIn Video Audit"
+    "linkedinVideoAudit": "LinkedIn Video Audit",
+    "addFirstActivity": "Voeg je eerste activiteit toe",
+    "interaction": "Interactie"
   },
   "filters": {
     "filters": "Filters",
@@ -1029,7 +1071,33 @@
     "noRefreshTokenRelogin": "Geen refresh token - log opnieuw in voor blijvende toegang",
     "saveFailed": "Opslaan mislukt",
     "uploadFailed": "Uploaden mislukt",
-    "deleteFailed": "Verwijderen mislukt"
+    "deleteFailed": "Verwijderen mislukt",
+    "cannotRejectAccepted": "Kan geaccepteerde offerte niet afwijzen",
+    "cannotRejectAcceptedDescription": "Deze offerte is al geaccepteerd en kan niet worden afgewezen",
+    "cannotRejectSigned": "Kan getekende offerte niet afwijzen",
+    "cannotRejectSignedDescription": "Deze offerte is al ondertekend en kan niet worden afgewezen",
+    "createFailed": "Aanmaken mislukt",
+    "createUserFailed": "Fout bij aanmaken gebruiker",
+    "csvOnly": "Alleen CSV-bestanden zijn toegestaan",
+    "downloadFailed": "Downloaden mislukt",
+    "emailMissing": "E-mailadres ontbreekt",
+    "emailMissingDescription": "Er is geen e-mailadres beschikbaar voor dit contact",
+    "emailRequired": "E-mailadres is verplicht",
+    "enterValidEmail": "Voer een geldig e-mailadres in",
+    "error": "Fout",
+    "errorOccurred": "Er is een fout opgetreden",
+    "exportFailed": "Exporteren mislukt",
+    "generateSignLinkFailed": "Fout bij genereren ondertekeningslink",
+    "importFailed": "Importeren mislukt",
+    "invalidEmail": "Ongeldig e-mailadres",
+    "invalidEmailDescription": "Voer een geldig e-mailadres in",
+    "loadingDashboard": "Fout bij laden dashboard",
+    "moveProjectFailed": "Fout bij verplaatsen project",
+    "noUrlReceived": "Geen URL ontvangen",
+    "openFailed": "Openen mislukt",
+    "requiredFieldsMapping": "Koppel alle verplichte velden voordat je verder gaat",
+    "updateProjectStageFailed": "Fout bij bijwerken projectfase",
+    "validationError": "Validatiefout"
   },
   "dialogs": {
     "deleteConfirmTitle": "{{item}} verwijderen?",
@@ -1319,6 +1387,56 @@
       "applied": "{{templateType}} template toegepast! 🎉"
     },
     "dealWon": "🎉 Deal Gewonnen!"
+  },
+  "csv": {
+    "downloadExample": "Voorbeeld downloaden",
+    "dragDropHint": "Sleep een CSV-bestand hierheen of klik om te uploaden",
+    "errors": "Fouten",
+    "exampleFile": "Voorbeeldbestand",
+    "import": "CSV importeren",
+    "importComplete": "Importeren voltooid",
+    "importing": "Importeren...",
+    "mapColumns": "Kolommen koppelen",
+    "nextPreview": "Volgende: Voorbeeld",
+    "pleaseWait": "Even geduld...",
+    "rows": "rijen",
+    "seeFormat": "Bekijk het formaat",
+    "selectFile": "Bestand selecteren",
+    "successful": "succesvol",
+    "total": "Totaal"
+  },
+  "notes": {
+    "deadline": "Deadline",
+    "deleteNote": "Notitie verwijderen",
+    "deleteNoteConfirmation": "Weet je zeker dat je deze notitie wilt verwijderen?",
+    "followUpCompleted": "Follow-up voltooid",
+    "followUpRequired": "Follow-up vereist",
+    "lastEdited": "Laatste wijziging",
+    "markAsCompleted": "Markeer als voltooid",
+    "overdueSince": "Verlopen sinds",
+    "pin": "Vastmaken",
+    "pinned": "Vastgemaakt",
+    "unpin": "Losmaken"
+  },
+  "users": {
+    "createUser": "Gebruiker aanmaken",
+    "createUserDescription": "Nodig een nieuwe gebruiker uit voor het systeem",
+    "selectRole": "Selecteer rol",
+    "roles": {
+      "employee": "Medewerker",
+      "hr": "HR",
+      "manager": "Manager",
+      "superAdmin": "Super Beheerder"
+    }
+  },
+  "documents": {
+    "awaitingSignature": "Wacht op handtekening",
+    "completed": "Voltooid",
+    "deleteConfirmation": "Weet je zeker dat je dit document wilt verwijderen?",
+    "download": "Downloaden",
+    "draft": "Concept",
+    "signed": "Ondertekend",
+    "view": "Bekijken"
   }
 }
 
