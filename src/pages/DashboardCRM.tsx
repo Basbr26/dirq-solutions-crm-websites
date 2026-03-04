@@ -23,6 +23,8 @@ import {
   Calendar,
   Activity
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { usePipelineStats } from '@/features/projects/hooks/useProjects';
 import { useQuoteStats } from '@/features/quotes/hooks/useQuotes';
 import { ProjectStage } from '@/types/projects';
@@ -143,6 +145,24 @@ export default function DashboardCRM() {
   // Quick stats
   const { data: dealsThisWeek } = useDealsThisWeek();
   const { data: entityCounts } = useEntityCounts();
+
+  // Today's pending/overdue tasks
+  const today = new Date().toISOString().split('T')[0];
+  const { data: todayTasks } = useQuery({
+    queryKey: ['today-tasks', today],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('interactions')
+        .select('id, subject, type, due_date, company:companies(name)')
+        .lte('due_date', today)
+        .eq('task_status', 'pending')
+        .eq('is_task', true)
+        .order('due_date', { ascending: true })
+        .limit(5);
+      if (error) throw error;
+      return data as { id: string; subject: string; type: string; due_date: string; company: { name: string } | null }[];
+    },
+  });
 
   // Get locale for date-fns
   const dateLocale = i18n.language === 'nl' ? nl : enUS;
@@ -461,7 +481,7 @@ export default function DashboardCRM() {
                   <Badge variant="secondary">{entityCounts?.companies || 0}</Badge>
                 </div>
               </Link>
-              
+
               <Link to="/contacts">
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
@@ -471,7 +491,7 @@ export default function DashboardCRM() {
                   <Badge variant="secondary">{entityCounts?.contacts || 0}</Badge>
                 </div>
               </Link>
-              
+
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div className="flex items-center gap-3">
                   <Activity className="h-5 w-5 text-orange-500" />
@@ -481,7 +501,7 @@ export default function DashboardCRM() {
                   {formatCurrency(pipelineStats?.avg_deal_size || 0)}
                 </span>
               </div>
-              
+
               <Link to="/pipeline">
                 <div className="flex items-center justify-between p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
@@ -496,6 +516,50 @@ export default function DashboardCRM() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Today's tasks widget */}
+        {todayTasks && todayTasks.length > 0 && (
+          <Card className="border-orange-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-orange-600">
+                    <Activity className="h-5 w-5" />
+                    Vandaag te doen
+                  </CardTitle>
+                  <CardDescription>Openstaande en verlopen taken</CardDescription>
+                </div>
+                <Link to="/interactions">
+                  <Button variant="ghost" size="sm" className="text-orange-600 hover:text-orange-700">
+                    Alle taken →
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {todayTasks.map((task) => {
+                const isOverdue = task.due_date < today;
+                return (
+                  <Link key={task.id} to="/interactions">
+                    <div className={`flex items-center justify-between p-3 rounded-lg hover:bg-muted/80 transition-colors ${isOverdue ? 'bg-red-50 border border-red-200' : 'bg-muted'}`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{task.subject}</p>
+                        {task.company && (
+                          <p className="text-xs text-muted-foreground truncate">{task.company.name}</p>
+                        )}
+                      </div>
+                      <Badge variant={isOverdue ? 'destructive' : 'secondary'} className="ml-2 flex-shrink-0 text-xs">
+                        {isOverdue
+                          ? 'Verlopen'
+                          : new Date(task.due_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                      </Badge>
+                    </div>
+                  </Link>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppLayout>
   );

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, Search, Filter, Phone, Mail, Calendar, FileText, CheckSquare, Presentation, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Search, Filter, Phone, Mail, Calendar, FileText, CheckSquare, CheckCircle2, XCircle, User } from 'lucide-react';
 import { useInteractions, useInteractionStats, useUpdateInteraction } from './hooks/useInteractions';
+import { useAuth } from '@/hooks/useAuth';
 import { InteractionCard } from './components/InteractionCard';
 import { AddInteractionDialog } from './components/AddInteractionDialog';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -22,10 +23,12 @@ import { AppLayout } from '@/components/layout/AppLayout';
 
 export default function InteractionsPage() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string | undefined>(undefined);
   const [taskStatusFilter, setTaskStatusFilter] = useState<string | undefined>(undefined);
+  const [myTasksOnly, setMyTasksOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -44,7 +47,8 @@ export default function InteractionsPage() {
     search: debouncedSearch || undefined,
     type: typeFilter || undefined,
     taskStatus: taskStatusFilter || undefined,
-    isTask: taskStatusFilter ? true : undefined, // Only show tasks if we have a task status filter
+    isTask: taskStatusFilter ? true : undefined,
+    userId: myTasksOnly ? user?.id : undefined,
   });
 
   const { data: stats } = useInteractionStats();
@@ -177,6 +181,14 @@ export default function InteractionsPage() {
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant={myTasksOnly ? "default" : "outline"}
+            onClick={() => { setMyTasksOnly(!myTasksOnly); setPage(1); }}
+            className="gap-2"
+          >
+            <User className="h-4 w-4" />
+            Mijn taken
+          </Button>
           {taskStatusFilter && (
             <Button
               variant={isBulkMode ? "default" : "outline"}

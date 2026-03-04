@@ -57,6 +57,7 @@ export interface InteractionFilters {
   quoteId?: string; // For filtering by quote
   isTask?: boolean;
   taskStatus?: string;
+  userId?: string; // Filter by specific user (for "Mijn taken")
 }
 
 export interface CreateInteractionData {
@@ -164,6 +165,10 @@ export function useInteractions(filters: InteractionFilters = {}) {
 
       if (filters.taskStatus) {
         query = query.eq('task_status', filters.taskStatus);
+      }
+
+      if (filters.userId) {
+        query = query.eq('user_id', filters.userId);
       }
 
       // Pagination

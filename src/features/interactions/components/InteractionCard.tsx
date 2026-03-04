@@ -18,8 +18,9 @@ import {
   Building2,
   ExternalLink,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, isBefore } from 'date-fns';
 import { nl } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { InteractionDetailDialog } from './InteractionDetailDialog';
@@ -56,6 +57,11 @@ export const InteractionCard = memo(function InteractionCard({ interaction }: In
   const config = getTypeConfig(interaction.type, t);
   const Icon = config.icon;
 
+  const isOverdue = interaction.is_task &&
+    interaction.task_status === 'pending' &&
+    !!interaction.due_date &&
+    isBefore(new Date(interaction.due_date), new Date());
+
   const handleCompanyClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (interaction.company_id) {
@@ -72,7 +78,10 @@ export const InteractionCard = memo(function InteractionCard({ interaction }: In
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setShowDetail(true)}>
+      <Card className={cn(
+        "hover:shadow-md transition-shadow cursor-pointer",
+        isOverdue && "border-red-400 border-2"
+      )} onClick={() => setShowDetail(true)}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-3 flex-1">
@@ -100,16 +109,26 @@ export const InteractionCard = memo(function InteractionCard({ interaction }: In
                     </Badge>
                   )}
                 </div>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                  <span className="flex items-center gap-1">
+                <div className="flex items-center gap-3 mt-1 text-xs flex-wrap">
+                  <span className="flex items-center gap-1 text-muted-foreground">
                     <Clock className="h-3 w-3" />
                     {formatDistanceToNow(new Date(interaction.created_at), {
                       addSuffix: true,
                       locale: nl,
                     })}
                   </span>
+                  {interaction.due_date && interaction.is_task && (
+                    <span className={cn(
+                      "flex items-center gap-1",
+                      isOverdue ? "text-red-500 font-medium" : "text-muted-foreground"
+                    )}>
+                      <Calendar className="h-3 w-3" />
+                      {isOverdue ? 'Verlopen: ' : 'Deadline: '}
+                      {new Date(interaction.due_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' })}
+                    </span>
+                  )}
                   {interaction.duration_minutes && (
-                    <span>{interaction.duration_minutes} {t('common.minutes')}</span>
+                    <span className="text-muted-foreground">{interaction.duration_minutes} {t('common.minutes')}</span>
                   )}
                 </div>
               </div>
