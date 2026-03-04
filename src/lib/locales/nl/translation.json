@@ -930,7 +930,24 @@
     "startTime": "Starttijd",
     "endDate": "Einddatum",
     "endTime": "Eindtijd",
-    "location": "Locatie"
+    "location": "Locatie",
+    "deleteConfirm": "Event verwijderen",
+    "deleteConfirmDescription": "Weet je zeker dat je dit event wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "deleteGoogleWarning": "Dit event wordt ook verwijderd uit Google Calendar.",
+    "eventDeleted": "Event verwijderd",
+    "eventDeletedWithGoogle": "Event verwijderd uit CRM en Google Calendar",
+    "joinMeeting": "Deelnemen aan vergadering",
+    "linkedCompany": "Gekoppeld bedrijf",
+    "linkedContact": "Gekoppeld contactpersoon",
+    "meetingLink": "Vergaderlink",
+    "syncedWithGoogle": "Gesynchroniseerd met Google Calendar",
+    "types": {
+      "meeting": "Vergadering",
+      "call": "Telefoongesprek",
+      "task": "Taak",
+      "reminder": "Herinnering",
+      "other": "Overig"
+    }
   },
   "activities": {
     "title": "Activiteiten Log",
