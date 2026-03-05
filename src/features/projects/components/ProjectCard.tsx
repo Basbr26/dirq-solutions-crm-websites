@@ -11,9 +11,8 @@ import {
   Package,
   Clock
 } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
 
 interface ProjectCardProps {
   project: Project;
@@ -107,21 +106,6 @@ export const ProjectCard = memo(function ProjectCard({ project }: ProjectCardPro
               </span>
             </div>
           )}
-
-          {/* Last activity indicator */}
-          {project.updated_at && (() => {
-            const days = differenceInDays(new Date(), new Date(project.updated_at));
-            if (days < 1) return null;
-            return (
-              <div className={cn(
-                "flex items-center gap-1.5 text-xs",
-                days > 7 ? "text-red-500" : days > 3 ? "text-orange-500" : "text-muted-foreground"
-              )}>
-                <Clock className="h-3 w-3" />
-                <span>{days === 1 ? '1 dag geleden bijgewerkt' : `${days} dagen geleden bijgewerkt`}</span>
-              </div>
-            );
-          })()}
 
           {/* Features Tags */}
           {project.features && project.features.length > 0 && (

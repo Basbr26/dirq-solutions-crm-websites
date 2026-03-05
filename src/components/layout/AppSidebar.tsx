@@ -174,9 +174,6 @@ export function AppSidebar() {
             {item.badge}
           </span>
         )}
-        {!collapsed && item.href === '/gmail' && (
-          <Badge variant="secondary" className="ml-auto text-xs py-0 px-1.5 h-5">Beta</Badge>
-        )}
       </Button>
     );
 

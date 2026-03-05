@@ -233,22 +233,23 @@ export function GoogleCalendarSync() {
         expiresAt.setSeconds(expiresAt.getSeconds() + tokenResponse.expires_in);
         addDebugLog(`⏱️ Token expires at: ${expiresAt.toLocaleString()}`);
 
-        // Store token via Edge Function.
-        // Edge Function validates via Google's tokeninfo API — no Supabase JWT needed.
-        addDebugLog('💾 Storing token via Edge Function...');
-        const { data: saveResult, error: saveError } = await supabase.functions.invoke('save-token', {
-          body: {
-            type: 'google_calendar',
-            access_token: tokenResponse.access_token,
-            expires_at: expiresAt.toISOString(),
-            user_id: user.id,
-          },
-        });
-        if (saveError || !saveResult?.success) {
-          const errMsg = saveError?.message || saveResult?.error || 'onbekende fout';
-          addDebugLog(`❌ save-token error: ${errMsg}`);
-          setConnectionError(`Token opslaan mislukt: ${errMsg}`);
-          logger.error(saveError || saveResult, { context: 'google_calendar_store_tokens', user_id: user.id });
+        // Store tokens securely in Supabase profiles table (upsert in case row is missing)
+        addDebugLog('💾 Storing token in database...');
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            email: user.email,
+            role: 'SUPPORT',
+            google_access_token: tokenResponse.access_token,
+            google_token_expires_at: expiresAt.toISOString(),
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'id' });
+
+        if (updateError) {
+          addDebugLog(`❌ Database error: ${updateError.message}`);
+          setConnectionError(`Token opslaan mislukt: ${updateError.message}`);
+          logger.error(updateError, { context: 'google_calendar_store_tokens', user_id: user.id });
           toast.error('Kon tokens niet opslaan in database');
           return;
         }

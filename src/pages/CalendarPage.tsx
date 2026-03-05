@@ -64,8 +64,6 @@ export default function CalendarPage() {
   const [date, setDate] = useState(new Date());
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [slotDialogOpen, setSlotDialogOpen] = useState(false);
-  const [selectedSlotDate, setSelectedSlotDate] = useState('');
   const [filters, setFilters] = useState({
     meeting: true,
     call: true,
@@ -290,11 +288,6 @@ export default function CalendarPage() {
             </Button>
           )}
           <CreateEventDialog />
-          <CreateEventDialog
-            open={slotDialogOpen}
-            onOpenChange={setSlotDialogOpen}
-            initialDate={selectedSlotDate}
-          />
         </div>
       }
     >
@@ -388,10 +381,6 @@ export default function CalendarPage() {
                     onNavigate={(newDate) => setDate(newDate)}
                     eventPropGetter={eventStyleGetter}
                     onSelectEvent={(event) => setSelectedEvent(event.resource)}
-                    onSelectSlot={({ start }) => {
-                      setSelectedSlotDate(format(start, 'yyyy-MM-dd'));
-                      setSlotDialogOpen(true);
-                    }}
                     selectable
                     popup
                     toolbar={false}

@@ -213,16 +213,11 @@ export const CompanyCard = memo(function CompanyCard({ company }: CompanyCardPro
           "flex items-center pt-2 border-t",
           isMobile ? "justify-between" : "justify-between"
         )}>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+          <div className="flex items-center text-xs text-muted-foreground truncate">
             {company.owner && (
               <span className="truncate">
                 {company.owner?.voornaam} {company.owner?.achternaam}
               </span>
-            )}
-            {company.total_mrr > 0 && (
-              <Badge variant="outline" className="text-xs text-green-600 border-green-200 bg-green-50 flex-shrink-0">
-                € {company.total_mrr.toLocaleString('nl-NL')}/mnd
-              </Badge>
             )}
           </div>
           {company.last_contact_date && (
@@ -243,6 +238,21 @@ export const CompanyCard = memo(function CompanyCard({ company }: CompanyCardPro
           )}
         </div>
 
+        {/* Tags - Hide on mobile to reduce clutter */}
+        {!isMobile && company.tags && company.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 pt-2">
+            {company.tags.slice(0, 3).map((tag, idx) => (
+              <Badge key={idx} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            {company.tags.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{company.tags.length - 3}
+              </Badge>
+            )}
+          </div>
+        )}
         {/* Tags - Hide on mobile to reduce clutter */}
         {!isMobile && company.tags && company.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-2">
