@@ -172,10 +172,14 @@ serve(async (req) => {
   };
 
   if (isSourceCode) {
-    deployBody.installCommand = 'npm install --legacy-peer-deps';
-    deployBody.buildCommand = 'npm run build';
-    deployBody.outputDirectory = outputDirectory;
-    if (framework) deployBody.framework = framework;
+    // projectSettings is where Vercel actually reads install/build overrides
+    const projectSettings: Record<string, string> = {
+      installCommand: 'npm install --legacy-peer-deps',
+      buildCommand: 'npm run build',
+      outputDirectory,
+    };
+    if (framework) projectSettings.framework = framework;
+    deployBody.projectSettings = projectSettings;
   }
 
   console.log('Deploy body (no files):', JSON.stringify({ ...deployBody, files: `[${fileRefs.length} files]` }));
