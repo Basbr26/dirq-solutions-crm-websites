@@ -1,6 +1,6 @@
 // Website Preview Tab — shown in ProjectDetailPage
 // Allows creating shareable preview links for a project
-// Supports: manual URL input OR ZIP/HTML file upload (deployed via Netlify Deploy API)
+// Supports: manual URL input OR ZIP/HTML file upload (deployed via Vercel Deploy API)
 
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,8 +13,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Link2, Copy, Plus, Eye, CheckCircle2, XCircle, Clock, Globe, Upload, ExternalLink, Trash2, Loader2 } from 'lucide-react';
+import { Link2, Copy, Plus, Eye, CheckCircle2, XCircle, Clock, Globe, Upload, ExternalLink, Trash2, Loader2, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -59,6 +61,13 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
 
+  // Send dialog state
+  const [sendDialogPreview, setSendDialogPreview] = useState<WebsitePreview | null>(null);
+  const [sendEmail, setSendEmail] = useState('');
+  const [sendName, setSendName] = useState('');
+  const [sendMessage, setSendMessage] = useState('');
+  const [sending, setSending] = useState(false);
+
   const { data: previews = [], isLoading } = useQuery({
     queryKey: ['website_previews', projectId],
     queryFn: async () => {
@@ -69,6 +78,34 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as WebsitePreview[];
+    },
+  });
+
+  // Fetch primary contact for email pre-fill
+  const { data: primaryContact } = useQuery({
+    queryKey: ['company_primary_contact', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('contacts')
+        .select('email, first_name, last_name')
+        .eq('company_id', companyId!)
+        .eq('is_primary', true)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: company } = useQuery({
+    queryKey: ['company_email', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('companies')
+        .select('name, email')
+        .eq('id', companyId!)
+        .maybeSingle();
+      return data;
     },
   });
 
@@ -129,6 +166,62 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
     toast.success(`Link gekopieerd: ${previewTitle}`);
   }
 
+  function openSendDialog(preview: WebsitePreview) {
+    setSendDialogPreview(preview);
+    const email = primaryContact?.email ?? company?.email ?? '';
+    const name = primaryContact
+      ? `${primaryContact.first_name ?? ''} ${primaryContact.last_name ?? ''}`.trim()
+      : '';
+    setSendEmail(email);
+    setSendName(name);
+    setSendMessage('');
+  }
+
+  function closeSendDialog() {
+    setSendDialogPreview(null);
+    setSendEmail('');
+    setSendName('');
+    setSendMessage('');
+  }
+
+  async function handleSend() {
+    if (!sendDialogPreview) return;
+    if (!sendEmail.trim()) { toast.error('Vul een e-mailadres in'); return; }
+
+    setSending(true);
+    try {
+      const shareLink = getShareLink(sendDialogPreview.token);
+
+      const { error: fnError } = await supabase.functions.invoke('send-preview-email', {
+        body: {
+          to: sendEmail.trim(),
+          recipientName: sendName.trim() || undefined,
+          companyName: company?.name || undefined,
+          previewTitle: sendDialogPreview.title,
+          previewLink: shareLink,
+          senderName: user?.email ? user.email.split('@')[0] : 'Dirq Solutions',
+          message: sendMessage.trim() || undefined,
+        },
+      });
+
+      if (fnError) throw fnError;
+
+      await supabase
+        .from('website_previews')
+        .update({ status: 'sent', viewer_email: sendEmail.trim() })
+        .eq('id', sendDialogPreview.id);
+
+      queryClient.invalidateQueries({ queryKey: ['website_previews', projectId] });
+      toast.success(`Preview verstuurd naar ${sendEmail.trim()}`);
+      closeSendDialog();
+    } catch (err) {
+      console.error(err);
+      toast.error('Fout bij versturen');
+    } finally {
+      setSending(false);
+    }
+  }
+
   function handleCreate() {
     if (!url.trim()) { toast.error('Vul een preview URL in'); return; }
     try { new URL(url.trim()); } catch { toast.error('Voer een geldige URL in (inclusief https://)'); return; }
@@ -161,7 +254,6 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
       let zipBlob: Blob;
 
       if (isHtml) {
-        // Wrap single HTML file in a minimal ZIP so the edge function always receives a ZIP
         const zip = new JSZip();
         zip.file('index.html', await zipFile.arrayBuffer());
         zipBlob = await zip.generateAsync({ type: 'blob' });
@@ -171,7 +263,6 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
 
       setUploadProgress(30);
 
-      // Get current Supabase session JWT
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error('Sessie verlopen, log opnieuw in');
@@ -180,8 +271,6 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
 
       setUploadProgress(50);
 
-      // Send raw ZIP bytes to edge function via fetch (supabase.functions.invoke serializes as JSON;
-      // we need raw binary with Content-Type: application/zip)
       const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deploy-to-netlify`;
       const response = await fetch(functionUrl, {
         method: 'POST',
@@ -349,6 +438,7 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
             const cfg = STATUS_CONFIG[preview.status] ?? STATUS_CONFIG.draft;
             const StatusIcon = cfg.icon;
             const shareLink = getShareLink(preview.token);
+            const isBuilding = preview.deploy_status === 'building';
 
             return (
               <Card key={preview.id} className="p-4">
@@ -360,7 +450,7 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
                         <StatusIcon className="w-3 h-3" />
                         {cfg.label}
                       </Badge>
-                      {preview.deploy_status === 'building' && (
+                      {isBuilding && (
                         <Badge variant="secondary" className="text-xs gap-1 text-yellow-600">
                           <Loader2 className="w-3 h-3 animate-spin" />
                           Bouwen...
@@ -402,22 +492,86 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
                       </Button>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => deletePreview.mutate(preview.id)}
-                    disabled={deletePreview.isPending}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {!isBuilding && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-muted-foreground hover:text-primary gap-1"
+                        onClick={() => openSendDialog(preview)}
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        Verstuur
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => deletePreview.mutate(preview.id)}
+                      disabled={deletePreview.isPending}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </Card>
             );
           })}
         </div>
       )}
+
+      {/* Send dialog */}
+      <Dialog open={!!sendDialogPreview} onOpenChange={(open) => { if (!open) closeSendDialog(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="w-4 h-4" />
+              Preview versturen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <Label className="text-sm">E-mailadres *</Label>
+              <Input
+                value={sendEmail}
+                onChange={(e) => setSendEmail(e.target.value)}
+                placeholder="klant@bedrijf.nl"
+                type="email"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Naam ontvanger</Label>
+              <Input
+                value={sendName}
+                onChange={(e) => setSendName(e.target.value)}
+                placeholder="Jan de Vries"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm">Persoonlijk bericht (optioneel)</Label>
+              <Textarea
+                value={sendMessage}
+                onChange={(e) => setSendMessage(e.target.value)}
+                placeholder="Hierbij de website preview zoals besproken..."
+                className="mt-1 resize-none"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" size="sm" onClick={closeSendDialog} disabled={sending}>
+              Annuleren
+            </Button>
+            <Button size="sm" onClick={handleSend} disabled={sending} className="gap-2">
+              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+              {sending ? 'Versturen...' : 'Verstuur preview'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
