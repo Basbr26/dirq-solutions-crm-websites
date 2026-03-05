@@ -180,7 +180,7 @@ serve(async (req) => {
 
   console.log('Deploy body (no files):', JSON.stringify({ ...deployBody, files: `[${fileRefs.length} files]` }));
 
-  const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
+  const deployRes = await fetch('https://api.vercel.com/v13/deployments?skipAutoDetectionConfirmation=1', {
     method: 'POST',
     headers: { 'Authorization': vercelAuth, 'Content-Type': 'application/json' },
     body: JSON.stringify(deployBody),
