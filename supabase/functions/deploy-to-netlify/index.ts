@@ -168,14 +168,17 @@ serve(async (req) => {
   const deployBody: Record<string, unknown> = {
     name,
     files: fileRefs,
-    projectSettings: { nodeVersion: '20.x' },
+    target: 'production',
   };
 
   if (isSourceCode) {
+    deployBody.installCommand = 'npm install';
     deployBody.buildCommand = 'npm run build';
     deployBody.outputDirectory = outputDirectory;
     if (framework) deployBody.framework = framework;
   }
+
+  console.log('Deploy body (no files):', JSON.stringify({ ...deployBody, files: `[${fileRefs.length} files]` }));
 
   const deployRes = await fetch('https://api.vercel.com/v13/deployments', {
     method: 'POST',
@@ -184,9 +187,11 @@ serve(async (req) => {
   });
 
   if (!deployRes.ok) {
-    const err = await deployRes.text();
-    console.error('Vercel deployment failed:', deployRes.status, err);
-    return json({ success: false, error: `Vercel deploy mislukt (${deployRes.status})` }, 502);
+    const errText = await deployRes.text();
+    console.error('Vercel deployment failed:', deployRes.status, errText);
+    // Include first 300 chars of Vercel error so UI can show it
+    const errSnippet = errText.slice(0, 300);
+    return json({ success: false, error: `Vercel deploy mislukt (${deployRes.status}): ${errSnippet}` }, 502);
   }
 
   const deployment = await deployRes.json();
