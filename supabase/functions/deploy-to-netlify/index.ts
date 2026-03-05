@@ -174,10 +174,10 @@ serve(async (req) => {
   if (isSourceCode) {
     // projectSettings is where Vercel actually reads install/build overrides
     const projectSettings: Record<string, string> = {
-      installCommand: 'npm install --legacy-peer-deps',
+      installCommand: 'npm install --legacy-peer-deps && npm install ajv@^8 --legacy-peer-deps',
       buildCommand: 'npm run build',
       outputDirectory,
-      nodeVersion: '18.x', // CRA/craco incompatible with Node 20+
+      nodeVersion: '20.x',
     };
     if (framework) projectSettings.framework = framework;
     deployBody.projectSettings = projectSettings;
