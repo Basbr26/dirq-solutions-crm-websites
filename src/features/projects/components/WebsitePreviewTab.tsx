@@ -493,17 +493,15 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    {!isBuilding && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-xs text-muted-foreground hover:text-primary gap-1"
-                        onClick={() => openSendDialog(preview)}
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        Verstuur
-                      </Button>
-                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-muted-foreground hover:text-primary gap-1"
+                      onClick={() => openSendDialog(preview)}
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      Verstuur
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
