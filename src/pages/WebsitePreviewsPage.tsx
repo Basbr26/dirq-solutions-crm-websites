@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Globe, Link2, Copy, Eye, CheckCircle2, XCircle, Clock, ExternalLink, Trash2 } from 'lucide-react';
+import { Globe, Link2, Copy, Eye, CheckCircle2, XCircle, Clock, ExternalLink, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -17,6 +17,7 @@ interface Preview {
   preview_url: string;
   token: string;
   status: string;
+  deploy_status: string;
   viewed_at: string | null;
   created_at: string;
   project: { id: string; title: string } | null;
@@ -105,6 +106,18 @@ export default function WebsitePreviewsPage() {
                         <StatusIcon className="w-3 h-3" />
                         {cfg.label}
                       </Badge>
+                      {preview.deploy_status === 'building' && (
+                        <Badge variant="secondary" className="text-xs gap-1 text-yellow-600">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Bouwen...
+                        </Badge>
+                      )}
+                      {preview.deploy_status === 'failed' && (
+                        <Badge variant="destructive" className="text-xs gap-1">
+                          <XCircle className="w-3 h-3" />
+                          Build mislukt
+                        </Badge>
+                      )}
                       {preview.project && (
                         <Link
                           to={`/projects/${preview.project.id}`}

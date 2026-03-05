@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Link2, Copy, Plus, Eye, CheckCircle2, XCircle, Clock, Globe, Upload, ExternalLink, Trash2 } from 'lucide-react';
+import { Link2, Copy, Plus, Eye, CheckCircle2, XCircle, Clock, Globe, Upload, ExternalLink, Trash2, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -24,6 +24,7 @@ interface WebsitePreview {
   preview_url: string;
   token: string;
   status: string;
+  deploy_status: string;
   viewed_at: string | null;
   created_at: string;
 }
@@ -84,14 +85,15 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
   });
 
   const createPreview = useMutation({
-    mutationFn: async (previewUrl: string) => {
+    mutationFn: async ({ url, deployStatus }: { url: string; deployStatus: string }) => {
       const { data, error } = await supabase
         .from('website_previews')
         .insert({
           project_id: projectId,
           company_id: companyId ?? null,
           title: title.trim() || 'Website Preview',
-          preview_url: previewUrl,
+          preview_url: url,
+          deploy_status: deployStatus,
           created_by: user?.id,
         })
         .select()
@@ -130,7 +132,7 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
   function handleCreate() {
     if (!url.trim()) { toast.error('Vul een preview URL in'); return; }
     try { new URL(url.trim()); } catch { toast.error('Voer een geldige URL in (inclusief https://)'); return; }
-    createPreview.mutate(url.trim());
+    createPreview.mutate({ url: url.trim(), deployStatus: 'ready' });
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -199,7 +201,7 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
       }
 
       setUploadProgress(100);
-      createPreview.mutate(result.url);
+      createPreview.mutate({ url: result.url, deployStatus: result.deploy_status ?? 'ready' });
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : 'Deploy mislukt');
@@ -297,12 +299,16 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Enkel HTML-bestand of een .zip (incl. React/Vite builds). Wordt automatisch gehost via Netlify.
+                  ZIP of HTML-bestand — broncode of gebouwde versie. Wordt automatisch gebouwd en gehost via Vercel.
                 </p>
                 {uploading && (
                   <div className="mt-2 space-y-1">
                     <Progress value={uploadProgress} className="h-2" />
-                    <p className="text-xs text-muted-foreground text-right">{uploadProgress}%</p>
+                    <p className="text-xs text-muted-foreground text-right">
+                      {uploadProgress < 40 ? 'Bestanden uploaden...'
+                        : uploadProgress < 80 ? 'Bouwen... (dit duurt ~1-2 minuten)'
+                        : 'Bijna klaar...'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -348,12 +354,24 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
               <Card key={preview.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className="font-medium text-sm">{preview.title}</span>
                       <Badge variant={cfg.variant} className={`text-xs gap-1 ${cfg.color}`}>
                         <StatusIcon className="w-3 h-3" />
                         {cfg.label}
                       </Badge>
+                      {preview.deploy_status === 'building' && (
+                        <Badge variant="secondary" className="text-xs gap-1 text-yellow-600">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          Bouwen...
+                        </Badge>
+                      )}
+                      {preview.deploy_status === 'failed' && (
+                        <Badge variant="destructive" className="text-xs gap-1">
+                          <XCircle className="w-3 h-3" />
+                          Build mislukt
+                        </Badge>
+                      )}
                     </div>
                     <a
                       href={preview.preview_url}
