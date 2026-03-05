@@ -27,3 +27,7 @@ verify_jwt = false
 
 [functions.gmail-sync]
 verify_jwt = false
+
+# deploy-to-netlify: JWT handmatig gevalideerd in handler via authClient.auth.getUser().
+[functions.deploy-to-netlify]
+verify_jwt = false

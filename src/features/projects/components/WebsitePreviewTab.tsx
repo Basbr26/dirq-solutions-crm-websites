@@ -1,6 +1,6 @@
 // Website Preview Tab — shown in ProjectDetailPage
 // Allows creating shareable preview links for a project
-// Supports: manual URL input OR ZIP file upload (extracted to Supabase Storage)
+// Supports: manual URL input OR ZIP/HTML file upload (deployed via Netlify Deploy API)
 
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -140,69 +140,57 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
     if (!zipFile) { toast.error('Selecteer eerst een bestand'); return; }
 
     setUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
 
     try {
-      const folderId = crypto.randomUUID();
       const isHtml = zipFile.name.toLowerCase().endsWith('.html') || zipFile.name.toLowerCase().endsWith('.htm');
+      let zipBlob: Blob;
 
       if (isHtml) {
-        // Single HTML file — upload directly
-        const storagePath = `${folderId}/index.html`;
-        const { error } = await supabase.storage
-          .from('website-previews')
-          .upload(storagePath, zipFile, { contentType: 'text/html', upsert: false });
-        if (error) throw new Error(error.message);
-        setUploadProgress(100);
-        const { data: urlData } = supabase.storage.from('website-previews').getPublicUrl(storagePath);
-        createPreview.mutate(urlData.publicUrl);
+        // Wrap single HTML file in a minimal ZIP so the edge function always receives a ZIP
+        const zip = new JSZip();
+        zip.file('index.html', await zipFile.arrayBuffer());
+        zipBlob = await zip.generateAsync({ type: 'blob' });
+      } else {
+        zipBlob = zipFile;
+      }
+
+      setUploadProgress(30);
+
+      // Get current Supabase session JWT
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Sessie verlopen, log opnieuw in');
         return;
       }
 
-      // ZIP file — extract in browser then upload all files
-      const zip = new JSZip();
-      const contents = await zip.loadAsync(zipFile);
+      setUploadProgress(50);
 
-      const files: { path: string; data: Blob; mimeType: string }[] = [];
-      const promises: Promise<void>[] = [];
-
-      contents.forEach((relativePath, entry) => {
-        if (entry.dir || relativePath.startsWith('__MACOSX') || relativePath.startsWith('.')) return;
-        promises.push(
-          entry.async('blob').then((blob) => {
-            files.push({ path: relativePath, data: blob, mimeType: getMimeType(relativePath) });
-          })
-        );
+      // Send raw ZIP bytes to edge function via fetch (supabase.functions.invoke serializes as JSON;
+      // we need raw binary with Content-Type: application/zip)
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/deploy-to-netlify`;
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/zip',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: zipBlob,
       });
 
-      await Promise.all(promises);
+      setUploadProgress(80);
 
-      if (files.length === 0) { toast.error('ZIP bevat geen bestanden'); return; }
-
-      const indexFile = files.find(f => f.path.toLowerCase() === 'index.html')
-        ?? files.find(f => f.path.toLowerCase().endsWith('/index.html'))
-        ?? files.find(f => f.path.toLowerCase().endsWith('.html'));
-
-      if (!indexFile) { toast.error('Geen index.html gevonden in de ZIP'); return; }
-
-      let uploaded = 0;
-      for (const file of files) {
-        const { error } = await supabase.storage
-          .from('website-previews')
-          .upload(`${folderId}/${file.path}`, file.data, { contentType: file.mimeType, upsert: false });
-        if (error) throw new Error(`Upload mislukt voor ${file.path}: ${error.message}`);
-        uploaded++;
-        setUploadProgress(Math.round((uploaded / files.length) * 100));
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || `Deploy mislukt (${response.status})`);
       }
 
-      const { data: urlData } = supabase.storage
-        .from('website-previews')
-        .getPublicUrl(`${folderId}/${indexFile.path}`);
-
-      createPreview.mutate(urlData.publicUrl);
+      setUploadProgress(100);
+      createPreview.mutate(result.url);
     } catch (err) {
       console.error(err);
-      toast.error(err instanceof Error ? err.message : 'Upload mislukt');
+      toast.error(err instanceof Error ? err.message : 'Deploy mislukt');
     } finally {
       setUploading(false);
     }
@@ -297,7 +285,7 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Enkel HTML-bestand of een .zip met <code>index.html</code> + CSS/JS/afbeeldingen.
+                  Enkel HTML-bestand of een .zip (incl. React/Vite builds). Wordt automatisch gehost via Netlify.
                 </p>
                 {uploading && (
                   <div className="mt-2 space-y-1">
@@ -394,32 +382,3 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
   );
 }
 
-// Map file extensions to MIME types for Supabase Storage uploads
-function getMimeType(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase() ?? '';
-  const map: Record<string, string> = {
-    html: 'text/html',
-    htm:  'text/html',
-    css:  'text/css',
-    js:   'application/javascript',
-    mjs:  'application/javascript',
-    json: 'application/json',
-    svg:  'image/svg+xml',
-    png:  'image/png',
-    jpg:  'image/jpeg',
-    jpeg: 'image/jpeg',
-    gif:  'image/gif',
-    webp: 'image/webp',
-    ico:  'image/x-icon',
-    woff: 'font/woff',
-    woff2:'font/woff2',
-    ttf:  'font/ttf',
-    eot:  'application/vnd.ms-fontobject',
-    mp4:  'video/mp4',
-    webm: 'video/webm',
-    txt:  'text/plain',
-    xml:  'application/xml',
-    pdf:  'application/pdf',
-  };
-  return map[ext] ?? 'application/octet-stream';
-}
