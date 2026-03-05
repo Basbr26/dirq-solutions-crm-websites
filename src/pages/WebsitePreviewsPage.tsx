@@ -1,5 +1,5 @@
 // Website Previews overview — all previews across all projects
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Globe, Link2, Copy, Eye, CheckCircle2, XCircle, Clock, ExternalLink } from 'lucide-react';
+import { Globe, Link2, Copy, Eye, CheckCircle2, XCircle, Clock, ExternalLink, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -32,6 +32,8 @@ const STATUS_CONFIG: Record<string, { label: string; variant: 'outline' | 'defau
 };
 
 export default function WebsitePreviewsPage() {
+  const queryClient = useQueryClient();
+
   const { data: previews = [], isLoading } = useQuery({
     queryKey: ['website_previews_all'],
     queryFn: async () => {
@@ -42,6 +44,18 @@ export default function WebsitePreviewsPage() {
       if (error) throw error;
       return data as Preview[];
     },
+  });
+
+  const deletePreview = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('website_previews').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['website_previews_all'] });
+      toast.success('Preview verwijderd');
+    },
+    onError: () => toast.error('Fout bij verwijderen'),
   });
 
   function getShareLink(token: string) {
@@ -135,6 +149,15 @@ export default function WebsitePreviewsPage() {
                       </Button>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => deletePreview.mutate(preview.id)}
+                    disabled={deletePreview.isPending}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
               </Card>
             );

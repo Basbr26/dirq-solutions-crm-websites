@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Link2, Copy, Plus, Eye, CheckCircle2, XCircle, Clock, Globe, Upload, ExternalLink } from 'lucide-react';
+import { Link2, Copy, Plus, Eye, CheckCircle2, XCircle, Clock, Globe, Upload, ExternalLink, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { nl } from 'date-fns/locale';
 
@@ -69,6 +69,18 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
       if (error) throw error;
       return data as WebsitePreview[];
     },
+  });
+
+  const deletePreview = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('website_previews').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['website_previews', projectId] });
+      toast.success('Preview verwijderd');
+    },
+    onError: () => toast.error('Fout bij verwijderen'),
   });
 
   const createPreview = useMutation({
@@ -372,6 +384,15 @@ export function WebsitePreviewTab({ projectId, companyId }: Props) {
                       </Button>
                     </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => deletePreview.mutate(preview.id)}
+                    disabled={deletePreview.isPending}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
                 </div>
               </Card>
             );
