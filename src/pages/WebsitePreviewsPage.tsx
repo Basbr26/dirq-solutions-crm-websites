@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,16 +54,8 @@ export default function WebsitePreviewsPage() {
   }
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Globe className="w-6 h-6 text-primary" />
-        <div>
-          <h1 className="text-xl font-semibold">Website Previews</h1>
-          <p className="text-sm text-muted-foreground">Alle gedeelde previews met prospects</p>
-        </div>
-      </div>
-
+    <AppLayout title="Website Previews" subtitle="Alle gedeelde previews met prospects">
+      <div className="space-y-4">
       {/* Content */}
       {isLoading ? (
         <div className="space-y-3">
@@ -149,5 +142,6 @@ export default function WebsitePreviewsPage() {
         </div>
       )}
     </div>
+    </AppLayout>
   );
 }
