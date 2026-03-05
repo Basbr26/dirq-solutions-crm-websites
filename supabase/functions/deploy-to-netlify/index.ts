@@ -177,6 +177,7 @@ serve(async (req) => {
       installCommand: 'npm install --legacy-peer-deps',
       buildCommand: 'npm run build',
       outputDirectory,
+      nodeVersion: '18.x', // CRA/craco incompatible with Node 20+
     };
     if (framework) projectSettings.framework = framework;
     deployBody.projectSettings = projectSettings;
