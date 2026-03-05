@@ -62,6 +62,7 @@ import { useProjectStageConfig } from '@/types/projectStageConfig';
 import { QuoteForm } from '@/features/quotes/components/QuoteForm';
 import { useCreateQuote } from '@/features/quotes/hooks/useQuoteMutations';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { WebsitePreviewTab } from './components/WebsitePreviewTab';
 
 const getProjectTypeLabels = (t: any) => ({
   landing_page: t('projects.types.landingPage'),
@@ -623,10 +624,11 @@ export default function ProjectDetailPage() {
 
           {/* Tabs */}
           <Tabs defaultValue="quotes" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="quotes">Offertes ({quotes?.length || 0})</TabsTrigger>
               <TabsTrigger value="documents">Documenten</TabsTrigger>
               <TabsTrigger value="activity">Activiteiten</TabsTrigger>
+              <TabsTrigger value="preview">Website Preview</TabsTrigger>
             </TabsList>
 
             <TabsContent value="quotes" className="mt-6">
@@ -729,6 +731,10 @@ export default function ProjectDetailPage() {
                   )}
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="preview" className="mt-6">
+              <WebsitePreviewTab projectId={id!} companyId={project.company_id} />
             </TabsContent>
           </Tabs>
 

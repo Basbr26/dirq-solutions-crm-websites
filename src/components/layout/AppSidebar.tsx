@@ -25,6 +25,7 @@ import {
   Mail,
   Map,
   Inbox,
+  Globe,
 } from 'lucide-react';
 
 interface NavItem {
@@ -67,6 +68,7 @@ const getNavGroups = (role: string | null, t: (key: string) => string, draftCoun
         { title: t('navigation.projects'), icon: FolderKanban, href: '/projects', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
         { title: t('navigation.salesOverview'), icon: TrendingUp, href: '/pipeline', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
         { title: t('navigation.quotes'), icon: FileText, href: '/quotes', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
+        { title: 'Website Previews', icon: Globe, href: '/website-previews', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
         { title: t('navigation.activities'), icon: MessageSquare, href: '/interactions', roles: ['ADMIN', 'SALES', 'MANAGER', 'SUPPORT', 'super_admin'] },
         { title: t('common.calendar') || 'Agenda', icon: Calendar, href: '/calendar', roles: ['ADMIN', 'SALES', 'MANAGER', 'super_admin'] },
       ],

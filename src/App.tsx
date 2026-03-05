@@ -53,6 +53,8 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Public pages (no auth required)
 const PublicSignPage = lazy(() => import("./pages/PublicSignPage"));
 const PublicSignQuotePage = lazy(() => import("./pages/PublicSignQuotePage"));
+const PublicPreviewPage = lazy(() => import("./pages/PublicPreviewPage"));
+const WebsitePreviewsPage = lazy(() => import("./pages/WebsitePreviewsPage"));
 
 const queryClient = new QueryClient();
 
@@ -132,8 +134,20 @@ function AnimatedRoutes() {
           } 
         />
         
-        <Route 
-          path="/dashboard/super-admin" 
+        {/* Public Website Preview page - no authentication required */}
+        <Route
+          path="/preview/:token"
+          element={
+            <AnimatedRoute>
+              <Suspense fallback={<SuspenseFallback />}>
+                <PublicPreviewPage />
+              </Suspense>
+            </AnimatedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/super-admin"
           element={
             <AnimatedRoute>
               <ProtectedRoute allowedRoles={['super_admin']}>
@@ -440,6 +454,18 @@ function AnimatedRoutes() {
               <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
                 <Suspense fallback={<SuspenseFallback />}>
                   <EmailDraftsPage />
+                </Suspense>
+              </ProtectedRoute>
+            </AnimatedRoute>
+          }
+        />
+        <Route
+          path="/website-previews"
+          element={
+            <AnimatedRoute>
+              <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'SALES', 'super_admin']}>
+                <Suspense fallback={<SuspenseFallback />}>
+                  <WebsitePreviewsPage />
                 </Suspense>
               </ProtectedRoute>
             </AnimatedRoute>
