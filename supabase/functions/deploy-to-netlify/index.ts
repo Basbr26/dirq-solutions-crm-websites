@@ -172,7 +172,7 @@ serve(async (req) => {
   };
 
   if (isSourceCode) {
-    deployBody.installCommand = 'npm install';
+    deployBody.installCommand = 'npm install --legacy-peer-deps';
     deployBody.buildCommand = 'npm run build';
     deployBody.outputDirectory = outputDirectory;
     if (framework) deployBody.framework = framework;
